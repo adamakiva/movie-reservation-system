@@ -1,3 +1,5 @@
+### Inspired by https://roadmap.sh/projects/movie-reservation-system
+
 ### Prerequisites
 
 1. Linux-based system with POSIX compliant shell (required for the scripts to work)
