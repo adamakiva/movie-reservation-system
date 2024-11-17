@@ -65,3 +65,7 @@ const roleModel = pgTable(
     return [{ nameIndex: index().using('btree', table.name) }];
   },
 );
+
+/**********************************************************************************/
+
+export { roleModel, userModel };
