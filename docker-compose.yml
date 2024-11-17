@@ -1,0 +1,74 @@
+services:
+  mrs-pg:
+    hostname: mrs-pg
+    container_name: mrs-pg
+    restart: unless-stopped
+    image: postgres:17.1-alpine
+    user: ${UID}:${GID}
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DBS=mrs, mrs_test
+    volumes:
+      - ./dev-data/pg:/var/lib/postgresql/data:rw
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:rw
+      # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
+      - /etc/passwd:/etc/passwd:ro
+      # See: https://stackoverflow.com/a/44440563
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+    command: postgres -p 5432 -c log_statement=all
+
+  mrs:
+    hostname: mrs
+    container_name: mrs
+    restart: unless-stopped
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: dev
+    user: ${UID}:${GID}
+    environment:
+      - SERVER_PORT=4334
+      - SERVER_DEBUG_PORT=4335
+      - SERVER_BASE_URL=http://localhost
+      - HTTP_ROUTE=api/v0
+      - HEALTH_CHECK_ROUTE=health
+      - ALLOWED_HOSTS=::,127.0.0.1,localhost
+      - ALLOWED_ORIGINS=*
+      - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
+      - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      # Node flags
+      - NODE_ENV=development
+      - NODE_NO_WARNINGS=0
+      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
+    volumes:
+      - ./:/home/node/mrs:rw
+      # Volume npm cache to speed up the npm install. This should allow cache reuse
+      # whenever node_modules are removed.
+      # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
+      - ./npm-cache:/home/node/.npm:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    # tty enables better log format for npm and debug. Using it in development
+    # is not an issue, however, don't enable it production since there's no need
+    tty: true
+    stdin_open: true
+    ports:
+      - 4334:4334
+      - 4335:4335
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health | grep -q '204'"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      mrs-pg:
+        condition: service_healthy
