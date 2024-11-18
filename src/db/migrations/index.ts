@@ -2,6 +2,8 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
+import { ERROR_CODES } from '../../utils/constants.js';
+
 import * as schemas from '../schemas.js';
 
 /**********************************************************************************/
@@ -32,7 +34,7 @@ async function migration(dbUrl: string) {
  * This function may return a promise or not, depending on whether the required
  * environment variables exist.
  *
- * Normally this is bad practice because how would you handle errors?
+ * Normally this is bad practice because due to different error handling.
  *
  * However in this case, all errors are handled by shutting down the process and
  * are not propagated down the caller chain.
@@ -57,12 +59,12 @@ function run() {
       }),
     ).catch((err) => {
       console.error('Migration failed:', err);
-      process.exitCode = 1;
+      process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
   }
 
   console.error(errMessages.join('\n'));
-  process.exitCode = 1;
+  process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
 
   return;
 }
