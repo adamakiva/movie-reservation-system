@@ -5,5 +5,6 @@
 # using `tini``. This will allow signals to be forwarded to the application as
 # expected
 
-npm install && DB_URL=$DB_URL npm run commit-migrations;
+npm install &&
+npm run commit-migrations &&
 exec node --watch --nolazy --enable-source-maps --trace-uncaught --trace-warnings --inspect=0.0.0.0:"$SERVER_DEBUG_PORT" --import @swc-node/register/esm-register ./src/main.ts;

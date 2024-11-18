@@ -151,7 +151,6 @@ const showtimeModel = pgTable(
   },
 );
 
-// TODO All previous shows for logging -> Think of a name
 const showtimeSummary = pgTable('showtime_summary', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
   at: timestamp('at', {

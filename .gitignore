@@ -16,7 +16,6 @@
 !*.ts
 
 # Etc
-!eslint.config.js
 !*.sql
 !*.json
 !*.sh
@@ -24,7 +23,5 @@
 !*.yml
 !Dockerfile
 !.gitignore
-!.gitkeep
 !LICENSE
-!.template.env
 !.npmrc

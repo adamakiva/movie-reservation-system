@@ -2,7 +2,7 @@ services:
   mrs-pg:
     hostname: mrs-pg
     container_name: mrs-pg
-    restart: unless-stopped
+    restart: "no"
     image: postgres:17.1-alpine
     user: ${UID}:${GID}
     environment:
@@ -27,7 +27,7 @@ services:
   mrs:
     hostname: mrs
     container_name: mrs
-    restart: unless-stopped
+    restart: "no"
     build:
       context: ./
       dockerfile: Dockerfile
@@ -42,7 +42,7 @@ services:
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
       - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
-      - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      - A_DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
       # Node flags
       - NODE_ENV=development
       - NODE_NO_WARNINGS=0
