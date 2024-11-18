@@ -42,7 +42,7 @@ services:
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
       - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
-      - A_DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
       # Node flags
       - NODE_ENV=development
       - NODE_NO_WARNINGS=0
