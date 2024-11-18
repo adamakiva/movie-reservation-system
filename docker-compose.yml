@@ -17,12 +17,13 @@ services:
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - ./scripts/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
       interval: 3s
       timeout: 2s
       retries: 5
-    command: postgres -p 5432 -c log_statement=all
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
 
   mrs:
     hostname: mrs
@@ -59,6 +60,7 @@ services:
     # is not an issue, however, don't enable it production since there's no need
     tty: true
     stdin_open: true
+    mem_limit: 2048m
     ports:
       - 4334:4334
       - 4335:4335
