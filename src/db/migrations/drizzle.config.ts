@@ -2,7 +2,6 @@ import { type Config, defineConfig } from 'drizzle-kit';
 
 /**********************************************************************************/
 
-// See: https://orm.drizzle.team/kit-docs/config-reference
 const drizzleConfig: Config = {
   dialect: 'postgresql',
   dbCredentials: {
