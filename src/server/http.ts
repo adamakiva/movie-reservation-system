@@ -7,9 +7,9 @@ import type pg from 'postgres';
 import { Database } from '../db/index.js';
 import {
   ERROR_CODES,
-  isDevelopmentMode,
   isProductionMode,
   isTestMode,
+  Logger,
   type EnvironmentManager,
 } from '../utils/index.js';
 
@@ -17,32 +17,33 @@ import * as Middlewares from './middleware.js';
 
 /**********************************************************************************/
 
-export default class HttpServer {
+class HttpServer {
   readonly #mode;
-
-  readonly #db;
-
   readonly #server;
+  readonly #db;
   readonly #routes;
-
   readonly #requestContext;
+  readonly #logger;
 
   /********************************************************************************/
 
   public static async create(
     params: Readonly<{
       mode: ReturnType<EnvironmentManager['getEnvVariables']>['mode'];
-      dbParams: {
+      dbParams: Readonly<{
         url: string;
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         options?: pg.Options<{}>;
         healthCheckQuery: string;
-      };
-      allowedMethods: Set<string>;
-      routes: { http: string; health: string };
+      }>;
+      allowedMethods: Readonly<Set<string>>;
+      routes: Readonly<{ http: string; health: string }>;
+      logMiddleware: ReturnType<Logger['getLogMiddleware']>;
+      logger: ReturnType<Logger['getHandler']>;
     }>,
   ) {
-    const { mode, dbParams, allowedMethods, routes } = params;
+    const { mode, dbParams, allowedMethods, routes, logMiddleware, logger } =
+      params;
 
     const db = new Database(dbParams);
 
@@ -56,13 +57,18 @@ export default class HttpServer {
       db: db,
       server: server,
       routes: routes,
+      logger: logger,
     });
 
-    await self.#attachConfigurationMiddlewares(app, allowedMethods);
-    self.#attachRoutesMiddlewares(app, {
-      healthRoute: routes.health,
-      httpRoute: routes.http,
+    self.#attachServerConfigurations();
+    self.#attachServerEventHandlers();
+    await self.#attachConfigurationMiddlewares({
+      app,
+      allowedMethods,
+      logMiddleware,
     });
+    self.#attachHealthChecks(app, routes.health);
+    self.#attachRoutesMiddlewares(app, routes.health);
 
     return self;
   }
@@ -80,7 +86,7 @@ export default class HttpServer {
           const { address, port } = this.#server.address() as AddressInfo;
           const route = this.#routes.http;
 
-          console.info(
+          this.#logger.info(
             `Server is running in '${this.#mode}' mode on: ` +
               `'${address.endsWith(':') ? address : address.concat(':')}${port}${route}'`,
           );
@@ -108,24 +114,24 @@ export default class HttpServer {
   private constructor(
     params: Readonly<{
       mode: ReturnType<EnvironmentManager['getEnvVariables']>['mode'];
-      db: Database;
+      db: Readonly<Database>;
       server: Server;
-      routes: { http: string; health: string };
+      routes: Readonly<{ http: string; health: string }>;
+      logger: ReturnType<Logger['getHandler']>;
     }>,
   ) {
-    const { mode, db, server, routes } = params;
+    const { mode, db, server, routes, logger } = params;
 
     this.#mode = mode;
     this.#db = db;
     this.#server = server;
     this.#routes = routes;
+    this.#logger = logger;
 
     this.#requestContext = {
       db: db,
+      logger: logger,
     };
-
-    this.#attachServerConfigurations();
-    this.#attachServerEventHandlers();
   }
 
   #attachServerConfigurations() {
@@ -165,7 +171,7 @@ export default class HttpServer {
   }
 
   #handleErrorEvent(err: Error) {
-    console.error(err, 'HTTP Server error');
+    this.#logger.error(err, 'HTTP Server error');
 
     // If an event emitter error happened, we shutdown the application.
     // As a result we allow the deployment orchestration tool to attempt to
@@ -178,7 +184,7 @@ export default class HttpServer {
     const results = await Promise.allSettled([this.#db.close()]);
     results.forEach((result) => {
       if (result.status === 'rejected') {
-        console.error(result.reason, 'Error during server termination');
+        this.#logger.error(result.reason, 'Error during server termination');
         exitCode = ERROR_CODES.EXIT_RESTART;
       }
     });
@@ -189,11 +195,14 @@ export default class HttpServer {
     process.exitCode = 0;
   }
 
-  async #attachConfigurationMiddlewares(
-    app: Express,
-    allowedMethods: Set<string>,
-  ) {
-    app.use(Middlewares.checkMethod(allowedMethods), compress());
+  async #attachConfigurationMiddlewares(params: {
+    app: Express;
+    allowedMethods: Readonly<Set<string>>;
+    logMiddleware: ReturnType<Logger['getLogMiddleware']>;
+  }) {
+    const { app, allowedMethods, logMiddleware } = params;
+
+    app.use(logMiddleware, Middlewares.checkMethod(allowedMethods), compress());
     if (isProductionMode(this.#mode)) {
       app.use(
         (await import('helmet')).default({
@@ -219,26 +228,31 @@ export default class HttpServer {
     }
   }
 
-  #attachRoutesMiddlewares(
-    app: Express,
-    routes: Readonly<{ healthRoute: string; httpRoute: string }>,
-  ) {
-    const { healthRoute, httpRoute } = routes;
-
-    if (isDevelopmentMode(this.#mode)) {
-      this.#attachAPIDocs(app, httpRoute);
-    }
-
+  #attachRoutesMiddlewares(app: Express, httpRoute: string) {
     app
-      .use(healthRoute, Middlewares.healthCheck(this.#healthCheck.bind(this)))
-      // The middlewares are executed in order (as set by express) and there's
-      // no point to log every health check or every call to the api-docs
-      // (development only), so the log middleware comes after the health
-      // check route
-      .use(Middlewares.isAuthenticated(this.#werxUtils))
       .use(httpRoute, Middlewares.attachContext(this.#requestContext))
       // Non-existent route & error handler
       .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
+  }
+
+  #attachHealthChecks(app: Express, healthCheckRoute: string) {
+    app
+      .head(healthCheckRoute, Middlewares.healthCheck({ type: 'liveness' }))
+      .get(healthCheckRoute, Middlewares.healthCheck({ type: 'liveness' }))
+      .head(
+        healthCheckRoute,
+        Middlewares.healthCheck({
+          type: 'readiness',
+          isReadyCallback: this.#healthCheck.bind(this),
+        }),
+      )
+      .get(
+        healthCheckRoute,
+        Middlewares.healthCheck({
+          type: 'readiness',
+          isReadyCallback: this.#healthCheck.bind(this),
+        }),
+      );
   }
 
   async #healthCheck() {
@@ -246,10 +260,14 @@ export default class HttpServer {
     try {
       await this.#db.isReady();
     } catch (err) {
-      console.error(err, 'Database error');
+      this.#logger.error(err, 'Database error');
       notReadyMsg += '\nDatabase is unavailable';
     }
 
     return notReadyMsg;
   }
 }
+
+/**********************************************************************************/
+
+export default HttpServer;

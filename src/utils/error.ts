@@ -2,7 +2,7 @@ import { inspect } from 'node:util';
 
 /**********************************************************************************/
 
-export default class MRSError extends Error {
+class MRSError extends Error {
   readonly #message;
   readonly #statusCode;
 
@@ -29,7 +29,7 @@ export default class MRSError extends Error {
     return logMessage;
   }
 
-  public getClientErrorObject() {
+  public getClientError() {
     return {
       code: this.#statusCode,
       message: this.#message,
@@ -51,3 +51,7 @@ export default class MRSError extends Error {
     return `${header}${stackTrace}${nestedCause}`;
   }
 }
+
+/**********************************************************************************/
+
+export default MRSError;

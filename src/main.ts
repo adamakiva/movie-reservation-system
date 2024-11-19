@@ -15,9 +15,23 @@ EventEmitter.captureRejections = true;
 /**********************************************************************************/
 
 import { HttpServer } from './server/index.js';
-import { EnvironmentManager, ERROR_CODES, VALIDATION } from './utils/index.js';
+import {
+  EnvironmentManager,
+  ERROR_CODES,
+  Logger,
+  VALIDATION,
+} from './utils/index.js';
 
 /**********************************************************************************/
+
+function createLogger() {
+  const logger = new Logger();
+
+  return {
+    logger: logger.getHandler(),
+    logMiddleware: logger.getLogMiddleware(),
+  };
+}
 
 function signalHandler(server: HttpServer) {
   return () => {
@@ -27,12 +41,15 @@ function signalHandler(server: HttpServer) {
   };
 }
 
-function globalErrorHandler(
-  server: HttpServer,
-  reason: 'exception' | 'rejection',
-) {
+function globalErrorHandler(params: {
+  server: HttpServer;
+  reason: 'exception' | 'rejection';
+  logger: ReturnType<Logger['getHandler']>;
+}) {
+  const { server, reason, logger } = params;
+
   return (err: unknown) => {
-    console.error(err, `Unhandled ${reason}`);
+    logger.error(err, `Unhandled ${reason}`);
 
     server.close();
 
@@ -41,14 +58,23 @@ function globalErrorHandler(
   };
 }
 
-function attachProcessHandlers(server: HttpServer) {
+function attachProcessHandlers(
+  server: HttpServer,
+  logger: ReturnType<Logger['getHandler']>,
+) {
   process
-    .on('warning', console.warn)
+    .on('warning', logger.warn)
     .once('SIGINT', signalHandler(server))
     .once('SIGQUIT', signalHandler(server))
     .once('SIGTERM', signalHandler(server))
-    .once('unhandledRejection', globalErrorHandler(server, 'rejection'))
-    .once('uncaughtException', globalErrorHandler(server, 'exception'));
+    .once(
+      'unhandledRejection',
+      globalErrorHandler({ server, reason: 'rejection', logger }),
+    )
+    .once(
+      'uncaughtException',
+      globalErrorHandler({ server, reason: 'exception', logger }),
+    );
 }
 
 /**********************************************************************************/
@@ -61,8 +87,10 @@ async function startServer() {
     dbUrl,
   } = environmentManager.getEnvVariables();
 
+  const { logger, logMiddleware } = createLogger();
+
   const server = await HttpServer.create({
-    mode: mode,
+    mode,
     dbParams: {
       url: dbUrl,
       options: {
@@ -89,11 +117,13 @@ async function startServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
+    logMiddleware,
+    logger,
   });
 
   await server.listen(serverEnv.port);
 
-  attachProcessHandlers(server);
+  attachProcessHandlers(server, logger);
 }
 
 /**********************************************************************************/
