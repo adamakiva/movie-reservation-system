@@ -26,7 +26,7 @@ check_prerequisites() {
 
 install_dependencies() {
     printf "\nInstalling dependencies...\n"
-    if ! npm install; then
+    if ! npm install -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
     fi

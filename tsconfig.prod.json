@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./build",
     "removeComments": true,
-    "inlineSourceMap": false
+    "noEmitOnError": true
   },
   // Does not support glob pattern
   "include": ["src/**/*.ts"]
