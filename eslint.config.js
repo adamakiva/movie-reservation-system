@@ -8,6 +8,7 @@ import tslint from 'typescript-eslint';
 export default tslint.config({
   plugins: {
     '@typescript-eslint': tslint.plugin,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     '@security': security,
   },
   extends: [prettier],
@@ -84,33 +85,33 @@ export default tslint.config({
       'error',
       { args: 'after-used', ignoreRestSiblings: true },
     ],
-    'no-use-before-define': 'error',
+    // 'no-use-before-define': 'error', // Uncomment if using javascript
     'no-useless-assignment': 'error',
     'no-useless-backreference': 'error',
     'require-atomic-updates': 'error',
     'use-isnan': 'error',
     'valid-typeof': 'error',
     'arrow-body-style': ['error', 'always'],
-    'class-methods-use-this': 'error',
+    // 'class-methods-use-this': 'error', // Uncomment if using javascript
     complexity: 'error',
     'consistent-return': 'error',
     curly: 'error',
     'default-case-last': 'error',
-    'default-param-last': 'error',
-    'dot-notation': 'error',
+    // 'default-param-last': 'error', // Uncomment if using javascript
+    // 'dot-notation': 'error', // Uncomment if using javascript
     eqeqeq: 'error',
     'guard-for-in': 'error',
-    'init-declarations': ['error', 'always'],
+    // 'init-declarations': ['error', 'always'], // Uncomment if using javascript
     'max-classes-per-file': 'error',
     'max-depth': ['error', 4],
-    'max-params': ['error', 4],
-    'no-array-constructor': 'error',
+    // 'max-params': ['error', { max: 4 }], // Uncomment if using javascript
+    // 'no-array-constructor': 'error', // Uncomment if using javascript
     'no-caller': 'error',
     'no-case-declarations': 'error',
     'no-delete-var': 'error',
     'no-else-return': 'error',
     'no-empty': 'error',
-    'no-empty-function': 'error',
+    // 'no-empty-function': 'error', // Uncomment if using javascript
     'no-empty-static-block': 'error',
     'no-eq-null': 'error',
     'no-eval': 'error',
@@ -120,14 +121,14 @@ export default tslint.config({
     'no-extra-label': 'error',
     'no-global-assign': 'error',
     'no-implicit-coercion': ['error', { allow: ['!!'] }],
-    'no-implied-eval': 'error',
+    // 'no-implied-eval': 'error', // Uncomment if using javascript
     'no-invalid-this': 'error',
     'no-iterator': 'error',
     'no-label-var': 'error',
     'no-labels': 'error',
     'no-lone-blocks': 'error',
     'no-lonely-if': 'error',
-    'no-loop-func': 'error',
+    // 'no-loop-func': 'error', // Uncomment if using javascript
     'no-multi-assign': 'error',
     'no-nested-ternary': 'error',
     'no-new-wrappers': 'error',
@@ -138,28 +139,28 @@ export default tslint.config({
     'no-regex-spaces': 'error',
     'no-return-assign': ['error', 'always'],
     'no-sequences': 'error',
-    'no-throw-literal': 'error',
+    // 'no-throw-literal': 'error', // Uncomment if using javascript
     'no-unneeded-ternary': 'error',
-    'no-unused-expressions': 'error',
+    // 'no-unused-expressions': 'error', // Uncomment if using javascript
     'no-useless-call': 'error',
     'no-useless-catch': 'error',
     'no-useless-computed-key': 'error',
     'no-useless-concat': 'error',
-    'no-useless-constructor': 'error',
+    // 'no-useless-constructor': 'error', // Uncomment if using javascript
     'no-useless-escape': 'error',
     'no-useless-rename': 'error',
     'no-useless-return': 'error',
     'no-void': 'error',
     'no-with': 'error',
     'prefer-const': 'error',
-    'prefer-destructuring': ['error', { array: false, object: true }],
+    // 'prefer-destructuring': ['error', { array: false, object: true }], // Uncomment if using javascript
     'prefer-object-spread': 'error',
-    'prefer-promise-reject-errors': 'error',
+    // 'prefer-promise-reject-errors': 'error', // Uncomment if using javascript
     'prefer-template': 'error',
-    'require-await': 'error',
+    // 'require-await': 'error', // Uncomment if using javascript
     'require-yield': 'error',
 
-    // Typescript
+    // Typescript (Remove this section if you are using JavaScript)
     '@typescript-eslint/adjacent-overload-signatures': 'error',
     '@typescript-eslint/array-type': ['error', { default: 'array' }],
     '@typescript-eslint/await-thenable': 'error',
@@ -199,7 +200,7 @@ export default tslint.config({
     '@typescript-eslint/init-declarations': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'max-params': 'off',
-    '@typescript-eslint/max-params': ['error', 4],
+    '@typescript-eslint/max-params': ['error', { max: 4 }],
     '@typescript-eslint/method-signature-style': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-array-constructor': 'off',
@@ -237,7 +238,6 @@ export default tslint.config({
     '@typescript-eslint/no-namespace': 'error',
     '@typescript-eslint/no-non-null-asserted-nullish-coalescing': 'error',
     '@typescript-eslint/no-non-null-asserted-optional-chain': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'error',
     '@typescript-eslint/no-redundant-type-constituents': 'error',
     '@typescript-eslint/no-require-imports': 'error',
     '@typescript-eslint/no-this-alias': 'error',
@@ -289,7 +289,10 @@ export default tslint.config({
     '@typescript-eslint/prefer-optional-chain': 'error',
     '@typescript-eslint/prefer-promise-reject-errors': 'error',
     '@typescript-eslint/prefer-readonly': 'error',
-    '@typescript-eslint/prefer-readonly-parameter-types': 'error',
+    '@typescript-eslint/prefer-readonly-parameter-types': [
+      'error',
+      { ignoreInferredTypes: true },
+    ],
     '@typescript-eslint/prefer-reduce-type-parameter': 'error',
     '@typescript-eslint/prefer-return-this-type': 'error',
     '@typescript-eslint/require-array-sort-compare': 'error',

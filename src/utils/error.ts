@@ -18,7 +18,7 @@ export default class MRSError extends Error {
 
   public [inspect.custom]() {
     const stackTrace = this.stack
-      ? `\nStack trace:\n${this.stack!.split('\n').slice(1).join('\n')}`
+      ? `\nStack trace:\n${this.stack.split('\n').slice(1).join('\n')}`
       : '';
 
     let logMessage = `${this.#statusCode}: ${this.#message}${stackTrace}`;
@@ -36,7 +36,7 @@ export default class MRSError extends Error {
     };
   }
 
-  static #formatError(err: Error) {
+  static #formatError(err: Readonly<Error>) {
     const header = `${err.name} - ${err.message}`;
     const stackTrace = err.stack
       ? `\nStack trace:\n${err.stack.split('\n').slice(1).join('\n')}`

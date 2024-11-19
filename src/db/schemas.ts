@@ -32,6 +32,18 @@ const timestamps = {
 
 /**********************************************************************************/
 
+const roleModel = pgTable(
+  'role',
+  {
+    id: uuid('id').primaryKey().defaultRandom().notNull(),
+    name: varchar('name').notNull(),
+    ...timestamps,
+  },
+  (table) => {
+    return [{ nameIndex: index().using('btree', table.name) }];
+  },
+);
+
 const userModel = pgTable(
   'user',
   {
@@ -57,18 +69,6 @@ const userModel = pgTable(
         roleIndex: index().using('btree', table.roleId),
       },
     ];
-  },
-);
-
-const roleModel = pgTable(
-  'role',
-  {
-    id: uuid('id').primaryKey().defaultRandom().notNull(),
-    name: varchar('name').notNull(),
-    ...timestamps,
-  },
-  (table) => {
-    return [{ nameIndex: index().using('btree', table.name) }];
   },
 );
 

@@ -19,6 +19,5 @@
     "vue",
     "markdown"
   ],
-  "eslint.useFlatConfig": true,
-  "eslint.workingDirectories": [{ "pattern": "./" }]
+  "eslint.useFlatConfig": true
 }

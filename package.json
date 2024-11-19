@@ -7,13 +7,13 @@
   "scripts": {
     "test": "NODE_ENV=test node --test",
     "test-only": "NODE_ENV=test --test --test-only",
-    "lint": "tsc --project ./tsconfig.json --noEmit && eslint {src,__tests__}/**/*.ts",
+    "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
     "generate-migrations": "drizzle-kit generate --name=init-db --config=./src/db/migrations/drizzle.config.ts",
     "commit-migrations": "tsx ./src/db/migrations/index.ts",
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
-    "check-code-deps": "depcheck --ignores=@swc-node/register,@swc/core,prettier",
+    "check-code-deps": "depcheck --ignores=prettier",
     "check-cir-deps": "dpdm --no-tree --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
     "check-licenses": "nlf -d -r 1"
   },
@@ -33,8 +33,6 @@
     "zod": "~3.23.8"
   },
   "devDependencies": {
-    "@swc-node/register": "~1.10.9",
-    "@swc/core": "~1.9.2",
     "@types/compression": "~1.7.5",
     "@types/cors": "~2.8.17",
     "@types/express": "~5.0.0",
@@ -52,7 +50,7 @@
     "prettier": "~3.3.3",
     "tsx": "~4.19.2",
     "typescript": "~5.6.3",
-    "typescript-eslint": "~8.14.0"
+    "typescript-eslint": "~8.15.0"
   },
   "author": "Adam Akiva",
   "license": "MIT",

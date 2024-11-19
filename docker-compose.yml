@@ -46,7 +46,6 @@ services:
       - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
       # Node flags
       - NODE_ENV=development
-      - NODE_NO_WARNINGS=0
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
       - ./:/home/node/mrs:rw

@@ -39,6 +39,8 @@ async function migration(dbUrl: string) {
  * However in this case, all errors are handled by shutting down the process and
  * are not propagated down the caller chain.
  */
+//@ts-expect-error On purpose, see the above comment
+// eslint-disable-next-line consistent-return
 function run() {
   const dbUrls = new Map([['DB_URL', process.env.DB_URL]]);
   if (process.env.NODE_ENV !== 'production') {
@@ -57,7 +59,7 @@ function run() {
       dbUrls.values().map((dbUrl) => {
         return migration(dbUrl!);
       }),
-    ).catch((err) => {
+    ).catch((err: unknown) => {
       console.error('Migration failed:', err);
       process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
@@ -65,10 +67,10 @@ function run() {
 
   console.error(errMessages.join('\n'));
   process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
-
-  return;
 }
 
 /**********************************************************************************/
 
+// On purpose, see this function documentation
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 run();

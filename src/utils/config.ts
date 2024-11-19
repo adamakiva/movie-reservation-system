@@ -28,14 +28,15 @@ type EnvironmentVariables = {
 /**********************************************************************************/
 
 class EnvironmentManager {
+  readonly #mode;
   readonly #environmentVariables;
 
-  public constructor() {
-    const mode = this.#checkRuntimeMode(process.env.NODE_ENV);
-    this.#checkForMissingEnvironmentVariables(mode);
+  public constructor(mode?: string) {
+    this.#mode = EnvironmentManager.#checkRuntimeMode(mode);
+    this.#checkForMissingEnvironmentVariables();
 
     this.#environmentVariables = {
-      mode: mode,
+      mode: this.#mode,
       server: {
         port: process.env.SERVER_PORT!,
         baseUrl: process.env.SERVER_BASE_URL!,
@@ -46,10 +47,6 @@ class EnvironmentManager {
       },
       dbUrl: process.env.DB_URL!,
     } as const satisfies EnvironmentVariables;
-
-    // The default stack trace limit is 10 calls. Increasing it to a number which
-    // we'll never have to think about it again
-    Error.stackTraceLimit = 256;
 
     // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
     globalAgent.maxSockets = 128;
@@ -65,7 +62,7 @@ class EnvironmentManager {
 
   /********************************************************************************/
 
-  #checkRuntimeMode(mode?: string) {
+  static #checkRuntimeMode(mode?: string) {
     if (isDevelopmentMode(mode) || isTestMode(mode) || isProductionMode(mode)) {
       return mode as Mode;
     }
@@ -75,12 +72,12 @@ class EnvironmentManager {
         ' Unresolvable, exiting...',
     );
 
-    process.exit(ERROR_CODES.EXIT_NO_RESTART);
+    return process.exit(ERROR_CODES.EXIT_NO_RESTART);
   }
 
-  #checkForMissingEnvironmentVariables(mode: Mode) {
-    let errorMessages: string[] = [];
-    this.#mapEnvironmentVariables(mode).forEach((key) => {
+  #checkForMissingEnvironmentVariables() {
+    const errorMessages: string[] = [];
+    this.#mapEnvironmentVariables().forEach((key) => {
       if (!process.env[key]) {
         errorMessages.push(`* Missing ${key} environment variable`);
       }
@@ -92,7 +89,7 @@ class EnvironmentManager {
     }
   }
 
-  #mapEnvironmentVariables(mode: Mode) {
+  #mapEnvironmentVariables() {
     const environmentVariables = [
       'SERVER_PORT',
       'SERVER_BASE_URL',
@@ -102,7 +99,7 @@ class EnvironmentManager {
       'ALLOWED_ORIGINS',
       'DB_URL',
     ];
-    if (mode !== 'production') {
+    if (this.#mode !== 'production') {
       environmentVariables.push('DB_TEST_URL', 'SERVER_DEBUG_PORT');
     }
 
