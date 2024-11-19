@@ -1,4 +1,10 @@
-const VALIDATION = {} as const;
+const VALIDATION = {
+  POSTGRES: {
+    POOL_MAX_CONNECTIONS: 10,
+    STATEMENT_TIMEOUT: 30_000,
+    IDLE_IN_TRANSACTION_SESSION_TIMEOUT: 60_000,
+  },
+} as const;
 
 /**********************************************************************************/
 
