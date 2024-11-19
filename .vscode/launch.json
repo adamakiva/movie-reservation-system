@@ -13,7 +13,8 @@
       "address": "localhost",
       "remoteRoot": "/home/node/mrs",
       "localRoot": "${workspaceFolder}",
-      "sourceMaps": true
+      "sourceMaps": true,
+      "smartStep": true
     }
   ]
 }

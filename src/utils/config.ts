@@ -110,3 +110,4 @@ class EnvironmentManager {
 /**********************************************************************************/
 
 export default EnvironmentManager;
+export type { Mode };

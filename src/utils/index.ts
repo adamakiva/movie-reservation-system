@@ -1,8 +1,8 @@
 import type { Response as ExpressResponse } from 'express';
 
-import Database from '../db/index.js';
+import type { Database } from '../db/index.js';
 
-import EnvironmentManager from './config.js';
+import EnvironmentManager, { type Mode } from './config.js';
 import { ERROR_CODES, HTTP_STATUS_CODES, VALIDATION } from './constants.js';
 import MRSError from './error.js';
 import {
@@ -11,11 +11,11 @@ import {
   isTestMode,
   strcasecmp,
 } from './functions.js';
-import Logger from './logger.js';
+import Logger, { type LogMiddleware, type LoggerHandler } from './logger.js';
 
 /**********************************************************************************/
 
-type ResponseWithoutCtx = ExpressResponse<unknown, {}>;
+type ResponseWithoutCtx = ExpressResponse<unknown, object>;
 type ResponseWithCtx = ExpressResponse<unknown, { context: RequestContext }>;
 
 type RequestContext = {
@@ -23,19 +23,30 @@ type RequestContext = {
   logger: ReturnType<Logger['getHandler']>;
 };
 
+// Omitting client to allow this type to refer to transaction as well as the base
+// database handler
+type DatabaseHandler = Omit<
+  ReturnType<RequestContext['db']['getHandler']>,
+  '$client'
+>;
+
 /**********************************************************************************/
 
 export {
-  EnvironmentManager,
   ERROR_CODES,
+  EnvironmentManager,
   HTTP_STATUS_CODES,
+  Logger,
+  MRSError,
+  VALIDATION,
   isDevelopmentMode,
   isProductionMode,
   isTestMode,
-  Logger,
-  MRSError,
   strcasecmp,
-  VALIDATION,
+  type DatabaseHandler,
+  type LogMiddleware,
+  type LoggerHandler,
+  type Mode,
   type RequestContext,
   type ResponseWithCtx,
   type ResponseWithoutCtx,

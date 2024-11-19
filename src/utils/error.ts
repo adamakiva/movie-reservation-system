@@ -36,7 +36,7 @@ class MRSError extends Error {
     };
   }
 
-  static #formatError(err: Readonly<Error>) {
+  static #formatError(err: Error) {
     const header = `${err.name} - ${err.message}`;
     const stackTrace = err.stack
       ? `\nStack trace:\n${err.stack.split('\n').slice(1).join('\n')}`

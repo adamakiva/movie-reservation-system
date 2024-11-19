@@ -9,8 +9,9 @@ import {
   ERROR_CODES,
   isProductionMode,
   isTestMode,
-  Logger,
-  type EnvironmentManager,
+  type LoggerHandler,
+  type LogMiddleware,
+  type Mode,
 } from '../utils/index.js';
 
 import * as Middlewares from './middleware.js';
@@ -27,29 +28,32 @@ class HttpServer {
 
   /********************************************************************************/
 
-  public static async create(
-    params: Readonly<{
-      mode: ReturnType<EnvironmentManager['getEnvVariables']>['mode'];
-      dbParams: Readonly<{
-        url: string;
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-        options?: pg.Options<{}>;
-        healthCheckQuery: string;
-      }>;
-      allowedMethods: Readonly<Set<string>>;
-      routes: Readonly<{ http: string; health: string }>;
-      logMiddleware: ReturnType<Logger['getLogMiddleware']>;
-      logger: ReturnType<Logger['getHandler']>;
-    }>,
-  ) {
+  public static async create(params: {
+    mode: Mode;
+    dbParams: {
+      url: string;
+      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+      options?: pg.Options<{}>;
+      healthCheckQuery: string;
+    };
+    allowedMethods: Set<string>;
+    routes: { http: string; health: string };
+    logMiddleware: LogMiddleware;
+    logger: LoggerHandler;
+  }) {
     const { mode, dbParams, allowedMethods, routes, logMiddleware, logger } =
       params;
 
-    const db = new Database(dbParams);
+    const db = new Database({ ...dbParams, logger });
 
     // Disable 'x-powered-by' should be pretty clear. The Reason for disabling etag
     // can be understood by this comprehensive answer: https://stackoverflow.com/a/67929691
-    const app = express().disable('etag').disable('x-powered-by');
+    // TLDR: Etag ignores response headers for matching SHA so new auth token
+    // will not work
+    const app = express().disable('x-powered-by').disable('etag');
+    // Express type chain include extending IRouter which returns void | Promise<void>,
+    // however, this is irrelevant for this use case
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const server = createServer(app);
 
     const self = new HttpServer({
@@ -68,16 +72,12 @@ class HttpServer {
       logMiddleware,
     });
     self.#attachHealthChecks(app, routes.health);
-    self.#attachRoutesMiddlewares(app, routes.health);
+    self.#attachRoutesMiddlewares(app, routes.http);
 
     return self;
   }
 
-  public async listen(port?: number | string) {
-    if (port) {
-      port = typeof port === 'string' ? Number(port) : port;
-    }
-
+  public async listen(port?: number) {
     return await new Promise<number>((resolve) => {
       this.#server.once('listening', () => {
         if (!isTestMode(this.#mode)) {
@@ -111,15 +111,13 @@ class HttpServer {
 
   // Prevent creating the class via the constructor because it needs to be an
   // async creation
-  private constructor(
-    params: Readonly<{
-      mode: ReturnType<EnvironmentManager['getEnvVariables']>['mode'];
-      db: Readonly<Database>;
-      server: Server;
-      routes: Readonly<{ http: string; health: string }>;
-      logger: ReturnType<Logger['getHandler']>;
-    }>,
-  ) {
+  private constructor(params: {
+    mode: Mode;
+    db: Database;
+    server: Server;
+    routes: { http: string; health: string };
+    logger: LoggerHandler;
+  }) {
     const { mode, db, server, routes, logger } = params;
 
     this.#mode = mode;
@@ -167,6 +165,8 @@ class HttpServer {
     // the application
     this.#server
       .once('error', this.#handleErrorEvent.bind(this))
+      // On purpose since the process is shutting-down anyhow
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       .once('close', this.#handleCloseEvent.bind(this));
   }
 
@@ -197,8 +197,8 @@ class HttpServer {
 
   async #attachConfigurationMiddlewares(params: {
     app: Express;
-    allowedMethods: Readonly<Set<string>>;
-    logMiddleware: ReturnType<Logger['getLogMiddleware']>;
+    allowedMethods: Set<string>;
+    logMiddleware: LogMiddleware;
   }) {
     const { app, allowedMethods, logMiddleware } = params;
 

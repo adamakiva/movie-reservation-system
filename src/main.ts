@@ -20,6 +20,7 @@ import {
   ERROR_CODES,
   Logger,
   VALIDATION,
+  type LoggerHandler,
 } from './utils/index.js';
 
 /**********************************************************************************/
@@ -44,7 +45,7 @@ function signalHandler(server: HttpServer) {
 function globalErrorHandler(params: {
   server: HttpServer;
   reason: 'exception' | 'rejection';
-  logger: ReturnType<Logger['getHandler']>;
+  logger: LoggerHandler;
 }) {
   const { server, reason, logger } = params;
 
@@ -58,10 +59,7 @@ function globalErrorHandler(params: {
   };
 }
 
-function attachProcessHandlers(
-  server: HttpServer,
-  logger: ReturnType<Logger['getHandler']>,
-) {
+function attachProcessHandlers(server: HttpServer, logger: LoggerHandler) {
   process
     .on('warning', logger.warn)
     .once('SIGINT', signalHandler(server))
@@ -80,7 +78,7 @@ function attachProcessHandlers(
 /**********************************************************************************/
 
 async function startServer() {
-  const environmentManager = new EnvironmentManager();
+  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
   const {
     mode,
     server: serverEnv,
@@ -121,7 +119,7 @@ async function startServer() {
     logger,
   });
 
-  await server.listen(serverEnv.port);
+  await server.listen(parseInt(serverEnv.port));
 
   attachProcessHandlers(server, logger);
 }

@@ -2,6 +2,9 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**********************************************************************************/
 
+type LoggerHandler = ReturnType<Logger['getHandler']>;
+type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
+
 class Logger {
   readonly #handler;
 
@@ -17,39 +20,44 @@ class Logger {
     };
   }
 
-  getHandler() {
+  public getHandler() {
     return this.#handler;
   }
 
-  getLogMiddleware() {
+  public getLogMiddleware() {
     return this.#logMiddleware.bind(this);
   }
 
   /********************************************************************************/
 
   #debug(...args: unknown[]) {
-    console.debug(args);
+    console.debug(...args);
   }
 
   #info(...args: unknown[]) {
-    console.info(args);
+    console.info(...args);
   }
 
   #log(...args: unknown[]) {
-    console.log(args);
+    console.log(...args);
   }
 
   #warn(...args: unknown[]) {
-    console.warn(args);
+    console.warn(...args);
   }
 
   #error(...args: unknown[]) {
-    console.error(args);
+    console.error(...args);
   }
 
-  #logMiddleware(req: Request, res: Response, next: NextFunction) {}
+  #logMiddleware(_req: Request, _res: Response, next: NextFunction) {
+    this.#log('PH');
+
+    next();
+  }
 }
 
 /**********************************************************************************/
 
 export default Logger;
+export type { LoggerHandler, LogMiddleware };
