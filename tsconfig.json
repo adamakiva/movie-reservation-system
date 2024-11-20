@@ -10,9 +10,6 @@
     "inlineSources": true,
     "removeComments": false,
     "noEmitOnError": true,
-    // JavaScript support
-    "allowJs": true,
-    "checkJs": true,
     // Type checking
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -46,5 +43,5 @@
     "skipLibCheck": true
   },
   // Does not support glob pattern
-  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
+  "include": ["src/**/*.ts", "__tests__/**/*.ts", "eslint.config.js"]
 }
