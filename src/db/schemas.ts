@@ -151,7 +151,7 @@ const showtimeModel = pgTable(
   },
 );
 
-const showtimeSummary = pgTable('showtime_summary', {
+const showtimeSummaryModel = pgTable('showtime_summary', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
   at: timestamp('at', {
     mode: 'string',
@@ -174,6 +174,6 @@ export {
   movieModel,
   roleModel,
   showtimeModel,
-  showtimeSummary,
+  showtimeSummaryModel,
   userModel,
 };

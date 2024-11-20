@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import prettier from 'eslint-config-prettier';
 import security from 'eslint-plugin-security';
 import globals from 'globals';
@@ -8,7 +10,6 @@ import tslint from 'typescript-eslint';
 export default tslint.config({
   plugins: {
     '@typescript-eslint': tslint.plugin,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     '@security': security,
   },
   extends: [prettier],
@@ -27,7 +28,7 @@ export default tslint.config({
     },
   },
   linterOptions: {
-    reportUnusedDisableDirectives: 2,
+    reportUnusedDisableDirectives: 'error',
   },
   rules: {
     // JavaScript
@@ -92,7 +93,7 @@ export default tslint.config({
     'use-isnan': 'error',
     'valid-typeof': 'error',
     'arrow-body-style': ['error', 'always'],
-    // 'class-methods-use-this': 'error', // Uncomment if using javascript
+    // 'class-methods-use-this': 'warn', // Uncomment if using javascript
     complexity: 'error',
     'consistent-return': 'error',
     curly: 'error',
@@ -134,6 +135,7 @@ export default tslint.config({
     'no-new-wrappers': 'error',
     'no-nonoctal-decimal-escape': 'error',
     'no-object-constructor': 'error',
+    'no-param-reassign': 'error',
     'no-proto': 'error',
     'no-redeclare': 'error',
     'no-regex-spaces': 'error',
@@ -168,7 +170,7 @@ export default tslint.config({
     '@typescript-eslint/ban-tslint-comment': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'class-methods-use-this': 'off',
-    '@typescript-eslint/class-methods-use-this': 'error',
+    '@typescript-eslint/class-methods-use-this': 'warn',
     '@typescript-eslint/consistent-generic-constructors': 'error',
     '@typescript-eslint/consistent-indexed-object-style': [
       'error',
@@ -193,7 +195,7 @@ export default tslint.config({
     '@typescript-eslint/default-param-last': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'dot-notation': 'off',
-    '@typescript-eslint/dot-notation': 'error',
+    // '@typescript-eslint/dot-notation': 'error', // TODO Uncomment when it works (>8.15.0)
     '@typescript-eslint/explicit-member-accessibility': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'init-declarations': 'off',
@@ -215,7 +217,7 @@ export default tslint.config({
     '@typescript-eslint/no-dynamic-delete': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-empty-function': 'off',
-    '@typescript-eslint/no-empty-function': 'error',
+    // '@typescript-eslint/no-empty-function': 'error', // TODO Uncomment when it works (>8.15.0)
     '@typescript-eslint/no-empty-object-type': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-extra-non-null-assertion': 'error',
@@ -258,7 +260,7 @@ export default tslint.config({
     '@typescript-eslint/no-unsafe-unary-minus': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-unused-expressions': 'off',
-    '@typescript-eslint/no-unused-expressions': 'error',
+    // '@typescript-eslint/no-unused-expressions': 'error', // TODO Uncomment when it works (>8.15.0)
     // Note: you must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': 'error',
@@ -289,10 +291,6 @@ export default tslint.config({
     '@typescript-eslint/prefer-optional-chain': 'error',
     '@typescript-eslint/prefer-promise-reject-errors': 'error',
     '@typescript-eslint/prefer-readonly': 'error',
-    '@typescript-eslint/prefer-readonly-parameter-types': [
-      'error',
-      { ignoreInferredTypes: true },
-    ],
     '@typescript-eslint/prefer-reduce-type-parameter': 'error',
     '@typescript-eslint/prefer-return-this-type': 'error',
     '@typescript-eslint/require-array-sort-compare': 'error',

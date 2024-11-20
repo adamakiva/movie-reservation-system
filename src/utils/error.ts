@@ -2,7 +2,7 @@ import { inspect } from 'node:util';
 
 /**********************************************************************************/
 
-export default class MRSError extends Error {
+class MRSError extends Error {
   readonly #message;
   readonly #statusCode;
 
@@ -29,14 +29,14 @@ export default class MRSError extends Error {
     return logMessage;
   }
 
-  public getClientErrorObject() {
+  public getClientError() {
     return {
       code: this.#statusCode,
       message: this.#message,
     };
   }
 
-  static #formatError(err: Readonly<Error>) {
+  static #formatError(err: Error) {
     const header = `${err.name} - ${err.message}`;
     const stackTrace = err.stack
       ? `\nStack trace:\n${err.stack.split('\n').slice(1).join('\n')}`
@@ -51,3 +51,7 @@ export default class MRSError extends Error {
     return `${header}${stackTrace}${nestedCause}`;
   }
 }
+
+/**********************************************************************************/
+
+export default MRSError;
