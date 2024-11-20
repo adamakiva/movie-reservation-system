@@ -8,9 +8,18 @@
  * When the server runs
  */
 import { EventEmitter } from 'node:events';
+import { globalAgent } from 'node:http';
+import { Stream } from 'node:stream';
 
 // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
 EventEmitter.captureRejections = true;
+
+// To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
+globalAgent.maxSockets = 128;
+globalAgent.maxTotalSockets = 1024;
+
+// Limit the stream internal buffer to 256kb (default is 64kb)
+Stream.setDefaultHighWaterMark(false, 262_144);
 
 /**********************************************************************************/
 
@@ -22,6 +31,55 @@ import {
   VALIDATION,
   type LoggerHandler,
 } from './utils/index.js';
+
+/**********************************************************************************/
+
+async function startServer() {
+  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
+  const {
+    mode,
+    server: serverEnv,
+    dbUrl,
+  } = environmentManager.getEnvVariables();
+
+  const { logger, logMiddleware } = createLogger();
+
+  const server = await HttpServer.create({
+    mode,
+    dbParams: {
+      url: dbUrl,
+      options: {
+        max: VALIDATION.POSTGRES.POOL_MAX_CONNECTIONS,
+        connection: {
+          application_name: 'movie_reservation_system_pg',
+          statement_timeout: VALIDATION.POSTGRES.STATEMENT_TIMEOUT,
+          idle_in_transaction_session_timeout:
+            VALIDATION.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
+        },
+      },
+      healthCheckQuery: 'SELECT NOW()',
+    },
+    allowedMethods: new Set([
+      'HEAD',
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ]),
+    routes: {
+      http: `/${serverEnv.httpRoute}`,
+      health: `/${serverEnv.healthCheckRoute}`,
+    },
+    logMiddleware,
+    logger,
+  });
+
+  await server.listen(parseInt(serverEnv.port));
+
+  attachProcessHandlers(server, logger);
+}
 
 /**********************************************************************************/
 
@@ -73,55 +131,6 @@ function attachProcessHandlers(server: HttpServer, logger: LoggerHandler) {
       'uncaughtException',
       globalErrorHandler({ server, reason: 'exception', logger }),
     );
-}
-
-/**********************************************************************************/
-
-async function startServer() {
-  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
-  const {
-    mode,
-    server: serverEnv,
-    dbUrl,
-  } = environmentManager.getEnvVariables();
-
-  const { logger, logMiddleware } = createLogger();
-
-  const server = await HttpServer.create({
-    mode,
-    dbParams: {
-      url: dbUrl,
-      options: {
-        max: VALIDATION.POSTGRES.POOL_MAX_CONNECTIONS,
-        connection: {
-          application_name: 'movie_reservation_system_pg',
-          statement_timeout: VALIDATION.POSTGRES.STATEMENT_TIMEOUT,
-          idle_in_transaction_session_timeout:
-            VALIDATION.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
-        },
-      },
-      healthCheckQuery: 'SELECT NOW()',
-    },
-    allowedMethods: new Set([
-      'HEAD',
-      'GET',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ]),
-    routes: {
-      http: `/${serverEnv.httpRoute}`,
-      health: `/${serverEnv.healthCheckRoute}`,
-    },
-    logMiddleware,
-    logger,
-  });
-
-  await server.listen(parseInt(serverEnv.port));
-
-  attachProcessHandlers(server, logger);
 }
 
 /**********************************************************************************/

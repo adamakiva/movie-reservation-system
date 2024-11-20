@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import prettier from 'eslint-config-prettier';
 import security from 'eslint-plugin-security';
 import globals from 'globals';
@@ -86,7 +84,7 @@ export default tslint.config({
       'error',
       { args: 'after-used', ignoreRestSiblings: true },
     ],
-    // 'no-use-before-define': 'error', // Uncomment if using javascript
+    // 'no-use-before-define': ['error', { functions: false }], // Uncomment if using javascript
     'no-useless-assignment': 'error',
     'no-useless-backreference': 'error',
     'require-atomic-updates': 'error',
@@ -263,7 +261,7 @@ export default tslint.config({
     // '@typescript-eslint/no-unused-expressions': 'error', // TODO Uncomment when it works (>8.15.0)
     // Note: you must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
-    '@typescript-eslint/no-use-before-define': 'error',
+    '@typescript-eslint/no-use-before-define': ['error', { functions: false }],
     // Note: you must disable the base rule as it can report incorrect errors
     'no-useless-constructor': 'off',
     '@typescript-eslint/no-useless-constructor': 'error',

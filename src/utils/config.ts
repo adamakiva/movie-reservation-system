@@ -1,6 +1,3 @@
-import { globalAgent } from 'node:http';
-import { Stream } from 'node:stream';
-
 import { ERROR_CODES } from './constants.js';
 import {
   isDevelopmentMode,
@@ -47,13 +44,6 @@ class EnvironmentManager {
       },
       dbUrl: process.env.DB_URL!,
     } as const satisfies EnvironmentVariables;
-
-    // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
-    globalAgent.maxSockets = 128;
-    globalAgent.maxTotalSockets = 1024;
-
-    // Limit the stream internal buffer to 256kb (default is 64kb)
-    Stream.setDefaultHighWaterMark(false, 262_144);
   }
 
   public getEnvVariables() {
