@@ -65,7 +65,11 @@ services:
       - 4335:4335
     healthcheck:
       test:
-        ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health | grep -q '204'"]
+        [
+          "CMD-SHELL",
+          "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/alive | grep -q '204' &&
+          curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/ready | grep -q '204'"
+        ]
       interval: 15s
       timeout: 3s
       retries: 5

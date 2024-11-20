@@ -46,11 +46,7 @@ class HttpServer {
 
     const db = new Database({ ...dbParams, logger });
 
-    // Disable 'x-powered-by' should be pretty clear. The Reason for disabling etag
-    // can be understood by this comprehensive answer: https://stackoverflow.com/a/67929691
-    // TLDR: Etag ignores response headers for matching SHA so new auth token
-    // will not work
-    const app = express().disable('x-powered-by').disable('etag');
+    const app = express().disable('x-powered-by');
     // Express type chain include extending IRouter which returns void | Promise<void>,
     // however, this is irrelevant for this use case
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -66,13 +62,13 @@ class HttpServer {
 
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
-    await self.#attachConfigurationMiddlewares({
+    await self.#attachConfigurationMiddlewares(app, allowedMethods);
+    self.#attachHealthChecks(app, routes.health);
+    self.#attachRoutesMiddlewares({
       app,
-      allowedMethods,
+      httpRoute: routes.http,
       logMiddleware,
     });
-    self.#attachHealthChecks(app, routes.health);
-    self.#attachRoutesMiddlewares(app, routes.http);
 
     return self;
   }
@@ -137,21 +133,22 @@ class HttpServer {
     // socket NOT websockets. Network socket is the underlying layer for http
     // request (in this case). In short, the socket options refer to a "standard"
     // connection from a client
-    this.#server.maxHeadersCount = 50;
-    this.#server.headersTimeout = 20_000; // millis
-    this.#server.requestTimeout = 20_000; // millis
+    this.#server.maxHeadersCount = 64;
+    this.#server.headersTimeout = 8_000; // millis
+    this.#server.requestTimeout = 16_000; // millis
     // Connection close will terminate the tcp socket once the payload was
     // transferred and acknowledged. This setting is for the rare cases where,
     // for some reason, the tcp socket is left alive
-    this.#server.timeout = 600_000; // millis
+    this.#server.timeout = 60_000; // millis
     // See: https://github.com/nodejs/node/issues/40071
     // Leaving this without any limit will cause the server to reuse the
     // connection indefinitely (in theory). As a result, load balancing will
     // have very little effects if more instances of the server are brought up
     // by the deployment orchestration tool.
     // As for a good number, it depends on the application traffic
-    this.#server.maxRequestsPerSocket = 100;
-    this.#server.keepAliveTimeout = 10_000; // millis
+    this.#server.maxRequestsPerSocket = 32;
+    this.#server.keepAliveTimeout = 8_000; // millis
+    this.#server.maxConnections = 8_000;
   }
 
   #attachServerEventHandlers() {
@@ -179,6 +176,8 @@ class HttpServer {
     process.exit(ERROR_CODES.EXIT_RESTART);
   }
 
+  // curl -X GET "localhost:4334/health/ready" -H "Custom-Header: $(head -c 80000 </dev/zero | tr '\0' 'A')"
+
   async #handleCloseEvent() {
     let exitCode = 0;
     const results = await Promise.allSettled([this.#db.close()]);
@@ -195,14 +194,11 @@ class HttpServer {
     process.exitCode = 0;
   }
 
-  async #attachConfigurationMiddlewares(params: {
-    app: Express;
-    allowedMethods: Set<string>;
-    logMiddleware: LogMiddleware;
-  }) {
-    const { app, allowedMethods, logMiddleware } = params;
-
-    app.use(logMiddleware, Middlewares.checkMethod(allowedMethods), compress());
+  async #attachConfigurationMiddlewares(
+    app: Express,
+    allowedMethods: Set<string>,
+  ) {
+    app.use(Middlewares.checkMethod(allowedMethods), compress());
     if (isProductionMode(this.#mode)) {
       app.use(
         (await import('helmet')).default({
@@ -228,31 +224,33 @@ class HttpServer {
     }
   }
 
-  #attachRoutesMiddlewares(app: Express, httpRoute: string) {
+  #attachHealthChecks(app: Express, healthCheckRoute: string) {
+    const aliveRoute = `${healthCheckRoute}/alive`;
+    const aliveParams = { type: 'liveness' } as const;
     app
+      .head(aliveRoute, Middlewares.healthCheck(aliveParams))
+      .get(aliveRoute, Middlewares.healthCheck(aliveParams));
+
+    const readyRoute = `${healthCheckRoute}/ready`;
+    const isReadyCallback = this.#healthCheck.bind(this);
+    const readyParams = { type: 'readiness', isReadyCallback } as const;
+    app
+      .head(readyRoute, Middlewares.healthCheck(readyParams))
+      .get(readyRoute, Middlewares.healthCheck(readyParams));
+  }
+
+  #attachRoutesMiddlewares(params: {
+    app: Express;
+    httpRoute: string;
+    logMiddleware: LogMiddleware;
+  }) {
+    const { app, httpRoute, logMiddleware } = params;
+
+    app
+      .use(logMiddleware)
       .use(httpRoute, Middlewares.attachContext(this.#requestContext))
       // Non-existent route & error handler
       .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
-  }
-
-  #attachHealthChecks(app: Express, healthCheckRoute: string) {
-    app
-      .head(healthCheckRoute, Middlewares.healthCheck({ type: 'liveness' }))
-      .get(healthCheckRoute, Middlewares.healthCheck({ type: 'liveness' }))
-      .head(
-        healthCheckRoute,
-        Middlewares.healthCheck({
-          type: 'readiness',
-          isReadyCallback: this.#healthCheck.bind(this),
-        }),
-      )
-      .get(
-        healthCheckRoute,
-        Middlewares.healthCheck({
-          type: 'readiness',
-          isReadyCallback: this.#healthCheck.bind(this),
-        }),
-      );
   }
 
   async #healthCheck() {
