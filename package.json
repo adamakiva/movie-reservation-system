@@ -5,8 +5,8 @@
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
-    "test": "NODE_ENV=test node --test",
-    "test-only": "NODE_ENV=test --test --test-only",
+    "test": "NODE_ENV=test node --import tsx --test __tests__/**/*.test.ts",
+    "test-only": "NODE_ENV=test --import tsx --test --test-only",
     "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
     "generate-migrations": "drizzle-kit generate --name=init-db --config=./src/db/migrations/drizzle.config.ts",
     "commit-migrations": "tsx ./src/db/migrations/index.ts",
