@@ -1,12 +1,10 @@
-const VALIDATION = {
+const CONFIGURATIONS = {
   POSTGRES: {
     POOL_MAX_CONNECTIONS: 10,
     STATEMENT_TIMEOUT: 30_000,
     IDLE_IN_TRANSACTION_SESSION_TIMEOUT: 60_000,
   },
 } as const;
-
-/**********************************************************************************/
 
 const HTTP_STATUS_CODES = {
   SUCCESS: 200,
@@ -46,4 +44,4 @@ const ERROR_CODES = {
 
 /**********************************************************************************/
 
-export { ERROR_CODES, HTTP_STATUS_CODES, VALIDATION };
+export { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES };

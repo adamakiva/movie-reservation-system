@@ -29,41 +29,6 @@ function checkMethod(allowedMethods: Set<string>) {
   };
 }
 
-function healthCheck(
-  options:
-    | { type: 'liveness' }
-    | {
-        type: 'readiness';
-        isReadyCallback: () => Promise<string>;
-      },
-) {
-  return async (req: Request, res: ResponseWithoutCtx) => {
-    const method = req.method.toUpperCase();
-    if (method !== 'HEAD' && method !== 'GET') {
-      res.status(HTTP_STATUS_CODES.NOT_ALLOWED).end();
-      return;
-    }
-
-    switch (options.type) {
-      case 'liveness': {
-        res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
-        return;
-      }
-      case 'readiness': {
-        const notReadyMsg = await options.isReadyCallback();
-        if (notReadyMsg.length) {
-          res
-            .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
-            .json(`Application is not available: ${notReadyMsg}`);
-          return;
-        }
-
-        res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
-      }
-    }
-  };
-}
-
 function attachContext(requestContext: RequestContext) {
   return (_: Request, res: ResponseWithCtx, next: NextFunction) => {
     res.locals.context = requestContext;
@@ -161,10 +126,4 @@ function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
 
 /**********************************************************************************/
 
-export {
-  attachContext,
-  checkMethod,
-  errorHandler,
-  handleMissedRoutes,
-  healthCheck,
-};
+export { attachContext, checkMethod, errorHandler, handleMissedRoutes };

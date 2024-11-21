@@ -25,10 +25,10 @@ Stream.setDefaultHighWaterMark(false, 262_144);
 
 import { HttpServer } from './server/index.js';
 import {
+  CONFIGURATIONS,
   EnvironmentManager,
   ERROR_CODES,
   Logger,
-  VALIDATION,
   type LoggerHandler,
 } from './utils/index.js';
 
@@ -49,12 +49,12 @@ async function startServer() {
     dbParams: {
       url: dbUrl,
       options: {
-        max: VALIDATION.POSTGRES.POOL_MAX_CONNECTIONS,
+        max: CONFIGURATIONS.POSTGRES.POOL_MAX_CONNECTIONS,
         connection: {
           application_name: 'movie_reservation_system_pg',
-          statement_timeout: VALIDATION.POSTGRES.STATEMENT_TIMEOUT,
+          statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
           idle_in_transaction_session_timeout:
-            VALIDATION.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
+            CONFIGURATIONS.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
         },
       },
       healthCheckQuery: 'SELECT NOW()',

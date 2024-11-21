@@ -14,7 +14,8 @@ import {
   type Mode,
 } from '../utils/index.js';
 
-import * as Middlewares from './middleware.js';
+import { healthCheckRouter } from '../routers/index.js';
+import * as Middlewares from './middlewares.js';
 
 /**********************************************************************************/
 
@@ -63,10 +64,9 @@ class HttpServer {
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
     await self.#attachConfigurationMiddlewares(app, allowedMethods);
-    self.#attachHealthChecks(app, routes.health);
     self.#attachRoutesMiddlewares({
       app,
-      httpRoute: routes.http,
+      routes: routes,
       logMiddleware,
     });
 
@@ -224,45 +224,22 @@ class HttpServer {
     }
   }
 
-  #attachHealthChecks(app: Express, healthCheckRoute: string) {
-    const aliveRoute = `${healthCheckRoute}/alive`;
-    const aliveParams = { type: 'liveness' } as const;
-    app
-      .head(aliveRoute, Middlewares.healthCheck(aliveParams))
-      .get(aliveRoute, Middlewares.healthCheck(aliveParams));
-
-    const readyRoute = `${healthCheckRoute}/ready`;
-    const isReadyCallback = this.#healthCheck.bind(this);
-    const readyParams = { type: 'readiness', isReadyCallback } as const;
-    app
-      .head(readyRoute, Middlewares.healthCheck(readyParams))
-      .get(readyRoute, Middlewares.healthCheck(readyParams));
-  }
-
   #attachRoutesMiddlewares(params: {
     app: Express;
-    httpRoute: string;
+    routes: { http: string; health: string };
     logMiddleware: LogMiddleware;
   }) {
-    const { app, httpRoute, logMiddleware } = params;
+    const {
+      app,
+      routes: { http: httpRoute, health: healthCheckRoute },
+      logMiddleware,
+    } = params;
 
     app
+      .use(Middlewares.attachContext(this.#requestContext))
+      .use(healthCheckRoute, healthCheckRouter)
       .use(logMiddleware)
-      .use(httpRoute, Middlewares.attachContext(this.#requestContext))
-      // Non-existent route & error handler
       .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
-  }
-
-  async #healthCheck() {
-    let notReadyMsg = '';
-    try {
-      await this.#db.isReady();
-    } catch (err) {
-      this.#logger.error(err, 'Database error');
-      notReadyMsg += '\nDatabase is unavailable';
-    }
-
-    return notReadyMsg;
   }
 }
 

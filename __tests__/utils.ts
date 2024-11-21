@@ -32,21 +32,23 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
+import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/db/index.js';
 import { HttpServer } from '../src/server/index.js';
-import * as Middlewares from '../src/server/middleware.js';
+import * as Middlewares from '../src/server/middlewares.js';
 import {
+  CONFIGURATIONS,
   ERROR_CODES,
   HTTP_STATUS_CODES,
+  isTestMode,
   Logger,
   MRSError,
-  VALIDATION,
-  isTestMode,
   type LoggerHandler,
   type Mode,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
+import * as validators from '../src/validators/index.js';
 
 const { PostgresError } = pg;
 
@@ -91,10 +93,10 @@ async function createServer() {
       url: dbUrl,
       options: {
         connection: {
-          application_name: 'TGMS-tests',
-          statement_timeout: VALIDATION.POSTGRES.STATEMENT_TIMEOUT,
+          application_name: 'movie_reservation_system_pg_test',
+          statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
           idle_in_transaction_session_timeout:
-            VALIDATION.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
+            CONFIGURATIONS.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
         },
       },
       healthCheckQuery: 'SELECT NOW()',
@@ -264,24 +266,25 @@ function createHttpMocks<T extends Response = Response>(params: {
 /**********************************************************************************/
 
 export {
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-  MRSError,
-  Middlewares,
-  PostgresError,
-  VALIDATION,
   after,
   assert,
   before,
+  controllers,
   createHttpMocks,
+  ERROR_CODES,
+  HTTP_STATUS_CODES,
   initServer,
+  Middlewares,
   mockLogger,
+  MRSError,
+  PostgresError,
   randomNumber,
   randomString,
   randomUUID,
   suite,
   terminateServer,
   test,
+  validators,
   type Database,
   type Logger,
   type LoggerHandler,
