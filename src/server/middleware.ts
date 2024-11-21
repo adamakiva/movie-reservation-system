@@ -13,52 +13,6 @@ import {
 
 /**********************************************************************************/
 
-function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
-  const { FOREIGN_KEY_VIOLATION, UNIQUE_VIOLATION, TOO_MANY_CONNECTIONS } =
-    ERROR_CODES.POSTGRES;
-  const { logger } = res.locals.context;
-
-  switch (err.code) {
-    case FOREIGN_KEY_VIOLATION:
-    case UNIQUE_VIOLATION:
-      logger.error(
-        err,
-        'Should have been handled by the code and never get here. Check the' +
-          ' code implementation',
-      );
-      break;
-    case TOO_MANY_CONNECTIONS:
-      logger.error(
-        err,
-        'Exceeded database maximum connections.\nThis Should never happen,' +
-          ' check the server and database logs to understand why it happened',
-      );
-      break;
-    default:
-      logger.error(err, 'Unexpected database error');
-      break;
-  }
-
-  res
-    .status(HTTP_STATUS_CODES.SERVER_ERROR)
-    .json('Unexpected error, please try again');
-}
-
-function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
-  const { logger } = res.locals.context;
-  if (err instanceof Error) {
-    logger.error(err, 'Unhandled exception');
-  } else {
-    logger.error(err, 'Caught a non-error object.\nThis should never happen');
-  }
-
-  res
-    .status(HTTP_STATUS_CODES.SERVER_ERROR)
-    .json('Unexpected error, please try again');
-}
-
-/**********************************************************************************/
-
 function checkMethod(allowedMethods: Set<string>) {
   return (req: Request, res: ResponseWithoutCtx, next: NextFunction) => {
     if (!allowedMethods.has(req.method.toUpperCase())) {
@@ -83,7 +37,13 @@ function healthCheck(
         isReadyCallback: () => Promise<string>;
       },
 ) {
-  return async (_req: Request, res: ResponseWithoutCtx) => {
+  return async (req: Request, res: ResponseWithoutCtx) => {
+    const method = req.method.toUpperCase();
+    if (method !== 'HEAD' && method !== 'GET') {
+      res.status(HTTP_STATUS_CODES.NOT_ALLOWED).end();
+      return;
+    }
+
     switch (options.type) {
       case 'liveness': {
         res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
@@ -151,6 +111,52 @@ function errorHandler(
   }
 
   handleUnexpectedError(err, res);
+}
+
+/**********************************************************************************/
+
+function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
+  const { FOREIGN_KEY_VIOLATION, UNIQUE_VIOLATION, TOO_MANY_CONNECTIONS } =
+    ERROR_CODES.POSTGRES;
+  const { logger } = res.locals.context;
+
+  switch (err.code) {
+    case FOREIGN_KEY_VIOLATION:
+    case UNIQUE_VIOLATION:
+      logger.error(
+        err,
+        'Should have been handled by the code and never get here. Check the' +
+          ' code implementation',
+      );
+      break;
+    case TOO_MANY_CONNECTIONS:
+      logger.error(
+        err,
+        'Exceeded database maximum connections.\nThis Should never happen,' +
+          ' check the server and database logs to understand why it happened',
+      );
+      break;
+    default:
+      logger.error(err, 'Unexpected database error');
+      break;
+  }
+
+  res
+    .status(HTTP_STATUS_CODES.SERVER_ERROR)
+    .json('Unexpected error, please try again');
+}
+
+function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
+  const { logger } = res.locals.context;
+  if (err instanceof Error) {
+    logger.error(err, 'Unhandled exception');
+  } else {
+    logger.error(err, 'Caught a non-error object.\nThis should never happen');
+  }
+
+  res
+    .status(HTTP_STATUS_CODES.SERVER_ERROR)
+    .json('Unexpected error, please try again');
 }
 
 /**********************************************************************************/
