@@ -3,7 +3,7 @@ import type { Response as ExpressResponse } from 'express';
 import type { Database } from '../db/index.js';
 
 import EnvironmentManager, { type Mode } from './config.js';
-import { ERROR_CODES, HTTP_STATUS_CODES, VALIDATION } from './constants.js';
+import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
 import MRSError from './error.js';
 import {
   isDevelopmentMode,
@@ -33,12 +33,12 @@ type DatabaseHandler = Omit<
 /**********************************************************************************/
 
 export {
+  CONFIGURATIONS,
   ERROR_CODES,
   EnvironmentManager,
   HTTP_STATUS_CODES,
   Logger,
   MRSError,
-  VALIDATION,
   isDevelopmentMode,
   isProductionMode,
   isTestMode,
