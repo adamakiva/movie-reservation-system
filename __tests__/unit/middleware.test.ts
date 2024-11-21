@@ -22,7 +22,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Middleware tests', async () => {
+await suite('Middleware unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {

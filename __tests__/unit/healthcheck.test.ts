@@ -19,7 +19,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Health check tests', async () => {
+await suite('Health check unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
@@ -92,7 +92,6 @@ await suite('Health check tests', async () => {
         assert.strictEqual(nextMock.mock.callCount(), i + 1);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const calledError = nextMock.mock.calls[i]?.arguments[0];
-        console.log(i, calledError, nextMock.mock.calls);
         assert.strictEqual(calledError instanceof MRSError, true);
         assert.strictEqual(
           (calledError as MRSError).getClientError().code,
