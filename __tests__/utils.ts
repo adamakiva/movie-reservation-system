@@ -89,7 +89,8 @@ async function createServer() {
 
   const server = await HttpServer.create({
     mode: mode,
-    dbParams: {
+    authenticationParams: {},
+    databaseParams: {
       url: dbUrl,
       options: {
         connection: {

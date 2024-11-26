@@ -1,6 +1,7 @@
 import type { Response as ExpressResponse } from 'express';
 
 import type { Database } from '../db/index.js';
+import type { AuthenticationManager } from '../server/index.js';
 
 import EnvironmentManager, { type Mode } from './config.js';
 import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
@@ -19,14 +20,15 @@ type ResponseWithoutCtx = ExpressResponse<unknown, object>;
 type ResponseWithCtx = ExpressResponse<unknown, { context: RequestContext }>;
 
 type RequestContext = {
-  db: Database;
+  authentication: AuthenticationManager;
+  database: Database;
   logger: ReturnType<Logger['getHandler']>;
 };
 
 // Omitting client to allow this type to refer to transaction as well as the base
 // database handler
 type DatabaseHandler = Omit<
-  ReturnType<RequestContext['db']['getHandler']>,
+  ReturnType<RequestContext['database']['getHandler']>,
   '$client'
 >;
 

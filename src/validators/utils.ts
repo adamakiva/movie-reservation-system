@@ -17,10 +17,28 @@ const VALIDATION = {
         ERROR_MESSAGE: 'HTTP method must be at most 4 characters long',
       },
     },
-  } as const,
-};
+  },
+  LOGIN: {
+    EMAIL: {
+      MAX_LENGTH: {
+        VALUE: 256,
+        ERROR_MESSAGE: 'Email must be at most 256 characters long',
+      },
+    },
+    PASSWORD: {
+      MIN_LENGTH: {
+        VALUE: 4,
+        ERROR_MESSAGE: 'Password must be at least 4 characters long',
+      },
+      MAX_LENGTH: {
+        VALUE: 64,
+        ERROR_MESSAGE: 'Password must be at most 64 characters long',
+      },
+    },
+  },
+} as const;
 
-const { HEALTHCHECK } = VALIDATION;
+const { HEALTHCHECK, LOGIN } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -70,6 +88,27 @@ const healthCheckSchema = Zod.string({
     }),
   );
 
-/********************************************************************************/
+/**********************************************************************************/
 
-export { healthCheckSchema, parseValidationResult, VALIDATION };
+const loginSchema = Zod.object(
+  {
+    email: Zod.string({
+      invalid_type_error: 'Email must be a string',
+      required_error: 'Email is required',
+    })
+      .max(LOGIN.EMAIL.MAX_LENGTH.VALUE, LOGIN.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
+      .email('Invalid email'),
+    password: Zod.string({
+      invalid_type_error: 'Password must be a string',
+      required_error: 'Password is required',
+    }),
+  },
+  {
+    invalid_type_error: 'Request body should be an object',
+    required_error: 'Request must have a body',
+  },
+);
+
+/**********************************************************************************/
+
+export { healthCheckSchema, loginSchema, parseValidationResult, VALIDATION };

@@ -46,7 +46,8 @@ async function startServer() {
 
   const server = await HttpServer.create({
     mode,
-    dbParams: {
+    authenticationParams: {},
+    databaseParams: {
       url: dbUrl,
       options: {
         max: CONFIGURATIONS.POSTGRES.POOL_MAX_CONNECTIONS,

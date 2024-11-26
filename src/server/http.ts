@@ -5,6 +5,7 @@ import type { AddressInfo } from 'node:net';
 import type pg from 'postgres';
 
 import { Database } from '../db/index.js';
+import * as routers from '../routers/index.js';
 import {
   ERROR_CODES,
   isProductionMode,
@@ -14,15 +15,16 @@ import {
   type Mode,
 } from '../utils/index.js';
 
-import { healthCheckRouter } from '../routers/index.js';
+import AuthenticationManager from './authentication.js';
 import * as Middlewares from './middlewares.js';
 
 /**********************************************************************************/
 
 class HttpServer {
   readonly #mode;
+  readonly #database;
+  readonly #authentication;
   readonly #server;
-  readonly #db;
   readonly #routes;
   readonly #requestContext;
   readonly #logger;
@@ -31,7 +33,15 @@ class HttpServer {
 
   public static async create(params: {
     mode: Mode;
-    dbParams: {
+    authenticationParams: {
+      audience: string;
+      issuer: string;
+      expTime: string;
+      alg: string;
+      privateAccessKey: string;
+      privateRefreshKey: string;
+    };
+    databaseParams: {
       url: string;
       // eslint-disable-next-line @typescript-eslint/no-empty-object-type
       options?: pg.Options<{}>;
@@ -42,10 +52,19 @@ class HttpServer {
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
-    const { mode, dbParams, allowedMethods, routes, logMiddleware, logger } =
-      params;
+    const {
+      mode,
+      authenticationParams,
+      databaseParams,
+      allowedMethods,
+      routes,
+      logMiddleware,
+      logger,
+    } = params;
 
-    const db = new Database({ ...dbParams, logger });
+    const authentication =
+      await AuthenticationManager.create(authenticationParams);
+    const database = new Database({ ...databaseParams, logger });
 
     const app = express().disable('x-powered-by');
     // Express type chain include extending IRouter which returns void | Promise<void>,
@@ -54,11 +73,12 @@ class HttpServer {
     const server = createServer(app);
 
     const self = new HttpServer({
-      mode: mode,
-      db: db,
-      server: server,
-      routes: routes,
-      logger: logger,
+      mode,
+      authentication,
+      database,
+      server,
+      routes,
+      logger,
     });
 
     self.#attachServerConfigurations();
@@ -99,8 +119,12 @@ class HttpServer {
     this.#server.close();
   }
 
+  public getAuthentication() {
+    return this.#authentication;
+  }
+
   public getDatabase() {
-    return this.#db;
+    return this.#database;
   }
 
   /********************************************************************************/
@@ -109,22 +133,25 @@ class HttpServer {
   // async creation
   private constructor(params: {
     mode: Mode;
-    db: Database;
+    authentication: AuthenticationManager;
+    database: Database;
     server: Server;
     routes: { http: string; health: string };
     logger: LoggerHandler;
   }) {
-    const { mode, db, server, routes, logger } = params;
+    const { mode, authentication, database, server, routes, logger } = params;
 
     this.#mode = mode;
-    this.#db = db;
+    this.#authentication = authentication;
+    this.#database = database;
     this.#server = server;
     this.#routes = routes;
     this.#logger = logger;
 
     this.#requestContext = {
-      db: db,
-      logger: logger,
+      authentication,
+      database,
+      logger,
     };
   }
 
@@ -180,7 +207,7 @@ class HttpServer {
 
   async #handleCloseEvent() {
     let exitCode = 0;
-    const results = await Promise.allSettled([this.#db.close()]);
+    const results = await Promise.allSettled([this.#database.close()]);
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.error(result.reason, 'Error during server termination');
@@ -237,8 +264,9 @@ class HttpServer {
 
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(healthCheckRoute, healthCheckRouter)
+      .use(healthCheckRoute, routers.healthCheckRouter)
       .use(logMiddleware)
+      .use(httpRoute, routers.authenticationRouter)
       .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
   }
 }

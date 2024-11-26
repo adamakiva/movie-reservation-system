@@ -35,6 +35,8 @@ const timestamps = {
 
 const authenticationModel = pgTable('authentication', {
   userId: varchar('email').primaryKey().unique().notNull(),
+  accessToken: varchar('access_token').notNull(),
+  refreshToken: varchar('refresh_token').notNull(),
   expiresAt: integer('expires_at').notNull(),
 });
 
