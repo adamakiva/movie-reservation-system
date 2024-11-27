@@ -22,6 +22,7 @@ type ResponseWithCtx = ExpressResponse<unknown, { context: RequestContext }>;
 type RequestContext = {
   authentication: AuthenticationManager;
   database: Database;
+  hashSecret: Buffer;
   logger: ReturnType<Logger['getHandler']>;
 };
 

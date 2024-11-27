@@ -8,15 +8,16 @@ import {
 } from '../utils/index.js';
 import type { authenticationValidator } from '../validators/index.js';
 
+/**********************************************************************************/
+
 type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
 
 /**********************************************************************************/
 
 async function login(ctx: RequestContext, credentials: Credentials) {
-  const { database, authentication } = ctx;
+  const { authentication, database, hashSecret } = ctx;
   const handler = database.getHandler();
-  const { authentication: authenticationModel, user: userModel } =
-    database.getModels();
+  const { user: userModel } = database.getModels();
   const { email, password } = credentials;
 
   const users = await handler
@@ -30,34 +31,57 @@ async function login(ctx: RequestContext, credentials: Credentials) {
       'User email and/or password are incorrect',
     );
   }
-  const { id, hash } = users[0]!;
+  const { id: userId, hash } = users[0]!;
 
-  const validPassword = await argon2.verify(hash, password);
+  const validPassword = await argon2.verify(hash, password, {
+    secret: hashSecret,
+  });
   if (!validPassword) {
     throw new MRSError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'User email and/or password are incorrect',
     );
   }
+  const { accessTokenExpirationTime, refreshTokenExpirationTime } =
+    authentication.getExpirationTime();
 
-  const { accessToken, refreshToken } = await authentication.generateTokens(id);
+  const [accessToken, refreshToken] = await Promise.all([
+    authentication.generateAccessToken(userId, accessTokenExpirationTime),
+    authentication.generateRefreshToken(userId, refreshTokenExpirationTime),
+  ]);
 
-  await handler
-    .insert(authenticationModel)
-    .values({
-      userId: id,
-      accessToken,
-      refreshToken,
-      expiresAt: Date.now(),
-    })
-    .onConflictDoUpdate({
-      target: authenticationModel.userId,
-      set: { accessToken, refreshToken, expiresAt: Date.now() },
-    });
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
 
-  return { accessToken, refreshToken };
+async function refresh(ctx: RequestContext, refreshToken: string) {
+  try {
+    const { authentication } = ctx;
+
+    const { accessTokenExpirationTime } = authentication.getExpirationTime();
+
+    const {
+      payload: { sub: userId },
+    } = await authentication.validateToken(refreshToken, 'refresh');
+    if (!userId) {
+      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+    }
+
+    return await authentication.generateAccessToken(
+      userId,
+      accessTokenExpirationTime,
+    );
+  } catch (err) {
+    if (err instanceof MRSError) {
+      throw err;
+    }
+
+    throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
 }
 
 /**********************************************************************************/
 
-export { login };
+export { login, refresh };

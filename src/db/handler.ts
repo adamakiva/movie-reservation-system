@@ -54,7 +54,6 @@ export default class Database {
     });
 
     this.#models = {
-      authentication: schemas.authenticationModel,
       role: schemas.roleModel,
       user: schemas.userModel,
       genre: schemas.genreModel,

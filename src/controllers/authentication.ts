@@ -21,6 +21,21 @@ async function login(req: Request, res: ResponseWithCtx, next: NextFunction) {
   }
 }
 
+async function refresh(req: Request, res: ResponseWithCtx, next: NextFunction) {
+  try {
+    const { refreshToken } = authenticationValidator.validateRefresh(req);
+
+    const result = await authenticationService.refresh(
+      res.locals.context,
+      refreshToken,
+    );
+
+    res.status(HTTP_STATUS_CODES.CREATED).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 /**********************************************************************************/
 
-export { login };
+export { login, refresh };

@@ -36,10 +36,17 @@ class HttpServer {
     authenticationParams: {
       audience: string;
       issuer: string;
-      expTime: string;
       alg: string;
-      privateAccessKey: string;
-      privateRefreshKey: string;
+      access: {
+        publicKey: string;
+        privateKey: string;
+        expiresAt: number;
+      };
+      refresh: {
+        publicKey: string;
+        privateKey: string;
+        expiresAt: number;
+      };
     };
     databaseParams: {
       url: string;
@@ -49,6 +56,7 @@ class HttpServer {
     };
     allowedMethods: Set<string>;
     routes: { http: string; health: string };
+    hashSecret: Buffer;
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
@@ -58,6 +66,7 @@ class HttpServer {
       databaseParams,
       allowedMethods,
       routes,
+      hashSecret,
       logMiddleware,
       logger,
     } = params;
@@ -78,6 +87,7 @@ class HttpServer {
       database,
       server,
       routes,
+      hashSecret,
       logger,
     });
 
@@ -137,9 +147,18 @@ class HttpServer {
     database: Database;
     server: Server;
     routes: { http: string; health: string };
+    hashSecret: Buffer;
     logger: LoggerHandler;
   }) {
-    const { mode, authentication, database, server, routes, logger } = params;
+    const {
+      mode,
+      authentication,
+      database,
+      server,
+      routes,
+      hashSecret,
+      logger,
+    } = params;
 
     this.#mode = mode;
     this.#authentication = authentication;
@@ -151,6 +170,7 @@ class HttpServer {
     this.#requestContext = {
       authentication,
       database,
+      hashSecret,
       logger,
     };
   }
@@ -202,8 +222,6 @@ class HttpServer {
     // rerun the application in a "clean" state
     process.exit(ERROR_CODES.EXIT_RESTART);
   }
-
-  // curl -X GET "localhost:4334/health/ready" -H "Custom-Header: $(head -c 80000 </dev/zero | tr '\0' 'A')"
 
   async #handleCloseEvent() {
     let exitCode = 0;

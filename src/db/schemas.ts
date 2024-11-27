@@ -1,7 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
-  integer,
   pgTable,
   point,
   real,
@@ -30,15 +29,6 @@ const timestamps = {
     .defaultNow()
     .notNull(),
 };
-
-/**********************************************************************************/
-
-const authenticationModel = pgTable('authentication', {
-  userId: varchar('email').primaryKey().unique().notNull(),
-  accessToken: varchar('access_token').notNull(),
-  refreshToken: varchar('refresh_token').notNull(),
-  expiresAt: integer('expires_at').notNull(),
-});
 
 /**********************************************************************************/
 
@@ -179,7 +169,6 @@ const showtimeSummaryModel = pgTable('showtime_summary', {
 /**********************************************************************************/
 
 export {
-  authenticationModel,
   genreModel,
   hallModel,
   movieModel,

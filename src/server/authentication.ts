@@ -1,11 +1,9 @@
-import { and, eq, lt } from 'drizzle-orm';
 import type { NextFunction, Request } from 'express';
 import jose from 'jose';
 
 import {
   HTTP_STATUS_CODES,
   MRSError,
-  type RequestContext,
   type ResponseWithCtx,
 } from '../utils/index.js';
 
@@ -14,31 +12,53 @@ import {
 class AuthenticationManager {
   readonly #audience;
   readonly #issuer;
-  readonly #expTime;
   readonly #alg;
-  readonly #privateAccessKey;
-  readonly #privateRefreshKey;
+  readonly #access;
+  readonly #refresh;
 
   public static async create(params: {
     audience: string;
     issuer: string;
-    expTime: string;
     alg: string;
-    privateAccessKey: string;
-    privateRefreshKey: string;
+    access: {
+      publicKey: string;
+      privateKey: string;
+      expiresAt: number;
+    };
+    refresh: {
+      publicKey: string;
+      privateKey: string;
+      expiresAt: number;
+    };
   }) {
-    const [privateAccessKey, privateRefreshKey] = await Promise.all([
-      jose.importPKCS8(params.privateAccessKey, params.alg),
-      jose.importPKCS8(params.privateRefreshKey, params.alg),
+    const { audience, issuer, alg, access, refresh } = params;
+
+    const [
+      publicAccessKey,
+      privateAccessKey,
+      publicRefreshKey,
+      privateRefreshKey,
+    ] = await Promise.all([
+      jose.importSPKI(access.publicKey, alg),
+      jose.importPKCS8(access.privateKey, alg),
+      jose.importPKCS8(refresh.publicKey, alg),
+      jose.importSPKI(refresh.privateKey, alg),
     ]);
 
     const self = new AuthenticationManager({
-      audience: params.audience,
-      issuer: params.issuer,
-      expTime: params.expTime,
-      alg: params.alg,
-      privateAccessKey,
-      privateRefreshKey,
+      audience,
+      issuer,
+      alg,
+      access: {
+        publicKey: publicAccessKey,
+        privateKey: privateAccessKey,
+        expiresAt: access.expiresAt,
+      },
+      refresh: {
+        publicKey: publicRefreshKey,
+        privateKey: privateRefreshKey,
+        expiresAt: refresh.expiresAt,
+      },
     });
 
     return self;
@@ -46,14 +66,11 @@ class AuthenticationManager {
 
   public async httpAuthenticationMiddleware(
     req: Request,
-    res: ResponseWithCtx,
+    _res: ResponseWithCtx,
     next: NextFunction,
   ) {
     try {
-      await this.#checkAuthenticationToken(
-        res.locals.context.database,
-        req.headers.authorization,
-      );
+      await this.#checkAuthenticationToken(req.headers.authorization);
 
       next();
     } catch (err) {
@@ -61,27 +78,58 @@ class AuthenticationManager {
     }
   }
 
-  public async generateTokens(userId: string) {
-    const [accessToken, refreshToken] = await Promise.all([
-      new jose.SignJWT()
-        .setSubject(userId)
-        .setAudience(this.#audience)
-        .setIssuer(this.#issuer)
-        .setIssuedAt()
-        .setExpirationTime(this.#expTime)
-        .setProtectedHeader({ alg: this.#alg })
-        .sign(this.#privateAccessKey),
-      new jose.SignJWT()
-        .setSubject(userId)
-        .setAudience(this.#audience)
-        .setIssuer(this.#issuer)
-        .setIssuedAt()
-        .setExpirationTime(this.#expTime)
-        .setProtectedHeader({ alg: this.#alg })
-        .sign(this.#privateRefreshKey),
-    ]);
+  public getExpirationTime() {
+    const now = Date.now();
 
-    return { accessToken, refreshToken };
+    return {
+      accessTokenExpirationTime: now + this.#access.expiresAt,
+      refreshTokenExpirationTime: now + this.#refresh.expiresAt,
+    };
+  }
+
+  public async generateAccessToken(
+    userId: string,
+    accessTokenExpirationTime: number,
+  ) {
+    return await new jose.SignJWT()
+      .setSubject(userId)
+      .setAudience(this.#audience)
+      .setIssuer(this.#issuer)
+      .setIssuedAt()
+      .setExpirationTime(accessTokenExpirationTime)
+      .setProtectedHeader({ alg: this.#alg })
+      .sign(this.#access.privateKey);
+  }
+
+  public async generateRefreshToken(
+    userId: string,
+    refreshTokenExpirationTime: number,
+  ) {
+    return await new jose.SignJWT()
+      .setSubject(userId)
+      .setAudience(this.#audience)
+      .setIssuer(this.#issuer)
+      .setIssuedAt()
+      .setExpirationTime(refreshTokenExpirationTime)
+      .setProtectedHeader({ alg: this.#alg })
+      .sign(this.#refresh.privateKey);
+  }
+
+  public async validateToken(token: string, type: 'access' | 'refresh') {
+    let publicKey: jose.KeyLike = null!;
+    switch (type) {
+      case 'access':
+        ({ publicKey } = this.#access);
+        break;
+      case 'refresh':
+        ({ publicKey } = this.#refresh);
+        break;
+    }
+
+    return await jose.jwtVerify(token, publicKey, {
+      audience: this.#audience,
+      issuer: this.#issuer,
+    });
   }
 
   /********************************************************************************/
@@ -89,41 +137,51 @@ class AuthenticationManager {
   private constructor(params: {
     audience: string;
     issuer: string;
-    expTime: string;
     alg: string;
-    privateAccessKey: jose.KeyLike;
-    privateRefreshKey: jose.KeyLike;
+    access: {
+      publicKey: jose.KeyLike;
+      privateKey: jose.KeyLike;
+      expiresAt: number;
+    };
+    refresh: {
+      publicKey: jose.KeyLike;
+      privateKey: jose.KeyLike;
+      expiresAt: number;
+    };
   }) {
-    this.#audience = params.audience;
-    this.#issuer = params.issuer;
-    this.#expTime = params.expTime;
-    this.#alg = params.alg;
-    this.#privateAccessKey = params.privateAccessKey;
-    this.#privateRefreshKey = params.privateRefreshKey;
+    const { audience, issuer, alg, access, refresh } = params;
+
+    this.#audience = audience;
+    this.#issuer = issuer;
+    this.#alg = alg;
+    this.#access = access;
+    this.#refresh = refresh;
   }
 
-  async #checkAuthenticationToken(
-    db: RequestContext['database'],
-    authenticationHeader?: string,
-  ) {
-    if (!authenticationHeader) {
-      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
-    }
+  async #checkAuthenticationToken(authenticationHeader?: string) {
+    try {
+      if (!authenticationHeader) {
+        throw new MRSError(
+          HTTP_STATUS_CODES.UNAUTHORIZED,
+          'Missing authentication header',
+        );
+      }
+      const token = authenticationHeader.replace('Bearer', '');
 
-    const handler = db.getHandler();
-    const model = db.getModels().authentication;
+      const {
+        payload: { sub },
+      } = await this.validateToken(token, 'access');
+      if (!sub) {
+        throw new MRSError(
+          HTTP_STATUS_CODES.UNAUTHORIZED,
+          'Invalid access token',
+        );
+      }
+    } catch (err) {
+      if (err instanceof MRSError) {
+        throw err;
+      }
 
-    const authenticationToken = authenticationHeader.replace('Bearer', '');
-    const { sub } = jose.decodeJwt(authenticationToken);
-    if (!sub) {
-      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
-    }
-
-    const res = await handler
-      .select({ expiresAt: model.expiresAt })
-      .from(model)
-      .where(and(eq(model.userId, sub), lt(model.expiresAt, Date.now())));
-    if (!res.length) {
       throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
     }
   }

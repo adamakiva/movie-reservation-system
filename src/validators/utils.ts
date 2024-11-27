@@ -18,27 +18,37 @@ const VALIDATION = {
       },
     },
   },
-  LOGIN: {
-    EMAIL: {
-      MAX_LENGTH: {
-        VALUE: 256,
-        ERROR_MESSAGE: 'Email must be at most 256 characters long',
+  AUTHENTICATION: {
+    LOGIN: {
+      EMAIL: {
+        MAX_LENGTH: {
+          VALUE: 256,
+          ERROR_MESSAGE: 'Email must be at most 256 characters long',
+        },
+      },
+      PASSWORD: {
+        MIN_LENGTH: {
+          VALUE: 4,
+          ERROR_MESSAGE: 'Password must be at least 4 characters long',
+        },
+        MAX_LENGTH: {
+          VALUE: 64,
+          ERROR_MESSAGE: 'Password must be at most 64 characters long',
+        },
       },
     },
-    PASSWORD: {
-      MIN_LENGTH: {
-        VALUE: 4,
-        ERROR_MESSAGE: 'Password must be at least 4 characters long',
-      },
-      MAX_LENGTH: {
-        VALUE: 64,
-        ERROR_MESSAGE: 'Password must be at most 64 characters long',
+    REFRESH: {
+      TOKEN: {
+        MAX_LENGTH: {
+          VALUE: 1_024,
+          ERROR_MESSAGE: 'Refresh token must be at most 1024 characters long',
+        },
       },
     },
   },
 } as const;
 
-const { HEALTHCHECK, LOGIN } = VALIDATION;
+const { HEALTHCHECK, AUTHENTICATION } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -96,7 +106,10 @@ const loginSchema = Zod.object(
       invalid_type_error: 'Email must be a string',
       required_error: 'Email is required',
     })
-      .max(LOGIN.EMAIL.MAX_LENGTH.VALUE, LOGIN.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
+      .max(
+        AUTHENTICATION.LOGIN.EMAIL.MAX_LENGTH.VALUE,
+        AUTHENTICATION.LOGIN.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
+      )
       .email('Invalid email'),
     password: Zod.string({
       invalid_type_error: 'Password must be a string',
@@ -109,6 +122,22 @@ const loginSchema = Zod.object(
   },
 );
 
+const refreshTokenSchema = Zod.object({
+  refreshToken: Zod.string({
+    invalid_type_error: 'Refresh token must be a string',
+    required_error: 'Refresh token is required',
+  }).max(
+    AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.VALUE,
+    AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.ERROR_MESSAGE,
+  ),
+});
+
 /**********************************************************************************/
 
-export { healthCheckSchema, loginSchema, parseValidationResult, VALIDATION };
+export {
+  healthCheckSchema,
+  loginSchema,
+  parseValidationResult,
+  refreshTokenSchema,
+  VALIDATION,
+};

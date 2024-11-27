@@ -39,16 +39,18 @@ async function startServer() {
   const {
     mode,
     server: serverEnv,
-    dbUrl,
+    databaseUrl,
   } = environmentManager.getEnvVariables();
 
   const { logger, logMiddleware } = createLogger();
 
   const server = await HttpServer.create({
     mode,
-    authenticationParams: {},
+    authenticationParams: {
+      // TODO
+    },
     databaseParams: {
-      url: dbUrl,
+      url: databaseUrl,
       options: {
         max: CONFIGURATIONS.POSTGRES.POOL_MAX_CONNECTIONS,
         connection: {
