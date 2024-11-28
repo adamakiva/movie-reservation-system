@@ -1,6 +1,7 @@
 import type { NextFunction, Request } from 'express';
-import jose from 'jose';
+import * as jose from 'jose';
 
+import { readFile } from 'fs/promises';
 import {
   HTTP_STATUS_CODES,
   MRSError,
@@ -21,17 +22,29 @@ class AuthenticationManager {
     issuer: string;
     alg: string;
     access: {
-      publicKey: string;
-      privateKey: string;
       expiresAt: number;
     };
     refresh: {
-      publicKey: string;
-      privateKey: string;
       expiresAt: number;
     };
+    keysPath: string;
   }) {
-    const { audience, issuer, alg, access, refresh } = params;
+    const { audience, issuer, alg, access, refresh, keysPath } = params;
+
+    // All file paths are not provided by the user
+    /* eslint-disable @security/detect-non-literal-fs-filename */
+    const [
+      accessPublicKey,
+      accessPrivateKey,
+      refreshPublicKey,
+      refreshPrivateKey,
+    ] = await Promise.all([
+      readFile(`${keysPath}/access_public_key.pem`, { encoding: 'utf-8' }),
+      readFile(`${keysPath}/access_private_key.pem`, { encoding: 'utf-8' }),
+      readFile(`${keysPath}/refresh_public_key.pem`, { encoding: 'utf-8' }),
+      readFile(`${keysPath}/refresh_private_key.pem`, { encoding: 'utf-8' }),
+    ]);
+    /* eslint-enable @security/detect-non-literal-fs-filename */
 
     const [
       publicAccessKey,
@@ -39,10 +52,10 @@ class AuthenticationManager {
       publicRefreshKey,
       privateRefreshKey,
     ] = await Promise.all([
-      jose.importSPKI(access.publicKey, alg),
-      jose.importPKCS8(access.privateKey, alg),
-      jose.importPKCS8(refresh.publicKey, alg),
-      jose.importSPKI(refresh.privateKey, alg),
+      jose.importSPKI(accessPublicKey, alg),
+      jose.importPKCS8(accessPrivateKey, alg),
+      jose.importSPKI(refreshPublicKey, alg),
+      jose.importPKCS8(refreshPrivateKey, alg),
     ]);
 
     const self = new AuthenticationManager({

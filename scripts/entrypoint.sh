@@ -7,4 +7,5 @@
 
 npm install &&
 npm run commit-migrations &&
-exec ./node_modules/.bin/tsx --watch --stack-trace-limit=32 --disable-proto=delete --trace-exit --force-node-api-uncaught-exceptions-policy --no-addons --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536 --inspect=0.0.0.0:"${SERVER_DEBUG_PORT}" ./src/main.ts;
+# Argon2 uses addons so the flag --no-addons is not present
+exec ./node_modules/.bin/tsx --watch --stack-trace-limit=32 --disable-proto=delete --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536 --inspect=0.0.0.0:"${SERVER_DEBUG_PORT}" ./src/main.ts;

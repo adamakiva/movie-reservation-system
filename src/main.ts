@@ -23,6 +23,7 @@ Stream.setDefaultHighWaterMark(false, 262_144);
 
 /**********************************************************************************/
 
+import { resolve } from 'node:path';
 import { HttpServer } from './server/index.js';
 import {
   CONFIGURATIONS,
@@ -40,6 +41,7 @@ async function startServer() {
     mode,
     server: serverEnv,
     databaseUrl,
+    hashSecret,
   } = environmentManager.getEnvVariables();
 
   const { logger, logMiddleware } = createLogger();
@@ -47,7 +49,16 @@ async function startServer() {
   const server = await HttpServer.create({
     mode,
     authenticationParams: {
-      // TODO
+      audience: 'mrs-users',
+      issuer: 'mrs-server',
+      alg: 'RS256',
+      access: {
+        expiresAt: 900_000, // 15 minutes
+      },
+      refresh: {
+        expiresAt: 2_629_746_000, // A month
+      },
+      keysPath: resolve(import.meta.dirname, '..', 'keys'),
     },
     databaseParams: {
       url: databaseUrl,
@@ -75,6 +86,7 @@ async function startServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
+    hashSecret,
     logMiddleware,
     logger,
   });

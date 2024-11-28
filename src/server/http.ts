@@ -38,15 +38,12 @@ class HttpServer {
       issuer: string;
       alg: string;
       access: {
-        publicKey: string;
-        privateKey: string;
         expiresAt: number;
       };
       refresh: {
-        publicKey: string;
-        privateKey: string;
         expiresAt: number;
       };
+      keysPath: string;
     };
     databaseParams: {
       url: string;

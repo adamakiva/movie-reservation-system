@@ -44,6 +44,7 @@ services:
       - ALLOWED_ORIGINS=*
       - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
       - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      - HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
       # Node flags
       - NODE_ENV=development
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
