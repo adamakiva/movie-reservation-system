@@ -75,17 +75,18 @@ check_services_health() {
 }
 
 start() {
-    check_prerequisites;
+    check_prerequisites &&
 
-    printf "\nStarting application...\n";
+    printf "\nStarting application...\n" &&
 
-    rm -f "$ERR_LOG_FILE";
-    mkdir -p "$DB_DATA_FOLDER" "$NPM_CACHE_FOLDER";
+    mkdir -p "$DB_DATA_FOLDER" "$NPM_CACHE_FOLDER" &&
 
-    install_dependencies;
-    generate_keys;
+    install_dependencies &&
+    generate_keys &&
 
-    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait;
+    rm -f "$ERR_LOG_FILE" &&
+
+    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait &&
     check_services_health;
 }
 

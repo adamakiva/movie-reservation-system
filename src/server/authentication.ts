@@ -1,10 +1,10 @@
-import type { NextFunction, Request } from 'express';
-import * as jose from 'jose';
-
-import { readFile } from 'fs/promises';
 import {
   HTTP_STATUS_CODES,
+  jose,
   MRSError,
+  readFile,
+  type NextFunction,
+  type Request,
   type ResponseWithCtx,
 } from '../utils/index.js';
 
@@ -31,20 +31,19 @@ class AuthenticationManager {
   }) {
     const { audience, issuer, alg, access, refresh, keysPath } = params;
 
-    // All file paths are not provided by the user
-    /* eslint-disable @security/detect-non-literal-fs-filename */
+    const encoding = { encoding: 'utf-8' } as const;
+
     const [
       accessPublicKey,
       accessPrivateKey,
       refreshPublicKey,
       refreshPrivateKey,
     ] = await Promise.all([
-      readFile(`${keysPath}/access_public_key.pem`, { encoding: 'utf-8' }),
-      readFile(`${keysPath}/access_private_key.pem`, { encoding: 'utf-8' }),
-      readFile(`${keysPath}/refresh_public_key.pem`, { encoding: 'utf-8' }),
-      readFile(`${keysPath}/refresh_private_key.pem`, { encoding: 'utf-8' }),
+      readFile(`${keysPath}/access_public_key.pem`, encoding),
+      readFile(`${keysPath}/access_private_key.pem`, encoding),
+      readFile(`${keysPath}/refresh_public_key.pem`, encoding),
+      readFile(`${keysPath}/refresh_private_key.pem`, encoding),
     ]);
-    /* eslint-enable @security/detect-non-literal-fs-filename */
 
     const [
       publicAccessKey,

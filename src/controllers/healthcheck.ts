@@ -1,6 +1,6 @@
-import type { NextFunction, Request } from 'express';
-
 import {
+  type NextFunction,
+  type Request,
   type RequestContext,
   type ResponseWithCtx,
   HTTP_STATUS_CODES,

@@ -2,12 +2,14 @@ services:
   mrs-pg:
     hostname: mrs-pg
     container_name: mrs-pg
+    # Restart is disabled to allow for reading the correct status code from the container
     restart: "no"
     image: postgres:17.1-alpine
     user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
+      # Used by a script to create multiple empty database with the given names
       - POSTGRES_DBS=mrs, mrs_test
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
@@ -17,6 +19,7 @@ services:
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      # Config options instead of passing it using the CLI
       - ./scripts/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
@@ -28,6 +31,7 @@ services:
   mrs:
     hostname: mrs
     container_name: mrs
+    # Restart is disabled to allow for reading the correct status code from the container
     restart: "no"
     build:
       context: ./
@@ -35,6 +39,7 @@ services:
       target: dev
     user: ${UID}:${GID}
     environment:
+      # Server options
       - SERVER_PORT=4334
       - SERVER_DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
@@ -42,11 +47,14 @@ services:
       - HEALTH_CHECK_ROUTE=health
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
+      # Database URIs
       - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
       - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      # Encryption salt
       - HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
       # Node flags
       - NODE_ENV=development
+      # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
       - ./:/home/node/mrs:rw
@@ -60,6 +68,7 @@ services:
     # is not an issue, however, don't enable it production since there's no need
     tty: true
     stdin_open: true
+    # Disallow going crazy with memory usage without being aware of it
     mem_limit: 2048m
     ports:
       - 4334:4334
@@ -71,7 +80,7 @@ services:
           "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/alive | grep -q '204' &&
           curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/ready | grep -q '204'"
         ]
-      interval: 15s
+      interval: 20s
       timeout: 3s
       retries: 5
       start_period: 30s

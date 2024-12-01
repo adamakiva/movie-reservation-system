@@ -1,12 +1,16 @@
-import type { Request } from 'express';
-
-import { type ResponseWithCtx, HTTP_STATUS_CODES } from '../utils/index.js';
+import {
+  type Request,
+  type ResponseWithCtx,
+  HTTP_STATUS_CODES,
+} from '../utils/index.js';
 
 import {
   healthCheckSchema,
   parseValidationResult,
   VALIDATION,
 } from './utils.js';
+
+/**********************************************************************************/
 
 const {
   HEALTHCHECK: {

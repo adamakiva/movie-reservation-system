@@ -1,6 +1,4 @@
-import type { Request } from 'express';
-
-import { HTTP_STATUS_CODES } from '../utils/index.js';
+import { type Request, HTTP_STATUS_CODES } from '../utils/index.js';
 
 import {
   loginSchema,

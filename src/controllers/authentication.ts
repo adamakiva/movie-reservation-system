@@ -1,7 +1,10 @@
-import type { NextFunction, Request } from 'express';
-
 import { authenticationService } from '../services/index.js';
-import { type ResponseWithCtx, HTTP_STATUS_CODES } from '../utils/index.js';
+import {
+  HTTP_STATUS_CODES,
+  type NextFunction,
+  type Request,
+  type ResponseWithCtx,
+} from '../utils/index.js';
 import { authenticationValidator } from '../validators/index.js';
 
 /**********************************************************************************/

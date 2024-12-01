@@ -1,6 +1,4 @@
-import Zod from 'zod';
-
-import { MRSError } from '../utils/index.js';
+import { MRSError, Zod } from '../utils/index.js';
 
 /**********************************************************************************/
 
@@ -114,7 +112,15 @@ const loginSchema = Zod.object(
     password: Zod.string({
       invalid_type_error: 'Password must be a string',
       required_error: 'Password is required',
-    }),
+    })
+      .min(
+        AUTHENTICATION.LOGIN.PASSWORD.MIN_LENGTH.VALUE,
+        AUTHENTICATION.LOGIN.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+      )
+      .max(
+        AUTHENTICATION.LOGIN.PASSWORD.MAX_LENGTH.VALUE,
+        AUTHENTICATION.LOGIN.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
+      ),
   },
   {
     invalid_type_error: 'Request body should be an object',

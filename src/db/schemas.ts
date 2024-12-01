@@ -1,3 +1,5 @@
+// Import directly and not via index.ts to prevent importing the entire project
+// and/or import issues with drizzle
 import { sql } from 'drizzle-orm';
 import {
   index,

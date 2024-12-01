@@ -15,6 +15,8 @@ import {
   terminateServer,
   test,
   type LoggerHandler,
+  type NextFunction,
+  type Request,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
   type ServerParams,
@@ -110,7 +112,15 @@ await suite('Middleware unit tests', async () => {
   });
 
   await suite('Handle missed routes', async () => {
-    await test('Missed route', async () => {
+    await test.only('Missed route', async (ctx) => {
+      ctx.mock.method(
+        serverParams.authentication,
+        'httpAuthenticationMiddleware',
+        (_req: Request, _res: ResponseWithCtx, next: NextFunction) => {
+          next();
+        },
+      );
+
       const res = await fetch(`${serverParams.routes.base}/${randomString()}`, {
         method: 'GET',
       });

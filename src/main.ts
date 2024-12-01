@@ -15,21 +15,21 @@ import { Stream } from 'node:stream';
 EventEmitter.captureRejections = true;
 
 // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
-globalAgent.maxSockets = 128;
-globalAgent.maxTotalSockets = 1024;
+globalAgent.maxSockets = 256;
+globalAgent.maxTotalSockets = 2048;
 
 // Limit the stream internal buffer to 256kb (default is 64kb)
 Stream.setDefaultHighWaterMark(false, 262_144);
 
 /**********************************************************************************/
 
-import { resolve } from 'node:path';
 import { HttpServer } from './server/index.js';
 import {
   CONFIGURATIONS,
   EnvironmentManager,
   ERROR_CODES,
   Logger,
+  resolve,
   type LoggerHandler,
 } from './utils/index.js';
 

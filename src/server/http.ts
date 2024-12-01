@@ -1,18 +1,18 @@
-import compress from 'compression';
-import express, { type Express } from 'express';
-import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-import type pg from 'postgres';
-
 import { Database } from '../db/index.js';
 import * as routers from '../routers/index.js';
 import {
+  compress,
+  createServer,
   ERROR_CODES,
+  express,
   isProductionMode,
   isTestMode,
+  type AddressInfo,
+  type Express,
   type LoggerHandler,
   type LogMiddleware,
   type Mode,
+  type Server,
 } from '../utils/index.js';
 
 import AuthenticationManager from './authentication.js';
@@ -33,24 +33,8 @@ class HttpServer {
 
   public static async create(params: {
     mode: Mode;
-    authenticationParams: {
-      audience: string;
-      issuer: string;
-      alg: string;
-      access: {
-        expiresAt: number;
-      };
-      refresh: {
-        expiresAt: number;
-      };
-      keysPath: string;
-    };
-    databaseParams: {
-      url: string;
-      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-      options?: pg.Options<{}>;
-      healthCheckQuery: string;
-    };
+    authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
     routes: { http: string; health: string };
     hashSecret: Buffer;
@@ -93,7 +77,7 @@ class HttpServer {
     await self.#attachConfigurationMiddlewares(app, allowedMethods);
     self.#attachRoutesMiddlewares({
       app,
-      routes: routes,
+      routes,
       logMiddleware,
     });
 
@@ -136,8 +120,6 @@ class HttpServer {
 
   /********************************************************************************/
 
-  // Prevent creating the class via the constructor because it needs to be an
-  // async creation
   private constructor(params: {
     mode: Mode;
     authentication: AuthenticationManager;
@@ -277,12 +259,18 @@ class HttpServer {
       logMiddleware,
     } = params;
 
+    // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
       .use(healthCheckRoute, routers.healthCheckRouter)
+      .use(
+        this.#authentication.httpAuthenticationMiddleware.bind(
+          this.#authentication,
+        ),
+      )
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
-      .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
+      .use('*', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }
 

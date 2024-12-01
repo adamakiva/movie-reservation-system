@@ -1,11 +1,11 @@
-import { Router } from 'express';
 import { authenticationController } from '../controllers/index.js';
+import { Router, json } from '../utils/index.js';
 
 /**********************************************************************************/
 
 const router = Router()
-  .put('/login', authenticationController.login)
-  .put('/refresh', authenticationController.refresh);
+  .put('/login', json({ limit: '16kb' }), authenticationController.login)
+  .put('/refresh', json({ limit: '16kb' }), authenticationController.refresh);
 
 /**********************************************************************************/
 

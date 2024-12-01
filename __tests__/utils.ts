@@ -19,6 +19,7 @@ process.on('warning', (warn) => {
 
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
 import type { NextFunction, Request, Response } from 'express';
@@ -62,6 +63,7 @@ type EnvironmentVariables = {
     healthCheckRoute: string;
   };
   db: string;
+  hashSecret: Buffer;
 };
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
@@ -83,13 +85,24 @@ function terminateServer(params: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const { mode, server: serverEnv, db: dbUrl } = getTestEnv();
+  const { mode, server: serverEnv, db: dbUrl, hashSecret } = getTestEnv();
 
   const { logger, logMiddleware } = mockLogger();
 
   const server = await HttpServer.create({
     mode: mode,
-    authenticationParams: {},
+    authenticationParams: {
+      audience: 'mrs-users',
+      issuer: 'mrs-server',
+      alg: 'RS256',
+      access: {
+        expiresAt: 900_000, // 15 minutes
+      },
+      refresh: {
+        expiresAt: 2_629_746_000, // A month
+      },
+      keysPath: resolve(import.meta.dirname, '..', 'keys'),
+    },
     databaseParams: {
       url: dbUrl,
       options: {
@@ -115,6 +128,7 @@ async function createServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
+    hashSecret,
     logger: logger,
     logMiddleware: logMiddleware,
   });
@@ -127,6 +141,7 @@ async function createServer() {
 
   return {
     server: server,
+    authentication: server.getAuthentication(),
     db: server.getDatabase(),
     routes: {
       base: baseUrl,
@@ -147,6 +162,7 @@ function getTestEnv(): EnvironmentVariables {
       healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
     },
     db: process.env.DB_TEST_URL!,
+    hashSecret: Buffer.from(process.env.HASH_SECRET!),
   } as const;
 }
 
@@ -170,6 +186,7 @@ function checkEnvVariables() {
     'HTTP_ROUTE',
     'HEALTH_CHECK_ROUTE',
     'DB_TEST_URL',
+    'HASH_SECRET',
   ].forEach((val) => {
     if (!process.env[val]) {
       missingValues += `* Missing ${val} environment variable\n`;

@@ -1,5 +1,4 @@
-import type { Logger as DrizzleLogger } from 'drizzle-orm';
-import type { LoggerHandler } from '../utils/index.js';
+import type { DrizzleLogger, LoggerHandler } from '../utils/index.js';
 
 /**********************************************************************************/
 
