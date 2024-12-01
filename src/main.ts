@@ -15,8 +15,8 @@ import { Stream } from 'node:stream';
 EventEmitter.captureRejections = true;
 
 // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
-globalAgent.maxSockets = 128;
-globalAgent.maxTotalSockets = 1024;
+globalAgent.maxSockets = 256;
+globalAgent.maxTotalSockets = 2048;
 
 // Limit the stream internal buffer to 256kb (default is 64kb)
 Stream.setDefaultHighWaterMark(false, 262_144);
@@ -29,6 +29,7 @@ import {
   EnvironmentManager,
   ERROR_CODES,
   Logger,
+  resolve,
   type LoggerHandler,
 } from './utils/index.js';
 
@@ -39,15 +40,28 @@ async function startServer() {
   const {
     mode,
     server: serverEnv,
-    dbUrl,
+    databaseUrl,
+    hashSecret,
   } = environmentManager.getEnvVariables();
 
   const { logger, logMiddleware } = createLogger();
 
   const server = await HttpServer.create({
     mode,
-    dbParams: {
-      url: dbUrl,
+    authenticationParams: {
+      audience: 'mrs-users',
+      issuer: 'mrs-server',
+      alg: 'RS256',
+      access: {
+        expiresAt: 900_000, // 15 minutes
+      },
+      refresh: {
+        expiresAt: 2_629_746_000, // A month
+      },
+      keysPath: resolve(import.meta.dirname, '..', 'keys'),
+    },
+    databaseParams: {
+      url: databaseUrl,
       options: {
         max: CONFIGURATIONS.POSTGRES.POOL_MAX_CONNECTIONS,
         connection: {
@@ -72,6 +86,7 @@ async function startServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
+    hashSecret,
     logMiddleware,
     logger,
   });

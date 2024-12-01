@@ -1,11 +1,11 @@
-import type { NextFunction, Request } from 'express';
-
 import {
+  type NextFunction,
+  type Request,
   type RequestContext,
   type ResponseWithCtx,
   HTTP_STATUS_CODES,
 } from '../utils/index.js';
-import { healthCheckValidators } from '../validators/index.js';
+import { healthCheckValidator } from '../validators/index.js';
 
 /**********************************************************************************/
 
@@ -15,7 +15,7 @@ function livenessHealthCheck(
   next: NextFunction,
 ) {
   try {
-    healthCheckValidators.validateHealthCheck(req, res);
+    healthCheckValidator.validateHealthCheck(req, res);
 
     res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
   } catch (err) {
@@ -29,7 +29,7 @@ async function readinessHealthCheck(
   next: NextFunction,
 ) {
   try {
-    healthCheckValidators.validateHealthCheck(req, res);
+    healthCheckValidator.validateHealthCheck(req, res);
 
     const notReadyMsg = await isReady(res.locals.context);
     if (notReadyMsg.length) {
@@ -48,11 +48,11 @@ async function readinessHealthCheck(
 /**********************************************************************************/
 
 async function isReady(context: RequestContext) {
-  const { db, logger } = context;
+  const { database, logger } = context;
 
   let notReadyMsg = '';
   try {
-    await db.isReady();
+    await database.isReady();
   } catch (err) {
     logger.error(err);
     notReadyMsg += '\nDatabase is unavailable';

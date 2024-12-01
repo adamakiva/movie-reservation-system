@@ -1,11 +1,10 @@
-import type { NextFunction, Request } from 'express';
-import pg from 'postgres';
-
 import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
   MRSError,
-  strcasecmp,
+  pg,
+  type NextFunction,
+  type Request,
   type RequestContext,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
@@ -37,7 +36,7 @@ function attachContext(requestContext: RequestContext) {
   };
 }
 
-function handleMissedRoutes(req: Request, res: ResponseWithoutCtx) {
+function handleNonExistentRoute(req: Request, res: ResponseWithoutCtx) {
   res
     .status(HTTP_STATUS_CODES.NOT_FOUND)
     .json(`The route '${req.url}' does not exist`);
@@ -64,7 +63,11 @@ function errorHandler(
     res.status(code).json(message);
     return;
   }
-  if (err instanceof Error && !strcasecmp(err.name, 'PayloadTooLargeError')) {
+  if (
+    err instanceof Object &&
+    'type' in err &&
+    err.type === 'entity.too.large'
+  ) {
     res
       .status(HTTP_STATUS_CODES.CONTENT_TOO_LARGE)
       .json('Request entity too large');
@@ -126,4 +129,4 @@ function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
 
 /**********************************************************************************/
 
-export { attachContext, checkMethod, errorHandler, handleMissedRoutes };
+export { attachContext, checkMethod, errorHandler, handleNonExistentRoute };

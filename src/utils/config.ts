@@ -19,7 +19,8 @@ type EnvironmentVariables = {
     allowedHosts: string[];
     allowedOrigins: string[];
   };
-  dbUrl: string;
+  databaseUrl: string;
+  hashSecret: Buffer;
 };
 
 /**********************************************************************************/
@@ -42,7 +43,8 @@ class EnvironmentManager {
         allowedHosts: process.env.ALLOWED_HOSTS!.split(','),
         allowedOrigins: process.env.ALLOWED_ORIGINS!.split(','),
       },
-      dbUrl: process.env.DB_URL!,
+      databaseUrl: process.env.DB_URL!,
+      hashSecret: Buffer.from(process.env.HASH_SECRET!),
     } as const satisfies EnvironmentVariables;
   }
 
@@ -88,6 +90,7 @@ class EnvironmentManager {
       'ALLOWED_HOSTS',
       'ALLOWED_ORIGINS',
       'DB_URL',
+      'HASH_SECRET',
     ];
     if (this.#mode !== 'production') {
       environmentVariables.push('DB_TEST_URL', 'SERVER_DEBUG_PORT');

@@ -1,19 +1,44 @@
-### Inspired by https://roadmap.sh/projects/movie-reservation-system
+# Movie reservation system
 
-### Prerequisites
+## Inspired by https://roadmap.sh/projects/movie-reservation-system
+
+A backend which allows to reserve movie tickets.  
+This is a practice exercise so some stuff may be redundant/complicated for learning purposes.  
+For any questions/suggestions, contact details are in my github profile
+
+## Tech stack
+
+- Node.js
+- PostgreSQL
+
+## Libraries
+
+- **Express.js** - Http routing
+- **Drizzle ORM** - SQL integration
+- **postgres** - Native handler for postgreSQL
+- **jose** - JWT generation & validation
+- **zod** - Validation library
+- **ESLint & Prettier** - Code linter & formatter
+- **tsx** - Typescript execute to run typescript in Node.js
+
+---
+
+# Development mode run instructions
+
+## Prerequisites
 
 1. Linux-based system with POSIX compliant shell (required for the scripts to work)
 2. [Docker engine & docker-compose plugin](https://github.com/AdamAkiva/tutorials/blob/main/tools/docker/docker.md)
    preferably the latest version, otherwise you may encounter errors
-3. Make sure the scripts have execute permissions, e.g:
+3. Make sure the scripts have execute permissions, e.g: (Assuming root dir)
 
 ```bash
-chmod +x ./scripts/*
+chmod +x ./scripts/*.sh
 ```
 
 ---
 
-### Recommended (Will work without them):
+## Recommended (Will work without them):
 
 1. [NVM - Node Version Manager](https://github.com/nvm-sh/nvm#installing-and-updating)
 2. [Node LTS version](https://github.com/nvm-sh/nvm#long-term-support)
@@ -27,7 +52,7 @@ chmod +x ./scripts/*
 
 ---
 
-### Run locally
+## Run locally
 
 1. Make sure you have a .env file with needed values (see `.template.env`) in the
    root folder of the application.
@@ -44,13 +69,9 @@ chmod +x ./scripts/*
 ./scripts/remove.sh
 ```
 
-### OpenAPI (AKA swagger)
-
-After the project is running you may view the API [here](http://localhost:2828/v0/api/api-docs)
-
 ---
 
-### Troubleshooting
+## Troubleshooting
 
 If you have permission errors when running the postgres image, try the following:
 

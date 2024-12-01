@@ -1,10 +1,6 @@
-import { sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import pg from 'postgres';
-
 import DatabaseLogger from './logger.js';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */
-import type { LoggerHandler } from '../utils/index.js';
+import { drizzle, type LoggerHandler, pg, sql } from '../utils/index.js';
 import * as schemas from './schemas.js';
 
 /**********************************************************************************/

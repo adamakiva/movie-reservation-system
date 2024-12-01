@@ -2,6 +2,8 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
+// Import directly and not via index.ts to prevent importing the entire project
+// and/or import issues with drizzle
 import { ERROR_CODES } from '../../utils/constants.js';
 
 import * as schemas from '../schemas.js';

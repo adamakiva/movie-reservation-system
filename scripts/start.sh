@@ -7,6 +7,7 @@ ROOT_DIR=$(dirname "$(dirname "$(realpath "$0")")");
 
 DB_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
 NPM_CACHE_FOLDER="$ROOT_DIR"/npm-cache;
+KEYS_FOLDER="$ROOT_DIR"/keys;
 ERR_LOG_FILE=err_logs.txt;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
@@ -25,10 +26,27 @@ check_prerequisites() {
 }
 
 install_dependencies() {
-    printf "\nInstalling dependencies...\n"
+    printf "\nInstalling dependencies...\n";
     if ! npm install -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
+    fi
+}
+
+generate_keys() {
+    if [ ! -d $KEYS_FOLDER ]; then
+        printf "\nGenerating missing keys...\n";
+
+        mkdir $KEYS_FOLDER;
+
+        # Access keys
+        openssl genpkey -algorithm RSA -out $KEYS_FOLDER/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in $KEYS_FOLDER/access_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out $KEYS_FOLDER/access_public_key.pem;
+        # Refresh keys
+        openssl genpkey -algorithm RSA -out $KEYS_FOLDER/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in $KEYS_FOLDER/refresh_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out $KEYS_FOLDER/refresh_public_key.pem;
     fi
 }
 
@@ -57,16 +75,18 @@ check_services_health() {
 }
 
 start() {
-    check_prerequisites;
+    check_prerequisites &&
 
-    printf "\nStarting application...\n";
+    printf "\nStarting application...\n" &&
 
-    rm -f "$ERR_LOG_FILE";
-    mkdir -p "$DB_DATA_FOLDER" "$NPM_CACHE_FOLDER";
+    mkdir -p "$DB_DATA_FOLDER" "$NPM_CACHE_FOLDER" &&
 
-    install_dependencies;
+    install_dependencies &&
+    generate_keys &&
 
-    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait;
+    rm -f "$ERR_LOG_FILE" &&
+
+    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait &&
     check_services_health;
 }
 

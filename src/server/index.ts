@@ -1,5 +1,6 @@
+import AuthenticationManager from './authentication.js';
 import HttpServer from './http.js';
 
 /**********************************************************************************/
 
-export { HttpServer };
+export { AuthenticationManager, HttpServer };

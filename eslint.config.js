@@ -193,7 +193,7 @@ export default tslint.config({
     '@typescript-eslint/default-param-last': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'dot-notation': 'off',
-    // '@typescript-eslint/dot-notation': 'error', // TODO Uncomment when it works (>8.15.0)
+    '@typescript-eslint/dot-notation': 'error',
     '@typescript-eslint/explicit-member-accessibility': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'init-declarations': 'off',
@@ -215,7 +215,7 @@ export default tslint.config({
     '@typescript-eslint/no-dynamic-delete': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-empty-function': 'off',
-    // '@typescript-eslint/no-empty-function': 'error', // TODO Uncomment when it works (>8.15.0)
+    '@typescript-eslint/no-empty-function': 'error',
     '@typescript-eslint/no-empty-object-type': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-extra-non-null-assertion': 'error',
@@ -258,7 +258,7 @@ export default tslint.config({
     '@typescript-eslint/no-unsafe-unary-minus': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-unused-expressions': 'off',
-    // '@typescript-eslint/no-unused-expressions': 'error', // TODO Uncomment when it works (>8.15.0)
+    '@typescript-eslint/no-unused-expressions': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': ['error', { functions: false }],
@@ -296,7 +296,6 @@ export default tslint.config({
     'require-await': 'off',
     '@typescript-eslint/require-await': 'error',
     '@typescript-eslint/restrict-plus-operands': 'error',
-    '@typescript-eslint/restrict-template-expressions': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-return-await': 'off',
     '@typescript-eslint/return-await': ['error', 'always'],

@@ -30,7 +30,7 @@ await suite('Health check unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await suite('Validation', async () => {
+  await suite('Validation layer', async () => {
     await test('Liveness - Invalid methods', (ctx) => {
       const disallowedMethods = [
         'POST',
@@ -104,7 +104,7 @@ await suite('Health check unit tests', async () => {
       }
     });
   });
-  await suite('Controller', async () => {
+  await suite('Controller layer', async () => {
     await test('Readiness - Application is not ready', async (ctx) => {
       const nextMock = ctx.mock.fn();
 
@@ -116,7 +116,7 @@ await suite('Health check unit tests', async () => {
       });
       // @ts-expect-error Only this function is relevant for the test so we ignore
       // the need for additional fields
-      response.locals.context.db = {
+      response.locals.context.database = {
         isReady: async () => {
           await Promise.reject(new PostgresError('PH'));
         },

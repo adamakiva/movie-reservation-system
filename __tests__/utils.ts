@@ -19,6 +19,7 @@ process.on('warning', (warn) => {
 
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
 import type { NextFunction, Request, Response } from 'express';
@@ -36,6 +37,7 @@ import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/db/index.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/middlewares.js';
+import * as services from '../src/services/index.js';
 import {
   CONFIGURATIONS,
   ERROR_CODES,
@@ -49,6 +51,7 @@ import {
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
 import * as validators from '../src/validators/index.js';
+import { VALIDATION } from '../src/validators/index.js';
 
 const { PostgresError } = pg;
 
@@ -61,7 +64,8 @@ type EnvironmentVariables = {
     httpRoute: string;
     healthCheckRoute: string;
   };
-  db: string;
+  databaseUrl: string;
+  hashSecret: Buffer;
 };
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
@@ -83,14 +87,26 @@ function terminateServer(params: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const { mode, server: serverEnv, db: dbUrl } = getTestEnv();
+  const { mode, server: serverEnv, databaseUrl, hashSecret } = getTestEnv();
 
   const { logger, logMiddleware } = mockLogger();
 
   const server = await HttpServer.create({
     mode: mode,
-    dbParams: {
-      url: dbUrl,
+    authenticationParams: {
+      audience: 'mrs-users',
+      issuer: 'mrs-server',
+      alg: 'RS256',
+      access: {
+        expiresAt: 900_000, // 15 minutes
+      },
+      refresh: {
+        expiresAt: 2_629_746_000, // A month
+      },
+      keysPath: resolve(import.meta.dirname, '..', 'keys'),
+    },
+    databaseParams: {
+      url: databaseUrl,
       options: {
         connection: {
           application_name: 'movie_reservation_system_pg_test',
@@ -114,6 +130,7 @@ async function createServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
+    hashSecret,
     logger: logger,
     logMiddleware: logMiddleware,
   });
@@ -126,7 +143,8 @@ async function createServer() {
 
   return {
     server: server,
-    db: server.getDatabase(),
+    authentication: server.getAuthentication(),
+    database: server.getDatabase(),
     routes: {
       base: baseUrl,
       health: `${baseUrl}/${healthCheckRoute}`,
@@ -145,7 +163,8 @@ function getTestEnv(): EnvironmentVariables {
       httpRoute: process.env.HTTP_ROUTE!,
       healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
     },
-    db: process.env.DB_TEST_URL!,
+    databaseUrl: process.env.DB_TEST_URL!,
+    hashSecret: Buffer.from(process.env.HASH_SECRET!),
   } as const;
 }
 
@@ -169,6 +188,7 @@ function checkEnvVariables() {
     'HTTP_ROUTE',
     'HEALTH_CHECK_ROUTE',
     'DB_TEST_URL',
+    'HASH_SECRET',
   ].forEach((val) => {
     if (!process.env[val]) {
       missingValues += `* Missing ${val} environment variable\n`;
@@ -281,9 +301,11 @@ export {
   randomNumber,
   randomString,
   randomUUID,
+  services,
   suite,
   terminateServer,
   test,
+  VALIDATION,
   validators,
   type Database,
   type Logger,

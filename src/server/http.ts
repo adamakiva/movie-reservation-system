@@ -1,28 +1,30 @@
-import compress from 'compression';
-import express, { type Express } from 'express';
-import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
-import type pg from 'postgres';
-
 import { Database } from '../db/index.js';
+import * as routers from '../routers/index.js';
 import {
+  compress,
+  createServer,
   ERROR_CODES,
+  express,
   isProductionMode,
   isTestMode,
+  type AddressInfo,
+  type Express,
   type LoggerHandler,
   type LogMiddleware,
   type Mode,
+  type Server,
 } from '../utils/index.js';
 
-import { healthCheckRouter } from '../routers/index.js';
+import AuthenticationManager from './authentication.js';
 import * as Middlewares from './middlewares.js';
 
 /**********************************************************************************/
 
 class HttpServer {
   readonly #mode;
+  readonly #database;
+  readonly #authentication;
   readonly #server;
-  readonly #db;
   readonly #routes;
   readonly #requestContext;
   readonly #logger;
@@ -31,21 +33,28 @@ class HttpServer {
 
   public static async create(params: {
     mode: Mode;
-    dbParams: {
-      url: string;
-      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-      options?: pg.Options<{}>;
-      healthCheckQuery: string;
-    };
+    authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
     routes: { http: string; health: string };
+    hashSecret: Buffer;
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
-    const { mode, dbParams, allowedMethods, routes, logMiddleware, logger } =
-      params;
+    const {
+      mode,
+      authenticationParams,
+      databaseParams,
+      allowedMethods,
+      routes,
+      hashSecret,
+      logMiddleware,
+      logger,
+    } = params;
 
-    const db = new Database({ ...dbParams, logger });
+    const authentication =
+      await AuthenticationManager.create(authenticationParams);
+    const database = new Database({ ...databaseParams, logger });
 
     const app = express().disable('x-powered-by');
     // Express type chain include extending IRouter which returns void | Promise<void>,
@@ -54,11 +63,13 @@ class HttpServer {
     const server = createServer(app);
 
     const self = new HttpServer({
-      mode: mode,
-      db: db,
-      server: server,
-      routes: routes,
-      logger: logger,
+      mode,
+      authentication,
+      database,
+      server,
+      routes,
+      hashSecret,
+      logger,
     });
 
     self.#attachServerConfigurations();
@@ -66,7 +77,7 @@ class HttpServer {
     await self.#attachConfigurationMiddlewares(app, allowedMethods);
     self.#attachRoutesMiddlewares({
       app,
-      routes: routes,
+      routes,
       logMiddleware,
     });
 
@@ -99,32 +110,47 @@ class HttpServer {
     this.#server.close();
   }
 
+  public getAuthentication() {
+    return this.#authentication;
+  }
+
   public getDatabase() {
-    return this.#db;
+    return this.#database;
   }
 
   /********************************************************************************/
 
-  // Prevent creating the class via the constructor because it needs to be an
-  // async creation
   private constructor(params: {
     mode: Mode;
-    db: Database;
+    authentication: AuthenticationManager;
+    database: Database;
     server: Server;
     routes: { http: string; health: string };
+    hashSecret: Buffer;
     logger: LoggerHandler;
   }) {
-    const { mode, db, server, routes, logger } = params;
+    const {
+      mode,
+      authentication,
+      database,
+      server,
+      routes,
+      hashSecret,
+      logger,
+    } = params;
 
     this.#mode = mode;
-    this.#db = db;
+    this.#authentication = authentication;
+    this.#database = database;
     this.#server = server;
     this.#routes = routes;
     this.#logger = logger;
 
     this.#requestContext = {
-      db: db,
-      logger: logger,
+      authentication,
+      database,
+      hashSecret,
+      logger,
     };
   }
 
@@ -176,11 +202,9 @@ class HttpServer {
     process.exit(ERROR_CODES.EXIT_RESTART);
   }
 
-  // curl -X GET "localhost:4334/health/ready" -H "Custom-Header: $(head -c 80000 </dev/zero | tr '\0' 'A')"
-
   async #handleCloseEvent() {
     let exitCode = 0;
-    const results = await Promise.allSettled([this.#db.close()]);
+    const results = await Promise.allSettled([this.#database.close()]);
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.error(result.reason, 'Error during server termination');
@@ -235,11 +259,18 @@ class HttpServer {
       logMiddleware,
     } = params;
 
+    // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(healthCheckRoute, healthCheckRouter)
+      .use(healthCheckRoute, routers.healthCheckRouter)
+      .use(
+        this.#authentication.httpAuthenticationMiddleware.bind(
+          this.#authentication,
+        ),
+      )
       .use(logMiddleware)
-      .use('*', Middlewares.handleMissedRoutes, Middlewares.errorHandler);
+      .use(httpRoute, routers.authenticationRouter)
+      .use('*', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }
 

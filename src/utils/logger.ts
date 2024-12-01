@@ -5,6 +5,8 @@ import type { NextFunction, Request, Response } from 'express';
 type LoggerHandler = ReturnType<Logger['getHandler']>;
 type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
 
+/**********************************************************************************/
+
 class Logger {
   readonly #handler;
 
