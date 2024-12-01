@@ -1,5 +1,4 @@
 import {
-  type NextFunction,
   type Request,
   type RequestContext,
   type ResponseWithCtx,
@@ -9,40 +8,24 @@ import { healthCheckValidator } from '../validators/index.js';
 
 /**********************************************************************************/
 
-function livenessHealthCheck(
-  req: Request,
-  res: ResponseWithCtx,
-  next: NextFunction,
-) {
-  try {
-    healthCheckValidator.validateHealthCheck(req, res);
+function livenessHealthCheck(req: Request, res: ResponseWithCtx) {
+  healthCheckValidator.validateHealthCheck(req, res);
 
-    res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
-  } catch (err) {
-    next(err);
-  }
+  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
-async function readinessHealthCheck(
-  req: Request,
-  res: ResponseWithCtx,
-  next: NextFunction,
-) {
-  try {
-    healthCheckValidator.validateHealthCheck(req, res);
+async function readinessHealthCheck(req: Request, res: ResponseWithCtx) {
+  healthCheckValidator.validateHealthCheck(req, res);
 
-    const notReadyMsg = await isReady(res.locals.context);
-    if (notReadyMsg.length) {
-      res
-        .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
-        .json(`Application is not available: ${notReadyMsg}`);
-      return;
-    }
-
-    res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
-  } catch (err) {
-    next(err);
+  const notReadyMsg = await isReady(res.locals.context);
+  if (notReadyMsg.length) {
+    res
+      .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
+      .json(`Application is not available: ${notReadyMsg}`);
+    return;
   }
+
+  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

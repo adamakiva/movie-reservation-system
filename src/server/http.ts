@@ -270,7 +270,7 @@ class HttpServer {
       )
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
-      .use('*', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
+      .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }
 

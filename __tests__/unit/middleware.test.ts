@@ -128,21 +128,29 @@ await suite('Middleware unit tests', async () => {
       const { request, response } = createHttpMocks<ResponseWithCtx>({
         logger: logger,
       });
-      const nextMock = ctx.mock.fn();
 
       const httpAuthenticationMiddlewareSpy = ctx.mock
         .fn(serverParams.authentication.httpAuthenticationMiddleware)
         .bind(serverParams.authentication);
 
-      await httpAuthenticationMiddlewareSpy(request, response, nextMock);
+      await assert.rejects(
+        async () => {
+          await httpAuthenticationMiddlewareSpy(
+            request,
+            response,
+            ctx.mock.fn(),
+          );
+        },
+        (err) => {
+          assert.strictEqual(err instanceof MRSError, true);
+          assert.deepStrictEqual((err as MRSError).getClientError(), {
+            code: HTTP_STATUS_CODES.UNAUTHORIZED,
+            message: 'Missing authorization header',
+          });
 
-      assert.strictEqual(nextMock.mock.callCount(), 1);
-      const nextError = nextMock.mock.calls[0]!.arguments[0] as MRSError;
-      assert.strictEqual(nextError instanceof MRSError, true);
-      assert.deepStrictEqual(nextError.getClientError(), {
-        code: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: 'Missing authorization header',
-      });
+          return true;
+        },
+      );
     });
     await test('Invalid token', async (ctx) => {
       const { request, response } = createHttpMocks<ResponseWithCtx>({
@@ -151,21 +159,29 @@ await suite('Middleware unit tests', async () => {
           headers: { authorization: 'Bearer bla' },
         },
       });
-      const nextMock = ctx.mock.fn();
 
       const httpAuthenticationMiddlewareSpy = ctx.mock
         .fn(serverParams.authentication.httpAuthenticationMiddleware)
         .bind(serverParams.authentication);
 
-      await httpAuthenticationMiddlewareSpy(request, response, nextMock);
+      await assert.rejects(
+        async () => {
+          await httpAuthenticationMiddlewareSpy(
+            request,
+            response,
+            ctx.mock.fn(),
+          );
+        },
+        (err) => {
+          assert.strictEqual(err instanceof MRSError, true);
+          assert.deepStrictEqual((err as MRSError).getClientError(), {
+            code: HTTP_STATUS_CODES.UNAUTHORIZED,
+            message: 'Malformed JWT token',
+          });
 
-      assert.strictEqual(nextMock.mock.callCount(), 1);
-      const nextError = nextMock.mock.calls[0]!.arguments[0] as MRSError;
-      assert.strictEqual(nextError instanceof MRSError, true);
-      assert.deepStrictEqual(nextError.getClientError(), {
-        code: HTTP_STATUS_CODES.UNAUTHORIZED,
-        message: 'Malformed JWT token',
-      });
+          return true;
+        },
+      );
     });
   });
 

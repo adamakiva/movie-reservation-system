@@ -81,13 +81,9 @@ class AuthenticationManager {
     _res: ResponseWithCtx,
     next: NextFunction,
   ) {
-    try {
-      await this.#checkAuthenticationToken(req.headers.authorization);
+    await this.#checkAuthenticationToken(req.headers.authorization);
 
-      next();
-    } catch (err) {
-      next(err);
-    }
+    next();
   }
 
   public getExpirationTime() {

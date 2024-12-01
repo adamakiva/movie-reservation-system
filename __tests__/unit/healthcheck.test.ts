@@ -40,26 +40,33 @@ await suite('Health check unit tests', async () => {
         'OPTIONS',
       ] as const;
 
-      const nextMock = ctx.mock.fn();
       const livenessHealthCheckMock = ctx.mock.fn(
         controllers.healthcheckController.livenessHealthCheck,
       );
-      const { request, response } = createHttpMocks<ResponseWithCtx>({
-        logger: logger,
-      });
 
-      disallowedMethods.forEach((method, i) => {
-        request.method = method;
+      disallowedMethods.forEach((disallowedMethod) => {
+        const { request, response } = createHttpMocks<ResponseWithCtx>({
+          logger: logger,
+          reqOptions: {
+            method: disallowedMethod,
+          },
+        });
 
-        livenessHealthCheckMock(request, response, nextMock);
-        assert.strictEqual(nextMock.mock.callCount(), i + 1);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const calledError = nextMock.mock.calls[i]?.arguments[0];
-        assert.strictEqual(calledError instanceof MRSError, true);
-        assert.strictEqual(
-          (calledError as MRSError).getClientError().code,
-          HTTP_STATUS_CODES.NOT_ALLOWED,
+        assert.throws(
+          () => {
+            livenessHealthCheckMock(request, response);
+          },
+          (err) => {
+            assert.strictEqual(err instanceof MRSError, true);
+            assert.strictEqual(
+              (err as MRSError).getClientError().code,
+              HTTP_STATUS_CODES.NOT_ALLOWED,
+            );
+
+            return true;
+          },
         );
+
         assert.strictEqual(
           typeof response._getHeaders().allow === 'string',
           true,
@@ -75,39 +82,44 @@ await suite('Health check unit tests', async () => {
         'OPTIONS',
       ] as const;
 
-      const nextMock = ctx.mock.fn();
       const readinessHealthCheckMock = ctx.mock.fn(
         controllers.healthcheckController.readinessHealthCheck,
       );
-      const { request, response } = createHttpMocks<ResponseWithCtx>({
-        logger: logger,
-      });
 
-      for (let i = 0; i < disallowedMethods.length; ++i) {
-        request.method = disallowedMethods[i]!;
+      await Promise.all(
+        disallowedMethods.map(async (disallowedMethod) => {
+          const { request, response } = createHttpMocks<ResponseWithCtx>({
+            logger: logger,
+            reqOptions: {
+              method: disallowedMethod,
+            },
+          });
 
-        // On purpose to track the call count and parameters
-        // eslint-disable-next-line no-await-in-loop
-        await readinessHealthCheckMock(request, response, nextMock);
-        assert.strictEqual(nextMock.mock.callCount(), i + 1);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const calledError = nextMock.mock.calls[i]?.arguments[0];
-        assert.strictEqual(calledError instanceof MRSError, true);
-        assert.strictEqual(
-          (calledError as MRSError).getClientError().code,
-          HTTP_STATUS_CODES.NOT_ALLOWED,
-        );
-        assert.strictEqual(
-          typeof response._getHeaders().allow === 'string',
-          true,
-        );
-      }
+          await assert.rejects(
+            async () => {
+              await readinessHealthCheckMock(request, response);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.strictEqual(
+                (err as MRSError).getClientError().code,
+                HTTP_STATUS_CODES.NOT_ALLOWED,
+              );
+
+              return true;
+            },
+          );
+
+          assert.strictEqual(
+            typeof response._getHeaders().allow === 'string',
+            true,
+          );
+        }),
+      );
     });
   });
   await suite('Controller layer', async () => {
     await test('Readiness - Application is not ready', async (ctx) => {
-      const nextMock = ctx.mock.fn();
-
       const { request, response } = createHttpMocks<ResponseWithCtx>({
         logger: logger,
         reqOptions: {
@@ -126,13 +138,12 @@ await suite('Health check unit tests', async () => {
         controllers.healthcheckController.readinessHealthCheck,
       );
 
-      await validateHealthCheckMiddlewareSpy(request, response, nextMock);
+      await validateHealthCheckMiddlewareSpy(request, response);
 
       assert.strictEqual(
         response._getStatusCode(),
         HTTP_STATUS_CODES.GATEWAY_TIMEOUT,
       );
-      assert.strictEqual(nextMock.mock.callCount(), 0);
     });
   });
 });
