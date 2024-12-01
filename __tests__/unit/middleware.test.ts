@@ -15,8 +15,6 @@ import {
   terminateServer,
   test,
   type LoggerHandler,
-  type NextFunction,
-  type Request,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
   type ServerParams,
@@ -112,15 +110,7 @@ await suite('Middleware unit tests', async () => {
   });
 
   await suite('Handle missed routes', async () => {
-    await test.only('Missed route', async (ctx) => {
-      ctx.mock.method(
-        serverParams.authentication,
-        'httpAuthenticationMiddleware',
-        (_req: Request, _res: ResponseWithCtx, next: NextFunction) => {
-          next();
-        },
-      );
-
+    await test('Missed route', async () => {
       const res = await fetch(`${serverParams.routes.base}/${randomString()}`, {
         method: 'GET',
       });
@@ -168,8 +158,8 @@ await suite('Middleware unit tests', async () => {
       });
       const nextMock = ctx.mock.fn();
 
-      const error = new Error('Expected error');
-      error.name = 'PayloadTooLargeError';
+      const error: Error & { type?: string } = new Error('Expected error');
+      error.type = 'entity.too.large';
 
       const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
       errorHandlerSpy(error, request, response, nextMock);
