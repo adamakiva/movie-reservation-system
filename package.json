@@ -17,9 +17,6 @@
     "check-cir-deps": "dpdm --no-tree --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
     "check-licenses": "nlf -d -r 1"
   },
-  "engines": {
-    "node": ">=22"
-  },
   "dependencies": {
     "argon2": "~0.41.1",
     "compression": "~1.7.5",
@@ -54,6 +51,12 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "~8.16.0"
   },
+  "engines": {
+    "node": ">=22"
+  },
+  "os": [
+    "linux"
+  ],
   "author": "Adam Akiva",
   "license": "MIT",
   "private": true,

@@ -34,19 +34,19 @@ install_dependencies() {
 }
 
 generate_keys() {
-    if [ ! -d $KEYS_FOLDER ]; then
+    if [ ! -d "$KEYS_FOLDER" ]; then
         printf "\nGenerating missing keys...\n";
 
-        mkdir $KEYS_FOLDER;
+        mkdir "$KEYS_FOLDER";
 
         # Access keys
-        openssl genpkey -algorithm RSA -out $KEYS_FOLDER/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
-        openssl rsa -in $KEYS_FOLDER/access_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out $KEYS_FOLDER/access_public_key.pem;
+        openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in "$KEYS_FOLDER"/access_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/access_public_key.pem;
         # Refresh keys
-        openssl genpkey -algorithm RSA -out $KEYS_FOLDER/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
-        openssl rsa -in $KEYS_FOLDER/refresh_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out $KEYS_FOLDER/refresh_public_key.pem;
+        openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in "$KEYS_FOLDER"/refresh_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/refresh_public_key.pem;
     fi
 }
 
