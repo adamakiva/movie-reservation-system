@@ -262,17 +262,12 @@ class HttpServer {
     // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(healthCheckRoute, routers.healthCheckRouter);
-
-    if (this.#mode === 'production') {
-      app.use(
+      .use(healthCheckRoute, routers.healthCheckRouter)
+      .use(
         this.#authentication.httpAuthenticationMiddleware.bind(
           this.#authentication,
         ),
-      );
-    }
-
-    app
+      )
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
       .use('*', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);

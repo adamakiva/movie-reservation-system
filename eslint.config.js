@@ -296,7 +296,6 @@ export default tslint.config({
     'require-await': 'off',
     '@typescript-eslint/require-await': 'error',
     '@typescript-eslint/restrict-plus-operands': 'error',
-    '@typescript-eslint/restrict-template-expressions': 'error',
     // Note: you must disable the base rule as it can report incorrect errors
     'no-return-await': 'off',
     '@typescript-eslint/return-await': ['error', 'always'],

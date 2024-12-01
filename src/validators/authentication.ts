@@ -18,7 +18,7 @@ function validateLogin(req: Request) {
   );
 }
 
-function validateRefresh(req: Request) {
+function validateRefreshAccessToken(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
@@ -30,4 +30,4 @@ function validateRefresh(req: Request) {
 
 /**********************************************************************************/
 
-export { validateLogin, validateRefresh };
+export { validateLogin, validateRefreshAccessToken };

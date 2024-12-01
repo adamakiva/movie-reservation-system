@@ -24,11 +24,16 @@ async function login(req: Request, res: ResponseWithCtx, next: NextFunction) {
   }
 }
 
-async function refresh(req: Request, res: ResponseWithCtx, next: NextFunction) {
+async function refreshAccessToken(
+  req: Request,
+  res: ResponseWithCtx,
+  next: NextFunction,
+) {
   try {
-    const { refreshToken } = authenticationValidator.validateRefresh(req);
+    const { refreshToken } =
+      authenticationValidator.validateRefreshAccessToken(req);
 
-    const result = await authenticationService.refresh(
+    const result = await authenticationService.refreshAccessToken(
       res.locals.context,
       refreshToken,
     );
@@ -41,4 +46,4 @@ async function refresh(req: Request, res: ResponseWithCtx, next: NextFunction) {
 
 /**********************************************************************************/
 
-export { login, refresh };
+export { login, refreshAccessToken };

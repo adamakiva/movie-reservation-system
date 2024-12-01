@@ -37,6 +37,7 @@ import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/db/index.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/middlewares.js';
+import * as services from '../src/services/index.js';
 import {
   CONFIGURATIONS,
   ERROR_CODES,
@@ -50,6 +51,7 @@ import {
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
 import * as validators from '../src/validators/index.js';
+import { VALIDATION } from '../src/validators/index.js';
 
 const { PostgresError } = pg;
 
@@ -62,7 +64,7 @@ type EnvironmentVariables = {
     httpRoute: string;
     healthCheckRoute: string;
   };
-  db: string;
+  databaseUrl: string;
   hashSecret: Buffer;
 };
 
@@ -85,7 +87,7 @@ function terminateServer(params: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const { mode, server: serverEnv, db: dbUrl, hashSecret } = getTestEnv();
+  const { mode, server: serverEnv, databaseUrl, hashSecret } = getTestEnv();
 
   const { logger, logMiddleware } = mockLogger();
 
@@ -104,7 +106,7 @@ async function createServer() {
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
     },
     databaseParams: {
-      url: dbUrl,
+      url: databaseUrl,
       options: {
         connection: {
           application_name: 'movie_reservation_system_pg_test',
@@ -142,7 +144,7 @@ async function createServer() {
   return {
     server: server,
     authentication: server.getAuthentication(),
-    db: server.getDatabase(),
+    database: server.getDatabase(),
     routes: {
       base: baseUrl,
       health: `${baseUrl}/${healthCheckRoute}`,
@@ -161,7 +163,7 @@ function getTestEnv(): EnvironmentVariables {
       httpRoute: process.env.HTTP_ROUTE!,
       healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
     },
-    db: process.env.DB_TEST_URL!,
+    databaseUrl: process.env.DB_TEST_URL!,
     hashSecret: Buffer.from(process.env.HASH_SECRET!),
   } as const;
 }
@@ -299,9 +301,11 @@ export {
   randomNumber,
   randomString,
   randomUUID,
+  services,
   suite,
   terminateServer,
   test,
+  VALIDATION,
   validators,
   type Database,
   type Logger,

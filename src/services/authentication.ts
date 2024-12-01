@@ -15,32 +15,13 @@ type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
 
 async function login(ctx: RequestContext, credentials: Credentials) {
   const { authentication, database, hashSecret } = ctx;
-  const handler = database.getHandler();
-  const { user: userModel } = database.getModels();
-  const { email, password } = credentials;
 
-  const users = await handler
-    .select({ id: userModel.id, hash: userModel.hash })
-    .from(userModel)
-    .where(eq(userModel.email, email))
-    .limit(1);
-  if (!users.length) {
-    throw new MRSError(
-      HTTP_STATUS_CODES.BAD_REQUEST,
-      'User email and/or password are incorrect',
-    );
-  }
-  const { id: userId, hash } = users[0]!;
-
-  const validPassword = await argon2.verify(hash, password, {
-    secret: hashSecret,
+  const userId = await validateCredentials({
+    database,
+    credentials,
+    hashSecret,
   });
-  if (!validPassword) {
-    throw new MRSError(
-      HTTP_STATUS_CODES.BAD_REQUEST,
-      'User email and/or password are incorrect',
-    );
-  }
+
   const { accessTokenExpirationTime, refreshTokenExpirationTime } =
     authentication.getExpirationTime();
 
@@ -55,7 +36,7 @@ async function login(ctx: RequestContext, credentials: Credentials) {
   };
 }
 
-async function refresh(ctx: RequestContext, refreshToken: string) {
+async function refreshAccessToken(ctx: RequestContext, refreshToken: string) {
   try {
     const { authentication } = ctx;
 
@@ -83,4 +64,75 @@ async function refresh(ctx: RequestContext, refreshToken: string) {
 
 /**********************************************************************************/
 
-export { login, refresh };
+async function validateCredentials(params: {
+  database: RequestContext['database'];
+  credentials: Credentials;
+  hashSecret: Buffer;
+}) {
+  const {
+    database,
+    credentials: { email, password },
+    hashSecret,
+  } = params;
+
+  const { userId, hash } = await findUser(database, email);
+  await validatePassword({ hash, password, hashSecret });
+
+  return userId;
+}
+
+async function findUser(database: RequestContext['database'], email: string) {
+  const handler = database.getHandler();
+  const { user: userModel } = database.getModels();
+
+  const users = await handler
+    .select({ id: userModel.id, hash: userModel.hash })
+    .from(userModel)
+    .where(eq(userModel.email, email))
+    .limit(1);
+  if (!users.length) {
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Email and/or password are incorrect',
+    );
+  }
+  const { id: userId, hash } = users[0]!;
+
+  return {
+    userId,
+    hash,
+  };
+}
+
+async function validatePassword(params: {
+  hash: string;
+  password: string;
+  hashSecret: Buffer;
+}) {
+  try {
+    const { hash, password, hashSecret } = params;
+
+    const validPassword = await argon2.verify(hash, password, {
+      secret: hashSecret,
+    });
+    if (!validPassword) {
+      throw new MRSError(
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        'Email and/or password are incorrect',
+      );
+    }
+  } catch (err) {
+    if (err instanceof MRSError) {
+      throw err;
+    }
+
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Email and/or password are incorrect',
+    );
+  }
+}
+
+/**********************************************************************************/
+
+export { login, refreshAccessToken };

@@ -170,15 +170,15 @@ class AuthenticationManager {
     this.#refresh = refresh;
   }
 
-  async #checkAuthenticationToken(authenticationHeader?: string) {
+  async #checkAuthenticationToken(authorizationHeader?: string) {
     try {
-      if (!authenticationHeader) {
+      if (!authorizationHeader) {
         throw new MRSError(
           HTTP_STATUS_CODES.UNAUTHORIZED,
-          'Missing authentication header',
+          'Missing authorization header',
         );
       }
-      const token = authenticationHeader.replace('Bearer', '');
+      const token = authorizationHeader.replace('Bearer', '');
 
       const {
         payload: { sub },
@@ -190,11 +190,17 @@ class AuthenticationManager {
         );
       }
     } catch (err) {
+      // TODO Check error thrown by exp passed and throw a specific error for it
       if (err instanceof MRSError) {
         throw err;
       }
 
-      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+      if (err instanceof jose.errors.JWSInvalid) {
+        throw new MRSError(
+          HTTP_STATUS_CODES.UNAUTHORIZED,
+          'Malformed JWT token',
+        );
+      }
     }
   }
 }
