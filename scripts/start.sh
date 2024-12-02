@@ -3,7 +3,7 @@
 UID=$(id -u);
 GID=$(id -g);
 
-ROOT_DIR=$(dirname "$(dirname "$(realpath "$0")")");
+ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
 DB_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
 NPM_CACHE_FOLDER="$ROOT_DIR"/npm-cache;

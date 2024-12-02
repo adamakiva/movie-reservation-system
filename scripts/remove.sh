@@ -3,7 +3,7 @@
 UID=$(id -u);
 GID=$(id -g);
 
-ROOT_DIR=$(dirname "$(dirname "$(realpath "$0")")");
+ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
 TESTS_COVERAGE_FOLDER="$ROOT_DIR"/__tests__/coverage;
 
