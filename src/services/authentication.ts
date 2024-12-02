@@ -1,5 +1,4 @@
 import {
-  argon2,
   eq,
   HTTP_STATUS_CODES,
   MRSError,
@@ -14,12 +13,12 @@ type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
 /**********************************************************************************/
 
 async function login(ctx: RequestContext, credentials: Credentials) {
-  const { authentication, database, hashSecret } = ctx;
+  const { authentication, database } = ctx;
 
   const userId = await validateCredentials({
+    authentication,
     database,
     credentials,
-    hashSecret,
   });
 
   const { accessTokenExpirationTime, refreshTokenExpirationTime } =
@@ -65,18 +64,18 @@ async function refreshAccessToken(ctx: RequestContext, refreshToken: string) {
 /**********************************************************************************/
 
 async function validateCredentials(params: {
+  authentication: RequestContext['authentication'];
   database: RequestContext['database'];
   credentials: Credentials;
-  hashSecret: Buffer;
 }) {
   const {
+    authentication,
     database,
     credentials: { email, password },
-    hashSecret,
   } = params;
 
   const { userId, hash } = await findUser(database, email);
-  await validatePassword({ hash, password, hashSecret });
+  await validatePassword({ authentication, hash, password });
 
   return userId;
 }
@@ -105,16 +104,14 @@ async function findUser(database: RequestContext['database'], email: string) {
 }
 
 async function validatePassword(params: {
+  authentication: RequestContext['authentication'];
   hash: string;
   password: string;
-  hashSecret: Buffer;
 }) {
   try {
-    const { hash, password, hashSecret } = params;
+    const { authentication, hash, password } = params;
 
-    const validPassword = await argon2.verify(hash, password, {
-      secret: hashSecret,
-    });
+    const validPassword = await authentication.verifyPassword(hash, password);
     if (!validPassword) {
       throw new MRSError(
         HTTP_STATUS_CODES.BAD_REQUEST,

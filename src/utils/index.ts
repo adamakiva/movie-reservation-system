@@ -41,7 +41,6 @@ type ResponseWithCtx = Response<unknown, { context: RequestContext }>;
 type RequestContext = {
   authentication: AuthenticationManager;
   database: Database;
-  hashSecret: Buffer;
   logger: ReturnType<Logger['getHandler']>;
 };
 

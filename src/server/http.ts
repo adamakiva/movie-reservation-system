@@ -37,7 +37,6 @@ class HttpServer {
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
     routes: { http: string; health: string };
-    hashSecret: Buffer;
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
@@ -47,7 +46,6 @@ class HttpServer {
       databaseParams,
       allowedMethods,
       routes,
-      hashSecret,
       logMiddleware,
       logger,
     } = params;
@@ -68,7 +66,6 @@ class HttpServer {
       database,
       server,
       routes,
-      hashSecret,
       logger,
     });
 
@@ -126,18 +123,9 @@ class HttpServer {
     database: Database;
     server: Server;
     routes: { http: string; health: string };
-    hashSecret: Buffer;
     logger: LoggerHandler;
   }) {
-    const {
-      mode,
-      authentication,
-      database,
-      server,
-      routes,
-      hashSecret,
-      logger,
-    } = params;
+    const { mode, authentication, database, server, routes, logger } = params;
 
     this.#mode = mode;
     this.#authentication = authentication;
@@ -149,7 +137,6 @@ class HttpServer {
     this.#requestContext = {
       authentication,
       database,
-      hashSecret,
       logger,
     };
   }
@@ -263,11 +250,6 @@ class HttpServer {
     app
       .use(Middlewares.attachContext(this.#requestContext))
       .use(healthCheckRoute, routers.healthCheckRouter)
-      .use(
-        this.#authentication.httpAuthenticationMiddleware.bind(
-          this.#authentication,
-        ),
-      )
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);

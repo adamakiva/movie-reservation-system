@@ -16,7 +16,7 @@ async function login(req: Request, res: ResponseWithCtx) {
     credentials,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(result);
+  res.status(HTTP_STATUS_CODES.CREATED).json(result);
 }
 
 async function refreshAccessToken(req: Request, res: ResponseWithCtx) {
@@ -28,7 +28,7 @@ async function refreshAccessToken(req: Request, res: ResponseWithCtx) {
     refreshToken,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(result);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(result);
 }
 
 /**********************************************************************************/

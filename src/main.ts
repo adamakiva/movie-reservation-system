@@ -59,6 +59,7 @@ async function startServer() {
         expiresAt: 2_629_746_000, // A month
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
+      hashSecret,
     },
     databaseParams: {
       url: databaseUrl,
@@ -86,7 +87,6 @@ async function startServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
-    hashSecret,
     logMiddleware,
     logger,
   });

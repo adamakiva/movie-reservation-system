@@ -1,4 +1,5 @@
 import {
+  argon2,
   HTTP_STATUS_CODES,
   jose,
   MRSError,
@@ -16,6 +17,7 @@ class AuthenticationManager {
   readonly #alg;
   readonly #access;
   readonly #refresh;
+  readonly #hashSecret;
 
   public static async create(params: {
     audience: string;
@@ -28,8 +30,10 @@ class AuthenticationManager {
       expiresAt: number;
     };
     keysPath: string;
+    hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh, keysPath } = params;
+    const { audience, issuer, alg, access, refresh, keysPath, hashSecret } =
+      params;
 
     const encoding = { encoding: 'utf-8' } as const;
 
@@ -71,6 +75,7 @@ class AuthenticationManager {
         privateKey: privateRefreshKey,
         expiresAt: refresh.expiresAt,
       },
+      hashSecret,
     });
 
     return self;
@@ -140,6 +145,14 @@ class AuthenticationManager {
     });
   }
 
+  public async hashPassword(password: string) {
+    return await argon2.hash(password, { secret: this.#hashSecret });
+  }
+
+  public async verifyPassword(hash: string, password: string) {
+    return await argon2.verify(hash, password, { secret: this.#hashSecret });
+  }
+
   /********************************************************************************/
 
   private constructor(params: {
@@ -156,14 +169,16 @@ class AuthenticationManager {
       privateKey: jose.KeyLike;
       expiresAt: number;
     };
+    hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh } = params;
+    const { audience, issuer, alg, access, refresh, hashSecret } = params;
 
     this.#audience = audience;
     this.#issuer = issuer;
     this.#alg = alg;
     this.#access = access;
     this.#refresh = refresh;
+    this.#hashSecret = hashSecret;
   }
 
   async #checkAuthenticationToken(authorizationHeader?: string) {

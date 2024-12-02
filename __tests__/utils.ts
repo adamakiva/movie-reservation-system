@@ -40,6 +40,7 @@ import * as Middlewares from '../src/server/middlewares.js';
 import * as services from '../src/services/index.js';
 import {
   CONFIGURATIONS,
+  eq,
   ERROR_CODES,
   HTTP_STATUS_CODES,
   isTestMode,
@@ -98,12 +99,13 @@ async function createServer() {
       issuer: 'mrs-server',
       alg: 'RS256',
       access: {
-        expiresAt: 900_000, // 15 minutes
+        expiresAt: 300_000, // 5 minutes
       },
       refresh: {
-        expiresAt: 2_629_746_000, // A month
+        expiresAt: 600_000, // 10 minutes
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
+      hashSecret,
     },
     databaseParams: {
       url: databaseUrl,
@@ -130,7 +132,6 @@ async function createServer() {
       http: `/${serverEnv.httpRoute}`,
       health: `/${serverEnv.healthCheckRoute}`,
     },
-    hashSecret,
     logger: logger,
     logMiddleware: logMiddleware,
   });
@@ -138,7 +139,7 @@ async function createServer() {
   const port = await server.listen();
   const baseUrl = `http://127.0.0.1:${port}`;
   const {
-    server: { healthCheckRoute },
+    server: { httpRoute, healthCheckRoute },
   } = getTestEnv();
 
   return {
@@ -146,7 +147,7 @@ async function createServer() {
     authentication: server.getAuthentication(),
     database: server.getDatabase(),
     routes: {
-      base: baseUrl,
+      base: `${baseUrl}/${httpRoute}`,
       health: `${baseUrl}/${healthCheckRoute}`,
     },
   };
@@ -235,8 +236,69 @@ function randomUUID(amount = 1) {
   });
 }
 
+/**********************************************************************************/
+/********************************** Seeds *****************************************/
+
+async function seedUser(
+  serverParams: ServerParams,
+  // eslint-disable-next-line no-unused-vars
+  fn: (email: string, password: string) => Promise<unknown>,
+) {
+  const { authentication, database } = serverParams;
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
+
+  const roleName = randomString();
+  const password = randomString();
+  const userData = {
+    email: `${randomString(8)}@ph.com`,
+    firstName: randomString(6),
+    lastName: randomString(8),
+    hash: await authentication.hashPassword(password),
+  };
+
+  const { roleId } = (
+    await handler
+      .insert(roleModel)
+      .values({ name: roleName })
+      .returning({ roleId: roleModel.id })
+  )[0]!;
+  await handler.insert(userModel).values({ ...userData, roleId });
+
+  try {
+    await fn(userData.email, password);
+  } finally {
+    await handler.delete(userModel).where(eq(userModel.email, userData.email));
+    await handler.delete(roleModel).where(eq(roleModel.id, roleId));
+  }
+}
+
 /******************************* API calls ****************************************/
 /**********************************************************************************/
+
+function sendHttpRequest(params: {
+  route: string;
+  method: string;
+  payload?: unknown;
+  headers?: HeadersInit;
+}) {
+  const { route, method, payload, headers } = params;
+
+  const requestOptions: RequestInit = {
+    method,
+    cache: 'no-store',
+    mode: 'same-origin',
+    body: JSON.stringify(payload),
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    redirect: 'follow',
+  } as const;
+
+  return fetch(route, requestOptions);
+}
 
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
@@ -301,6 +363,8 @@ export {
   randomNumber,
   randomString,
   randomUUID,
+  seedUser,
+  sendHttpRequest,
   services,
   suite,
   terminateServer,
