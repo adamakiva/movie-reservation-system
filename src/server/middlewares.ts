@@ -59,7 +59,7 @@ function errorHandler(
   if (err instanceof MRSError) {
     const { code, message } = err.getClientError();
 
-    res.locals.context.logger.error(err);
+    res.locals.context.logger.warn(err);
     res.status(code).json(message);
     return;
   }

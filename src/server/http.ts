@@ -267,6 +267,7 @@ class HttpServer {
       .use(healthCheckRoute, routers.healthCheckRouter)
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
+      .use(httpRoute, routers.roleRouter(this.#authentication))
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }

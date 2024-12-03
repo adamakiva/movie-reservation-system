@@ -432,7 +432,6 @@ const rules = {
     'no-new-wrappers': 'error',
     'no-nonoctal-decimal-escape': 'error',
     'no-object-constructor': 'error',
-    'no-param-reassign': 'error',
     'no-proto': 'error',
     'no-redeclare': 'error',
     'no-regex-spaces': 'error',

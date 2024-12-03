@@ -33,6 +33,7 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
+import { inArray } from 'drizzle-orm';
 import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/database/index.js';
 import { HttpServer } from '../src/server/index.js';
@@ -60,6 +61,9 @@ const { PostgresError } = pg;
 process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
 /**********************************************************************************/
+
+type Role = { id: string; name: string };
+type CreateRole = { name: string };
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
 
@@ -150,6 +154,7 @@ async function createServer() {
     server: server,
     authentication: server.getAuthentication(),
     database: server.getDatabase(),
+    environmentManager,
     routes: {
       base: `${baseUrl}/${serverEnvironment.httpRoute}`,
       health: `${baseUrl}/${serverEnvironment.healthCheckRoute}`,
@@ -253,6 +258,98 @@ function sendHttpRequest(params: {
   return fetch(route, requestOptions);
 }
 
+async function generateTokens(params: {
+  serverParams: ServerParams;
+  email: string;
+  password: string;
+}) {
+  const { serverParams, email, password } = params;
+
+  const res = await sendHttpRequest({
+    route: `${serverParams.routes.base}/login`,
+    method: 'POST',
+    payload: { email, password },
+  });
+
+  assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+
+  return await res.json();
+}
+
+async function getAdminTokens(serverParams: ServerParams) {
+  const email = process.env.ADMIN_EMAIL!;
+  const password = process.env.ADMIN_PASSWORD!;
+
+  return (await generateTokens({ serverParams, email, password })) as {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
+async function createRoles<T extends number = 1>(
+  serverParams: ServerParams,
+  data: T | (T extends 1 ? CreateRole : CreateRole[]),
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    tokens: { accessToken: string; refreshToken: string },
+    // eslint-disable-next-line no-unused-vars
+    role: T extends 1 ? Role : Role[],
+  ) => Promise<unknown>,
+) {
+  let roleIds: string[] = [];
+  // eslint-disable-next-line no-useless-assignment
+  let rolesData: { name: string }[] = null!;
+  if (typeof data === 'number') {
+    rolesData = [...Array(data)].map(() => {
+      return {
+        name: randomString(16),
+      };
+    });
+  } else if (!Array.isArray(data)) {
+    rolesData = [data];
+  } else {
+    rolesData = data;
+  }
+
+  const adminTokens = await getAdminTokens(serverParams);
+  try {
+    const roles = await Promise.all(
+      rolesData.map(async (roleData) => {
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/roles`,
+          method: 'POST',
+          headers: { Authorization: adminTokens.accessToken },
+          payload: roleData,
+        });
+
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        const role = (await res.json()) as Role;
+
+        return role;
+      }),
+    );
+    roleIds = roles.map((role) => {
+      return role.id;
+    });
+
+    // @ts-expect-error On purpose
+    return await fn(adminTokens, roles.length === 1 ? roles[0]! : roles);
+  } finally {
+    await deleteRoles(serverParams, ...roleIds);
+  }
+}
+
+async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
+  if (!roleIds.length) {
+    return;
+  }
+
+  const databaseHandler = serverParams.database.getHandler();
+  const { role: roleModel } = serverParams.database.getModels();
+
+  await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
+}
+
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
 
@@ -306,7 +403,11 @@ export {
   before,
   controllers,
   createHttpMocks,
+  createRoles,
+  deleteRoles,
   ERROR_CODES,
+  generateTokens,
+  getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
   Middlewares,
@@ -333,5 +434,6 @@ export {
   type Request,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
+  type Role,
   type ServerParams,
 };

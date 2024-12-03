@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  generateTokens,
   HTTP_STATUS_CODES,
   initServer,
   seedUser,
@@ -26,7 +27,7 @@ await suite('Authentication integration tests', async () => {
   await test('Login - Valid', async () => {
     await seedUser(serverParams, async (email, password) => {
       const tokens = await generateTokens({
-        route: `${serverParams.routes.base}/login`,
+        serverParams,
         email,
         password,
       });
@@ -53,7 +54,7 @@ await suite('Authentication integration tests', async () => {
   await test('Refresh - Valid', async () => {
     await seedUser(serverParams, async (email, password) => {
       const { refreshToken } = await generateTokens({
-        route: `${serverParams.routes.base}/login`,
+        serverParams,
         email,
         password,
       });
@@ -78,23 +79,3 @@ await suite('Authentication integration tests', async () => {
     });
   });
 });
-
-/**********************************************************************************/
-
-async function generateTokens(params: {
-  route: string;
-  email: string;
-  password: string;
-}) {
-  const { route, email, password } = params;
-
-  const res = await sendHttpRequest({
-    route,
-    method: 'POST',
-    payload: { email, password },
-  });
-
-  assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-  return await res.json();
-}
