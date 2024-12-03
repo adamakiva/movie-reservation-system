@@ -16,8 +16,9 @@ type EnvironmentVariables = {
     baseUrl: string;
     httpRoute: string;
     healthCheckRoute: string;
-    allowedHosts: string[];
-    allowedOrigins: string[];
+    allowedHosts: Set<string>;
+    allowedOrigins: Set<string>;
+    allowedMethods: Set<string>;
   };
   databaseUrl: string;
   hashSecret: Buffer;
@@ -40,10 +41,19 @@ class EnvironmentManager {
         baseUrl: process.env.SERVER_BASE_URL!,
         httpRoute: process.env.HTTP_ROUTE!,
         healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
-        allowedHosts: process.env.ALLOWED_HOSTS!.split(','),
-        allowedOrigins: process.env.ALLOWED_ORIGINS!.split(','),
+        allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),
+        allowedOrigins: new Set(process.env.ALLOWED_ORIGINS!.split(',')),
+        allowedMethods: new Set([
+          'HEAD',
+          'GET',
+          'POST',
+          'PUT',
+          'PATCH',
+          'DELETE',
+          'OPTIONS',
+        ]),
       },
-      databaseUrl: process.env.DB_URL!,
+      databaseUrl: process.env.DATABASE_URL!,
       hashSecret: Buffer.from(process.env.HASH_SECRET!),
     } as const satisfies EnvironmentVariables;
   }
@@ -89,11 +99,11 @@ class EnvironmentManager {
       'HEALTH_CHECK_ROUTE',
       'ALLOWED_HOSTS',
       'ALLOWED_ORIGINS',
-      'DB_URL',
+      'DATABASE_URL',
       'HASH_SECRET',
     ];
     if (this.#mode !== 'production') {
-      environmentVariables.push('DB_TEST_URL', 'SERVER_DEBUG_PORT');
+      environmentVariables.push('DATABASE_TEST_URL', 'SERVER_DEBUG_PORT');
     }
 
     return environmentVariables;

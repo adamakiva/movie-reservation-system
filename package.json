@@ -8,8 +8,8 @@
     "test": "NODE_ENV=test node --import tsx --test __tests__/**/*.test.ts",
     "test-only": "NODE_ENV=test node --import tsx --test --test-only",
     "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
-    "generate-migrations": "drizzle-kit generate --name=init-db --config=./src/db/migrations/drizzle.config.ts",
-    "commit-migrations": "tsx ./src/db/migrations/index.ts",
+    "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
+    "commit-migrations": "tsx ./src/database/migrations/index.ts",
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
@@ -20,6 +20,7 @@
   "dependencies": {
     "argon2": "~0.41.1",
     "compression": "~1.7.5",
+    "cors": "~2.8.5",
     "drizzle-orm": "~0.36.4",
     "express": "~5.0.1",
     "helmet": "~8.0.0",
@@ -46,7 +47,7 @@
     "prettier": "~3.4.1",
     "tsx": "~4.19.2",
     "typescript": "~5.7.2",
-    "typescript-eslint": "~8.16.0"
+    "typescript-eslint": "~8.17.0"
   },
   "engines": {
     "node": ">=22"

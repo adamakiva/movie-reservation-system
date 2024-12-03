@@ -38,7 +38,7 @@ const roleModel = pgTable(
   'role',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    name: varchar('name').notNull(),
+    name: varchar('name').unique().notNull(),
     ...timestamps,
   },
   (table) => {

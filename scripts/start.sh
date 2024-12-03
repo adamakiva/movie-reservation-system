@@ -5,7 +5,7 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
-DB_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
+DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
 NPM_CACHE_FOLDER="$ROOT_DIR"/npm-cache;
 KEYS_FOLDER="$ROOT_DIR"/keys;
 ERR_LOG_FILE=err_logs.txt;
@@ -79,7 +79,7 @@ start() {
 
     printf "\nStarting application...\n" &&
 
-    mkdir -p "$DB_DATA_FOLDER" "$NPM_CACHE_FOLDER" &&
+    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_CACHE_FOLDER" &&
 
     install_dependencies &&
     generate_keys &&

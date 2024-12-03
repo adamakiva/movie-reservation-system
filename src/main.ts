@@ -39,7 +39,7 @@ async function startServer() {
   const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
   const {
     mode,
-    server: serverEnv,
+    server: serverEnvironment,
     databaseUrl,
     hashSecret,
   } = environmentManager.getEnvVariables();
@@ -61,6 +61,15 @@ async function startServer() {
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
     },
+    corsOptions: {
+      methods: Array.from(serverEnvironment.allowedMethods),
+      origin:
+        serverEnvironment.allowedOrigins.size === 1
+          ? Array.from(serverEnvironment.allowedOrigins)[0]
+          : Array.from(serverEnvironment.allowedOrigins),
+      maxAge: 86_400, // 1 day in seconds
+      optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
+    },
     databaseParams: {
       url: databaseUrl,
       options: {
@@ -74,24 +83,16 @@ async function startServer() {
       },
       healthCheckQuery: 'SELECT NOW()',
     },
-    allowedMethods: new Set([
-      'HEAD',
-      'GET',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ]),
+    allowedMethods: serverEnvironment.allowedMethods,
     routes: {
-      http: `/${serverEnv.httpRoute}`,
-      health: `/${serverEnv.healthCheckRoute}`,
+      http: `/${serverEnvironment.httpRoute}`,
+      health: `/${serverEnvironment.healthCheckRoute}`,
     },
     logMiddleware,
     logger,
   });
 
-  await server.listen(parseInt(serverEnv.port));
+  await server.listen(parseInt(serverEnvironment.port));
 
   attachProcessHandlers(server, logger);
 }

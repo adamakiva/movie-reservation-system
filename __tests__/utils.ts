@@ -34,20 +34,19 @@ import {
 import pg from 'postgres';
 
 import * as controllers from '../src/controllers/index.js';
-import type { Database } from '../src/db/index.js';
+import type { Database } from '../src/database/index.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/middlewares.js';
 import * as services from '../src/services/index.js';
 import {
   CONFIGURATIONS,
+  EnvironmentManager,
   eq,
   ERROR_CODES,
   HTTP_STATUS_CODES,
-  isTestMode,
   Logger,
   MRSError,
   type LoggerHandler,
-  type Mode,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
@@ -56,18 +55,11 @@ import { VALIDATION } from '../src/validators/index.js';
 
 const { PostgresError } = pg;
 
-/**********************************************************************************/
+// In order to reuse the environment manager class, we swap the only different
+// value
+process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
-type EnvironmentVariables = {
-  mode: Mode;
-  server: {
-    baseUrl: string;
-    httpRoute: string;
-    healthCheckRoute: string;
-  };
-  databaseUrl: string;
-  hashSecret: Buffer;
-};
+/**********************************************************************************/
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
 
@@ -88,7 +80,13 @@ function terminateServer(params: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const { mode, server: serverEnv, databaseUrl, hashSecret } = getTestEnv();
+  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
+  const {
+    mode,
+    server: serverEnvironment,
+    databaseUrl,
+    hashSecret,
+  } = environmentManager.getEnvVariables();
 
   const { logger, logMiddleware } = mockLogger();
 
@@ -99,13 +97,22 @@ async function createServer() {
       issuer: 'mrs-server',
       alg: 'RS256',
       access: {
-        expiresAt: 300_000, // 5 minutes
+        expiresAt: 60_000, // 1 minute
       },
       refresh: {
-        expiresAt: 600_000, // 10 minutes
+        expiresAt: 120_000, // 2 minutes
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
+    },
+    corsOptions: {
+      methods: Array.from(serverEnvironment.allowedMethods),
+      origin:
+        serverEnvironment.allowedOrigins.size === 1
+          ? Array.from(serverEnvironment.allowedOrigins)[0]
+          : Array.from(serverEnvironment.allowedOrigins),
+      maxAge: 60, // 1 minute in seconds
+      optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
     },
     databaseParams: {
       url: databaseUrl,
@@ -129,8 +136,8 @@ async function createServer() {
       'OPTIONS',
     ]),
     routes: {
-      http: `/${serverEnv.httpRoute}`,
-      health: `/${serverEnv.healthCheckRoute}`,
+      http: `/${serverEnvironment.httpRoute}`,
+      health: `/${serverEnvironment.healthCheckRoute}`,
     },
     logger: logger,
     logMiddleware: logMiddleware,
@@ -138,70 +145,16 @@ async function createServer() {
 
   const port = await server.listen();
   const baseUrl = `http://127.0.0.1:${port}`;
-  const {
-    server: { httpRoute, healthCheckRoute },
-  } = getTestEnv();
 
   return {
     server: server,
     authentication: server.getAuthentication(),
     database: server.getDatabase(),
     routes: {
-      base: `${baseUrl}/${httpRoute}`,
-      health: `${baseUrl}/${healthCheckRoute}`,
+      base: `${baseUrl}/${serverEnvironment.httpRoute}`,
+      health: `${baseUrl}/${serverEnvironment.healthCheckRoute}`,
     },
   };
-}
-
-function getTestEnv(): EnvironmentVariables {
-  const mode = checkRuntimeEnv(process.env.NODE_ENV);
-  checkEnvVariables();
-
-  return {
-    mode: mode,
-    server: {
-      baseUrl: process.env.SERVER_BASE_URL!,
-      httpRoute: process.env.HTTP_ROUTE!,
-      healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
-    },
-    databaseUrl: process.env.DB_TEST_URL!,
-    hashSecret: Buffer.from(process.env.HASH_SECRET!),
-  } as const;
-}
-
-function checkRuntimeEnv(mode?: string) {
-  if (isTestMode(mode)) {
-    return mode as 'test';
-  }
-
-  console.error(
-    `Missing or invalid 'NODE_ENV' env value, should never happen.` +
-      ' Unresolvable, exiting...',
-  );
-
-  return process.exit(ERROR_CODES.EXIT_NO_RESTART);
-}
-
-function checkEnvVariables() {
-  let missingValues = '';
-  [
-    'SERVER_BASE_URL',
-    'HTTP_ROUTE',
-    'HEALTH_CHECK_ROUTE',
-    'DB_TEST_URL',
-    'HASH_SECRET',
-  ].forEach((val) => {
-    if (!process.env[val]) {
-      missingValues += `* Missing ${val} environment variable\n`;
-    }
-  });
-  if (missingValues) {
-    console.error(
-      `\nMissing the following environment vars:\n${missingValues}`,
-    );
-
-    process.exit(ERROR_CODES.EXIT_NO_RESTART);
-  }
 }
 
 /***************************** General utils **************************************/

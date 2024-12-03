@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS "role" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar NOT NULL,
 	"created_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp(3) with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "role_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "showtime" (

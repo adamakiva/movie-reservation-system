@@ -10,7 +10,8 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       # Used by a script to create multiple empty database with the given names
-      - POSTGRES_DBS=mrs, mrs_test
+      - POSTGRES_DATABASES=mrs, mrs_test
+      - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
       - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:rw
@@ -38,6 +39,7 @@ services:
       dockerfile: Dockerfile
       target: dev
     user: ${UID}:${GID}
+    # Environment is hard-coded due to it being development environment
     environment:
       # Server options
       - SERVER_PORT=4334
@@ -48,10 +50,14 @@ services:
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
       # Database URIs
-      - DB_URL=postgres://admin:admin@mrs-pg:5432/mrs
-      - DB_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
+      - DATABASE_URL=postgres://admin:admin@mrs-pg:5432/mrs
+      - DATABASE_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
       # Encryption salt
       - HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
+      # Admin user data
+      - INITIAL_ROLE=admin
+      - ADMIN_EMAIL=admin@admin.com
+      - ADMIN_PASSWORD=bla123
       # Node flags
       - NODE_ENV=development
       # libuv options

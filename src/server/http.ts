@@ -1,13 +1,15 @@
-import { Database } from '../db/index.js';
+import { Database } from '../database/index.js';
 import * as routers from '../routers/index.js';
 import {
   compress,
+  cors,
   createServer,
   ERROR_CODES,
   express,
   isProductionMode,
   isTestMode,
   type AddressInfo,
+  type CorsOptions,
   type Express,
   type LoggerHandler,
   type LogMiddleware,
@@ -34,6 +36,7 @@ class HttpServer {
   public static async create(params: {
     mode: Mode;
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    corsOptions: CorsOptions;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
     routes: { http: string; health: string };
@@ -43,6 +46,7 @@ class HttpServer {
     const {
       mode,
       authenticationParams,
+      corsOptions,
       databaseParams,
       allowedMethods,
       routes,
@@ -71,7 +75,11 @@ class HttpServer {
 
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
-    await self.#attachConfigurationMiddlewares(app, allowedMethods);
+    await self.#attachConfigurationMiddlewares({
+      app,
+      allowedMethods,
+      corsOptions,
+    });
     self.#attachRoutesMiddlewares({
       app,
       routes,
@@ -205,11 +213,18 @@ class HttpServer {
     process.exitCode = 0;
   }
 
-  async #attachConfigurationMiddlewares(
-    app: Express,
-    allowedMethods: Set<string>,
-  ) {
-    app.use(Middlewares.checkMethod(allowedMethods), compress());
+  async #attachConfigurationMiddlewares(params: {
+    app: Express;
+    allowedMethods: Set<string>;
+    corsOptions: CorsOptions;
+  }) {
+    const { app, allowedMethods, corsOptions } = params;
+
+    app.use(
+      Middlewares.checkMethod(allowedMethods),
+      cors(corsOptions),
+      compress(),
+    );
     if (isProductionMode(this.#mode)) {
       app.use(
         (await import('helmet')).default({

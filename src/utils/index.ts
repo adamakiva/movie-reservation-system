@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 
 import argon2 from 'argon2';
 import compress from 'compression';
+import cors, { type CorsOptions } from 'cors';
 import { eq, sql, type Logger as DrizzleLogger } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import express, {
@@ -19,7 +20,7 @@ import * as jose from 'jose';
 import pg from 'postgres';
 import Zod from 'zod';
 
-import type { Database } from '../db/index.js';
+import type { Database } from '../database/index.js';
 import type { AuthenticationManager } from '../server/index.js';
 
 import EnvironmentManager, { type Mode } from './config.js';
@@ -64,6 +65,7 @@ export {
   Zod,
   argon2,
   compress,
+  cors,
   createServer,
   drizzle,
   eq,
@@ -79,6 +81,7 @@ export {
   sql,
   strcasecmp,
   type AddressInfo,
+  type CorsOptions,
   type DatabaseHandler,
   type DrizzleLogger,
   type Express,

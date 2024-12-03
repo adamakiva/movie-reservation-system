@@ -6,6 +6,6 @@ export default defineConfig({
   dialect: 'postgresql',
   verbose: true,
   strict: true,
-  schema: './src/db/schemas.ts',
-  out: './src/db/migrations',
+  schema: './src/database/schemas.ts',
+  out: './src/database/migrations',
 } satisfies Config);

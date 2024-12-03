@@ -146,7 +146,7 @@ class AuthenticationManager {
   }
 
   public async hashPassword(password: string) {
-    return await argon2.hash(password, { secret: this.#hashSecret });
+    return await argon2.hash(password, { type: 1, secret: this.#hashSecret });
   }
 
   public async verifyPassword(hash: string, password: string) {

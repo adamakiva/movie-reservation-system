@@ -19,11 +19,11 @@ EOSQL
 }
 
 main() {
-    if [ -n "$POSTGRES_DBS" ]; then
+    if [ -n "$POSTGRES_DATABASES" ]; then
         printf "Creating multiple database...\n";
 
-        for db in $(printf "%s", "$POSTGRES_DBS" | tr ',' ' ', "$"); do
-                create_database_grant_privilege "$db";
+        for database in $(printf "%s", "$POSTGRES_DATABASES" | tr ',' ' ', "$"); do
+                create_database_grant_privilege "$database";
         done
 
         printf "Databases created successfully\n";
