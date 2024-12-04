@@ -12,8 +12,8 @@ type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
 
 /**********************************************************************************/
 
-async function login(ctx: RequestContext, credentials: Credentials) {
-  const { authentication, database } = ctx;
+async function login(context: RequestContext, credentials: Credentials) {
+  const { authentication, database } = context;
 
   const userId = await validateCredentials({
     authentication,
@@ -35,9 +35,12 @@ async function login(ctx: RequestContext, credentials: Credentials) {
   };
 }
 
-async function refreshAccessToken(ctx: RequestContext, refreshToken: string) {
+async function refreshAccessToken(
+  context: RequestContext,
+  refreshToken: string,
+) {
   try {
-    const { authentication } = ctx;
+    const { authentication } = context;
 
     const { accessTokenExpirationTime } = authentication.getExpirationTime();
 

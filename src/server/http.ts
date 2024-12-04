@@ -189,7 +189,7 @@ class HttpServer {
   }
 
   #handleErrorEvent(err: Error) {
-    this.#logger.error(err, 'HTTP Server error');
+    this.#logger.fatal(err, 'HTTP Server error');
 
     // If an event emitter error happened, we shutdown the application.
     // As a result we allow the deployment orchestration tool to attempt to
@@ -202,7 +202,7 @@ class HttpServer {
     const results = await Promise.allSettled([this.#database.close()]);
     results.forEach((result) => {
       if (result.status === 'rejected') {
-        this.#logger.error(result.reason, 'Error during server termination');
+        this.#logger.fatal(result.reason, 'Error during server termination');
         exitCode = ERROR_CODES.EXIT_RESTART;
       }
     });
@@ -267,6 +267,7 @@ class HttpServer {
       .use(healthCheckRoute, routers.healthCheckRouter)
       .use(logMiddleware)
       .use(httpRoute, routers.authenticationRouter)
+      .use(httpRoute, routers.roleRouter(this.#authentication))
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }

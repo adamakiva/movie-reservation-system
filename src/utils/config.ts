@@ -4,6 +4,7 @@ import {
   isProductionMode,
   isTestMode,
 } from './functions.js';
+import type { LoggerHandler } from './logger.js';
 
 /**********************************************************************************/
 
@@ -27,11 +28,13 @@ type EnvironmentVariables = {
 /**********************************************************************************/
 
 class EnvironmentManager {
+  readonly #logger;
   readonly #mode;
   readonly #environmentVariables;
 
-  public constructor(mode?: string) {
-    this.#mode = EnvironmentManager.#checkRuntimeMode(mode);
+  public constructor(logger: LoggerHandler, mode?: string) {
+    this.#logger = logger;
+    this.#mode = this.#checkRuntimeMode(mode);
     this.#checkForMissingEnvironmentVariables();
 
     this.#environmentVariables = {
@@ -64,12 +67,12 @@ class EnvironmentManager {
 
   /********************************************************************************/
 
-  static #checkRuntimeMode(mode?: string) {
+  #checkRuntimeMode(mode?: string) {
     if (isDevelopmentMode(mode) || isTestMode(mode) || isProductionMode(mode)) {
       return mode as Mode;
     }
 
-    console.error(
+    this.#logger.fatal(
       `Missing or invalid 'NODE_ENV' env value, should never happen.` +
         ' Unresolvable, exiting...',
     );
@@ -85,7 +88,7 @@ class EnvironmentManager {
       }
     });
     if (errorMessages.length) {
-      console.error(errorMessages.join('\n'));
+      this.#logger.fatal(errorMessages.join('\n'));
 
       process.exit(ERROR_CODES.EXIT_NO_RESTART);
     }

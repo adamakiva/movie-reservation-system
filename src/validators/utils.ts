@@ -58,9 +58,37 @@ const VALIDATION = {
       },
     },
   },
+  ROLE: {
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
+    BODY: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Request body should be an object',
+      REQUIRED_ERROR_MESSAGE: 'Request must have a body',
+    },
+    PARAMS: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Request params should be an object',
+      REQUIRED_ERROR_MESSAGE: 'Request must have params',
+    },
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Role id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Role id is required',
+      ERROR_MESSAGE: 'Role id must be a valid UUIDV4',
+    },
+    NAME: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Role name must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Role name is required',
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Role name must be at least 1 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 64,
+        ERROR_MESSAGE: 'Role name must be at most 64 characters long',
+      },
+    },
+  },
 } as const;
 
-const { HEALTHCHECK, AUTHENTICATION } = VALIDATION;
+const { HEALTHCHECK, AUTHENTICATION, ROLE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -158,10 +186,82 @@ const refreshTokenSchema = Zod.object(
 
 /**********************************************************************************/
 
+const createRoleSchema = Zod.object(
+  {
+    name: Zod.string({
+      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
+    })
+      .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase(),
+  },
+  {
+    invalid_type_error: ROLE.BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.BODY.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const updateRoleBodySchema = Zod.object(
+  {
+    name: Zod.string({
+      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase()
+      .optional(),
+  },
+  {
+    invalid_type_error: ROLE.BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.BODY.REQUIRED_ERROR_MESSAGE,
+  },
+).superRefine((val, ctx) => {
+  if (!Object.keys(val).length) {
+    ctx.addIssue({
+      code: Zod.ZodIssueCode.custom,
+      message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+      fatal: true,
+    });
+  }
+});
+
+const updateRoleParamsSchema = Zod.object(
+  {
+    roleId: Zod.string({
+      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(ROLE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: ROLE.PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const deleteRoleSchema = Zod.object(
+  {
+    roleId: Zod.string({
+      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(ROLE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: ROLE.PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+/**********************************************************************************/
+
 export {
+  createRoleSchema,
+  deleteRoleSchema,
   healthCheckSchema,
   loginSchema,
   parseValidationResult,
   refreshTokenSchema,
+  updateRoleBodySchema,
+  updateRoleParamsSchema,
   VALIDATION,
 };

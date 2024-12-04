@@ -19,6 +19,7 @@ class Logger {
       log: this.#log.bind(this),
       warn: this.#warn.bind(this),
       error: this.#error.bind(this),
+      fatal: this.#fatal.bind(this),
     };
   }
 
@@ -49,6 +50,10 @@ class Logger {
   }
 
   #error(...args: unknown[]) {
+    console.error(...args);
+  }
+
+  #fatal(...args: unknown[]) {
     console.error(...args);
   }
 

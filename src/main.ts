@@ -36,15 +36,18 @@ import {
 /**********************************************************************************/
 
 async function startServer() {
-  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
+  const { logger, logMiddleware } = createLogger();
+
+  const environmentManager = new EnvironmentManager(
+    logger,
+    process.env.NODE_ENV,
+  );
   const {
     mode,
     server: serverEnvironment,
     databaseUrl,
     hashSecret,
   } = environmentManager.getEnvVariables();
-
-  const { logger, logMiddleware } = createLogger();
 
   const server = await HttpServer.create({
     mode,
@@ -124,7 +127,7 @@ function globalErrorHandler(params: {
   const { server, reason, logger } = params;
 
   return (err: unknown) => {
-    logger.error(err, `Unhandled ${reason}`);
+    logger.fatal(err, `Unhandled ${reason}`);
 
     server.close();
 
