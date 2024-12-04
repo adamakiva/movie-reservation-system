@@ -7,6 +7,7 @@ import {
   HTTP_STATUS_CODES,
   initServer,
   randomString,
+  randomUUID,
   sendHttpRequest,
   suite,
   terminateServer,
@@ -17,7 +18,7 @@ import {
 
 /**********************************************************************************/
 
-await suite.only('Role integration tests', async () => {
+await suite('Role integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -45,63 +46,110 @@ await suite.only('Role integration tests', async () => {
       });
     });
   });
-  await test('Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+  await suite('Create', async () => {
+    await test('Body too large', async () => {
+      const { status } = await sendHttpRequest({
+        route: `${serverParams.routes.base}/roles`,
+        method: 'POST',
+        payload: { name: 'a'.repeat(65_536) },
+      });
 
-    const roleData = { name: randomString() } as const;
-
-    const res = await sendHttpRequest({
-      route: `${serverParams.routes.base}/roles`,
-      method: 'POST',
-      headers: { Authorization: accessToken },
-      payload: roleData,
+      assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
     });
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+    await test('Valid', async () => {
+      const { accessToken } = await getAdminTokens(serverParams);
 
-    const { id, ...fields } = (await res.json()) as Role;
-    assert.strictEqual(typeof id === 'string', true);
-    assert.deepStrictEqual(roleData, fields);
-  });
-  await test('Update', async () => {
-    await createRoles(serverParams, 1, async ({ accessToken }, role) => {
-      const updatedRoleData = { name: randomString(16) };
+      const roleData = { name: randomString(16) } as const;
 
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles/${role.id}`,
-        method: 'PUT',
+        route: `${serverParams.routes.base}/roles`,
+        method: 'POST',
         headers: { Authorization: accessToken },
-        payload: updatedRoleData,
+        payload: roleData,
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      const updatedRole = await res.json();
-      assert.deepStrictEqual({ ...role, ...updatedRoleData }, updatedRole);
+      const { id, ...fields } = (await res.json()) as Role;
+      assert.strictEqual(typeof id === 'string', true);
+      assert.deepStrictEqual(
+        { ...roleData, name: roleData.name.toLowerCase() },
+        fields,
+      );
     });
   });
-  await test('Delete', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+  await suite('Update', async () => {
+    await test('Body too large', async () => {
+      const { status } = await sendHttpRequest({
+        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
+        method: 'PUT',
+        payload: { name: 'a'.repeat(65_536) },
+      });
 
-    const roleData = { name: randomString() } as const;
-
-    let res = await sendHttpRequest({
-      route: `${serverParams.routes.base}/roles`,
-      method: 'POST',
-      headers: { Authorization: accessToken },
-      payload: roleData,
+      assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
     });
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+    await test('Valid', async () => {
+      await createRoles(serverParams, 1, async ({ accessToken }, role) => {
+        const updatedRoleData = { name: randomString(16) } as const;
 
-    const { id: roleId } = (await res.json()) as Role;
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/roles/${role.id}`,
+          method: 'PUT',
+          headers: { Authorization: accessToken },
+          payload: updatedRoleData,
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-    res = await sendHttpRequest({
-      route: `${serverParams.routes.base}/roles/${roleId}`,
-      method: 'DELETE',
-      headers: { Authorization: accessToken },
+        const updatedRole = await res.json();
+        assert.deepStrictEqual(
+          {
+            ...role,
+            ...{ ...updatedRoleData, name: updatedRoleData.name.toLowerCase() },
+          },
+          updatedRole,
+        );
+      });
     });
+  });
+  await suite('Delete', async () => {
+    await test('Existent', async () => {
+      const { accessToken } = await getAdminTokens(serverParams);
 
-    const responseBody = await res.text();
+      const roleData = { name: randomString() } as const;
 
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-    assert.strictEqual(responseBody, '');
+      let res = await sendHttpRequest({
+        route: `${serverParams.routes.base}/roles`,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: roleData,
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+
+      const { id: roleId } = (await res.json()) as Role;
+
+      res = await sendHttpRequest({
+        route: `${serverParams.routes.base}/roles/${roleId}`,
+        method: 'DELETE',
+        headers: { Authorization: accessToken },
+      });
+
+      const responseBody = await res.text();
+
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(responseBody, '');
+    });
+    await test('Non-existent', async () => {
+      const { accessToken } = await getAdminTokens(serverParams);
+
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
+        method: 'DELETE',
+        headers: { Authorization: accessToken },
+      });
+
+      const responseBody = await res.text();
+
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(responseBody, '');
+    });
   });
 });

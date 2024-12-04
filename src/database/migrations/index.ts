@@ -6,6 +6,7 @@ import pg from 'postgres';
 // Import directly and not via index.ts to prevent importing the entire project
 // and/or import issues with drizzle
 import { ERROR_CODES } from '../../utils/constants.js';
+import Logger, { type LoggerHandler } from '../../utils/logger.js';
 
 import * as schemas from '../schemas.js';
 
@@ -45,7 +46,7 @@ async function seedInitialData(
     .onConflictDoNothing();
 }
 
-async function migration(databaseUrl: string) {
+async function migration(databaseUrl: string, logger: LoggerHandler) {
   const connection = pg(databaseUrl);
   const databaseHandler = drizzle(connection, { schema: schemas });
 
@@ -59,10 +60,7 @@ async function migration(databaseUrl: string) {
       await connection.end({ timeout: 30 });
     } catch (err) {
       // No point in propagating it, because there is nothing to do with it
-      console.error(
-        `Error closing database connection for ${databaseUrl}`,
-        err,
-      );
+      logger.fatal(`Error closing database connection for ${databaseUrl}`, err);
     }
   }
 }
@@ -79,6 +77,8 @@ async function migration(databaseUrl: string) {
 //@ts-expect-error On purpose, see the above comment
 // eslint-disable-next-line consistent-return
 function run() {
+  const logger = new Logger().getHandler();
+
   const environmentVariables = new Map([
     ['INITIAL_ROLE', process.env.INITIAL_ROLE],
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
@@ -100,15 +100,15 @@ function run() {
   if (!errorMessages.length) {
     return Promise.all(
       databaseUrls.values().map((databaseUrl) => {
-        return migration(databaseUrl!);
+        return migration(databaseUrl!, logger);
       }),
     ).catch((err: unknown) => {
-      console.error('Migration failed:', err);
+      logger.fatal('Migration failed:', err);
       process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
   }
 
-  console.error(errorMessages.join('\n'));
+  logger.fatal(errorMessages.join('\n'));
   process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
 }
 

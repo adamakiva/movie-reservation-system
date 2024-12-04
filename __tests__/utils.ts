@@ -84,15 +84,18 @@ function terminateServer(params: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const environmentManager = new EnvironmentManager(process.env.NODE_ENV);
+  const { logger, logMiddleware } = mockLogger();
+
+  const environmentManager = new EnvironmentManager(
+    logger,
+    process.env.NODE_ENV,
+  );
   const {
     mode,
     server: serverEnvironment,
     databaseUrl,
     hashSecret,
   } = environmentManager.getEnvVariables();
-
-  const { logger, logMiddleware } = mockLogger();
 
   const server = await HttpServer.create({
     mode: mode,

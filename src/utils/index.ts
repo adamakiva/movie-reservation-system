@@ -34,7 +34,13 @@ import {
 } from './functions.js';
 import Logger, { type LogMiddleware, type LoggerHandler } from './logger.js';
 
-/**********************************************************************************/
+/********************************* General ****************************************/
+
+type RemoveUndefinedFields<T, K extends keyof T> = {
+  [P in keyof T]: P extends K ? Exclude<T[P], undefined> : T[P];
+};
+
+/********************************** Http ******************************************/
 
 type ResponseWithoutCtx = Response<unknown, object>;
 type ResponseWithCtx = Response<unknown, { context: RequestContext }>;
@@ -44,6 +50,8 @@ type RequestContext = {
   database: Database;
   logger: ReturnType<Logger['getHandler']>;
 };
+
+/********************************* Database ***************************************/
 
 // Omitting client to allow this type to refer to transaction as well as the base
 // database handler
@@ -90,6 +98,7 @@ export {
   type LoggerHandler,
   type Mode,
   type NextFunction,
+  type RemoveUndefinedFields,
   type Request,
   type RequestContext,
   type Response,

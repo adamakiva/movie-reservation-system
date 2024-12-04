@@ -59,6 +59,7 @@ const VALIDATION = {
     },
   },
   ROLE: {
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
     BODY: {
       INVALID_TYPE_ERROR_MESSAGE: 'Request body should be an object',
       REQUIRED_ERROR_MESSAGE: 'Request must have a body',
@@ -67,7 +68,6 @@ const VALIDATION = {
       INVALID_TYPE_ERROR_MESSAGE: 'Request params should be an object',
       REQUIRED_ERROR_MESSAGE: 'Request must have params',
     },
-
     ID: {
       INVALID_TYPE_ERROR_MESSAGE: 'Role id must be a string',
       REQUIRED_ERROR_MESSAGE: 'Role id is required',
@@ -193,7 +193,8 @@ const createRoleSchema = Zod.object(
       required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
     })
       .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE),
+      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase(),
   },
   {
     invalid_type_error: ROLE.BODY.INVALID_TYPE_ERROR_MESSAGE,
@@ -207,7 +208,9 @@ const updateRoleBodySchema = Zod.object(
       invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
     })
       .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE),
+      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase()
+      .optional(),
   },
   {
     invalid_type_error: ROLE.BODY.INVALID_TYPE_ERROR_MESSAGE,
@@ -217,7 +220,7 @@ const updateRoleBodySchema = Zod.object(
   if (!Object.keys(val).length) {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
-      message: 'Empty update is not allowed',
+      message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
       fatal: true,
     });
   }
