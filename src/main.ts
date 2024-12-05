@@ -108,7 +108,7 @@ function createLogger() {
   return {
     logger: logger.getHandler(),
     logMiddleware: logger.getLogMiddleware(),
-  };
+  } as const;
 }
 
 function signalHandler(server: HttpServer) {

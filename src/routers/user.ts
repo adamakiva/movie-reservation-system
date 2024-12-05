@@ -1,4 +1,4 @@
-import { roleController } from '../controllers/index.js';
+import { userController } from '../controllers/index.js';
 import type { AuthenticationManager } from '../server/index.js';
 import { Router, json } from '../utils/index.js';
 
@@ -7,28 +7,34 @@ import { Router, json } from '../utils/index.js';
 function router(authentication: AuthenticationManager) {
   const router = Router()
     .get(
-      '/roles',
+      '/users',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
-      roleController.getRoles,
+      userController.getUsers,
+    )
+    .get(
+      '/users/:userId',
+      json({ limit: 0 }),
+      authentication.httpAuthenticationMiddleware(),
+      userController.getUser,
     )
     .post(
-      '/roles',
-      json({ limit: '4kb' }),
+      '/users',
+      json({ limit: '8kb' }),
       authentication.httpAuthenticationMiddleware(),
-      roleController.createRole,
+      userController.createUser,
     )
     .put(
-      '/roles/:roleId',
-      json({ limit: '4kb' }),
+      '/users/:userId',
+      json({ limit: '8kb' }),
       authentication.httpAuthenticationMiddleware(),
-      roleController.updateRole,
+      userController.updateUser,
     )
     .delete(
-      '/roles/:roleId',
+      '/users/:userId',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
-      roleController.deleteRole,
+      userController.deleteUser,
     );
 
   return router;

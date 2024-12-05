@@ -22,7 +22,7 @@ import {
 
 /**********************************************************************************/
 
-const { AUTHENTICATION } = VALIDATION;
+const { AUTHENTICATION, USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -62,7 +62,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.EMAIL.REQUIRED_ERROR_MESSAGE,
+                message: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
               });
 
               return true;
@@ -92,7 +92,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.EMAIL.ERROR_MESSAGE,
+                message: USER.EMAIL.ERROR_MESSAGE,
               });
 
               return true;
@@ -122,7 +122,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
+                message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -153,7 +153,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.PASSWORD.REQUIRED_ERROR_MESSAGE,
+                message: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
               });
 
               return true;
@@ -166,9 +166,7 @@ await suite('Authentication unit tests', async () => {
             reqOptions: {
               body: {
                 email: 'ph@ph.com',
-                password: 'a'.repeat(
-                  VALIDATION.AUTHENTICATION.LOGIN.PASSWORD.MIN_LENGTH.VALUE - 1,
-                ),
+                password: 'a'.repeat(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
               },
             },
           });
@@ -185,7 +183,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+                message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -198,9 +196,7 @@ await suite('Authentication unit tests', async () => {
             reqOptions: {
               body: {
                 email: 'ph@ph.com',
-                password: 'a'.repeat(
-                  VALIDATION.AUTHENTICATION.LOGIN.PASSWORD.MAX_LENGTH.VALUE + 1,
-                ),
+                password: 'a'.repeat(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
               },
             },
           });
@@ -217,7 +213,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.LOGIN.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
+                message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -275,7 +271,7 @@ await suite('Authentication unit tests', async () => {
                 },
               };
             },
-          };
+          } as const;
         });
         const requestContext = {
           authentication,

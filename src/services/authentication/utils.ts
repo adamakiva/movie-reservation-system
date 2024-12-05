@@ -3,66 +3,12 @@ import {
   HTTP_STATUS_CODES,
   MRSError,
   type RequestContext,
-} from '../utils/index.js';
-import type { authenticationValidator } from '../validators/index.js';
+} from '../../utils/index.js';
+import type { authenticationValidator } from '../../validators/index.js';
 
 /**********************************************************************************/
 
 type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
-
-/**********************************************************************************/
-
-async function login(context: RequestContext, credentials: Credentials) {
-  const { authentication, database } = context;
-
-  const userId = await validateCredentials({
-    authentication,
-    database,
-    credentials,
-  });
-
-  const { accessTokenExpirationTime, refreshTokenExpirationTime } =
-    authentication.getExpirationTime();
-
-  const [accessToken, refreshToken] = await Promise.all([
-    authentication.generateAccessToken(userId, accessTokenExpirationTime),
-    authentication.generateRefreshToken(userId, refreshTokenExpirationTime),
-  ]);
-
-  return {
-    accessToken,
-    refreshToken,
-  };
-}
-
-async function refreshAccessToken(
-  context: RequestContext,
-  refreshToken: string,
-) {
-  try {
-    const { authentication } = context;
-
-    const { accessTokenExpirationTime } = authentication.getExpirationTime();
-
-    const {
-      payload: { sub: userId },
-    } = await authentication.validateToken(refreshToken, 'refresh');
-    if (!userId) {
-      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
-    }
-
-    return await authentication.generateAccessToken(
-      userId,
-      accessTokenExpirationTime,
-    );
-  } catch (err) {
-    if (err instanceof MRSError) {
-      throw err;
-    }
-
-    throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
-  }
-}
 
 /**********************************************************************************/
 
@@ -77,13 +23,16 @@ async function validateCredentials(params: {
     credentials: { email, password },
   } = params;
 
-  const { userId, hash } = await findUser(database, email);
+  const { userId, hash } = await readUserFromDatabase(database, email);
   await validatePassword({ authentication, hash, password });
 
   return userId;
 }
 
-async function findUser(database: RequestContext['database'], email: string) {
+async function readUserFromDatabase(
+  database: RequestContext['database'],
+  email: string,
+) {
   const handler = database.getHandler();
   const { user: userModel } = database.getModels();
 
@@ -103,7 +52,7 @@ async function findUser(database: RequestContext['database'], email: string) {
   return {
     userId,
     hash,
-  };
+  } as const;
 }
 
 async function validatePassword(params: {
@@ -133,6 +82,58 @@ async function validatePassword(params: {
   }
 }
 
+async function generateTokens(
+  authentication: RequestContext['authentication'],
+  userId: string,
+) {
+  const { accessTokenExpirationTime, refreshTokenExpirationTime } =
+    authentication.getExpirationTime();
+
+  const [accessToken, refreshToken] = await Promise.all([
+    authentication.generateAccessToken(userId, accessTokenExpirationTime),
+    authentication.generateRefreshToken(userId, refreshTokenExpirationTime),
+  ]);
+
+  return {
+    accessToken,
+    refreshToken,
+  } as const;
+}
+
+async function refreshAccessToken(
+  authentication: RequestContext['authentication'],
+  refreshToken: string,
+) {
+  const { accessTokenExpirationTime } = authentication.getExpirationTime();
+
+  try {
+    const {
+      payload: { sub: userId },
+    } = await authentication.validateToken(refreshToken, 'refresh');
+    if (!userId) {
+      throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+    }
+
+    const refreshedToken = await authentication.generateAccessToken(
+      userId,
+      accessTokenExpirationTime,
+    );
+
+    return refreshedToken;
+  } catch (err) {
+    if (err instanceof MRSError) {
+      throw err;
+    }
+
+    throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+  }
+}
+
 /**********************************************************************************/
 
-export { login, refreshAccessToken };
+export {
+  generateTokens,
+  refreshAccessToken,
+  validateCredentials,
+  type Credentials,
+};

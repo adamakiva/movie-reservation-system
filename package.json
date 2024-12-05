@@ -14,7 +14,7 @@
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
     "check-code-deps": "./scripts/unused-deps.sh",
-    "check-cir-deps": "dpdm --no-tree --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
+    "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
     "check-licenses": "nlf -d -r 1"
   },
   "dependencies": {

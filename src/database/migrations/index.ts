@@ -19,7 +19,7 @@ const MIGRATIONS_FOLDER = './src/database/migrations';
 async function seedInitialData(
   databaseHandler: PostgresJsDatabase<typeof schemas>,
 ) {
-  const initialRole = process.env.INITIAL_ROLE!;
+  const initialRole = process.env.ADMIN_ROLE!;
   const adminData = {
     firstName: 'admin',
     lastName: 'admin',
@@ -80,7 +80,7 @@ function run() {
   const logger = new Logger().getHandler();
 
   const environmentVariables = new Map([
-    ['INITIAL_ROLE', process.env.INITIAL_ROLE],
+    ['ADMIN_ROLE', process.env.ADMIN_ROLE],
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
     ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
     ['HASH_SECRET', process.env.HASH_SECRET],

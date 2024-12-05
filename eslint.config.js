@@ -89,7 +89,6 @@ const rules = {
       { args: 'after-used', ignoreRestSiblings: true },
     ],
     // 'no-use-before-define': ['error', { functions: false }], // Uncomment if using javascript
-    'no-useless-assignment': 'error',
     'no-useless-backreference': 'error',
     'require-atomic-updates': 'error',
     'use-isnan': 'error',
@@ -384,7 +383,6 @@ const rules = {
       { args: 'after-used', ignoreRestSiblings: true },
     ],
     // 'no-use-before-define': ['error', { functions: false }], // Uncomment if using javascript
-    'no-useless-assignment': 'error',
     'no-useless-backreference': 'error',
     'require-atomic-updates': 'error',
     'use-isnan': 'error',

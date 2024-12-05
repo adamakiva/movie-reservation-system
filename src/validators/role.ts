@@ -36,7 +36,7 @@ function validateUpdateRole(req: Request) {
   return {
     roleId,
     name,
-  };
+  } as const;
 }
 
 function validateDeleteRole(req: Request) {

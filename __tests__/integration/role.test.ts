@@ -3,6 +3,7 @@ import {
   assert,
   before,
   createRoles,
+  deleteRoles,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -57,24 +58,31 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
     });
     await test('Valid', async () => {
-      const { accessToken } = await getAdminTokens(serverParams);
+      let roleId = '';
 
-      const roleData = { name: randomString(16) } as const;
+      try {
+        const { accessToken } = await getAdminTokens(serverParams);
 
-      const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles`,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: roleData,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        const roleData = { name: randomString(16) } as const;
 
-      const { id, ...fields } = (await res.json()) as Role;
-      assert.strictEqual(typeof id === 'string', true);
-      assert.deepStrictEqual(
-        { ...roleData, name: roleData.name.toLowerCase() },
-        fields,
-      );
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/roles`,
+          method: 'POST',
+          headers: { Authorization: accessToken },
+          payload: roleData,
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+
+        const { id, ...fields } = (await res.json()) as Role;
+        roleId = id;
+        assert.strictEqual(typeof id === 'string', true);
+        assert.deepStrictEqual(
+          { ...roleData, name: roleData.name.toLowerCase() },
+          fields,
+        );
+      } finally {
+        await deleteRoles(serverParams, roleId);
+      }
     });
   });
   await suite('Update', async () => {
@@ -112,30 +120,37 @@ await suite('Role integration tests', async () => {
   });
   await suite('Delete', async () => {
     await test('Existent', async () => {
-      const { accessToken } = await getAdminTokens(serverParams);
+      let roleId = '';
 
-      const roleData = { name: randomString() } as const;
+      try {
+        const { accessToken } = await getAdminTokens(serverParams);
 
-      let res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles`,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: roleData,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        const roleData = { name: randomString() } as const;
 
-      const { id: roleId } = (await res.json()) as Role;
+        let res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/roles`,
+          method: 'POST',
+          headers: { Authorization: accessToken },
+          payload: roleData,
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles/${roleId}`,
-        method: 'DELETE',
-        headers: { Authorization: accessToken },
-      });
+        const { id } = (await res.json()) as Role;
+        roleId = id;
 
-      const responseBody = await res.text();
+        res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/roles/${id}`,
+          method: 'DELETE',
+          headers: { Authorization: accessToken },
+        });
 
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-      assert.strictEqual(responseBody, '');
+        const responseBody = await res.text();
+
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+        assert.strictEqual(responseBody, '');
+      } finally {
+        await deleteRoles(serverParams, roleId);
+      }
     });
     await test('Non-existent', async () => {
       const { accessToken } = await getAdminTokens(serverParams);

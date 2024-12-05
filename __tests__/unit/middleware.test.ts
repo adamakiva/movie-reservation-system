@@ -135,7 +135,7 @@ await suite('Middleware unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await httpAuthenticationMiddlewareSpy(
+          await httpAuthenticationMiddlewareSpy()(
             request,
             response,
             ctx.mock.fn(),
@@ -166,7 +166,7 @@ await suite('Middleware unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await httpAuthenticationMiddlewareSpy(
+          await httpAuthenticationMiddlewareSpy()(
             request,
             response,
             ctx.mock.fn(),

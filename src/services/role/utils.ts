@@ -1,49 +1,48 @@
 import {
   asc,
+  count,
   eq,
   ERROR_CODES,
   HTTP_STATUS_CODES,
   MRSError,
   pg,
-  type RemoveUndefinedFields,
   type RequestContext,
-} from '../utils/index.js';
-
-import type {
-  validateCreateRole,
-  validateDeleteRole,
-  validateUpdateRole,
-} from '../validators/role.js';
+} from '../../utils/index.js';
+import type { roleValidator as validator } from '../../validators/index.js';
 
 /**********************************************************************************/
 
-type CreateRoleValidatedData = ReturnType<typeof validateCreateRole>;
-type UpdateRoleValidatedData = ReturnType<typeof validateUpdateRole>;
-type DeleteRoleValidatedData = ReturnType<typeof validateDeleteRole>;
+type CreateRoleValidatedData = ReturnType<typeof validator.validateCreateRole>;
+type UpdateRoleValidatedData = ReturnType<typeof validator.validateUpdateRole>;
+type DeleteRoleValidatedData = ReturnType<typeof validator.validateDeleteRole>;
+
+type Role = {
+  id: string;
+  name: string;
+};
 
 /**********************************************************************************/
 
-async function getRoles(context: RequestContext) {
-  const { database } = context;
+async function readRolesFromDatabase(database: RequestContext['database']) {
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 
-  return await handler
+  const roles = await handler
     .select({ id: roleModel.id, name: roleModel.name })
     .from(roleModel)
     .orderBy(asc(roleModel.name));
+
+  return roles;
 }
 
-async function createRole(
-  context: RequestContext,
+async function insertRoleToDatabase(
+  database: RequestContext['database'],
   roleToCreate: CreateRoleValidatedData,
 ) {
-  const { database } = context;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 
   try {
-    // After insertion the value exists
     return (
       await handler
         .insert(roleModel)
@@ -55,30 +54,29 @@ async function createRole(
   }
 }
 
-async function updateRole(
-  context: RequestContext,
+async function updateRoleInDatabase(
+  database: RequestContext['database'],
   roleToUpdate: UpdateRoleValidatedData,
 ) {
-  const { database } = context;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
   const { roleId, ...fieldsToUpdate } = roleToUpdate;
 
   try {
-    // Since name is the only field we can assert it being not undefined.
-    // If more fields are added, this will need to be re-evaluated
     const updatedRoles = await handler
       .update(roleModel)
-      .set(
-        fieldsToUpdate as RemoveUndefinedFields<typeof fieldsToUpdate, 'name'>,
-      )
+      //@ts-expect-error Drizzle has issues with the typing which does not allow
+      // undefined value, this only a type error and works as intended
+      .set(fieldsToUpdate)
       .where(eq(roleModel.id, roleId))
       .returning({ id: roleModel.id, name: roleModel.name });
     if (!updatedRoles.length) {
-      throw new MRSError(HTTP_STATUS_CODES.NOT_FOUND, 'Role does not exist');
+      throw new MRSError(
+        HTTP_STATUS_CODES.NOT_FOUND,
+        `Role '${roleId}' does not exist`,
+      );
     }
 
-    // Updated role exists
     return updatedRoles[0]!;
   } catch (err) {
     // If there is a conflict it is due to the name update, hence, the name
@@ -87,21 +85,32 @@ async function updateRole(
   }
 }
 
-async function deleteRole(
-  context: RequestContext,
+async function deleteRoleFromDatabase(
+  database: RequestContext['database'],
   roleId: DeleteRoleValidatedData,
 ) {
-  const { database } = context;
   const handler = database.getHandler();
-  const { role: roleModel } = database.getModels();
+  const { role: roleModel, user: userModel } = database.getModels();
 
-  // I decided that if nothing was deleted because it didn't exist in the
+  // Only roles without attached users are allowed to be deleted
+  const usersWithDeletedRole = (
+    await handler
+      .select({ count: count() })
+      .from(userModel)
+      .where(eq(userModel.roleId, roleId))
+  )[0]!.count;
+  if (usersWithDeletedRole) {
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Role has attached users',
+    );
+  }
+
+  // I've decided that if nothing was deleted because it didn't exist in the
   // first place, it is still considered as a success since the end result
   // is the same
   await handler.delete(roleModel).where(eq(roleModel.id, roleId));
 }
-
-/**********************************************************************************/
 
 function handlePossibleDuplicationError(err: unknown, conflictField: string) {
   if (
@@ -120,4 +129,13 @@ function handlePossibleDuplicationError(err: unknown, conflictField: string) {
 
 /**********************************************************************************/
 
-export { createRole, deleteRole, getRoles, updateRole };
+export {
+  deleteRoleFromDatabase,
+  insertRoleToDatabase,
+  readRolesFromDatabase,
+  updateRoleInDatabase,
+  type CreateRoleValidatedData,
+  type DeleteRoleValidatedData,
+  type Role,
+  type UpdateRoleValidatedData,
+};

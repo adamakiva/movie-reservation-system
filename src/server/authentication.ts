@@ -81,14 +81,8 @@ class AuthenticationManager {
     return self;
   }
 
-  public async httpAuthenticationMiddleware(
-    req: Request,
-    _res: ResponseWithCtx,
-    next: NextFunction,
-  ) {
-    await this.#checkAuthenticationToken(req.headers.authorization);
-
-    next();
+  public httpAuthenticationMiddleware() {
+    return this.#httpAuthenticationMiddleware.bind(this);
   }
 
   public getExpirationTime() {
@@ -97,14 +91,14 @@ class AuthenticationManager {
     return {
       accessTokenExpirationTime: now + this.#access.expiresAt,
       refreshTokenExpirationTime: now + this.#refresh.expiresAt,
-    };
+    } as const;
   }
 
   public async generateAccessToken(
     userId: string,
     accessTokenExpirationTime: number,
   ) {
-    return await new jose.SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -112,13 +106,15 @@ class AuthenticationManager {
       .setExpirationTime(accessTokenExpirationTime)
       .setProtectedHeader({ alg: this.#alg })
       .sign(this.#access.privateKey);
+
+    return jwt;
   }
 
   public async generateRefreshToken(
     userId: string,
     refreshTokenExpirationTime: number,
   ) {
-    return await new jose.SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -126,6 +122,8 @@ class AuthenticationManager {
       .setExpirationTime(refreshTokenExpirationTime)
       .setProtectedHeader({ alg: this.#alg })
       .sign(this.#refresh.privateKey);
+
+    return jwt;
   }
 
   public async validateToken(token: string, type: 'access' | 'refresh') {
@@ -139,18 +137,29 @@ class AuthenticationManager {
         break;
     }
 
-    return await jose.jwtVerify(token, publicKey, {
+    const parsedJwt = await jose.jwtVerify(token, publicKey, {
       audience: this.#audience,
       issuer: this.#issuer,
     });
+
+    return parsedJwt;
   }
 
   public async hashPassword(password: string) {
-    return await argon2.hash(password, { type: 1, secret: this.#hashSecret });
+    const hashedPassword = await argon2.hash(password, {
+      type: 1,
+      secret: this.#hashSecret,
+    });
+
+    return hashedPassword;
   }
 
   public async verifyPassword(hash: string, password: string) {
-    return await argon2.verify(hash, password, { secret: this.#hashSecret });
+    const isValid = await argon2.verify(hash, password, {
+      secret: this.#hashSecret,
+    });
+
+    return isValid;
   }
 
   /********************************************************************************/
@@ -179,6 +188,16 @@ class AuthenticationManager {
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
+  }
+
+  async #httpAuthenticationMiddleware(
+    req: Request,
+    _res: ResponseWithCtx,
+    next: NextFunction,
+  ) {
+    await this.#checkAuthenticationToken(req.headers.authorization);
+
+    next();
   }
 
   async #checkAuthenticationToken(authorizationHeader?: string) {

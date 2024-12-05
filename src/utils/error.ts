@@ -33,7 +33,7 @@ class MRSError extends Error {
     return {
       code: this.#statusCode,
       message: this.#message,
-    };
+    } as const;
   }
 
   static #formatError(err: Error) {

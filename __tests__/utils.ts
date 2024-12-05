@@ -39,6 +39,8 @@ import type { Database } from '../src/database/index.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/middlewares.js';
 import * as services from '../src/services/index.js';
+import type { Role } from '../src/services/role/utils.js';
+import type { User } from '../src/services/user/utils.js';
 import {
   CONFIGURATIONS,
   EnvironmentManager,
@@ -52,7 +54,7 @@ import {
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
 import * as validators from '../src/validators/index.js';
-import { VALIDATION } from '../src/validators/index.js';
+import { VALIDATION } from '../src/validators/utils.js';
 
 const { PostgresError } = pg;
 
@@ -62,8 +64,14 @@ process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
 /**********************************************************************************/
 
-type Role = { id: string; name: string };
 type CreateRole = { name: string };
+type CreateUser = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  roleId: string;
+};
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
 
@@ -71,7 +79,9 @@ type ServerParams = Awaited<ReturnType<typeof initServer>>;
 /**********************************************************************************/
 
 async function initServer() {
-  return await createServer();
+  const server = await createServer();
+
+  return server;
 }
 
 function terminateServer(params: ServerParams) {
@@ -162,7 +172,7 @@ async function createServer() {
       base: `${baseUrl}/${serverEnvironment.httpRoute}`,
       health: `${baseUrl}/${serverEnvironment.healthCheckRoute}`,
     },
-  };
+  } as const;
 }
 
 /***************************** General utils **************************************/
@@ -276,17 +286,40 @@ async function generateTokens(params: {
 
   assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-  return await res.json();
+  const jsonResponse = await res.json();
+
+  return jsonResponse;
 }
 
 async function getAdminTokens(serverParams: ServerParams) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  return (await generateTokens({ serverParams, email, password })) as {
+  const tokens = (await generateTokens({ serverParams, email, password })) as {
     accessToken: string;
     refreshToken: string;
   };
+
+  return tokens;
+}
+
+async function getAdminRole(serverParams: ServerParams) {
+  const { database } = serverParams;
+  const handler = database.getHandler();
+  const { role: roleModel } = database.getModels();
+  const adminRoleName = process.env.ADMIN_ROLE!;
+
+  const { id } = (
+    await handler
+      .select({ id: roleModel.id })
+      .from(roleModel)
+      .where(eq(roleModel.name, adminRoleName))
+  )[0]!;
+
+  return {
+    roleId: id,
+    roleName: adminRoleName,
+  } as const;
 }
 
 async function createRoles<T extends number = 1>(
@@ -300,13 +333,12 @@ async function createRoles<T extends number = 1>(
   ) => Promise<unknown>,
 ) {
   let roleIds: string[] = [];
-  // eslint-disable-next-line no-useless-assignment
   let rolesData: { name: string }[] = null!;
   if (typeof data === 'number') {
     rolesData = [...Array(data)].map(() => {
       return {
         name: randomString(16),
-      };
+      } as const;
     });
   } else if (!Array.isArray(data)) {
     rolesData = [data];
@@ -336,13 +368,18 @@ async function createRoles<T extends number = 1>(
     });
 
     // @ts-expect-error On purpose
-    return await fn(adminTokens, roles.length === 1 ? roles[0]! : roles);
+    const res = await fn(adminTokens, roles.length === 1 ? roles[0]! : roles);
+
+    return res;
   } finally {
     await deleteRoles(serverParams, ...roleIds);
   }
 }
 
 async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
+  roleIds = roleIds.filter((roleId) => {
+    return roleId;
+  });
   if (!roleIds.length) {
     return;
   }
@@ -353,6 +390,24 @@ async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
   await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
 }
 
+async function createUsers() {
+  // TODO
+}
+
+async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
+  userIds = userIds.filter((userId) => {
+    return userId;
+  });
+  if (!userIds.length) {
+    return;
+  }
+
+  const databaseHandler = serverParams.database.getHandler();
+  const { user: userModel } = serverParams.database.getModels();
+
+  await databaseHandler.delete(userModel).where(inArray(userModel.id, userIds));
+}
+
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
 
@@ -360,24 +415,24 @@ function mockLogger() {
   const logger = new Logger();
   const loggerHandler = logger.getHandler();
 
-  function disableLog() {
-    // Disable logs
-  }
-
   return {
     logger: {
       ...loggerHandler,
-      debug: disableLog,
-      info: disableLog,
-      log: disableLog,
-      warn: disableLog,
-      error: disableLog,
+      debug: disableLogFn,
+      info: disableLogFn,
+      log: disableLogFn,
+      warn: disableLogFn,
+      error: disableLogFn,
     },
     logMiddleware: (_req: Request, _res: Response, next: NextFunction) => {
       // Disable logging middleware
       next();
     },
-  };
+  } as const;
+}
+
+function disableLogFn() {
+  // Disable logs
 }
 
 function createHttpMocks<T extends Response = Response>(params: {
@@ -395,7 +450,7 @@ function createHttpMocks<T extends Response = Response>(params: {
         context: { logger: logger },
       },
     }),
-  };
+  } as const;
 }
 
 /**********************************************************************************/
@@ -407,9 +462,12 @@ export {
   controllers,
   createHttpMocks,
   createRoles,
+  createUsers,
   deleteRoles,
+  deleteUsers,
   ERROR_CODES,
   generateTokens,
+  getAdminRole,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -428,6 +486,7 @@ export {
   test,
   VALIDATION,
   validators,
+  type CreateUser,
   type Database,
   type Logger,
   type LoggerHandler,
@@ -439,4 +498,5 @@ export {
   type ResponseWithoutCtx,
   type Role,
   type ServerParams,
+  type User,
 };

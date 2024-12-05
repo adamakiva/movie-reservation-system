@@ -55,7 +55,7 @@ services:
       # Encryption salt
       - HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
       # Admin user data
-      - INITIAL_ROLE=admin
+      - ADMIN_ROLE=admin
       - ADMIN_EMAIL=admin@admin.com
       - ADMIN_PASSWORD=bla123
       # Node flags
