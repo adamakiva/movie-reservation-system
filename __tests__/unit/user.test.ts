@@ -22,7 +22,7 @@ import {
 
 /**********************************************************************************/
 
-const { USER } = VALIDATION;
+const { USER, PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -148,7 +148,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
+                  message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -160,9 +160,7 @@ await suite.only('User unit tests', async () => {
               logger,
               reqOptions: {
                 query: {
-                  cursor: 'a'.repeat(
-                    USER.PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1,
-                  ),
+                  cursor: 'a'.repeat(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
                 },
               },
             });
@@ -179,7 +177,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
+                  message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -191,9 +189,7 @@ await suite.only('User unit tests', async () => {
               logger,
               reqOptions: {
                 query: {
-                  cursor: 'a'.repeat(
-                    USER.PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1,
-                  ),
+                  cursor: 'a'.repeat(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
                 },
               },
             });
@@ -210,7 +206,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
+                  message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -237,7 +233,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.CURSOR.ERROR_MESSAGE,
+                  message: PAGINATION.CURSOR.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -251,7 +247,7 @@ await suite.only('User unit tests', async () => {
               logger,
               reqOptions: {
                 query: {
-                  pageSize: USER.PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE - 1,
+                  pageSize: PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE - 1,
                 },
               },
             });
@@ -268,7 +264,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
+                  message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -280,7 +276,7 @@ await suite.only('User unit tests', async () => {
               logger,
               reqOptions: {
                 query: {
-                  pageSize: USER.PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE + 1,
+                  pageSize: PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE + 1,
                 },
               },
             });
@@ -297,7 +293,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
+                  message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
                 });
 
                 return true;
@@ -324,7 +320,7 @@ await suite.only('User unit tests', async () => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                  message: USER.PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+                  message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
                 });
 
                 return true;
@@ -635,7 +631,7 @@ await suite.only('User unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE,
+                message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
               });
 
               return true;
@@ -665,7 +661,7 @@ await suite.only('User unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE,
+                message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
               });
 
               return true;
@@ -1271,7 +1267,7 @@ await suite.only('User unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE,
+                message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
               });
 
               return true;
@@ -1302,7 +1298,7 @@ await suite.only('User unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE,
+                message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
               });
 
               return true;

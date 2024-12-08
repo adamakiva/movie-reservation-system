@@ -404,7 +404,7 @@ await suite('Authentication unit tests', async () => {
           logger,
         };
         const refreshToken = await authentication.generateRefreshToken(
-          randomUUID() as string,
+          randomUUID(),
           Date.now() + 10_000,
         );
         const refreshAccessTokenSpy = ctx.mock.fn(

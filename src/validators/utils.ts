@@ -15,6 +15,32 @@ const VALIDATION = {
     INVALID_TYPE_ERROR_MESSAGE: 'Request query should be an object',
     REQUIRED_ERROR_MESSAGE: 'Request must have query params',
   },
+  PAGINATION: {
+    CURSOR: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Cursor must be a string',
+      ERROR_MESSAGE: 'Invalid cursor',
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Cursor must be at least 1 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 128,
+        ERROR_MESSAGE: 'Cursor must be at most 128 characters long',
+      },
+    },
+    PAGE_SIZE: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Page size must be a number',
+      DEFAULT_VALUE: 10,
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Page size must be at least 1 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 64,
+        ERROR_MESSAGE: 'Page size must be at most 128 characters long',
+      },
+    },
+  },
   HEALTHCHECK: {
     HTTP_METHODS: {
       NAMES: ['HEAD', 'GET'],
@@ -64,32 +90,6 @@ const VALIDATION = {
     },
   },
   USER: {
-    PAGINATION: {
-      CURSOR: {
-        INVALID_TYPE_ERROR_MESSAGE: 'Cursor must be a string',
-        ERROR_MESSAGE: 'Invalid cursor',
-        MIN_LENGTH: {
-          VALUE: 1,
-          ERROR_MESSAGE: 'Cursor must be at least 1 character long',
-        },
-        MAX_LENGTH: {
-          VALUE: 128,
-          ERROR_MESSAGE: 'Cursor must be at most 128 characters long',
-        },
-      },
-      PAGE_SIZE: {
-        INVALID_TYPE_ERROR_MESSAGE: 'Page size must be a number',
-        DEFAULT_VALUE: 10,
-        MIN_LENGTH: {
-          VALUE: 1,
-          ERROR_MESSAGE: 'Page size must be at least 1 character long',
-        },
-        MAX_LENGTH: {
-          VALUE: 64,
-          ERROR_MESSAGE: 'Page size must be at most 128 characters long',
-        },
-      },
-    },
     NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
     ID: {
       INVALID_TYPE_ERROR_MESSAGE: 'User id must be a string',
@@ -153,8 +153,16 @@ const VALIDATION = {
   },
 } as const;
 
-const { BODY, PARAMS, QUERY, HEALTHCHECK, AUTHENTICATION, ROLE, USER } =
-  VALIDATION;
+const {
+  BODY,
+  PARAMS,
+  QUERY,
+  PAGINATION,
+  HEALTHCHECK,
+  AUTHENTICATION,
+  ROLE,
+  USER,
+} = VALIDATION;
 
 /**********************************************************************************/
 
@@ -174,6 +182,17 @@ function parseValidationResult<I, O>(
 
   return res.data;
 }
+
+// The cursor schema is checked with a programmer created object, so the
+// error messages only exist for possible error paths
+const cursorSchema = Zod.object({
+  id: Zod.string({
+    invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
+  }).uuid(PAGINATION.CURSOR.ERROR_MESSAGE),
+  createdAt: Zod.date({
+    invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
+  }),
+});
 
 /**********************************************************************************/
 
@@ -325,31 +344,30 @@ const deleteRoleSchema = Zod.object(
 const getUsersSchema = Zod.object(
   {
     cursor: Zod.string({
-      invalid_type_error: USER.PAGINATION.CURSOR.INVALID_TYPE_ERROR_MESSAGE,
+      invalid_type_error: PAGINATION.CURSOR.INVALID_TYPE_ERROR_MESSAGE,
     })
       .min(
-        USER.PAGINATION.CURSOR.MIN_LENGTH.VALUE,
-        USER.PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
+        PAGINATION.CURSOR.MIN_LENGTH.VALUE,
+        PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
       )
       .max(
-        USER.PAGINATION.CURSOR.MAX_LENGTH.VALUE,
-        USER.PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
+        PAGINATION.CURSOR.MAX_LENGTH.VALUE,
+        PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
       )
       .optional(),
     pageSize: Zod.coerce
       .number({
-        invalid_type_error:
-          USER.PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+        invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
       })
       .min(
-        USER.PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
-        USER.PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
+        PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
+        PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
       )
       .max(
-        USER.PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
-        USER.PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
+        PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
+        PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
       )
-      .default(USER.PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
+      .default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
   },
   {
     invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
@@ -363,7 +381,7 @@ const getUsersSchema = Zod.object(
   }
 
   try {
-    const { id: userId, createdAt } = decodeCursor(cursor);
+    const { id: userId, createdAt } = cursorSchema.parse(decodeCursor(cursor));
 
     return {
       cursor: { userId, createdAt },
@@ -372,7 +390,7 @@ const getUsersSchema = Zod.object(
   } catch {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
-      message: USER.PAGINATION.CURSOR.ERROR_MESSAGE,
+      message: PAGINATION.CURSOR.ERROR_MESSAGE,
       fatal: true,
     });
   }
