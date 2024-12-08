@@ -2,13 +2,9 @@ import {
   eq,
   HTTP_STATUS_CODES,
   MRSError,
+  type Credentials,
   type RequestContext,
 } from '../../utils/index.js';
-import type { authenticationValidator } from '../../validators/index.js';
-
-/**********************************************************************************/
-
-type Credentials = ReturnType<typeof authenticationValidator.validateLogin>;
 
 /**********************************************************************************/
 
@@ -131,9 +127,4 @@ async function refreshAccessToken(
 
 /**********************************************************************************/
 
-export {
-  generateTokens,
-  refreshAccessToken,
-  validateCredentials,
-  type Credentials,
-};
+export { generateTokens, refreshAccessToken, validateCredentials };

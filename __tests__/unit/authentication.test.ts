@@ -282,7 +282,7 @@ await suite('Authentication unit tests', async () => {
         const credentials = {
           email: `${randomUUID()}@ph.com`,
           password: randomString(),
-        };
+        } as const;
         const loginSpy = ctx.mock.fn(services.authenticationService.login);
 
         await assert.rejects(

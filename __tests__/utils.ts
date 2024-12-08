@@ -49,6 +49,7 @@ import {
   HTTP_STATUS_CODES,
   Logger,
   MRSError,
+  type Credentials,
   type LoggerHandler,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
@@ -245,18 +246,41 @@ async function seedUser(
   }
 }
 
+async function checkUserPassword(
+  serverParams: ServerParams,
+  credentials: Credentials,
+) {
+  const { authentication, database } = serverParams;
+  const handler = database.getHandler();
+  const { user: userModel } = database.getModels();
+  const { email, password } = credentials;
+
+  const users = await handler
+    .select({ hash: userModel.hash })
+    .from(userModel)
+    .where(eq(userModel.email, email));
+  if (!users.length) {
+    assert.fail(`Are you sure you've sent the correct credentials?`);
+  }
+
+  const isValid = await authentication.verifyPassword(users[0]!.hash, password);
+  assert.deepStrictEqual(isValid, true);
+}
+
 /******************************* API calls ****************************************/
 /**********************************************************************************/
 
-function sendHttpRequest(params: {
+function sendHttpRequest<
+  T extends 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+>(params: {
   route: string;
-  method: string;
-  payload?: unknown;
+  method: T;
+  payload?: T extends 'HEAD' | 'GET' | 'DELETE' ? never : unknown;
   headers?: HeadersInit;
 }) {
   const { route, method, payload, headers } = params;
 
-  const requestOptions: RequestInit = {
+  return fetch(route, {
     method,
     cache: 'no-store',
     mode: 'same-origin',
@@ -267,9 +291,7 @@ function sendHttpRequest(params: {
       Accept: 'application/json',
     },
     redirect: 'follow',
-  } as const;
-
-  return fetch(route, requestOptions);
+  });
 }
 
 async function generateTokens(params: {
@@ -304,23 +326,15 @@ async function getAdminTokens(serverParams: ServerParams) {
   return tokens;
 }
 
-async function getAdminRole(serverParams: ServerParams) {
-  const { database } = serverParams;
-  const handler = database.getHandler();
-  const { role: roleModel } = database.getModels();
-  const adminRoleName = process.env.ADMIN_ROLE!;
-
-  const { id } = (
-    await handler
-      .select({ id: roleModel.id })
-      .from(roleModel)
-      .where(eq(roleModel.name, adminRoleName))
-  )[0]!;
-
+function getAdminRole() {
   return {
-    roleId: id,
-    roleName: adminRoleName,
+    id: process.env.ADMIN_ROLE_ID!,
+    name: process.env.ADMIN_ROLE_NAME!,
   } as const;
+}
+
+function getAdminUserId() {
+  return process.env.ADMIN_ID!;
 }
 
 async function createRoles<T extends number = 1>(
@@ -334,12 +348,12 @@ async function createRoles<T extends number = 1>(
   ) => Promise<unknown>,
 ) {
   let roleIds: string[] = [];
-  let rolesData: { name: string }[] = null!;
+  let rolesData: CreateRole[] = null!;
   if (typeof data === 'number') {
     rolesData = [...Array(data)].map(() => {
       return {
         name: randomString(16),
-      } as const;
+      } as const as CreateRole;
     });
   } else if (!Array.isArray(data)) {
     rolesData = [data];
@@ -391,8 +405,67 @@ async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
   await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
 }
 
-async function createUsers() {
-  // TODO
+async function createUsers<T extends number = 1>(
+  serverParams: ServerParams,
+  data: T | (T extends 1 ? CreateUser : CreateUser[]),
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    tokens: { accessToken: string; refreshToken: string },
+    // eslint-disable-next-line no-unused-vars
+    user: T extends 1 ? User : User[],
+  ) => Promise<unknown>,
+) {
+  let userIds: string[] = [];
+  let usersData: CreateUser[] = null!;
+  if (typeof data === 'number') {
+    const { id: roleId } = getAdminRole();
+    usersData = generateRandomUsersData([roleId], data);
+  } else if (!Array.isArray(data)) {
+    usersData = [data];
+  } else {
+    usersData = data;
+  }
+
+  const adminTokens = await getAdminTokens(serverParams);
+  try {
+    const users = await Promise.all(
+      usersData.map(async (userData) => {
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.base}/users`,
+          method: 'POST',
+          headers: { Authorization: adminTokens.accessToken },
+          payload: userData,
+        });
+
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        const user = (await res.json()) as User;
+
+        return user;
+      }),
+    );
+    userIds = users.map((user) => {
+      return user.id;
+    });
+
+    // @ts-expect-error On purpose
+    const res = await fn(adminTokens, users.length === 1 ? users[0]! : users);
+
+    return res;
+  } finally {
+    await deleteUsers(serverParams, ...userIds);
+  }
+}
+
+function generateRandomUsersData(roleIds: string[], amount = 1) {
+  return [...Array(amount)].map(() => {
+    return {
+      firstName: randomString(16),
+      lastName: randomString(16),
+      email: `${randomString(8)}@ph.com`,
+      password: randomString(16),
+      roleId: roleIds[randomNumber(0, roleIds.length - 1)],
+    } as const as CreateUser;
+  });
 }
 
 async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
@@ -460,6 +533,7 @@ export {
   after,
   assert,
   before,
+  checkUserPassword,
   controllers,
   createHttpMocks,
   createRoles,
@@ -467,9 +541,11 @@ export {
   deleteRoles,
   deleteUsers,
   ERROR_CODES,
+  generateRandomUsersData,
   generateTokens,
   getAdminRole,
   getAdminTokens,
+  getAdminUserId,
   HTTP_STATUS_CODES,
   initServer,
   Middlewares,

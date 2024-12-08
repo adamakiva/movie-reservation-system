@@ -1,10 +1,10 @@
-import type { RequestContext } from '../../utils/index.js';
+import type { Credentials, RequestContext } from '../../utils/index.js';
 
 import * as utils from './utils.js';
 
 /**********************************************************************************/
 
-async function login(context: RequestContext, credentials: utils.Credentials) {
+async function login(context: RequestContext, credentials: Credentials) {
   const { authentication, database } = context;
 
   const userId = await utils.validateCredentials({

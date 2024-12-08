@@ -250,6 +250,11 @@ const refreshTokenSchema = Zod.object(
 
 const createRoleSchema = Zod.object(
   {
+    id: Zod.string({
+      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .uuid(ROLE.ID.ERROR_MESSAGE)
+      .optional(),
     name: Zod.string({
       invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
       required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
@@ -350,7 +355,7 @@ const getUsersSchema = Zod.object(
     required_error: QUERY.REQUIRED_ERROR_MESSAGE,
   },
 ).transform(({ cursor, pageSize }, ctx) => {
-  if (!cursor) {
+  if (!cursor || cursor === 'undefined' || cursor === 'null') {
     return {
       pageSize,
     } as const;

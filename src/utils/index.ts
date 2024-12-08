@@ -80,6 +80,11 @@ type Pagination = {
 
 type PaginatedResult<T> = T & { page: Pagination };
 
+type Credentials = {
+  email: string;
+  password: string;
+};
+
 /**********************************************************************************/
 
 export {
@@ -117,6 +122,7 @@ export {
   strcasecmp,
   type AddressInfo,
   type CorsOptions,
+  type Credentials,
   type DatabaseHandler,
   type DrizzleLogger,
   type Express,

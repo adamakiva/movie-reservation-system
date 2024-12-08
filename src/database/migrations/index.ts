@@ -19,20 +19,12 @@ const MIGRATIONS_FOLDER = './src/database/migrations';
 async function seedInitialData(
   databaseHandler: PostgresJsDatabase<typeof schemas>,
 ) {
-  const initialRole = process.env.ADMIN_ROLE!;
-  const adminData = {
-    firstName: 'admin',
-    lastName: 'admin',
-    email: process.env.ADMIN_EMAIL!,
-    hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
-      type: 1,
-      secret: Buffer.from(process.env.HASH_SECRET!),
-    }),
-  } as const;
-
   const createdRoles = await databaseHandler
     .insert(schemas.roleModel)
-    .values({ name: initialRole })
+    .values({
+      id: process.env.ADMIN_ROLE_ID!,
+      name: process.env.ADMIN_ROLE_NAME!,
+    })
     .returning({ roleId: schemas.roleModel.id })
     .onConflictDoNothing();
   if (!createdRoles.length) {
@@ -42,7 +34,19 @@ async function seedInitialData(
 
   await databaseHandler
     .insert(schemas.userModel)
-    .values({ ...adminData, roleId })
+    .values({
+      ...{
+        id: process.env.ADMIN_ID!,
+        firstName: 'admin',
+        lastName: 'admin',
+        email: process.env.ADMIN_EMAIL!,
+        hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
+          type: 1,
+          secret: Buffer.from(process.env.HASH_SECRET!),
+        }),
+      },
+      roleId,
+    })
     .onConflictDoNothing();
 }
 
@@ -80,7 +84,9 @@ function run() {
   const logger = new Logger().getHandler();
 
   const environmentVariables = new Map([
-    ['ADMIN_ROLE', process.env.ADMIN_ROLE],
+    ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],
+    ['ADMIN_ROLE_NAME', process.env.ADMIN_ROLE_NAME],
+    ['ADMIN_ID', process.env.ADMIN_ID],
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
     ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
     ['HASH_SECRET', process.env.HASH_SECRET],
