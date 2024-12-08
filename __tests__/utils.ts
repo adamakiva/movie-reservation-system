@@ -134,6 +134,7 @@ async function createServer() {
     databaseParams: {
       url: databaseUrl,
       options: {
+        max: 1, // On purpose to check issues with only a single database connection
         connection: {
           application_name: 'movie_reservation_system_pg_test',
           statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
