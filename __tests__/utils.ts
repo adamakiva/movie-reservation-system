@@ -199,14 +199,14 @@ function randomNumber(min = 0, max = 9) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomUUID(amount = 1) {
-  if (amount === 1) {
-    return crypto.randomUUID();
-  }
-
-  return [...Array<string>(amount)].map(() => {
+function randomUUID<T extends number = 1>(
+  amount = 1 as T,
+): T extends 1 ? string : string[] {
+  const uuids = [...Array(amount)].map(() => {
     return crypto.randomUUID();
   });
+
+  return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
 /**********************************************************************************/
@@ -419,7 +419,8 @@ async function createUsers<T extends number = 1>(
   let usersData: CreateUser[] = null!;
   if (typeof data === 'number') {
     const { id: roleId } = getAdminRole();
-    usersData = generateRandomUsersData([roleId], data);
+    const res = generateRandomUsersData([roleId], data);
+    usersData = Array.isArray(res) ? res : [res];
   } else if (!Array.isArray(data)) {
     usersData = [data];
   } else {
@@ -456,8 +457,11 @@ async function createUsers<T extends number = 1>(
   }
 }
 
-function generateRandomUsersData(roleIds: string[], amount = 1) {
-  return [...Array(amount)].map(() => {
+function generateRandomUsersData<T extends number = 1>(
+  roleIds: string[],
+  amount = 1 as T,
+): T extends 1 ? CreateUser : CreateUser[] {
+  const users = [...Array(amount)].map(() => {
     return {
       firstName: randomString(16),
       lastName: randomString(16),
@@ -466,6 +470,10 @@ function generateRandomUsersData(roleIds: string[], amount = 1) {
       roleId: roleIds[randomNumber(0, roleIds.length - 1)],
     } as const as CreateUser;
   });
+
+  return (amount === 1 ? users[0]! : users) as T extends 1
+    ? CreateUser
+    : CreateUser[];
 }
 
 async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {

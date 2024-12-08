@@ -90,6 +90,7 @@ const VALIDATION = {
         },
       },
     },
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
     ID: {
       INVALID_TYPE_ERROR_MESSAGE: 'User id must be a string',
       REQUIRED_ERROR_MESSAGE: 'User id is required',
@@ -491,7 +492,7 @@ const updateUserBodySchema = Zod.object({
   if (!Object.keys(val).length) {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
-      message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+      message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
       fatal: true,
     });
   }

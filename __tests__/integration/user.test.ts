@@ -233,7 +233,7 @@ await suite('Role integration tests', async () => {
           route: `${serverParams.routes.base}/users`,
           method: 'POST',
           headers: { Authorization: accessToken },
-          payload: generateRandomUsersData([roleId], 1)[0]!,
+          payload: generateRandomUsersData([roleId], 1),
         });
         assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
