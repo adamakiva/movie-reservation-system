@@ -3,7 +3,9 @@ import {
   assert,
   before,
   createHttpMocks,
-  generateRandomUsersData,
+  createUser,
+  generateUsersData,
+  getAdminRole,
   HTTP_STATUS_CODES,
   initServer,
   type LoggerHandler,
@@ -13,6 +15,7 @@ import {
   randomUUID,
   type ResponseWithCtx,
   type ServerParams,
+  services,
   suite,
   terminateServer,
   test,
@@ -26,7 +29,7 @@ const { USER, PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 
-await suite.only('User unit tests', async () => {
+await suite('User unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
@@ -122,7 +125,50 @@ await suite.only('User unit tests', async () => {
         });
       });
       await suite('Service layer', async () => {
-        await test('Non-existent', async (ctx) => {});
+        await test('Non-existent', async (ctx) => {
+          const { authentication, database } = serverParams;
+          ctx.mock.method(database, 'getHandler', () => {
+            return {
+              select: () => {
+                return {
+                  from: () => {
+                    return {
+                      where: () => {
+                        return {
+                          innerJoin: () => {
+                            return [];
+                          },
+                        };
+                      },
+                    };
+                  },
+                };
+              },
+            } as const;
+          });
+          const getUserSpy = ctx.mock.fn(services.userService.getUser);
+
+          await assert.rejects(
+            async () => {
+              await getUserSpy(
+                {
+                  authentication,
+                  database,
+                  logger,
+                },
+                randomUUID(),
+              );
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.strictEqual(
+                (err as MRSError).getClientError().code,
+                HTTP_STATUS_CODES.NOT_FOUND,
+              );
+              return true;
+            },
+          );
+        });
       });
     });
     await suite('Multiple', async () => {
@@ -339,7 +385,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 firstName: undefined,
               },
             },
@@ -369,7 +415,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 firstName: '',
               },
             },
@@ -399,7 +445,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 firstName: 'a'.repeat(USER.FIRST_NAME.MIN_LENGTH.VALUE - 1),
               },
             },
@@ -429,7 +475,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 firstName: 'a'.repeat(USER.FIRST_NAME.MAX_LENGTH.VALUE + 1),
               },
             },
@@ -461,7 +507,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 lastName: undefined,
               },
             },
@@ -491,7 +537,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 lastName: '',
               },
             },
@@ -521,7 +567,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 lastName: 'a'.repeat(USER.LAST_NAME.MIN_LENGTH.VALUE - 1),
               },
             },
@@ -551,7 +597,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 lastName: 'a'.repeat(USER.LAST_NAME.MAX_LENGTH.VALUE + 1),
               },
             },
@@ -583,7 +629,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 email: undefined,
               },
             },
@@ -613,7 +659,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 email: '',
               },
             },
@@ -643,7 +689,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 email: 'a'.repeat(USER.EMAIL.MIN_LENGTH.VALUE - 1),
               },
             },
@@ -673,7 +719,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 email: `${'a'.repeat(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
               },
             },
@@ -703,7 +749,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 email: randomString(),
               },
             },
@@ -735,7 +781,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 password: undefined,
               },
             },
@@ -765,7 +811,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 password: '',
               },
             },
@@ -795,7 +841,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 password: 'a'.repeat(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
               },
             },
@@ -825,7 +871,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 password: 'a'.repeat(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
               },
             },
@@ -857,7 +903,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 roleId: undefined,
               },
             },
@@ -887,7 +933,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 roleId: '',
               },
             },
@@ -917,7 +963,7 @@ await suite.only('User unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                ...generateRandomUsersData([randomUUID()], 1),
+                ...generateUsersData([randomUUID()], 1),
                 roleId: randomString(),
               },
             },
@@ -945,7 +991,39 @@ await suite.only('User unit tests', async () => {
       });
     });
     await suite('Service layer', async () => {
-      await test('Duplicate', async (ctx) => {});
+      await test('Duplicate', async () => {
+        const { id: roleId } = getAdminRole();
+        await createUser(
+          serverParams,
+          generateUsersData([roleId]),
+          async (_, user) => {
+            const context = {
+              authentication: serverParams.authentication,
+              database: serverParams.database,
+              logger,
+            };
+            const userToCreate = {
+              ...generateUsersData([roleId]),
+              email: user.email,
+            } as const;
+
+            await assert.rejects(
+              async () => {
+                await services.userService.createUser(context, userToCreate);
+              },
+              (err) => {
+                assert.strictEqual(err instanceof MRSError, true);
+                assert.deepStrictEqual((err as MRSError).getClientError(), {
+                  code: HTTP_STATUS_CODES.CONFLICT,
+                  message: `User '${user.email}' already exists`,
+                });
+
+                return true;
+              },
+            );
+          },
+        );
+      });
       await test('Non-existent role id', async (ctx) => {});
     });
   });

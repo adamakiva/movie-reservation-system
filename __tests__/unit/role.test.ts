@@ -3,7 +3,9 @@ import {
   assert,
   before,
   createHttpMocks,
+  createRole,
   createRoles,
+  generateRolesData,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
@@ -159,7 +161,7 @@ await suite('Role unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createRoles(serverParams, 1, async (_, role) => {
+        await createRole(serverParams, generateRolesData(), async (_, role) => {
           const context = {
             authentication: serverParams.authentication,
             database: serverParams.database,
@@ -412,29 +414,33 @@ await suite('Role unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createRoles(serverParams, 2, async (_, roles) => {
-          const context = {
-            authentication: serverParams.authentication,
-            database: serverParams.database,
-            logger,
-          };
-          const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
+        await createRoles(
+          serverParams,
+          generateRolesData(2),
+          async (_, roles) => {
+            const context = {
+              authentication: serverParams.authentication,
+              database: serverParams.database,
+              logger,
+            };
+            const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
 
-          await assert.rejects(
-            async () => {
-              await services.roleService.updateRole(context, roleToUpdate);
-            },
-            (err) => {
-              assert.strictEqual(err instanceof MRSError, true);
-              assert.deepStrictEqual((err as MRSError).getClientError(), {
-                code: HTTP_STATUS_CODES.CONFLICT,
-                message: `Role '${roles[1]!.name}' already exists`,
-              });
+            await assert.rejects(
+              async () => {
+                await services.roleService.updateRole(context, roleToUpdate);
+              },
+              (err) => {
+                assert.strictEqual(err instanceof MRSError, true);
+                assert.deepStrictEqual((err as MRSError).getClientError(), {
+                  code: HTTP_STATUS_CODES.CONFLICT,
+                  message: `Role '${roles[1]!.name}' already exists`,
+                });
 
-              return true;
-            },
-          );
-        });
+                return true;
+              },
+            );
+          },
+        );
       });
     });
   });

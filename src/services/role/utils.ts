@@ -44,11 +44,15 @@ async function insertRoleToDatabase(
 
   try {
     return (
-      await handler
-        .insert(roleModel)
-        .values(roleToCreate)
-        .returning({ id: roleModel.id, name: roleModel.name })
-    )[0]!;
+      (
+        await handler
+          .insert(roleModel)
+          //@ts-expect-error Drizzle has issues with the typing which does not allow
+          // undefined value, this only a type error and works as intended
+          .values(roleToCreate)
+          .returning({ id: roleModel.id, name: roleModel.name })
+      )[0]!
+    );
   } catch (err) {
     throw handlePossibleDuplicationError(err, roleToCreate.name);
   }

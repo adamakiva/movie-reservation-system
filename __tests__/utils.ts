@@ -177,6 +177,27 @@ async function createServer() {
   } as const;
 }
 
+function getRequestContext(serverParams: ServerParams, logger: LoggerHandler) {
+  return {
+    authentication: serverParams.authentication,
+    database: serverParams.database,
+    logger: logger,
+  } as const;
+}
+
+function getAdminRole() {
+  const adminRole = {
+    id: process.env.ADMIN_ROLE_ID!,
+    name: process.env.ADMIN_ROLE_NAME!,
+  } as const;
+
+  return adminRole;
+}
+
+function getAdminUserId() {
+  return process.env.ADMIN_ID!;
+}
+
 /***************************** General utils **************************************/
 /**********************************************************************************/
 
@@ -210,7 +231,7 @@ function randomUUID<T extends number = 1>(
 }
 
 /**********************************************************************************/
-/********************************** Seeds *****************************************/
+/******************************** Database ****************************************/
 
 async function seedUser(
   serverParams: ServerParams,
@@ -280,7 +301,7 @@ function sendHttpRequest<
 }) {
   const { route, method, payload, headers } = params;
 
-  return fetch(route, {
+  const fetchResponse = fetch(route, {
     method,
     cache: 'no-store',
     mode: 'same-origin',
@@ -292,6 +313,8 @@ function sendHttpRequest<
     },
     redirect: 'follow',
   });
+
+  return fetchResponse;
 }
 
 async function generateTokens(params: {
@@ -306,7 +329,6 @@ async function generateTokens(params: {
     method: 'POST',
     payload: { email, password },
   });
-
   assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
   const jsonResponse = await res.json();
@@ -318,77 +340,109 @@ async function getAdminTokens(serverParams: ServerParams) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  const tokens = (await generateTokens({ serverParams, email, password })) as {
-    accessToken: string;
-    refreshToken: string;
-  };
+  const tokens = await generateTokens({ serverParams, email, password });
 
   return tokens;
 }
 
-function getAdminRole() {
-  return {
-    id: process.env.ADMIN_ROLE_ID!,
-    name: process.env.ADMIN_ROLE_NAME!,
-  } as const;
+function generateRolesData<T extends number = 1>(
+  amount = 1 as T,
+): T extends 1 ? CreateRole : CreateRole[] {
+  const roles = [...Array(amount)].map(() => {
+    return {
+      name: randomString(16),
+    } as CreateRole;
+  });
+
+  return (amount === 1 ? roles[0]! : roles) as T extends 1
+    ? CreateRole
+    : CreateRole[];
 }
 
-function getAdminUserId() {
-  return process.env.ADMIN_ID!;
-}
-
-async function createRoles<T extends number = 1>(
+async function createRole(
   serverParams: ServerParams,
-  data: T | (T extends 1 ? CreateRole : CreateRole[]),
+  roleToCreate: CreateRole,
   fn: (
     // eslint-disable-next-line no-unused-vars
     tokens: { accessToken: string; refreshToken: string },
     // eslint-disable-next-line no-unused-vars
-    role: T extends 1 ? Role : Role[],
+    role: Role,
   ) => Promise<unknown>,
 ) {
-  let roleIds: string[] = [];
-  let rolesData: CreateRole[] = null!;
-  if (typeof data === 'number') {
-    rolesData = [...Array(data)].map(() => {
-      return {
-        name: randomString(16),
-      } as const as CreateRole;
-    });
-  } else if (!Array.isArray(data)) {
-    rolesData = [data];
-  } else {
-    rolesData = data;
-  }
+  const roleIdsToDelete: string[] = [];
 
   const adminTokens = await getAdminTokens(serverParams);
   try {
-    const roles = await Promise.all(
-      rolesData.map(async (roleData) => {
-        const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/roles`,
-          method: 'POST',
-          headers: { Authorization: adminTokens.accessToken },
-          payload: roleData,
-        });
-
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-        const role = (await res.json()) as Role;
-
-        return role;
-      }),
-    );
-    roleIds = roles.map((role) => {
-      return role.id;
+    const [role] = await sendCreateRoleRequest({
+      route: `${serverParams.routes.base}/roles`,
+      accessToken: adminTokens.accessToken,
+      rolesToCreate: [roleToCreate],
+      roleIdsToDelete,
     });
 
-    // @ts-expect-error On purpose
-    const res = await fn(adminTokens, roles.length === 1 ? roles[0]! : roles);
+    const callbackResponse = await fn(adminTokens, role!);
 
-    return res;
+    return callbackResponse;
   } finally {
-    await deleteRoles(serverParams, ...roleIds);
+    await deleteRoles(serverParams, ...roleIdsToDelete);
   }
+}
+
+async function createRoles(
+  serverParams: ServerParams,
+  rolesToCreate: CreateRole[],
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    tokens: { accessToken: string; refreshToken: string },
+    // eslint-disable-next-line no-unused-vars
+    roles: Role[],
+  ) => Promise<unknown>,
+) {
+  const roleIdsToDelete: string[] = [];
+
+  const adminTokens = await getAdminTokens(serverParams);
+  try {
+    const roles = await sendCreateRoleRequest({
+      route: `${serverParams.routes.base}/roles`,
+      accessToken: adminTokens.accessToken,
+      rolesToCreate,
+      roleIdsToDelete,
+    });
+
+    const callbackResponse = await fn(adminTokens, roles);
+
+    return callbackResponse;
+  } finally {
+    await deleteRoles(serverParams, ...roleIdsToDelete);
+  }
+}
+
+async function sendCreateRoleRequest(params: {
+  route: string;
+  accessToken: string;
+  rolesToCreate: CreateRole[];
+  roleIdsToDelete: string[];
+}) {
+  const { route, accessToken, rolesToCreate, roleIdsToDelete } = params;
+
+  const roles = await Promise.all(
+    rolesToCreate.map(async (roleToCreate) => {
+      const res = await sendHttpRequest({
+        route,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: roleToCreate,
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+
+      const role = (await res.json()) as Role;
+      roleIdsToDelete.push(role.id);
+
+      return role;
+    }),
+  );
+
+  return roles;
 }
 
 async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
@@ -405,59 +459,7 @@ async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
   await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
 }
 
-async function createUsers<T extends number = 1>(
-  serverParams: ServerParams,
-  data: T | (T extends 1 ? CreateUser : CreateUser[]),
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    user: T extends 1 ? User : User[],
-  ) => Promise<unknown>,
-) {
-  let userIds: string[] = [];
-  let usersData: CreateUser[] = null!;
-  if (typeof data === 'number') {
-    const { id: roleId } = getAdminRole();
-    const res = generateRandomUsersData([roleId], data);
-    usersData = Array.isArray(res) ? res : [res];
-  } else if (!Array.isArray(data)) {
-    usersData = [data];
-  } else {
-    usersData = data;
-  }
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const users = await Promise.all(
-      usersData.map(async (userData) => {
-        const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/users`,
-          method: 'POST',
-          headers: { Authorization: adminTokens.accessToken },
-          payload: userData,
-        });
-
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-        const user = (await res.json()) as User;
-
-        return user;
-      }),
-    );
-    userIds = users.map((user) => {
-      return user.id;
-    });
-
-    // @ts-expect-error On purpose
-    const res = await fn(adminTokens, users.length === 1 ? users[0]! : users);
-
-    return res;
-  } finally {
-    await deleteUsers(serverParams, ...userIds);
-  }
-}
-
-function generateRandomUsersData<T extends number = 1>(
+function generateUsersData<T extends number = 1>(
   roleIds: string[],
   amount = 1 as T,
 ): T extends 1 ? CreateUser : CreateUser[] {
@@ -474,6 +476,92 @@ function generateRandomUsersData<T extends number = 1>(
   return (amount === 1 ? users[0]! : users) as T extends 1
     ? CreateUser
     : CreateUser[];
+}
+
+async function createUser(
+  serverParams: ServerParams,
+  userToCreate: CreateUser,
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    tokens: { accessToken: string; refreshToken: string },
+    // eslint-disable-next-line no-unused-vars
+    user: User,
+  ) => Promise<unknown>,
+) {
+  const userIdsToDelete: string[] = [];
+
+  const adminTokens = await getAdminTokens(serverParams);
+  try {
+    const [user] = await sendCreateUserRequest({
+      route: `${serverParams.routes.base}/users`,
+      accessToken: adminTokens.accessToken,
+      usersToCreate: [userToCreate],
+      userIdsToDelete,
+    });
+
+    const callbackResponse = await fn(adminTokens, user!);
+
+    return callbackResponse;
+  } finally {
+    await deleteUsers(serverParams, ...userIdsToDelete);
+  }
+}
+
+async function createUsers(
+  serverParams: ServerParams,
+  usersToCreate: CreateUser[],
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    tokens: { accessToken: string; refreshToken: string },
+    // eslint-disable-next-line no-unused-vars
+    users: User[],
+  ) => Promise<unknown>,
+) {
+  const userIdsToDelete: string[] = [];
+
+  const adminTokens = await getAdminTokens(serverParams);
+  try {
+    const users = await sendCreateUserRequest({
+      route: `${serverParams.routes.base}/users`,
+      accessToken: adminTokens.accessToken,
+      usersToCreate,
+      userIdsToDelete,
+    });
+
+    const callbackResponse = await fn(adminTokens, users);
+
+    return callbackResponse;
+  } finally {
+    await deleteUsers(serverParams, ...userIdsToDelete);
+  }
+}
+
+async function sendCreateUserRequest(params: {
+  route: string;
+  accessToken: string;
+  usersToCreate: CreateUser[];
+  userIdsToDelete: string[];
+}) {
+  const { route, accessToken, usersToCreate, userIdsToDelete } = params;
+
+  const users = await Promise.all(
+    usersToCreate.map(async (userToCreate) => {
+      const res = await sendHttpRequest({
+        route,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: userToCreate,
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+
+      const user = (await res.json()) as User;
+      userIdsToDelete.push(user.id);
+
+      return user;
+    }),
+  );
+
+  return users;
 }
 
 async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
@@ -497,7 +585,7 @@ function mockLogger() {
   const logger = new Logger();
   const loggerHandler = logger.getHandler();
 
-  return {
+  const mockLogger = {
     logger: {
       ...loggerHandler,
       debug: disableLogFn,
@@ -511,6 +599,8 @@ function mockLogger() {
       next();
     },
   } as const;
+
+  return mockLogger;
 }
 
 function disableLogFn() {
@@ -524,7 +614,7 @@ function createHttpMocks<T extends Response = Response>(params: {
 }) {
   const { logger, reqOptions, resOptions } = params;
 
-  return {
+  const httpMocks = {
     request: createRequest(reqOptions),
     response: createResponse<T>({
       ...resOptions,
@@ -533,6 +623,8 @@ function createHttpMocks<T extends Response = Response>(params: {
       },
     }),
   } as const;
+
+  return httpMocks;
 }
 
 /**********************************************************************************/
@@ -544,16 +636,20 @@ export {
   checkUserPassword,
   controllers,
   createHttpMocks,
+  createRole,
   createRoles,
+  createUser,
   createUsers,
   deleteRoles,
   deleteUsers,
   ERROR_CODES,
-  generateRandomUsersData,
+  generateRolesData,
   generateTokens,
+  generateUsersData,
   getAdminRole,
   getAdminTokens,
   getAdminUserId,
+  getRequestContext,
   HTTP_STATUS_CODES,
   initServer,
   Middlewares,
