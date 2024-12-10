@@ -33,15 +33,11 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
-import { inArray } from 'drizzle-orm';
 import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/database/index.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/middlewares.js';
-import type { Genre } from '../src/services/genre/utils.js';
 import * as services from '../src/services/index.js';
-import type { Role } from '../src/services/role/utils.js';
-import type { User } from '../src/services/user/utils.js';
 import {
   CONFIGURATIONS,
   EnvironmentManager,
@@ -65,16 +61,6 @@ const { PostgresError } = pg;
 process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
 /**********************************************************************************/
-
-type CreateRole = { name: string };
-type CreateUser = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  roleId: string;
-};
-type CreateGenre = { name: string };
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
 
@@ -348,355 +334,6 @@ async function getAdminTokens(serverParams: ServerParams) {
   return tokens;
 }
 
-function generateRolesData<T extends number = 1>(
-  amount = 1 as T,
-): T extends 1 ? CreateRole : CreateRole[] {
-  const roles = [...Array(amount)].map(() => {
-    return {
-      name: randomString(16),
-    } as CreateRole;
-  });
-
-  return (amount === 1 ? roles[0]! : roles) as T extends 1
-    ? CreateRole
-    : CreateRole[];
-}
-
-async function createRole(
-  serverParams: ServerParams,
-  roleToCreate: CreateRole,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    role: Role,
-  ) => Promise<unknown>,
-) {
-  const roleIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const [role] = await sendCreateRoleRequest({
-      route: `${serverParams.routes.base}/roles`,
-      accessToken: adminTokens.accessToken,
-      rolesToCreate: [roleToCreate],
-      roleIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, role!);
-
-    return callbackResponse;
-  } finally {
-    await deleteRoles(serverParams, ...roleIdsToDelete);
-  }
-}
-
-async function createRoles(
-  serverParams: ServerParams,
-  rolesToCreate: CreateRole[],
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    roles: Role[],
-  ) => Promise<unknown>,
-) {
-  const roleIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const roles = await sendCreateRoleRequest({
-      route: `${serverParams.routes.base}/roles`,
-      accessToken: adminTokens.accessToken,
-      rolesToCreate,
-      roleIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, roles);
-
-    return callbackResponse;
-  } finally {
-    await deleteRoles(serverParams, ...roleIdsToDelete);
-  }
-}
-
-async function sendCreateRoleRequest(params: {
-  route: string;
-  accessToken: string;
-  rolesToCreate: CreateRole[];
-  roleIdsToDelete: string[];
-}) {
-  const { route, accessToken, rolesToCreate, roleIdsToDelete } = params;
-
-  const roles = await Promise.all(
-    rolesToCreate.map(async (roleToCreate) => {
-      const res = await sendHttpRequest({
-        route,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: roleToCreate,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-      const role = (await res.json()) as Role;
-      roleIdsToDelete.push(role.id);
-
-      return role;
-    }),
-  );
-
-  return roles;
-}
-
-async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
-  roleIds = roleIds.filter((roleId) => {
-    return roleId;
-  });
-  if (!roleIds.length) {
-    return;
-  }
-
-  const databaseHandler = serverParams.database.getHandler();
-  const { role: roleModel } = serverParams.database.getModels();
-
-  await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
-}
-
-function generateUsersData<T extends number = 1>(
-  roleIds: string[],
-  amount = 1 as T,
-): T extends 1 ? CreateUser : CreateUser[] {
-  const users = [...Array(amount)].map(() => {
-    return {
-      firstName: randomString(16),
-      lastName: randomString(16),
-      email: `${randomString(8)}@ph.com`,
-      password: randomString(16),
-      roleId: roleIds[randomNumber(0, roleIds.length - 1)],
-    } as const as CreateUser;
-  });
-
-  return (amount === 1 ? users[0]! : users) as T extends 1
-    ? CreateUser
-    : CreateUser[];
-}
-
-async function createUser(
-  serverParams: ServerParams,
-  userToCreate: CreateUser,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    user: User,
-  ) => Promise<unknown>,
-) {
-  const userIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const [user] = await sendCreateUserRequest({
-      route: `${serverParams.routes.base}/users`,
-      accessToken: adminTokens.accessToken,
-      usersToCreate: [userToCreate],
-      userIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, user!);
-
-    return callbackResponse;
-  } finally {
-    await deleteUsers(serverParams, ...userIdsToDelete);
-  }
-}
-
-async function createUsers(
-  serverParams: ServerParams,
-  usersToCreate: CreateUser[],
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    users: User[],
-  ) => Promise<unknown>,
-) {
-  const userIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const users = await sendCreateUserRequest({
-      route: `${serverParams.routes.base}/users`,
-      accessToken: adminTokens.accessToken,
-      usersToCreate,
-      userIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, users);
-
-    return callbackResponse;
-  } finally {
-    await deleteUsers(serverParams, ...userIdsToDelete);
-  }
-}
-
-async function sendCreateUserRequest(params: {
-  route: string;
-  accessToken: string;
-  usersToCreate: CreateUser[];
-  userIdsToDelete: string[];
-}) {
-  const { route, accessToken, usersToCreate, userIdsToDelete } = params;
-
-  const users = await Promise.all(
-    usersToCreate.map(async (userToCreate) => {
-      const res = await sendHttpRequest({
-        route,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: userToCreate,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-      const user = (await res.json()) as User;
-      userIdsToDelete.push(user.id);
-
-      return user;
-    }),
-  );
-
-  return users;
-}
-
-async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
-  userIds = userIds.filter((userId) => {
-    return userId;
-  });
-  if (!userIds.length) {
-    return;
-  }
-
-  const databaseHandler = serverParams.database.getHandler();
-  const { user: userModel } = serverParams.database.getModels();
-
-  await databaseHandler.delete(userModel).where(inArray(userModel.id, userIds));
-}
-
-function generateGenresData<T extends number = 1>(
-  amount = 1 as T,
-): T extends 1 ? CreateGenre : CreateGenre[] {
-  const roles = [...Array(amount)].map(() => {
-    return {
-      name: randomString(16),
-    } as CreateGenre;
-  });
-
-  return (amount === 1 ? roles[0]! : roles) as T extends 1
-    ? CreateGenre
-    : CreateGenre[];
-}
-
-async function createGenre(
-  serverParams: ServerParams,
-  genreToCreate: CreateGenre,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    genre: Genre,
-  ) => Promise<unknown>,
-) {
-  const genreIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const [genre] = await sendCreateGenreRequest({
-      route: `${serverParams.routes.base}/genres`,
-      accessToken: adminTokens.accessToken,
-      genresToCreate: [genreToCreate],
-      genreIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, genre!);
-
-    return callbackResponse;
-  } finally {
-    await deleteGenres(serverParams, ...genreIdsToDelete);
-  }
-}
-
-async function createGenres(
-  serverParams: ServerParams,
-  genresToCreate: CreateGenre[],
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    genres: Genre[],
-  ) => Promise<unknown>,
-) {
-  const genreIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const genres = await sendCreateGenreRequest({
-      route: `${serverParams.routes.base}/genres`,
-      accessToken: adminTokens.accessToken,
-      genresToCreate,
-      genreIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, genres);
-
-    return callbackResponse;
-  } finally {
-    await deleteGenres(serverParams, ...genreIdsToDelete);
-  }
-}
-
-async function sendCreateGenreRequest(params: {
-  route: string;
-  accessToken: string;
-  genresToCreate: CreateGenre[];
-  genreIdsToDelete: string[];
-}) {
-  const { route, accessToken, genresToCreate, genreIdsToDelete } = params;
-
-  const genres = await Promise.all(
-    genresToCreate.map(async (genreToCreate) => {
-      const res = await sendHttpRequest({
-        route,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: genreToCreate,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-      const genre = (await res.json()) as Genre;
-      genreIdsToDelete.push(genre.id);
-
-      return genre;
-    }),
-  );
-
-  return genres;
-}
-
-async function deleteGenres(serverParams: ServerParams, ...genreIds: string[]) {
-  genreIds = genreIds.filter((genreId) => {
-    return genreId;
-  });
-  if (!genreIds.length) {
-    return;
-  }
-
-  const databaseHandler = serverParams.database.getHandler();
-  const { genre: genreModel } = serverParams.database.getModels();
-
-  await databaseHandler
-    .delete(genreModel)
-    .where(inArray(genreModel.id, genreIds));
-}
-
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
 
@@ -754,21 +391,9 @@ export {
   before,
   checkUserPassword,
   controllers,
-  createGenre,
-  createGenres,
   createHttpMocks,
-  createRole,
-  createRoles,
-  createUser,
-  createUsers,
-  deleteGenres,
-  deleteRoles,
-  deleteUsers,
   ERROR_CODES,
-  generateGenresData,
-  generateRolesData,
   generateTokens,
-  generateUsersData,
   getAdminRole,
   getAdminTokens,
   getAdminUserId,
@@ -790,9 +415,7 @@ export {
   test,
   VALIDATION,
   validators,
-  type CreateUser,
   type Database,
-  type Genre,
   type Logger,
   type LoggerHandler,
   type MockRequest,
@@ -801,7 +424,5 @@ export {
   type Request,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
-  type Role,
   type ServerParams,
-  type User,
 };

@@ -1,15 +1,9 @@
+import { createRole, createRoles, generateRolesData } from '../role/utils.js';
 import {
   after,
   assert,
   before,
   checkUserPassword,
-  createRole,
-  createRoles,
-  createUser,
-  createUsers,
-  deleteUsers,
-  generateRolesData,
-  generateUsersData,
   getAdminRole,
   getAdminTokens,
   getAdminUserId,
@@ -22,8 +16,15 @@ import {
   terminateServer,
   test,
   type ServerParams,
-  type User,
 } from '../utils.js';
+
+import {
+  createUser,
+  createUsers,
+  deleteUsers,
+  generateUsersData,
+  type User,
+} from './utils.js';
 
 /**********************************************************************************/
 

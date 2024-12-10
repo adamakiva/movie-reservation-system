@@ -17,7 +17,7 @@ import {
   type ResponseWithCtx,
   type ResponseWithoutCtx,
   type ServerParams,
-} from '../utils.js';
+} from './utils.js';
 
 /**********************************************************************************/
 

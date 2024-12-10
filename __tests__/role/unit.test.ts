@@ -2,10 +2,6 @@ import {
   after,
   assert,
   before,
-  createGenre,
-  createGenres,
-  deleteGenres,
-  generateGenresData,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -15,13 +11,20 @@ import {
   suite,
   terminateServer,
   test,
-  type Genre,
   type ServerParams,
 } from '../utils.js';
 
+import {
+  createRole,
+  createRoles,
+  deleteRoles,
+  generateRolesData,
+  type Role,
+} from './utils.js';
+
 /**********************************************************************************/
 
-await suite('Genre integration tests', async () => {
+await suite('Role integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -31,24 +34,24 @@ await suite('Genre integration tests', async () => {
   });
 
   await test('Read', async () => {
-    await createGenres(
+    await createRoles(
       serverParams,
-      generateGenresData(32),
-      async ({ accessToken }, genres) => {
+      generateRolesData(32),
+      async ({ accessToken }, roles) => {
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/genres`,
+          route: `${serverParams.routes.base}/roles`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
         assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-        const fetchedGenres = (await res.json()) as Genre[];
-        genres.forEach((genre) => {
-          const matchingGenre = fetchedGenres.find((fetchedGenre) => {
-            return fetchedGenre.id === genre.id;
+        const fetchedRoles = (await res.json()) as Role[];
+        roles.forEach((role) => {
+          const matchingRole = fetchedRoles.find((fetchedRole) => {
+            return fetchedRole.id === role.id;
           });
 
-          assert.deepStrictEqual(genre, matchingGenre);
+          assert.deepStrictEqual(role, matchingRole);
         });
       },
     );
@@ -56,7 +59,7 @@ await suite('Genre integration tests', async () => {
   await suite('Create', async () => {
     await test('Body too large', async () => {
       const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/genres`,
+        route: `${serverParams.routes.base}/roles`,
         method: 'POST',
         payload: { name: 'a'.repeat(65_536) },
       });
@@ -64,37 +67,37 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
     });
     await test('Valid', async () => {
-      let genreId = '';
+      let roleId = '';
 
       try {
         const { accessToken } = await getAdminTokens(serverParams);
 
-        const genreData = { name: randomString(16) } as const;
+        const roleData = { name: randomString(16) } as const;
 
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/genres`,
+          route: `${serverParams.routes.base}/roles`,
           method: 'POST',
           headers: { Authorization: accessToken },
-          payload: genreData,
+          payload: roleData,
         });
         assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-        const { id, ...fields } = (await res.json()) as Genre;
-        genreId = id;
+        const { id, ...fields } = (await res.json()) as Role;
+        roleId = id;
         assert.strictEqual(typeof id === 'string', true);
         assert.deepStrictEqual(
-          { ...genreData, name: genreData.name.toLowerCase() },
+          { ...roleData, name: roleData.name.toLowerCase() },
           fields,
         );
       } finally {
-        await deleteGenres(serverParams, genreId);
+        await deleteRoles(serverParams, roleId);
       }
     });
   });
   await suite('Update', async () => {
     await test('Body too large', async () => {
       const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/genres/${randomUUID()}`,
+        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
         method: 'PUT',
         payload: { name: 'a'.repeat(65_536) },
       });
@@ -102,30 +105,30 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
     });
     await test('Valid', async () => {
-      await createGenre(
+      await createRole(
         serverParams,
-        generateGenresData(),
-        async ({ accessToken }, genre) => {
-          const updatedGenreData = { name: randomString(16) } as const;
+        generateRolesData(),
+        async ({ accessToken }, role) => {
+          const updatedRoleData = { name: randomString(16) } as const;
 
           const res = await sendHttpRequest({
-            route: `${serverParams.routes.base}/genres/${genre.id}`,
+            route: `${serverParams.routes.base}/roles/${role.id}`,
             method: 'PUT',
             headers: { Authorization: accessToken },
-            payload: updatedGenreData,
+            payload: updatedRoleData,
           });
           assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-          const updatedGenre = await res.json();
+          const updatedRole = await res.json();
           assert.deepStrictEqual(
             {
-              ...genre,
+              ...role,
               ...{
-                ...updatedGenreData,
-                name: updatedGenreData.name.toLowerCase(),
+                ...updatedRoleData,
+                name: updatedRoleData.name.toLowerCase(),
               },
             },
-            updatedGenre,
+            updatedRole,
           );
         },
       );
@@ -133,26 +136,26 @@ await suite('Genre integration tests', async () => {
   });
   await suite('Delete', async () => {
     await test('Existent', async () => {
-      let genreId = '';
+      let roleId = '';
 
       try {
         const { accessToken } = await getAdminTokens(serverParams);
 
-        const genreData = { name: randomString() } as const;
+        const roleData = { name: randomString() } as const;
 
         let res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/genres`,
+          route: `${serverParams.routes.base}/roles`,
           method: 'POST',
           headers: { Authorization: accessToken },
-          payload: genreData,
+          payload: roleData,
         });
         assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-        const { id } = (await res.json()) as Genre;
-        genreId = id;
+        const { id } = (await res.json()) as Role;
+        roleId = id;
 
         res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/genres/${id}`,
+          route: `${serverParams.routes.base}/roles/${id}`,
           method: 'DELETE',
           headers: { Authorization: accessToken },
         });
@@ -162,14 +165,14 @@ await suite('Genre integration tests', async () => {
         assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
         assert.strictEqual(responseBody, '');
       } finally {
-        await deleteGenres(serverParams, genreId);
+        await deleteRoles(serverParams, roleId);
       }
     });
     await test('Non-existent', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
 
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/genres/${randomUUID()}`,
+        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
       });

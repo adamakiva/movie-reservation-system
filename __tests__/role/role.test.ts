@@ -2,10 +2,7 @@ import {
   after,
   assert,
   before,
-  createGenre,
-  createGenres,
   createHttpMocks,
-  generateGenresData,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
@@ -23,13 +20,15 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-/**********************************************************************************/
-
-const { GENRE } = VALIDATION;
+import { createRole, createRoles, generateRolesData } from './utils.js';
 
 /**********************************************************************************/
 
-await suite('Genre unit tests', async () => {
+const { ROLE } = VALIDATION;
+
+/**********************************************************************************/
+
+await suite('Role unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
@@ -40,6 +39,9 @@ await suite('Genre unit tests', async () => {
     terminateServer(serverParams);
   });
 
+  await suite('Read', async () => {
+    // TODO Decide on permissions and check them
+  });
   await suite('Create', async () => {
     await suite('Validation layer', async () => {
       await suite('Name', async () => {
@@ -48,19 +50,19 @@ await suite('Genre unit tests', async () => {
             logger,
           });
 
-          const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
           );
 
           assert.throws(
             () => {
-              validateCreateGenreSpy(request);
+              validateCreateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
+                message: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
               });
 
               return true;
@@ -77,19 +79,19 @@ await suite('Genre unit tests', async () => {
             },
           });
 
-          const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
           );
 
           assert.throws(
             () => {
-              validateCreateGenreSpy(request);
+              validateCreateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -101,24 +103,24 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                name: 'a'.repeat(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+                name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
               },
             },
           });
 
-          const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
           );
 
           assert.throws(
             () => {
-              validateCreateGenreSpy(request);
+              validateCreateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -130,24 +132,24 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               body: {
-                name: 'a'.repeat(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+                name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
               },
             },
           });
 
-          const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
           );
 
           assert.throws(
             () => {
-              validateCreateGenreSpy(request);
+              validateCreateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -158,33 +160,29 @@ await suite('Genre unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createGenre(
-          serverParams,
-          generateGenresData(),
-          async (_, genre) => {
-            const context = {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              logger,
-            };
-            const genreToCreate = { name: genre.name };
+        await createRole(serverParams, generateRolesData(), async (_, role) => {
+          const context = {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            logger,
+          };
+          const roleToCreate = { name: role.name };
 
-            await assert.rejects(
-              async () => {
-                await services.genreService.createGenre(context, genreToCreate);
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `Genre '${genre.name}' already exists`,
-                });
+          await assert.rejects(
+            async () => {
+              await services.roleService.createRole(context, roleToCreate);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `Role '${role.name}' already exists`,
+              });
 
-                return true;
-              },
-            );
-          },
-        );
+              return true;
+            },
+          );
+        });
       });
     });
   });
@@ -195,24 +193,24 @@ await suite('Genre unit tests', async () => {
           logger,
           reqOptions: {
             params: {
-              genreId: randomUUID(),
+              roleId: randomUUID(),
             },
           },
         });
 
-        const validateUpdateGenreSpy = ctx.mock.fn(
-          validators.genreValidator.validateUpdateGenre,
+        const validateUpdateRoleSpy = ctx.mock.fn(
+          validators.roleValidator.validateUpdateRole,
         );
 
         assert.throws(
           () => {
-            validateUpdateGenreSpy(request);
+            validateUpdateRoleSpy(request);
           },
           (err) => {
             assert.strictEqual(err instanceof MRSError, true);
             assert.deepStrictEqual((err as MRSError).getClientError(), {
               code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-              message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+              message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
             });
 
             return true;
@@ -230,19 +228,19 @@ await suite('Genre unit tests', async () => {
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+                message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
               });
 
               return true;
@@ -254,7 +252,7 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: '',
+                roleId: '',
               },
               body: {
                 name: randomString(),
@@ -262,19 +260,19 @@ await suite('Genre unit tests', async () => {
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.ERROR_MESSAGE,
+                message: ROLE.ID.ERROR_MESSAGE,
               });
 
               return true;
@@ -286,7 +284,7 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: randomString(),
+                roleId: randomString(),
               },
               body: {
                 name: randomString(),
@@ -294,19 +292,19 @@ await suite('Genre unit tests', async () => {
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.ERROR_MESSAGE,
+                message: ROLE.ID.ERROR_MESSAGE,
               });
 
               return true;
@@ -320,7 +318,7 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: randomUUID(),
+                roleId: randomUUID(),
               },
               body: {
                 name: '',
@@ -328,19 +326,19 @@ await suite('Genre unit tests', async () => {
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -352,27 +350,27 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: randomUUID(),
+                roleId: randomUUID(),
               },
               body: {
-                name: 'a'.repeat(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+                name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
               },
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -384,27 +382,27 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: randomUUID(),
+                roleId: randomUUID(),
               },
               body: {
-                name: 'a'.repeat(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+                name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
               },
             },
           });
 
-          const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
 
           assert.throws(
             () => {
-              validateUpdateGenreSpy(request);
+              validateUpdateRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
+                message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
               });
 
               return true;
@@ -415,29 +413,26 @@ await suite('Genre unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createGenres(
+        await createRoles(
           serverParams,
-          generateGenresData(2),
-          async (_, genres) => {
+          generateRolesData(2),
+          async (_, roles) => {
             const context = {
               authentication: serverParams.authentication,
               database: serverParams.database,
               logger,
             };
-            const genreToUpdate = {
-              genreId: genres[0]!.id,
-              name: genres[1]!.name,
-            };
+            const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
 
             await assert.rejects(
               async () => {
-                await services.genreService.updateGenre(context, genreToUpdate);
+                await services.roleService.updateRole(context, roleToUpdate);
               },
               (err) => {
                 assert.strictEqual(err instanceof MRSError, true);
                 assert.deepStrictEqual((err as MRSError).getClientError(), {
                   code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `Genre '${genres[1]!.name}' already exists`,
+                  message: `Role '${roles[1]!.name}' already exists`,
                 });
 
                 return true;
@@ -456,19 +451,19 @@ await suite('Genre unit tests', async () => {
             logger,
           });
 
-          const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
           );
 
           assert.throws(
             () => {
-              validateDeleteGenreSpy(request);
+              validateDeleteRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+                message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
               });
 
               return true;
@@ -480,24 +475,24 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: '',
+                roleId: '',
               },
             },
           });
 
-          const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
           );
 
           assert.throws(
             () => {
-              validateDeleteGenreSpy(request);
+              validateDeleteRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.ERROR_MESSAGE,
+                message: ROLE.ID.ERROR_MESSAGE,
               });
 
               return true;
@@ -509,24 +504,24 @@ await suite('Genre unit tests', async () => {
             logger,
             reqOptions: {
               params: {
-                genreId: randomString(),
+                roleId: randomString(),
               },
             },
           });
 
-          const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
           );
 
           assert.throws(
             () => {
-              validateDeleteGenreSpy(request);
+              validateDeleteRoleSpy(request);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: GENRE.ID.ERROR_MESSAGE,
+                message: ROLE.ID.ERROR_MESSAGE,
               });
 
               return true;

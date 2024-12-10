@@ -3,9 +3,6 @@ import {
   assert,
   before,
   createHttpMocks,
-  createUser,
-  createUsers,
-  generateUsersData,
   getAdminRole,
   HTTP_STATUS_CODES,
   initServer,
@@ -23,6 +20,8 @@ import {
   VALIDATION,
   validators,
 } from '../utils.js';
+
+import { createUser, createUsers, generateUsersData } from './utils.js';
 
 /**********************************************************************************/
 
