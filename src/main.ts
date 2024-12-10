@@ -54,6 +54,7 @@ async function startServer() {
     authenticationParams: {
       audience: 'mrs-users',
       issuer: 'mrs-server',
+      typ: 'JWT',
       alg: 'RS256',
       access: {
         expiresAt: 900_000, // 15 minutes
@@ -108,7 +109,7 @@ function createLogger() {
   return {
     logger: logger.getHandler(),
     logMiddleware: logger.getLogMiddleware(),
-  };
+  } as const;
 }
 
 function signalHandler(server: HttpServer) {

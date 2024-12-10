@@ -1,6 +1,7 @@
-import * as authenticationService from './authentication.js';
-import * as roleService from './role.js';
+import * as authenticationService from './authentication/index.js';
+import * as roleService from './role/index.js';
+import * as userService from './user/index.js';
 
 /**********************************************************************************/
 
-export { authenticationService, roleService };
+export { authenticationService, roleService, userService };

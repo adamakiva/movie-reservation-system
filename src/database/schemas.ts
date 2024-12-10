@@ -17,14 +17,14 @@ import {
 
 const timestamps = {
   createdAt: timestamp('created_at', {
-    mode: 'string',
+    mode: 'date',
     precision: 3,
     withTimezone: true,
   })
     .defaultNow()
     .notNull(),
   updatedAt: timestamp('updated_at', {
-    mode: 'string',
+    mode: 'date',
     precision: 3,
     withTimezone: true,
   })
@@ -67,8 +67,13 @@ const userModel = pgTable(
   (table) => {
     return [
       {
-        emailUniqueIndex: uniqueIndex().using('btree', table.email),
+        emailUniqueIndex: uniqueIndex().using('btree', table.email.asc()),
         roleIndex: index().using('btree', table.roleId),
+        cursorIndex: uniqueIndex().using(
+          'btree',
+          table.id.asc(),
+          table.createdAt.asc(),
+        ),
       },
     ];
   },

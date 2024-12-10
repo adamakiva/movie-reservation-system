@@ -90,7 +90,7 @@ class HttpServer {
   }
 
   public async listen(port?: number) {
-    return await new Promise<number>((resolve) => {
+    const actualPort = await new Promise<number>((resolve) => {
       this.#server.once('listening', () => {
         if (!isTestMode(this.#mode)) {
           // Can be asserted since this is not a unix socket and we are inside
@@ -109,6 +109,8 @@ class HttpServer {
 
       this.#server.listen(port);
     });
+
+    return actualPort;
   }
 
   public close() {
@@ -266,8 +268,12 @@ class HttpServer {
       .use(Middlewares.attachContext(this.#requestContext))
       .use(healthCheckRoute, routers.healthCheckRouter)
       .use(logMiddleware)
-      .use(httpRoute, routers.authenticationRouter)
-      .use(httpRoute, routers.roleRouter(this.#authentication))
+      .use(
+        httpRoute,
+        routers.authenticationRouter,
+        routers.roleRouter(this.#authentication),
+        routers.userRouter(this.#authentication),
+      )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 }

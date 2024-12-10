@@ -31,7 +31,6 @@ await suite('Authentication integration tests', async () => {
         email,
         password,
       });
-
       assert.strictEqual(typeof tokens === 'object' && tokens !== null, true);
       assert.strictEqual(Object.keys(tokens).length, 2);
 
@@ -64,7 +63,6 @@ await suite('Authentication integration tests', async () => {
         method: 'PUT',
         payload: { refreshToken: refreshToken },
       });
-
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
       const refreshedAccessToken = await res.json();

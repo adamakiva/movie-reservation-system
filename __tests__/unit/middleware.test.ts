@@ -135,7 +135,7 @@ await suite('Middleware unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await httpAuthenticationMiddlewareSpy(
+          await httpAuthenticationMiddlewareSpy()(
             request,
             response,
             ctx.mock.fn(),
@@ -166,7 +166,7 @@ await suite('Middleware unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await httpAuthenticationMiddlewareSpy(
+          await httpAuthenticationMiddlewareSpy()(
             request,
             response,
             ctx.mock.fn(),
@@ -237,6 +237,10 @@ await suite('Middleware unit tests', async () => {
     });
     await suite('Postgres error', async () => {
       await test('Foreign key violation', (ctx) => {
+        ctx.mock.method(logger, 'fatal', () => {
+          // Since this method log a fatal error, we mock it on purpose
+        });
+
         const { request, response } = createHttpMocks<ResponseWithCtx>({
           logger: logger,
         });
@@ -250,6 +254,10 @@ await suite('Middleware unit tests', async () => {
         assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
       });
       await test('Unique violation', (ctx) => {
+        ctx.mock.method(logger, 'fatal', () => {
+          // Since this method log a fatal error, we mock it on purpose
+        });
+
         const { request, response } = createHttpMocks<ResponseWithCtx>({
           logger: logger,
         });
@@ -263,6 +271,10 @@ await suite('Middleware unit tests', async () => {
         assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
       });
       await test('Too many connections', (ctx) => {
+        ctx.mock.method(logger, 'fatal', () => {
+          // Since this method log a fatal error, we mock it on purpose
+        });
+
         const { request, response } = createHttpMocks<ResponseWithCtx>({
           logger: logger,
         });
@@ -277,6 +289,10 @@ await suite('Middleware unit tests', async () => {
       });
     });
     await test('Unexpected error object', (ctx) => {
+      ctx.mock.method(logger, 'fatal', () => {
+        // Since this method log a fatal error, we mock it on purpose
+      });
+
       const { request, response } = createHttpMocks<ResponseWithCtx>({
         logger: logger,
       });
@@ -289,6 +305,10 @@ await suite('Middleware unit tests', async () => {
       assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
     });
     await test('Unexpected non-error object', (ctx) => {
+      ctx.mock.method(logger, 'fatal', () => {
+        // Since this method log a fatal error, we mock it on purpose
+      });
+
       const { request, response } = createHttpMocks<ResponseWithCtx>({
         logger: logger,
       });

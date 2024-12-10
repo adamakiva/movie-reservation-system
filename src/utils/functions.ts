@@ -28,6 +28,26 @@ function isProductionMode(mode?: string) {
   return !strcasecmp(mode, 'production');
 }
 
+function encodeCursor(id: string, createdAt: Date) {
+  return Buffer.from(`${id},${createdAt.toISOString()}`).toString('base64');
+}
+
+function decodeCursor(cursor: string) {
+  const val = Buffer.from(cursor, 'base64').toString('utf-8').split(',');
+
+  return {
+    id: val[0]!,
+    createdAt: new Date(val[1]!),
+  } as const;
+}
+
 /**********************************************************************************/
 
-export { isDevelopmentMode, isProductionMode, isTestMode, strcasecmp };
+export {
+  decodeCursor,
+  encodeCursor,
+  isDevelopmentMode,
+  isProductionMode,
+  isTestMode,
+  strcasecmp,
+};

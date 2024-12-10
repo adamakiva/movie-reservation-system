@@ -6,7 +6,16 @@ import { resolve } from 'node:path';
 import argon2 from 'argon2';
 import compress from 'compression';
 import cors, { type CorsOptions } from 'cors';
-import { asc, eq, sql, type Logger as DrizzleLogger } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gt,
+  or,
+  sql,
+  type Logger as DrizzleLogger,
+} from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import express, {
   Router,
@@ -27,6 +36,8 @@ import EnvironmentManager, { type Mode } from './config.js';
 import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
 import MRSError from './error.js';
 import {
+  decodeCursor,
+  encodeCursor,
   isDevelopmentMode,
   isProductionMode,
   isTestMode,
@@ -60,6 +71,20 @@ type DatabaseHandler = Omit<
   '$client'
 >;
 
+/********************************** Service ***************************************/
+
+type Pagination = {
+  hasNext: boolean;
+  cursor: string | null;
+};
+
+type PaginatedResult<T> = T & { page: Pagination };
+
+type Credentials = {
+  email: string;
+  password: string;
+};
+
 /**********************************************************************************/
 
 export {
@@ -71,19 +96,25 @@ export {
   MRSError,
   Router,
   Zod,
+  and,
   argon2,
   asc,
   compress,
   cors,
+  count,
   createServer,
+  decodeCursor,
   drizzle,
+  encodeCursor,
   eq,
   express,
+  gt,
   isDevelopmentMode,
   isProductionMode,
   isTestMode,
   jose,
   json,
+  or,
   pg,
   readFile,
   resolve,
@@ -91,6 +122,7 @@ export {
   strcasecmp,
   type AddressInfo,
   type CorsOptions,
+  type Credentials,
   type DatabaseHandler,
   type DrizzleLogger,
   type Express,
@@ -98,6 +130,7 @@ export {
   type LoggerHandler,
   type Mode,
   type NextFunction,
+  type PaginatedResult,
   type RemoveUndefinedFields,
   type Request,
   type RequestContext,

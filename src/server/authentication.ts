@@ -14,7 +14,7 @@ import {
 class AuthenticationManager {
   readonly #audience;
   readonly #issuer;
-  readonly #alg;
+  readonly #header;
   readonly #access;
   readonly #refresh;
   readonly #hashSecret;
@@ -22,6 +22,7 @@ class AuthenticationManager {
   public static async create(params: {
     audience: string;
     issuer: string;
+    typ: string;
     alg: string;
     access: {
       expiresAt: number;
@@ -32,8 +33,16 @@ class AuthenticationManager {
     keysPath: string;
     hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh, keysPath, hashSecret } =
-      params;
+    const {
+      audience,
+      issuer,
+      typ,
+      alg,
+      access,
+      refresh,
+      keysPath,
+      hashSecret,
+    } = params;
 
     const encoding = { encoding: 'utf-8' } as const;
 
@@ -64,6 +73,7 @@ class AuthenticationManager {
     const self = new AuthenticationManager({
       audience,
       issuer,
+      typ,
       alg,
       access: {
         publicKey: publicAccessKey,
@@ -81,51 +91,50 @@ class AuthenticationManager {
     return self;
   }
 
-  public async httpAuthenticationMiddleware(
-    req: Request,
-    _res: ResponseWithCtx,
-    next: NextFunction,
-  ) {
-    await this.#checkAuthenticationToken(req.headers.authorization);
-
-    next();
+  public httpAuthenticationMiddleware() {
+    return this.#httpAuthenticationMiddleware.bind(this);
   }
 
   public getExpirationTime() {
-    const now = Date.now();
+    // JWT expects exp in seconds since epoch, not milliseconds
+    const now = Math.round(Date.now() / 1_000);
 
     return {
       accessTokenExpirationTime: now + this.#access.expiresAt,
       refreshTokenExpirationTime: now + this.#refresh.expiresAt,
-    };
+    } as const;
   }
 
   public async generateAccessToken(
     userId: string,
     accessTokenExpirationTime: number,
   ) {
-    return await new jose.SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
       .setIssuedAt()
       .setExpirationTime(accessTokenExpirationTime)
-      .setProtectedHeader({ alg: this.#alg })
+      .setProtectedHeader(this.#header)
       .sign(this.#access.privateKey);
+
+    return jwt;
   }
 
   public async generateRefreshToken(
     userId: string,
     refreshTokenExpirationTime: number,
   ) {
-    return await new jose.SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
       .setIssuedAt()
       .setExpirationTime(refreshTokenExpirationTime)
-      .setProtectedHeader({ alg: this.#alg })
+      .setProtectedHeader(this.#header)
       .sign(this.#refresh.privateKey);
+
+    return jwt;
   }
 
   public async validateToken(token: string, type: 'access' | 'refresh') {
@@ -139,18 +148,29 @@ class AuthenticationManager {
         break;
     }
 
-    return await jose.jwtVerify(token, publicKey, {
+    const parsedJwt = await jose.jwtVerify(token, publicKey, {
       audience: this.#audience,
       issuer: this.#issuer,
     });
+
+    return parsedJwt;
   }
 
   public async hashPassword(password: string) {
-    return await argon2.hash(password, { type: 1, secret: this.#hashSecret });
+    const hashedPassword = await argon2.hash(password, {
+      type: 1,
+      secret: this.#hashSecret,
+    });
+
+    return hashedPassword;
   }
 
   public async verifyPassword(hash: string, password: string) {
-    return await argon2.verify(hash, password, { secret: this.#hashSecret });
+    const isValid = await argon2.verify(hash, password, {
+      secret: this.#hashSecret,
+    });
+
+    return isValid;
   }
 
   /********************************************************************************/
@@ -158,6 +178,7 @@ class AuthenticationManager {
   private constructor(params: {
     audience: string;
     issuer: string;
+    typ: string;
     alg: string;
     access: {
       publicKey: jose.KeyLike;
@@ -171,14 +192,24 @@ class AuthenticationManager {
     };
     hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh, hashSecret } = params;
+    const { audience, issuer, typ, alg, access, refresh, hashSecret } = params;
 
     this.#audience = audience;
     this.#issuer = issuer;
-    this.#alg = alg;
+    this.#header = { typ, alg } as const;
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
+  }
+
+  async #httpAuthenticationMiddleware(
+    req: Request,
+    _res: ResponseWithCtx,
+    next: NextFunction,
+  ) {
+    await this.#checkAuthenticationToken(req.headers.authorization);
+
+    next();
   }
 
   async #checkAuthenticationToken(authorizationHeader?: string) {
