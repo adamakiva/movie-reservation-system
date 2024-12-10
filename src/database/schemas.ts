@@ -42,7 +42,7 @@ const roleModel = pgTable(
     ...timestamps,
   },
   (table) => {
-    return [{ nameIndex: index().using('btree', table.name) }];
+    return [uniqueIndex('role_name_unique_index').using('btree', table.name)];
   },
 );
 
@@ -66,15 +66,13 @@ const userModel = pgTable(
   },
   (table) => {
     return [
-      {
-        emailUniqueIndex: uniqueIndex().using('btree', table.email.asc()),
-        roleIndex: index().using('btree', table.roleId),
-        cursorIndex: uniqueIndex().using(
-          'btree',
-          table.id.asc(),
-          table.createdAt.asc(),
-        ),
-      },
+      uniqueIndex('user_email_unique_index').using('btree', table.email.asc()),
+      index('user_role_id_index').using('btree', table.roleId),
+      uniqueIndex('user_cursor_unique_index').using(
+        'btree',
+        table.id.asc(),
+        table.createdAt.asc(),
+      ),
     ];
   },
 );
@@ -89,7 +87,7 @@ const genreModel = pgTable(
     ...timestamps,
   },
   (table) => {
-    return [{ nameIndex: index().using('btree', table.name) }];
+    return [uniqueIndex('genre_name_unique_index').using('btree', table.name)];
   },
 );
 
@@ -150,10 +148,8 @@ const showtimeModel = pgTable(
   },
   (table) => {
     return [
-      {
-        movieIndex: index().using('btree', table.movieId),
-        hallIndex: index().using('btree', table.hallId),
-      },
+      index('showtime_movie_index').using('btree', table.movieId),
+      index('showtime_hall_index').using('btree', table.hallId),
     ];
   },
 );

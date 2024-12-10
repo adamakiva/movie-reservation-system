@@ -148,6 +148,26 @@ const VALIDATION = {
       ERROR_MESSAGE: 'Role id must be a valid UUIDV4',
     },
   },
+  GENRE: {
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Genre id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Genre id is required',
+      ERROR_MESSAGE: 'Genre id must be a valid UUIDV4',
+    },
+    NAME: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Genre name must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Genre name is required',
+      MIN_LENGTH: {
+        VALUE: 3,
+        ERROR_MESSAGE: 'Genre name must be at least 3 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 32,
+        ERROR_MESSAGE: 'Genre name must be at most 32 characters long',
+      },
+    },
+  },
 } as const;
 
 const {
@@ -159,6 +179,7 @@ const {
   AUTHENTICATION,
   ROLE,
   USER,
+  GENRE,
 } = VALIDATION;
 
 /**********************************************************************************/
@@ -541,10 +562,85 @@ const deleteUserSchema = Zod.object(
 
 /**********************************************************************************/
 
+const createGenreSchema = Zod.object(
+  {
+    id: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .uuid(GENRE.ID.ERROR_MESSAGE)
+      .optional(),
+    name: Zod.string({
+      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
+    })
+      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase(),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const updateGenreBodySchema = Zod.object(
+  {
+    name: Zod.string({
+      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase()
+      .optional(),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+).superRefine((val, ctx) => {
+  if (!Object.keys(val).length) {
+    ctx.addIssue({
+      code: Zod.ZodIssueCode.custom,
+      message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+      fatal: true,
+    });
+  }
+});
+
+const updateGenreParamsSchema = Zod.object(
+  {
+    genreId: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(GENRE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const deleteGenreSchema = Zod.object(
+  {
+    genreId: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(GENRE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+/**********************************************************************************/
+
 export {
   VALIDATION,
+  createGenreSchema,
   createRoleSchema,
   createUserSchema,
+  deleteGenreSchema,
   deleteRoleSchema,
   deleteUserSchema,
   getUserSchema,
@@ -553,6 +649,8 @@ export {
   loginSchema,
   parseValidationResult,
   refreshTokenSchema,
+  updateGenreBodySchema,
+  updateGenreParamsSchema,
   updateRoleBodySchema,
   updateRoleParamsSchema,
   updateUserBodySchema,
