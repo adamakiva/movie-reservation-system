@@ -329,14 +329,12 @@ await suite('Authentication unit tests', async () => {
             },
           );
         });
-        await test('Too long', (ctx) => {
+        await test('Invalid', (ctx) => {
           const { request } = createHttpMocks<ResponseWithCtx>({
             logger,
             reqOptions: {
               body: {
-                refreshToken: 'a'.repeat(
-                  AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.VALUE + 1,
-                ),
+                refreshToken: 'a'.repeat(64),
               },
             },
           });
@@ -353,7 +351,7 @@ await suite('Authentication unit tests', async () => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.deepStrictEqual((err as MRSError).getClientError(), {
                 code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-                message: AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.ERROR_MESSAGE,
+                message: AUTHENTICATION.REFRESH.TOKEN.ERROR_MESSAGE,
               });
 
               return true;

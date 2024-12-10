@@ -14,7 +14,7 @@ import {
 class AuthenticationManager {
   readonly #audience;
   readonly #issuer;
-  readonly #alg;
+  readonly #header;
   readonly #access;
   readonly #refresh;
   readonly #hashSecret;
@@ -22,6 +22,7 @@ class AuthenticationManager {
   public static async create(params: {
     audience: string;
     issuer: string;
+    typ: string;
     alg: string;
     access: {
       expiresAt: number;
@@ -32,8 +33,16 @@ class AuthenticationManager {
     keysPath: string;
     hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh, keysPath, hashSecret } =
-      params;
+    const {
+      audience,
+      issuer,
+      typ,
+      alg,
+      access,
+      refresh,
+      keysPath,
+      hashSecret,
+    } = params;
 
     const encoding = { encoding: 'utf-8' } as const;
 
@@ -64,6 +73,7 @@ class AuthenticationManager {
     const self = new AuthenticationManager({
       audience,
       issuer,
+      typ,
       alg,
       access: {
         publicKey: publicAccessKey,
@@ -86,7 +96,8 @@ class AuthenticationManager {
   }
 
   public getExpirationTime() {
-    const now = Date.now();
+    // JWT expects exp in seconds since epoch, not milliseconds
+    const now = Math.round(Date.now() / 1_000);
 
     return {
       accessTokenExpirationTime: now + this.#access.expiresAt,
@@ -104,7 +115,7 @@ class AuthenticationManager {
       .setIssuer(this.#issuer)
       .setIssuedAt()
       .setExpirationTime(accessTokenExpirationTime)
-      .setProtectedHeader({ alg: this.#alg })
+      .setProtectedHeader(this.#header)
       .sign(this.#access.privateKey);
 
     return jwt;
@@ -120,7 +131,7 @@ class AuthenticationManager {
       .setIssuer(this.#issuer)
       .setIssuedAt()
       .setExpirationTime(refreshTokenExpirationTime)
-      .setProtectedHeader({ alg: this.#alg })
+      .setProtectedHeader(this.#header)
       .sign(this.#refresh.privateKey);
 
     return jwt;
@@ -167,6 +178,7 @@ class AuthenticationManager {
   private constructor(params: {
     audience: string;
     issuer: string;
+    typ: string;
     alg: string;
     access: {
       publicKey: jose.KeyLike;
@@ -180,11 +192,11 @@ class AuthenticationManager {
     };
     hashSecret: Buffer;
   }) {
-    const { audience, issuer, alg, access, refresh, hashSecret } = params;
+    const { audience, issuer, typ, alg, access, refresh, hashSecret } = params;
 
     this.#audience = audience;
     this.#issuer = issuer;
-    this.#alg = alg;
+    this.#header = { typ, alg } as const;
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;

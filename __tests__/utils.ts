@@ -85,8 +85,8 @@ async function initServer() {
   return server;
 }
 
-function terminateServer(params: ServerParams) {
-  const { server } = params;
+function terminateServer(serverParams: ServerParams) {
+  const { server } = serverParams;
 
   // The database closure is handled by the server close event handler
   server.close();
@@ -113,6 +113,7 @@ async function createServer() {
     authenticationParams: {
       audience: 'mrs-users',
       issuer: 'mrs-server',
+      typ: 'JWT',
       alg: 'RS256',
       access: {
         expiresAt: 60_000, // 1 minute

@@ -60,12 +60,9 @@ const VALIDATION = {
   AUTHENTICATION: {
     REFRESH: {
       TOKEN: {
+        ERROR_MESSAGE: 'Invalid refresh token',
         INVALID_TYPE_ERROR_MESSAGE: 'Refresh token must be a string',
         REQUIRED_ERROR_MESSAGE: 'Refresh token is required',
-        MAX_LENGTH: {
-          VALUE: 1_024,
-          ERROR_MESSAGE: 'Refresh token must be at most 1024 characters long',
-        },
       },
     },
   },
@@ -255,10 +252,9 @@ const refreshTokenSchema = Zod.object(
       invalid_type_error:
         AUTHENTICATION.REFRESH.TOKEN.INVALID_TYPE_ERROR_MESSAGE,
       required_error: AUTHENTICATION.REFRESH.TOKEN.REQUIRED_ERROR_MESSAGE,
-    }).max(
-      AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.VALUE,
-      AUTHENTICATION.REFRESH.TOKEN.MAX_LENGTH.ERROR_MESSAGE,
-    ),
+    }).jwt({
+      message: AUTHENTICATION.REFRESH.TOKEN.ERROR_MESSAGE,
+    }),
   },
   {
     invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
@@ -354,6 +350,7 @@ const getUsersSchema = Zod.object(
         PAGINATION.CURSOR.MAX_LENGTH.VALUE,
         PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
       )
+      .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
       .optional(),
     pageSize: Zod.coerce
       .number({
