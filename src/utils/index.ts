@@ -30,7 +30,7 @@ import pg from 'postgres';
 import Zod from 'zod';
 
 import type { Database } from '../database/index.js';
-import type { AuthenticationManager } from '../server/index.js';
+import type { AuthenticationManager } from '../server/services/index.js';
 
 import EnvironmentManager, { type Mode } from './config.js';
 import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';

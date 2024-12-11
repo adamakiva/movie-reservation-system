@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 
 import { eq, inArray } from 'drizzle-orm';
 
-import type { Role } from '../../src/services/role/utils.js';
-import type { User } from '../../src/services/user/utils.js';
+import type { Role } from '../../src/entities/role/service/utils.js';
+import type { User } from '../../src/entities/user/service/utils.js';
 import type { Credentials } from '../../src/utils/index.js';
 
 import {

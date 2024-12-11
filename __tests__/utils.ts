@@ -33,11 +33,10 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
-import * as controllers from '../src/controllers/index.js';
 import type { Database } from '../src/database/index.js';
+import { VALIDATION } from '../src/entities/utils.validator.js';
 import { HttpServer } from '../src/server/index.js';
-import * as Middlewares from '../src/server/middlewares.js';
-import * as services from '../src/services/index.js';
+import * as Middlewares from '../src/server/services/middlewares.js';
 import {
   CONFIGURATIONS,
   EnvironmentManager,
@@ -49,8 +48,6 @@ import {
   type ResponseWithCtx,
   type ResponseWithoutCtx,
 } from '../src/utils/index.js';
-import * as validators from '../src/validators/index.js';
-import { VALIDATION } from '../src/validators/utils.js';
 
 const { PostgresError } = pg;
 
@@ -324,7 +321,6 @@ export {
   after,
   assert,
   before,
-  controllers,
   createHttpMocks,
   ERROR_CODES,
   generateTokens,
@@ -341,12 +337,10 @@ export {
   randomString,
   randomUUID,
   sendHttpRequest,
-  services,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  validators,
   type Database,
   type Logger,
   type LoggerHandler,

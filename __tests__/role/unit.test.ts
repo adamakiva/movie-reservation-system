@@ -1,3 +1,6 @@
+import * as service from '../../src/entities/role/service/index.js';
+import * as validator from '../../src/entities/role/validator.js';
+
 import {
   after,
   assert,
@@ -9,12 +12,10 @@ import {
   MRSError,
   randomString,
   randomUUID,
-  services,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  validators,
   type LoggerHandler,
   type ResponseWithCtx,
   type ServerParams,
@@ -51,7 +52,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateCreateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateCreateRole,
+            validator.validateCreateRole,
           );
 
           assert.throws(
@@ -80,7 +81,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateCreateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateCreateRole,
+            validator.validateCreateRole,
           );
 
           assert.throws(
@@ -109,7 +110,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateCreateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateCreateRole,
+            validator.validateCreateRole,
           );
 
           assert.throws(
@@ -138,7 +139,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateCreateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateCreateRole,
+            validator.validateCreateRole,
           );
 
           assert.throws(
@@ -170,7 +171,7 @@ await suite('Role unit tests', async () => {
 
           await assert.rejects(
             async () => {
-              await services.roleService.createRole(context, roleToCreate);
+              await service.createRole(context, roleToCreate);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
@@ -198,9 +199,7 @@ await suite('Role unit tests', async () => {
           },
         });
 
-        const validateUpdateRoleSpy = ctx.mock.fn(
-          validators.roleValidator.validateUpdateRole,
-        );
+        const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
 
         assert.throws(
           () => {
@@ -229,7 +228,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -261,7 +260,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -293,7 +292,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -327,7 +326,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -359,7 +358,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -391,7 +390,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateUpdateRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateUpdateRole,
+            validator.validateUpdateRole,
           );
 
           assert.throws(
@@ -423,7 +422,7 @@ await suite('Role unit tests', async () => {
 
           await assert.rejects(
             async () => {
-              await services.roleService.updateRole(context, roleToUpdate);
+              await service.updateRole(context, roleToUpdate);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
@@ -448,7 +447,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateDeleteRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateDeleteRole,
+            validator.validateDeleteRole,
           );
 
           assert.throws(
@@ -477,7 +476,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateDeleteRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateDeleteRole,
+            validator.validateDeleteRole,
           );
 
           assert.throws(
@@ -506,7 +505,7 @@ await suite('Role unit tests', async () => {
           });
 
           const validateDeleteRoleSpy = ctx.mock.fn(
-            validators.roleValidator.validateDeleteRole,
+            validator.validateDeleteRole,
           );
 
           assert.throws(

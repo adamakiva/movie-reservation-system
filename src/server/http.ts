@@ -1,5 +1,5 @@
 import { Database } from '../database/index.js';
-import * as routers from '../routers/index.js';
+import * as routers from '../entities/index.js';
 import {
   compress,
   cors,
@@ -17,8 +17,8 @@ import {
   type Server,
 } from '../utils/index.js';
 
-import AuthenticationManager from './authentication.js';
-import * as Middlewares from './middlewares.js';
+import AuthenticationManager from './services/authentication.js';
+import * as Middlewares from './services/middlewares.js';
 
 /**********************************************************************************/
 
@@ -266,7 +266,7 @@ class HttpServer {
     // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(routers.healthCheckRouter)
+      .use(routers.healthcheckRouter)
       .use(logMiddleware)
       .use(
         httpRoute,

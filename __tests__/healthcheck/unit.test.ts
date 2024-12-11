@@ -1,8 +1,9 @@
+import * as controller from '../../src/entities/healthcheck/controller.js';
+
 import {
   after,
   assert,
   before,
-  controllers,
   createHttpMocks,
   HTTP_STATUS_CODES,
   initServer,
@@ -41,7 +42,7 @@ await suite('Health check unit tests', async () => {
       ] as const;
 
       const livenessHealthCheckMock = ctx.mock.fn(
-        controllers.healthcheckController.livenessHealthCheck,
+        controller.livenessHealthCheck,
       );
 
       disallowedMethods.forEach((disallowedMethod) => {
@@ -83,7 +84,7 @@ await suite('Health check unit tests', async () => {
       ] as const;
 
       const readinessHealthCheckMock = ctx.mock.fn(
-        controllers.healthcheckController.readinessHealthCheck,
+        controller.readinessHealthCheck,
       );
 
       await Promise.all(
@@ -135,7 +136,7 @@ await suite('Health check unit tests', async () => {
       };
 
       const validateHealthCheckMiddlewareSpy = ctx.mock.fn(
-        controllers.healthcheckController.readinessHealthCheck,
+        controller.readinessHealthCheck,
       );
 
       await validateHealthCheckMiddlewareSpy(request, response);

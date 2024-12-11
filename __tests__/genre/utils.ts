@@ -1,6 +1,6 @@
 import { inArray } from 'drizzle-orm';
 
-import type { Genre } from '../../src/services/genre/utils.js';
+import type { Genre } from '../../src/entities/genre/service/utils.js';
 
 import { randomString, randomUUID, type ServerParams } from '../utils.js';
 

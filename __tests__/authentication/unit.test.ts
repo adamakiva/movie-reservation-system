@@ -1,3 +1,6 @@
+import * as service from '../../src/entities/authentication/service/index.js';
+import * as validator from '../../src/entities/authentication/validator.js';
+
 import {
   after,
   assert,
@@ -9,12 +12,10 @@ import {
   MRSError,
   randomString,
   randomUUID,
-  services,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  validators,
   type LoggerHandler,
   type ResponseWithCtx,
   type ServerParams,
@@ -50,9 +51,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -80,9 +79,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -110,9 +107,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -141,9 +136,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -171,9 +164,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -201,9 +192,7 @@ await suite('Authentication unit tests', async () => {
             },
           });
 
-          const validateLoginSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateLogin,
-          );
+          const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
 
           assert.throws(
             () => {
@@ -236,7 +225,7 @@ await suite('Authentication unit tests', async () => {
           email: `${randomUUID()}@ph.com`,
           password: randomString(),
         };
-        const loginSpy = ctx.mock.fn(services.authenticationService.login);
+        const loginSpy = ctx.mock.fn(service.login);
 
         await assert.rejects(
           async () => {
@@ -283,7 +272,7 @@ await suite('Authentication unit tests', async () => {
           email: `${randomUUID()}@ph.com`,
           password: randomString(),
         } as const;
-        const loginSpy = ctx.mock.fn(services.authenticationService.login);
+        const loginSpy = ctx.mock.fn(service.login);
 
         await assert.rejects(
           async () => {
@@ -311,7 +300,7 @@ await suite('Authentication unit tests', async () => {
           });
 
           const validateRefreshAccessTokenSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateRefreshAccessToken,
+            validator.validateRefreshAccessToken,
           );
 
           assert.throws(
@@ -340,7 +329,7 @@ await suite('Authentication unit tests', async () => {
           });
 
           const validateRefreshAccessTokenSpy = ctx.mock.fn(
-            validators.authenticationValidator.validateRefreshAccessToken,
+            validator.validateRefreshAccessToken,
           );
 
           assert.throws(
@@ -370,9 +359,7 @@ await suite('Authentication unit tests', async () => {
           logger,
         };
         const refreshToken = 'Bearer ph';
-        const refreshAccessTokenSpy = ctx.mock.fn(
-          services.authenticationService.refreshAccessToken,
-        );
+        const refreshAccessTokenSpy = ctx.mock.fn(service.refreshAccessToken);
 
         await assert.rejects(
           async () => {
@@ -405,9 +392,7 @@ await suite('Authentication unit tests', async () => {
           randomUUID(),
           Date.now() + 10_000,
         );
-        const refreshAccessTokenSpy = ctx.mock.fn(
-          services.authenticationService.refreshAccessToken,
-        );
+        const refreshAccessTokenSpy = ctx.mock.fn(service.refreshAccessToken);
 
         await assert.rejects(
           async () => {

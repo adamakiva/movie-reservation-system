@@ -1,3 +1,6 @@
+import * as service from '../../src/entities/genre/service/index.js';
+import * as validator from '../../src/entities/genre/validator.js';
+
 import {
   after,
   assert,
@@ -9,12 +12,10 @@ import {
   MRSError,
   randomString,
   randomUUID,
-  services,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  validators,
   type LoggerHandler,
   type ResponseWithCtx,
   type ServerParams,
@@ -48,7 +49,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+            validator.validateCreateGenre,
           );
 
           assert.throws(
@@ -77,7 +78,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+            validator.validateCreateGenre,
           );
 
           assert.throws(
@@ -106,7 +107,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+            validator.validateCreateGenre,
           );
 
           assert.throws(
@@ -135,7 +136,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateCreateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateCreateGenre,
+            validator.validateCreateGenre,
           );
 
           assert.throws(
@@ -167,7 +168,7 @@ await suite('Genre unit tests', async () => {
 
           await assert.rejects(
             async () => {
-              await services.genreService.createGenre(context, genreToCreate);
+              await service.createGenre(context, genreToCreate);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
@@ -196,7 +197,7 @@ await suite('Genre unit tests', async () => {
         });
 
         const validateUpdateGenreSpy = ctx.mock.fn(
-          validators.genreValidator.validateUpdateGenre,
+          validator.validateUpdateGenre,
         );
 
         assert.throws(
@@ -226,7 +227,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -258,7 +259,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -290,7 +291,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -324,7 +325,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -356,7 +357,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -388,7 +389,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateUpdateGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateUpdateGenre,
+            validator.validateUpdateGenre,
           );
 
           assert.throws(
@@ -423,7 +424,7 @@ await suite('Genre unit tests', async () => {
 
           await assert.rejects(
             async () => {
-              await services.genreService.updateGenre(context, genreToUpdate);
+              await service.updateGenre(context, genreToUpdate);
             },
             (err) => {
               assert.strictEqual(err instanceof MRSError, true);
@@ -448,7 +449,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+            validator.validateDeleteGenre,
           );
 
           assert.throws(
@@ -477,7 +478,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+            validator.validateDeleteGenre,
           );
 
           assert.throws(
@@ -506,7 +507,7 @@ await suite('Genre unit tests', async () => {
           });
 
           const validateDeleteGenreSpy = ctx.mock.fn(
-            validators.genreValidator.validateDeleteGenre,
+            validator.validateDeleteGenre,
           );
 
           assert.throws(

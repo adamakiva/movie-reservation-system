@@ -1,6 +1,6 @@
 import { inArray } from 'drizzle-orm';
 
-import type { Role } from '../../src/services/role/utils.js';
+import type { Role } from '../../src/entities/role/service/utils.js';
 
 import { randomString, randomUUID, type ServerParams } from '../utils.js';
 
