@@ -1,3 +1,4 @@
+import { seedUser } from '../user/utils.js';
 import {
   after,
   assert,
@@ -5,7 +6,6 @@ import {
   generateTokens,
   HTTP_STATUS_CODES,
   initServer,
-  seedUser,
   sendHttpRequest,
   suite,
   terminateServer,
@@ -25,7 +25,7 @@ await suite('Authentication integration tests', async () => {
   });
 
   await test('Login - Valid', async () => {
-    await seedUser(serverParams, async (email, password) => {
+    await seedUser(serverParams, true, async ({ email }, _, password) => {
       const tokens = await generateTokens({
         serverParams,
         email,
@@ -51,7 +51,7 @@ await suite('Authentication integration tests', async () => {
     });
   });
   await test('Refresh - Valid', async () => {
-    await seedUser(serverParams, async (email, password) => {
+    await seedUser(serverParams, true, async ({ email }, _, password) => {
       const { refreshToken } = await generateTokens({
         serverParams,
         email,
@@ -59,7 +59,7 @@ await suite('Authentication integration tests', async () => {
       });
 
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/refresh`,
+        route: `${serverParams.routes.http}/refresh`,
         method: 'PUT',
         payload: { refreshToken: refreshToken },
       });

@@ -3,7 +3,6 @@ import {
   assert,
   before,
   createHttpMocks,
-  getAdminRole,
   HTTP_STATUS_CODES,
   initServer,
   type LoggerHandler,
@@ -21,7 +20,7 @@ import {
   validators,
 } from '../utils.js';
 
-import { createUser, createUsers, generateUsersData } from './utils.js';
+import { generateUsersData, seedUser, seedUsers } from './utils.js';
 
 /**********************************************************************************/
 
@@ -996,37 +995,32 @@ await suite('User unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        const { id: roleId } = getAdminRole();
-        await createUser(
-          serverParams,
-          generateUsersData([roleId]),
-          async (_, user) => {
-            await assert.rejects(
-              async () => {
-                await services.userService.createUser(
-                  {
-                    authentication: serverParams.authentication,
-                    database: serverParams.database,
-                    logger,
-                  },
-                  {
-                    ...generateUsersData([roleId]),
-                    email: user.email,
-                  },
-                );
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `User '${user.email}' already exists`,
-                });
+        await seedUser(serverParams, true, async (user, role) => {
+          await assert.rejects(
+            async () => {
+              await services.userService.createUser(
+                {
+                  authentication: serverParams.authentication,
+                  database: serverParams.database,
+                  logger,
+                },
+                {
+                  ...generateUsersData([role.id], 1),
+                  email: user.email,
+                },
+              );
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `User '${user.email}' already exists`,
+              });
 
-                return true;
-              },
-            );
-          },
-        );
+              return true;
+            },
+          );
+        });
       });
       await test('Non-existent role id', async () => {
         const roleId = randomUUID();
@@ -1039,7 +1033,7 @@ await suite('User unit tests', async () => {
                 database: serverParams.database,
                 logger,
               },
-              generateUsersData([roleId]),
+              generateUsersData([roleId], 1),
             );
           },
           (err) => {
@@ -1652,71 +1646,62 @@ await suite('User unit tests', async () => {
         );
       });
       await test('Duplicate', async () => {
-        const { id: roleId } = getAdminRole();
-        await createUsers(
-          serverParams,
-          generateUsersData([roleId], 2),
-          async (_, users) => {
-            await assert.rejects(
-              async () => {
-                await services.userService.updateUser(
-                  {
-                    authentication: serverParams.authentication,
-                    database: serverParams.database,
-                    logger,
-                  },
-                  {
-                    userId: users[0]!.id,
-                    email: users[1]!.email,
-                  },
-                );
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `User '${users[1]!.email}' already exists`,
-                });
+        await seedUsers(serverParams, 2, false, async (users) => {
+          await assert.rejects(
+            async () => {
+              await services.userService.updateUser(
+                {
+                  authentication: serverParams.authentication,
+                  database: serverParams.database,
+                  logger,
+                },
+                {
+                  userId: users[0]!.id,
+                  email: users[1]!.email,
+                },
+              );
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `User '${users[1]!.email}' already exists`,
+              });
 
-                return true;
-              },
-            );
-          },
-        );
+              return true;
+            },
+          );
+        });
       });
       await test('Non-existent role id', async () => {
-        const { id: roleId } = getAdminRole();
         const updatedRoleId = randomUUID();
-        await createUser(
-          serverParams,
-          generateUsersData([roleId]),
-          async (_, user) => {
-            await assert.rejects(
-              async () => {
-                await services.userService.updateUser(
-                  {
-                    authentication: serverParams.authentication,
-                    database: serverParams.database,
-                    logger,
-                  },
-                  {
-                    userId: user.id,
-                    roleId: updatedRoleId,
-                  },
-                );
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.NOT_FOUND,
-                  message: `Role '${updatedRoleId}' does not exist`,
-                });
 
-                return true;
-              },
-            );
-          },
-        );
+        await seedUser(serverParams, true, async (user) => {
+          await assert.rejects(
+            async () => {
+              await services.userService.updateUser(
+                {
+                  authentication: serverParams.authentication,
+                  database: serverParams.database,
+                  logger,
+                },
+                {
+                  userId: user.id,
+                  roleId: updatedRoleId,
+                },
+              );
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.NOT_FOUND,
+                message: `Role '${updatedRoleId}' does not exist`,
+              });
+
+              return true;
+            },
+          );
+        });
       });
     });
   });

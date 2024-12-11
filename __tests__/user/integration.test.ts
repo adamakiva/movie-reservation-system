@@ -1,9 +1,7 @@
-import { createRole, createRoles, generateRolesData } from '../role/utils.js';
 import {
   after,
   assert,
   before,
-  checkUserPassword,
   getAdminRole,
   getAdminTokens,
   getAdminUserId,
@@ -19,10 +17,11 @@ import {
 } from '../utils.js';
 
 import {
-  createUser,
-  createUsers,
+  checkUserPassword,
   deleteUsers,
   generateUsersData,
+  seedUser,
+  seedUsers,
   type User,
 } from './utils.js';
 
@@ -39,105 +38,116 @@ await suite('Role integration tests', async () => {
 
   await suite('Read', async () => {
     await test('Single page', async () => {
-      await createRoles(
-        serverParams,
-        generateRolesData(3),
-        async (_, roles) => {
-          const roleIds = roles.map((role) => {
-            return role.id;
+      const { accessToken } = await getAdminTokens(serverParams);
+      const adminId = getAdminUserId();
+
+      await seedUsers(serverParams, 32, false, async (users) => {
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/users?${new URLSearchParams({ pageSize: '64' })}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.users), true);
+        const fetchedUsers = (responseBody.users as User[]).filter((user) => {
+          return user.id !== adminId;
+        });
+        fetchedUsers.forEach((user) => {
+          const matchingUserIndex = users.findIndex((u) => {
+            return u.id === user.id;
           });
-          await createUsers(
-            serverParams,
-            generateUsersData(roleIds, 10),
-            async ({ accessToken }, users) => {
-              const adminId = getAdminUserId();
+          assert.deepStrictEqual(user, users[matchingUserIndex]);
+          users.splice(matchingUserIndex, 1);
+        });
 
-              const res = await sendHttpRequest({
-                route: `${serverParams.routes.base}/users?${new URLSearchParams({ pageSize: '64' })}`,
-                method: 'GET',
-                headers: { Authorization: accessToken },
-              });
-              assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
-
-              const responseBody = await res.json();
-              assert.strictEqual(Array.isArray(responseBody.users), true);
-              const fetchedUsers = (responseBody.users as User[]).filter(
-                (user) => {
-                  return user.id !== adminId;
-                },
-              );
-              fetchedUsers.forEach((user) => {
-                const matchingUserIndex = users.findIndex((u) => {
-                  return u.id === user.id;
-                });
-                assert.deepStrictEqual(user, users[matchingUserIndex]);
-                users.splice(matchingUserIndex, 1);
-              });
-
-              assert.strictEqual(!!responseBody.page, true);
-              assert.strictEqual(responseBody.page.hasNext, false);
-              assert.strictEqual(responseBody.page.cursor, null);
-            },
-          );
-        },
-      );
+        assert.strictEqual(!!responseBody.page, true);
+        assert.strictEqual(responseBody.page.hasNext, false);
+        assert.strictEqual(responseBody.page.cursor, null);
+      });
     });
     await test('Many pages', async () => {
-      await createRoles(
-        serverParams,
-        generateRolesData(8),
-        async (_, roles) => {
-          const roleIds = roles.map((role) => {
-            return role.id;
+      const { accessToken } = await getAdminTokens(serverParams);
+      const adminId = getAdminUserId();
+
+      await seedUsers(serverParams, 128, false, async (users) => {
+        let pagination = {
+          hasNext: true,
+          cursor: 'null',
+        };
+
+        /* eslint-disable no-await-in-loop */
+        while (pagination.hasNext) {
+          const res = await sendHttpRequest({
+            route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+            method: 'GET',
+            headers: { Authorization: accessToken },
           });
-          await createUsers(
-            serverParams,
-            generateUsersData(roleIds, 64),
-            async ({ accessToken }, users) => {
-              const adminId = getAdminUserId();
-              let pagination = {
-                hasNext: true,
-                cursor: 'null',
-              };
+          assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-              /* eslint-disable no-await-in-loop */
-              while (pagination.hasNext) {
-                const res = await sendHttpRequest({
-                  route: `${serverParams.routes.base}/users?${new URLSearchParams({ cursor: pagination.cursor })}`,
-                  method: 'GET',
-                  headers: { Authorization: accessToken },
-                });
-                assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+          const responseBody = await res.json();
+          assert.strictEqual(Array.isArray(responseBody.users), true);
+          const fetchedUsers = (responseBody.users as User[]).filter((user) => {
+            return user.id !== adminId;
+          });
+          fetchedUsers.forEach((user) => {
+            const matchingUserIndex = users.findIndex((u) => {
+              return u.id === user.id;
+            });
+            assert.deepStrictEqual(user, users[matchingUserIndex]);
+            users.splice(matchingUserIndex, 1);
+          });
 
-                const responseBody = await res.json();
-                assert.strictEqual(Array.isArray(responseBody.users), true);
-                const fetchedUsers = (responseBody.users as User[]).filter(
-                  (user) => {
-                    return user.id !== adminId;
-                  },
-                );
-                fetchedUsers.forEach((user) => {
-                  const matchingUserIndex = users.findIndex((u) => {
-                    return u.id === user.id;
-                  });
-                  assert.deepStrictEqual(user, users[matchingUserIndex]);
-                  users.splice(matchingUserIndex, 1);
-                });
+          assert.strictEqual(!!responseBody.page, true);
+          pagination = responseBody.page;
+        }
+        /* eslint-enable no-await-in-loop */
+      });
+    });
+    await test('A lot pages', async () => {
+      const { accessToken } = await getAdminTokens(serverParams);
 
-                assert.strictEqual(!!responseBody.page, true);
-                pagination = responseBody.page;
-              }
-              /* eslint-enable no-await-in-loop */
-            },
-          );
-        },
-      );
+      await seedUsers(serverParams, 8_192, false, async (users) => {
+        const adminId = getAdminUserId();
+        let pagination = {
+          hasNext: true,
+          cursor: 'null',
+        };
+
+        /* eslint-disable no-await-in-loop */
+        while (pagination.hasNext) {
+          const res = await sendHttpRequest({
+            route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+            method: 'GET',
+            headers: { Authorization: accessToken },
+          });
+          assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+          const responseBody = await res.json();
+          assert.strictEqual(Array.isArray(responseBody.users), true);
+          const fetchedUsers = (responseBody.users as User[]).filter((user) => {
+            return user.id !== adminId;
+          });
+          fetchedUsers.forEach((user) => {
+            const matchingUserIndex = users.findIndex((u) => {
+              return u.id === user.id;
+            });
+            assert.deepStrictEqual(user, users[matchingUserIndex]);
+            users.splice(matchingUserIndex, 1);
+          });
+
+          assert.strictEqual(!!responseBody.page, true);
+          pagination = responseBody.page;
+        }
+        /* eslint-enable no-await-in-loop */
+      });
     });
   });
   await suite('Create', async () => {
     await test('Body too large', async () => {
       const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/users`,
+        route: `${serverParams.routes.http}/users`,
         method: 'POST',
         payload: {
           firstName: 'a'.repeat(65_536),
@@ -165,7 +175,7 @@ await suite('Role integration tests', async () => {
         } as const;
 
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/users`,
+          route: `${serverParams.routes.http}/users`,
           method: 'POST',
           headers: { Authorization: accessToken },
           payload: userData,
@@ -188,7 +198,7 @@ await suite('Role integration tests', async () => {
   await suite('Update', async () => {
     await test('Body too large', async () => {
       const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/users/${randomUUID()}`,
+        route: `${serverParams.routes.http}/users/${randomUUID()}`,
         method: 'PUT',
         payload: { firstName: 'a'.repeat(65_536) },
       });
@@ -198,43 +208,37 @@ await suite('Role integration tests', async () => {
     await test('Valid', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
 
-      await createRole(serverParams, generateRolesData(), async (_, role) => {
-        await createUser(
-          serverParams,
-          generateUsersData([role.id]),
-          async (_, user) => {
-            const updatedUserData = {
-              firstName: randomString(),
-              lastName: randomString(),
-              email: `${randomString(8)}@ph.com`,
-              password: '87654321',
-              roleId: role.id,
-            } as const;
+      await seedUser(serverParams, true, async (user, role) => {
+        const updatedUserData = {
+          firstName: randomString(),
+          lastName: randomString(),
+          email: `${randomString(8)}@ph.com`,
+          password: '87654321',
+          roleId: role.id,
+        } as const;
 
-            const res = await sendHttpRequest({
-              route: `${serverParams.routes.base}/users/${user.id}`,
-              method: 'PUT',
-              headers: { Authorization: accessToken },
-              payload: updatedUserData,
-            });
-            assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/users/${user.id}`,
+          method: 'PUT',
+          headers: { Authorization: accessToken },
+          payload: updatedUserData,
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-            const updatedUser = await res.json();
-            const { password, roleId, ...updatedUserFields } = updatedUserData;
-            assert.deepStrictEqual(
-              {
-                ...user,
-                ...updatedUserFields,
-                role: role.name,
-              },
-              updatedUser,
-            );
-            await checkUserPassword(serverParams, {
-              email: updatedUserData.email,
-              password: updatedUserData.password,
-            });
+        const updatedUser = await res.json();
+        const { password, roleId, ...updatedUserFields } = updatedUserData;
+        assert.deepStrictEqual(
+          {
+            ...user,
+            ...updatedUserFields,
+            role: role.name,
           },
+          updatedUser,
         );
+        await checkUserPassword(serverParams, {
+          email: updatedUserData.email,
+          password: updatedUserData.password,
+        });
       });
     });
   });
@@ -246,7 +250,7 @@ await suite('Role integration tests', async () => {
 
       try {
         let res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/users`,
+          route: `${serverParams.routes.http}/users`,
           method: 'POST',
           headers: { Authorization: accessToken },
           payload: generateUsersData([roleId], 1),
@@ -257,7 +261,7 @@ await suite('Role integration tests', async () => {
         userId = id;
 
         res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/users/${id}`,
+          route: `${serverParams.routes.http}/users/${id}`,
           method: 'DELETE',
           headers: { Authorization: accessToken },
         });
@@ -274,7 +278,7 @@ await suite('Role integration tests', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
 
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/users/${randomUUID()}`,
+        route: `${serverParams.routes.http}/users/${randomUUID()}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
       });

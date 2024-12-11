@@ -39,7 +39,7 @@ class HttpServer {
     corsOptions: CorsOptions;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
@@ -132,7 +132,7 @@ class HttpServer {
     authentication: AuthenticationManager;
     database: Database;
     server: Server;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logger: LoggerHandler;
   }) {
     const { mode, authentication, database, server, routes, logger } = params;
@@ -254,19 +254,19 @@ class HttpServer {
 
   #attachRoutesMiddlewares(params: {
     app: Express;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logMiddleware: LogMiddleware;
   }) {
     const {
       app,
-      routes: { http: httpRoute, health: healthCheckRoute },
+      routes: { http: httpRoute },
       logMiddleware,
     } = params;
 
     // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(healthCheckRoute, routers.healthCheckRouter)
+      .use(routers.healthCheckRouter)
       .use(logMiddleware)
       .use(
         httpRoute,

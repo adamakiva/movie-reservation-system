@@ -2,185 +2,529 @@ import {
   after,
   assert,
   before,
-  getAdminTokens,
+  createHttpMocks,
   HTTP_STATUS_CODES,
   initServer,
+  mockLogger,
+  MRSError,
   randomString,
   randomUUID,
-  sendHttpRequest,
+  services,
   suite,
   terminateServer,
   test,
+  VALIDATION,
+  validators,
+  type LoggerHandler,
+  type ResponseWithCtx,
   type ServerParams,
 } from '../utils.js';
 
-import {
-  createRole,
-  createRoles,
-  deleteRoles,
-  generateRolesData,
-  type Role,
-} from './utils.js';
+import { seedRole, seedRoles } from './utils.js';
 
 /**********************************************************************************/
 
-await suite('Role integration tests', async () => {
+const { ROLE } = VALIDATION;
+
+/**********************************************************************************/
+
+await suite('Role unit tests', async () => {
+  let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
+    ({ logger } = mockLogger());
     serverParams = await initServer();
   });
   after(() => {
     terminateServer(serverParams);
   });
 
-  await test('Read', async () => {
-    await createRoles(
-      serverParams,
-      generateRolesData(32),
-      async ({ accessToken }, roles) => {
-        const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/roles`,
-          method: 'GET',
-          headers: { Authorization: accessToken },
-        });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
-
-        const fetchedRoles = (await res.json()) as Role[];
-        roles.forEach((role) => {
-          const matchingRole = fetchedRoles.find((fetchedRole) => {
-            return fetchedRole.id === role.id;
-          });
-
-          assert.deepStrictEqual(role, matchingRole);
-        });
-      },
-    );
+  await suite('Read', async () => {
+    // TODO Decide on permissions and check them
   });
   await suite('Create', async () => {
-    await test('Body too large', async () => {
-      const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles`,
-        method: 'POST',
-        payload: { name: 'a'.repeat(65_536) },
-      });
+    await suite('Validation layer', async () => {
+      await suite('Name', async () => {
+        await test('Missing', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+          });
 
-      assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
-    });
-    await test('Valid', async () => {
-      let roleId = '';
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
+          );
 
-      try {
-        const { accessToken } = await getAdminTokens(serverParams);
+          assert.throws(
+            () => {
+              validateCreateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
+              });
 
-        const roleData = { name: randomString(16) } as const;
-
-        const res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/roles`,
-          method: 'POST',
-          headers: { Authorization: accessToken },
-          payload: roleData,
+              return true;
+            },
+          );
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        await test('Empty', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              body: {
+                name: '',
+              },
+            },
+          });
 
-        const { id, ...fields } = (await res.json()) as Role;
-        roleId = id;
-        assert.strictEqual(typeof id === 'string', true);
-        assert.deepStrictEqual(
-          { ...roleData, name: roleData.name.toLowerCase() },
-          fields,
-        );
-      } finally {
-        await deleteRoles(serverParams, roleId);
-      }
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateCreateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Too short', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              body: {
+                name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+              },
+            },
+          });
+
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateCreateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Too long', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              body: {
+                name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+              },
+            },
+          });
+
+          const validateCreateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateCreateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateCreateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+      });
+    });
+    await suite('Service layer', async () => {
+      await test('Duplicate', async () => {
+        await seedRole(serverParams, async (role) => {
+          const context = {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            logger,
+          };
+          const roleToCreate = { name: role.name };
+
+          await assert.rejects(
+            async () => {
+              await services.roleService.createRole(context, roleToCreate);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `Role '${role.name}' already exists`,
+              });
+
+              return true;
+            },
+          );
+        });
+      });
     });
   });
   await suite('Update', async () => {
-    await test('Body too large', async () => {
-      const { status } = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
-        method: 'PUT',
-        payload: { name: 'a'.repeat(65_536) },
+    await suite('Validation layer', async () => {
+      await test('No updates', (ctx) => {
+        const { request } = createHttpMocks<ResponseWithCtx>({
+          logger,
+          reqOptions: {
+            params: {
+              roleId: randomUUID(),
+            },
+          },
+        });
+
+        const validateUpdateRoleSpy = ctx.mock.fn(
+          validators.roleValidator.validateUpdateRole,
+        );
+
+        assert.throws(
+          () => {
+            validateUpdateRoleSpy(request);
+          },
+          (err) => {
+            assert.strictEqual(err instanceof MRSError, true);
+            assert.deepStrictEqual((err as MRSError).getClientError(), {
+              code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+              message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+            });
+
+            return true;
+          },
+        );
       });
-
-      assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
-    });
-    await test('Valid', async () => {
-      await createRole(
-        serverParams,
-        generateRolesData(),
-        async ({ accessToken }, role) => {
-          const updatedRoleData = { name: randomString(16) } as const;
-
-          const res = await sendHttpRequest({
-            route: `${serverParams.routes.base}/roles/${role.id}`,
-            method: 'PUT',
-            headers: { Authorization: accessToken },
-            payload: updatedRoleData,
-          });
-          assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
-
-          const updatedRole = await res.json();
-          assert.deepStrictEqual(
-            {
-              ...role,
-              ...{
-                ...updatedRoleData,
-                name: updatedRoleData.name.toLowerCase(),
+      await suite('Id', async () => {
+        await test('Missing', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              body: {
+                name: randomString(),
               },
             },
-            updatedRole,
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
           );
-        },
-      );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Empty', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: '',
+              },
+              body: {
+                name: randomString(),
+              },
+            },
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Invalid', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: randomString(),
+              },
+              body: {
+                name: randomString(),
+              },
+            },
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+      });
+      await suite('Name', async () => {
+        await test('Empty', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: randomUUID(),
+              },
+              body: {
+                name: '',
+              },
+            },
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Too short', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: randomUUID(),
+              },
+              body: {
+                name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+              },
+            },
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+        await test('Too long', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: randomUUID(),
+              },
+              body: {
+                name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+              },
+            },
+          });
+
+          const validateUpdateRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateUpdateRole,
+          );
+
+          assert.throws(
+            () => {
+              validateUpdateRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
+        });
+      });
+    });
+    await suite('Service layer', async () => {
+      await test('Duplicate', async () => {
+        await seedRoles(serverParams, 2, async (roles) => {
+          const context = {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            logger,
+          };
+          const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
+
+          await assert.rejects(
+            async () => {
+              await services.roleService.updateRole(context, roleToUpdate);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `Role '${roles[1]!.name}' already exists`,
+              });
+
+              return true;
+            },
+          );
+        });
+      });
     });
   });
   await suite('Delete', async () => {
-    await test('Existent', async () => {
-      let roleId = '';
+    await suite('Validation layer', async () => {
+      await suite('Id', async () => {
+        await test('Missing', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+          });
 
-      try {
-        const { accessToken } = await getAdminTokens(serverParams);
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
+          );
 
-        const roleData = { name: randomString() } as const;
+          assert.throws(
+            () => {
+              validateDeleteRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+              });
 
-        let res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/roles`,
-          method: 'POST',
-          headers: { Authorization: accessToken },
-          payload: roleData,
+              return true;
+            },
+          );
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+        await test('Empty', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: '',
+              },
+            },
+          });
 
-        const { id } = (await res.json()) as Role;
-        roleId = id;
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
+          );
 
-        res = await sendHttpRequest({
-          route: `${serverParams.routes.base}/roles/${id}`,
-          method: 'DELETE',
-          headers: { Authorization: accessToken },
+          assert.throws(
+            () => {
+              validateDeleteRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.ERROR_MESSAGE,
+              });
+
+              return true;
+            },
+          );
         });
+        await test('Invalid', (ctx) => {
+          const { request } = createHttpMocks<ResponseWithCtx>({
+            logger,
+            reqOptions: {
+              params: {
+                roleId: randomString(),
+              },
+            },
+          });
 
-        const responseBody = await res.text();
+          const validateDeleteRoleSpy = ctx.mock.fn(
+            validators.roleValidator.validateDeleteRole,
+          );
 
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-        assert.strictEqual(responseBody, '');
-      } finally {
-        await deleteRoles(serverParams, roleId);
-      }
-    });
-    await test('Non-existent', async () => {
-      const { accessToken } = await getAdminTokens(serverParams);
+          assert.throws(
+            () => {
+              validateDeleteRoleSpy(request);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+                message: ROLE.ID.ERROR_MESSAGE,
+              });
 
-      const res = await sendHttpRequest({
-        route: `${serverParams.routes.base}/roles/${randomUUID()}`,
-        method: 'DELETE',
-        headers: { Authorization: accessToken },
+              return true;
+            },
+          );
+        });
       });
-
-      const responseBody = await res.text();
-
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-      assert.strictEqual(responseBody, '');
     });
   });
 });

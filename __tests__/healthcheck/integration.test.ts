@@ -26,7 +26,7 @@ await suite('Health check integration tests', async () => {
 
     await Promise.all(
       allowedMethods.map(async (method) => {
-        const { status } = await fetch(`${serverParams.routes.health}/alive`, {
+        const { status } = await fetch(`${serverParams.routes.base}/alive`, {
           method,
         });
         assert.strictEqual(status, HTTP_STATUS_CODES.NO_CONTENT);
@@ -38,7 +38,7 @@ await suite('Health check integration tests', async () => {
 
     await Promise.all(
       allowedMethods.map(async (method) => {
-        const { status } = await fetch(`${serverParams.routes.health}/ready`, {
+        const { status } = await fetch(`${serverParams.routes.base}/ready`, {
           method,
         });
         assert.strictEqual(status, HTTP_STATUS_CODES.NO_CONTENT);

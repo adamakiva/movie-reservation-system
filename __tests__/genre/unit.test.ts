@@ -20,7 +20,7 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { createGenre, createGenres, generateGenresData } from './utils.js';
+import { seedGenre, seedGenres } from './utils.js';
 
 /**********************************************************************************/
 
@@ -157,33 +157,29 @@ await suite('Genre unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createGenre(
-          serverParams,
-          generateGenresData(),
-          async (_, genre) => {
-            const context = {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              logger,
-            };
-            const genreToCreate = { name: genre.name };
+        await seedGenre(serverParams, async (genre) => {
+          const context = {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            logger,
+          };
+          const genreToCreate = { name: genre.name };
 
-            await assert.rejects(
-              async () => {
-                await services.genreService.createGenre(context, genreToCreate);
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `Genre '${genre.name}' already exists`,
-                });
+          await assert.rejects(
+            async () => {
+              await services.genreService.createGenre(context, genreToCreate);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `Genre '${genre.name}' already exists`,
+              });
 
-                return true;
-              },
-            );
-          },
-        );
+              return true;
+            },
+          );
+        });
       });
     });
   });
@@ -414,36 +410,32 @@ await suite('Genre unit tests', async () => {
     });
     await suite('Service layer', async () => {
       await test('Duplicate', async () => {
-        await createGenres(
-          serverParams,
-          generateGenresData(2),
-          async (_, genres) => {
-            const context = {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              logger,
-            };
-            const genreToUpdate = {
-              genreId: genres[0]!.id,
-              name: genres[1]!.name,
-            };
+        await seedGenres(serverParams, 2, async (genres) => {
+          const context = {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            logger,
+          };
+          const genreToUpdate = {
+            genreId: genres[0]!.id,
+            name: genres[1]!.name,
+          };
 
-            await assert.rejects(
-              async () => {
-                await services.genreService.updateGenre(context, genreToUpdate);
-              },
-              (err) => {
-                assert.strictEqual(err instanceof MRSError, true);
-                assert.deepStrictEqual((err as MRSError).getClientError(), {
-                  code: HTTP_STATUS_CODES.CONFLICT,
-                  message: `Genre '${genres[1]!.name}' already exists`,
-                });
+          await assert.rejects(
+            async () => {
+              await services.genreService.updateGenre(context, genreToUpdate);
+            },
+            (err) => {
+              assert.strictEqual(err instanceof MRSError, true);
+              assert.deepStrictEqual((err as MRSError).getClientError(), {
+                code: HTTP_STATUS_CODES.CONFLICT,
+                message: `Genre '${genres[1]!.name}' already exists`,
+              });
 
-                return true;
-              },
-            );
-          },
-        );
+              return true;
+            },
+          );
+        });
       });
     });
   });

@@ -46,7 +46,6 @@ services:
       - SERVER_DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
       - HTTP_ROUTE=api/v0
-      - HEALTH_CHECK_ROUTE=health
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
       # Database URIs
@@ -85,8 +84,8 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/alive | grep -q '204' &&
-          curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/ready | grep -q '204'"
+          "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/alive | grep -q '204' &&
+          curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/ready | grep -q '204'"
         ]
       interval: 20s
       timeout: 3s

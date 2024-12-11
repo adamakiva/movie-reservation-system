@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Taken from: https://stackoverflow.com/a/69708249
+# Base was taken from: https://stackoverflow.com/a/69708249 and modified a bit by me
 
 # Assumes the script is one level above the package.json file.
 # If the assumption is incorrect, add/remove `/..` as needed

@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict';
 
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
+import type { Role } from '../../src/services/role/utils.js';
 import type { User } from '../../src/services/user/utils.js';
-import { HTTP_STATUS_CODES } from '../../src/utils/index.js';
+import type { Credentials } from '../../src/utils/index.js';
 
 import {
-  getAdminTokens,
   randomNumber,
   randomString,
-  sendHttpRequest,
+  randomUUID,
   type ServerParams,
 } from '../utils.js';
 
@@ -25,6 +25,91 @@ type CreateUser = {
 
 /**********************************************************************************/
 
+async function seedUser(
+  serverParams: ServerParams,
+  shouldHash: boolean,
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    createdUser: User,
+    // eslint-disable-next-line no-unused-vars
+    role: Role,
+    // eslint-disable-next-line no-unused-vars
+    password: string,
+  ) => Promise<unknown>,
+) {
+  const { authentication, database } = serverParams;
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
+
+  const entitiesToCreate = await generateUsersSeedData(
+    authentication,
+    1,
+    shouldHash,
+  );
+
+  // This can be inside a transaction but for the same reason the delete
+  // in the finally block may fail as well, resulting in the same effect
+  await handler.insert(roleModel).values(entitiesToCreate.rolesToCreate);
+  await handler.insert(userModel).values(
+    entitiesToCreate.usersToCreate.map((userToCreate) => {
+      const { password, ...fields } = userToCreate;
+
+      return fields;
+    }),
+  );
+
+  try {
+    const callbackResponse = await fn(
+      sanitizeSeededUsersResponse(entitiesToCreate)[0]!,
+      entitiesToCreate.rolesToCreate[0]!,
+      entitiesToCreate.usersToCreate[0]!.password,
+    );
+
+    return callbackResponse;
+  } finally {
+    await cleanupCreatedUsers(database, entitiesToCreate);
+  }
+}
+
+async function seedUsers(
+  serverParams: ServerParams,
+  amount: number,
+  shouldHash: boolean,
+  // eslint-disable-next-line no-unused-vars
+  fn: (createdUser: User[]) => Promise<unknown>,
+) {
+  const { authentication, database } = serverParams;
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
+
+  const entitiesToCreate = await generateUsersSeedData(
+    authentication,
+    amount,
+    shouldHash,
+  );
+
+  // This can be inside a transaction but for the same reason the delete
+  // in the finally block may fail as well, resulting in the same effect
+  await handler.insert(roleModel).values(entitiesToCreate.rolesToCreate);
+  await handler.insert(userModel).values(
+    entitiesToCreate.usersToCreate.map((userToCreate) => {
+      const { password, ...fields } = userToCreate;
+
+      return fields;
+    }),
+  );
+
+  try {
+    const callbackResponse = await fn(
+      sanitizeSeededUsersResponse(entitiesToCreate),
+    );
+
+    return callbackResponse;
+  } finally {
+    await cleanupCreatedUsers(database, entitiesToCreate);
+  }
+}
+
 function generateUsersData<T extends number = 1>(
   roleIds: string[],
   amount = 1 as T,
@@ -36,7 +121,7 @@ function generateUsersData<T extends number = 1>(
       email: `${randomString(8)}@ph.com`,
       password: randomString(16),
       roleId: roleIds[randomNumber(0, roleIds.length - 1)],
-    } as const as CreateUser;
+    } as CreateUser;
   });
 
   return (amount === 1 ? users[0]! : users) as T extends 1
@@ -44,90 +129,87 @@ function generateUsersData<T extends number = 1>(
     : CreateUser[];
 }
 
-async function createUser(
-  serverParams: ServerParams,
-  userToCreate: CreateUser,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    user: User,
-  ) => Promise<unknown>,
+async function generateUsersSeedData(
+  authentication: ServerParams['authentication'],
+  amount: number,
+  shouldHash: boolean,
 ) {
-  const userIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const [user] = await sendCreateUserRequest({
-      route: `${serverParams.routes.base}/users`,
-      accessToken: adminTokens.accessToken,
-      usersToCreate: [userToCreate],
-      userIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, user!);
-
-    return callbackResponse;
-  } finally {
-    await deleteUsers(serverParams, ...userIdsToDelete);
+  const rolesToCreate = [...Array(Math.ceil(amount / 4))].map(() => {
+    return { id: randomUUID(), name: randomString(8) };
+  });
+  let usersData = generateUsersData(
+    rolesToCreate.map((role) => {
+      return role.id;
+    }),
+    amount,
+  ) as CreateUser | CreateUser[];
+  if (!Array.isArray(usersData)) {
+    usersData = [usersData];
   }
-}
 
-async function createUsers(
-  serverParams: ServerParams,
-  usersToCreate: CreateUser[],
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    users: User[],
-  ) => Promise<unknown>,
-) {
-  const userIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const users = await sendCreateUserRequest({
-      route: `${serverParams.routes.base}/users`,
-      accessToken: adminTokens.accessToken,
-      usersToCreate,
-      userIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, users);
-
-    return callbackResponse;
-  } finally {
-    await deleteUsers(serverParams, ...userIdsToDelete);
-  }
-}
-
-async function sendCreateUserRequest(params: {
-  route: string;
-  accessToken: string;
-  usersToCreate: CreateUser[];
-  userIdsToDelete: string[];
-}) {
-  const { route, accessToken, usersToCreate, userIdsToDelete } = params;
-
-  const users = await Promise.all(
-    usersToCreate.map(async (userToCreate) => {
-      const res = await sendHttpRequest({
-        route,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: userToCreate,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-      const user = (await res.json()) as User;
-      userIdsToDelete.push(user.id);
-
-      return user;
+  const usersToCreate = await Promise.all(
+    usersData.map(async (userData) => {
+      return {
+        id: randomUUID(),
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        hash: shouldHash
+          ? await authentication.hashPassword(userData.password)
+          : userData.password,
+        roleId: userData.roleId,
+      };
     }),
   );
 
-  return users;
+  return {
+    rolesToCreate,
+    usersToCreate,
+  };
+}
+
+function sanitizeSeededUsersResponse(
+  createdEntities: Awaited<ReturnType<typeof generateUsersSeedData>>,
+) {
+  const { usersToCreate, rolesToCreate } = createdEntities;
+
+  return usersToCreate.map((userToCreate) => {
+    const { roleId, hash, password, ...fields } = {
+      ...userToCreate,
+      role: rolesToCreate.find((role) => {
+        return role.id === userToCreate.roleId;
+      })!.name,
+    };
+
+    return fields;
+  });
+}
+
+async function cleanupCreatedUsers(
+  database: ServerParams['database'],
+  createdEntities: Awaited<ReturnType<typeof generateUsersSeedData>>,
+) {
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
+  const { usersToCreate, rolesToCreate } = createdEntities;
+
+  await handler.delete(userModel).where(
+    inArray(
+      userModel.id,
+      usersToCreate.map((userToCreate) => {
+        return userToCreate.id;
+      }),
+    ),
+  );
+  await handler.delete(roleModel).where(
+    inArray(
+      roleModel.id,
+      rolesToCreate.map((roleToCreate) => {
+        return roleToCreate.id;
+      }),
+    ),
+  );
 }
 
 async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
@@ -144,13 +226,35 @@ async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
   await databaseHandler.delete(userModel).where(inArray(userModel.id, userIds));
 }
 
+async function checkUserPassword(
+  serverParams: ServerParams,
+  credentials: Credentials,
+) {
+  const { authentication, database } = serverParams;
+  const handler = database.getHandler();
+  const { user: userModel } = database.getModels();
+  const { email, password } = credentials;
+
+  const users = await handler
+    .select({ hash: userModel.hash })
+    .from(userModel)
+    .where(eq(userModel.email, email));
+  if (!users.length) {
+    assert.fail(`Are you sure you've sent the correct credentials?`);
+  }
+
+  const isValid = await authentication.verifyPassword(users[0]!.hash, password);
+  assert.deepStrictEqual(isValid, true);
+}
+
 /**********************************************************************************/
 
 export {
-  createUser,
-  createUsers,
+  checkUserPassword,
   deleteUsers,
   generateUsersData,
+  seedUser,
+  seedUsers,
   type CreateUser,
   type User,
 };

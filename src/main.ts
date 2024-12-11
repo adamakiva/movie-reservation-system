@@ -57,10 +57,10 @@ async function startServer() {
       typ: 'JWT',
       alg: 'RS256',
       access: {
-        expiresAt: 900_000, // 15 minutes
+        expiresAt: 900, // 15 minutes
       },
       refresh: {
-        expiresAt: 2_629_746_000, // A month
+        expiresAt: 2_629_746, // A month
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
@@ -90,7 +90,6 @@ async function startServer() {
     allowedMethods: serverEnvironment.allowedMethods,
     routes: {
       http: `/${serverEnvironment.httpRoute}`,
-      health: `/${serverEnvironment.healthCheckRoute}`,
     },
     logMiddleware,
     logger,

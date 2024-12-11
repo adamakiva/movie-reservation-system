@@ -1,16 +1,8 @@
-import assert from 'node:assert/strict';
-
 import { inArray } from 'drizzle-orm';
 
 import type { Role } from '../../src/services/role/utils.js';
-import { HTTP_STATUS_CODES } from '../../src/utils/index.js';
 
-import {
-  getAdminTokens,
-  randomString,
-  sendHttpRequest,
-  type ServerParams,
-} from '../utils.js';
+import { randomString, randomUUID, type ServerParams } from '../utils.js';
 
 /**********************************************************************************/
 
@@ -18,12 +10,61 @@ type CreateRole = { name: string };
 
 /**********************************************************************************/
 
+async function seedRole(
+  serverParams: ServerParams,
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    createdRole: Role,
+  ) => Promise<unknown>,
+) {
+  const { database } = serverParams;
+  const handler = database.getHandler();
+  const { role: roleModel } = database.getModels();
+
+  const rolesToCreate = generateRolesSeedData(1);
+
+  await handler.insert(roleModel).values(rolesToCreate);
+
+  try {
+    const callbackResponse = await fn(rolesToCreate[0]!);
+
+    return callbackResponse;
+  } finally {
+    await cleanupCreatedRoles(database, rolesToCreate);
+  }
+}
+
+async function seedRoles(
+  serverParams: ServerParams,
+  amount: number,
+  fn: (
+    // eslint-disable-next-line no-unused-vars
+    createdRoles: Role[],
+  ) => Promise<unknown>,
+) {
+  const { database } = serverParams;
+  const handler = database.getHandler();
+  const { role: roleModel } = database.getModels();
+
+  const rolesToCreate = generateRolesSeedData(amount);
+
+  await handler.insert(roleModel).values(rolesToCreate);
+
+  try {
+    const callbackResponse = await fn(rolesToCreate);
+
+    return callbackResponse;
+  } finally {
+    await cleanupCreatedRoles(database, rolesToCreate);
+  }
+}
+
 function generateRolesData<T extends number = 1>(
   amount = 1 as T,
 ): T extends 1 ? CreateRole : CreateRole[] {
   const roles = [...Array(amount)].map(() => {
     return {
-      name: randomString(16),
+      name: randomString(8),
     } as CreateRole;
   });
 
@@ -32,90 +73,37 @@ function generateRolesData<T extends number = 1>(
     : CreateRole[];
 }
 
-async function createRole(
-  serverParams: ServerParams,
-  roleToCreate: CreateRole,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    role: Role,
-  ) => Promise<unknown>,
-) {
-  const roleIdsToDelete: string[] = [];
-
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const [role] = await sendCreateRoleRequest({
-      route: `${serverParams.routes.base}/roles`,
-      accessToken: adminTokens.accessToken,
-      rolesToCreate: [roleToCreate],
-      roleIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, role!);
-
-    return callbackResponse;
-  } finally {
-    await deleteRoles(serverParams, ...roleIdsToDelete);
+function generateRolesSeedData(amount: number) {
+  let rolesData = generateRolesData(amount) as CreateRole | CreateRole[];
+  if (!Array.isArray(rolesData)) {
+    rolesData = [rolesData];
   }
+
+  const rolesToCreate = rolesData.map((roleData) => {
+    return {
+      id: randomUUID(),
+      ...roleData,
+    };
+  });
+
+  return rolesToCreate;
 }
 
-async function createRoles(
-  serverParams: ServerParams,
-  rolesToCreate: CreateRole[],
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    tokens: { accessToken: string; refreshToken: string },
-    // eslint-disable-next-line no-unused-vars
-    roles: Role[],
-  ) => Promise<unknown>,
+async function cleanupCreatedRoles(
+  database: ServerParams['database'],
+  createdRoles: Awaited<ReturnType<typeof generateRolesSeedData>>,
 ) {
-  const roleIdsToDelete: string[] = [];
+  const handler = database.getHandler();
+  const { role: roleModel } = database.getModels();
 
-  const adminTokens = await getAdminTokens(serverParams);
-  try {
-    const roles = await sendCreateRoleRequest({
-      route: `${serverParams.routes.base}/roles`,
-      accessToken: adminTokens.accessToken,
-      rolesToCreate,
-      roleIdsToDelete,
-    });
-
-    const callbackResponse = await fn(adminTokens, roles);
-
-    return callbackResponse;
-  } finally {
-    await deleteRoles(serverParams, ...roleIdsToDelete);
-  }
-}
-
-async function sendCreateRoleRequest(params: {
-  route: string;
-  accessToken: string;
-  rolesToCreate: CreateRole[];
-  roleIdsToDelete: string[];
-}) {
-  const { route, accessToken, rolesToCreate, roleIdsToDelete } = params;
-
-  const roles = await Promise.all(
-    rolesToCreate.map(async (roleToCreate) => {
-      const res = await sendHttpRequest({
-        route,
-        method: 'POST',
-        headers: { Authorization: accessToken },
-        payload: roleToCreate,
-      });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
-
-      const role = (await res.json()) as Role;
-      roleIdsToDelete.push(role.id);
-
-      return role;
-    }),
+  await handler.delete(roleModel).where(
+    inArray(
+      roleModel.id,
+      createdRoles.map((roleToCreate) => {
+        return roleToCreate.id;
+      }),
+    ),
   );
-
-  return roles;
 }
 
 async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
@@ -135,10 +123,10 @@ async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
 /**********************************************************************************/
 
 export {
-  createRole,
-  createRoles,
   deleteRoles,
   generateRolesData,
+  seedRole,
+  seedRoles,
   type CreateRole,
   type Role,
 };

@@ -8,9 +8,9 @@ set -u;
 ####################################################################################
 
 create_database_grant_privilege() {
+    # Create database with permissions given to the user specified by the
+    # '$POSTGRES_USER' environment variable
     database=$1;
-
-    printf "Creating database: '%s' and granting privileges to: '%s'" "$database" "$POSTGRES_USER";
 
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
         CREATE DATABASE $database;
@@ -19,6 +19,9 @@ EOSQL
 }
 
 main() {
+    # Create the designated databases by the '$POSTGRES_DATABASES'
+    # environment variable or skip the creation if the environment
+    # variable was not supplied
     if [ -n "$POSTGRES_DATABASES" ]; then
         printf "Creating multiple database...\n";
 

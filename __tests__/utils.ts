@@ -41,12 +41,10 @@ import * as services from '../src/services/index.js';
 import {
   CONFIGURATIONS,
   EnvironmentManager,
-  eq,
   ERROR_CODES,
   HTTP_STATUS_CODES,
   Logger,
   MRSError,
-  type Credentials,
   type LoggerHandler,
   type ResponseWithCtx,
   type ResponseWithoutCtx,
@@ -104,10 +102,10 @@ async function createServer() {
       typ: 'JWT',
       alg: 'RS256',
       access: {
-        expiresAt: 60_000, // 1 minute
+        expiresAt: 2, // 2 seconds
       },
       refresh: {
-        expiresAt: 120_000, // 2 minutes
+        expiresAt: 4, // 4 seconds
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
@@ -145,7 +143,6 @@ async function createServer() {
     ]),
     routes: {
       http: `/${serverEnvironment.httpRoute}`,
-      health: `/${serverEnvironment.healthCheckRoute}`,
     },
     logger: logger,
     logMiddleware: logMiddleware,
@@ -160,8 +157,8 @@ async function createServer() {
     database: server.getDatabase(),
     environmentManager,
     routes: {
-      base: `${baseUrl}/${serverEnvironment.httpRoute}`,
-      health: `${baseUrl}/${serverEnvironment.healthCheckRoute}`,
+      base: baseUrl,
+      http: `${baseUrl}/${serverEnvironment.httpRoute}`,
     },
   } as const;
 }
@@ -219,64 +216,6 @@ function randomUUID<T extends number = 1>(
   return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
-/**********************************************************************************/
-/******************************** Database ****************************************/
-
-async function seedUser(
-  serverParams: ServerParams,
-  // eslint-disable-next-line no-unused-vars
-  fn: (email: string, password: string) => Promise<unknown>,
-) {
-  const { authentication, database } = serverParams;
-  const handler = database.getHandler();
-  const { user: userModel, role: roleModel } = database.getModels();
-
-  const roleName = randomString();
-  const password = randomString();
-  const userData = {
-    email: `${randomString(8)}@ph.com`,
-    firstName: randomString(6),
-    lastName: randomString(8),
-    hash: await authentication.hashPassword(password),
-  };
-
-  const { roleId } = (
-    await handler
-      .insert(roleModel)
-      .values({ name: roleName })
-      .returning({ roleId: roleModel.id })
-  )[0]!;
-  await handler.insert(userModel).values({ ...userData, roleId });
-
-  try {
-    await fn(userData.email, password);
-  } finally {
-    await handler.delete(userModel).where(eq(userModel.email, userData.email));
-    await handler.delete(roleModel).where(eq(roleModel.id, roleId));
-  }
-}
-
-async function checkUserPassword(
-  serverParams: ServerParams,
-  credentials: Credentials,
-) {
-  const { authentication, database } = serverParams;
-  const handler = database.getHandler();
-  const { user: userModel } = database.getModels();
-  const { email, password } = credentials;
-
-  const users = await handler
-    .select({ hash: userModel.hash })
-    .from(userModel)
-    .where(eq(userModel.email, email));
-  if (!users.length) {
-    assert.fail(`Are you sure you've sent the correct credentials?`);
-  }
-
-  const isValid = await authentication.verifyPassword(users[0]!.hash, password);
-  assert.deepStrictEqual(isValid, true);
-}
-
 /******************************* API calls ****************************************/
 /**********************************************************************************/
 
@@ -314,7 +253,7 @@ async function generateTokens(params: {
   const { serverParams, email, password } = params;
 
   const res = await sendHttpRequest({
-    route: `${serverParams.routes.base}/login`,
+    route: `${serverParams.routes.http}/login`,
     method: 'POST',
     payload: { email, password },
   });
@@ -389,7 +328,6 @@ export {
   after,
   assert,
   before,
-  checkUserPassword,
   controllers,
   createHttpMocks,
   ERROR_CODES,
@@ -407,7 +345,6 @@ export {
   randomNumber,
   randomString,
   randomUUID,
-  seedUser,
   sendHttpRequest,
   services,
   suite,
