@@ -1,5 +1,5 @@
 import { Database } from '../database/index.js';
-import * as routers from '../routers/index.js';
+import * as routers from '../entities/index.js';
 import {
   compress,
   cors,
@@ -17,8 +17,8 @@ import {
   type Server,
 } from '../utils/index.js';
 
-import AuthenticationManager from './authentication.js';
-import * as Middlewares from './middlewares.js';
+import AuthenticationManager from './services/authentication.js';
+import * as Middlewares from './services/middlewares.js';
 
 /**********************************************************************************/
 
@@ -39,7 +39,7 @@ class HttpServer {
     corsOptions: CorsOptions;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logMiddleware: LogMiddleware;
     logger: LoggerHandler;
   }) {
@@ -132,7 +132,7 @@ class HttpServer {
     authentication: AuthenticationManager;
     database: Database;
     server: Server;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logger: LoggerHandler;
   }) {
     const { mode, authentication, database, server, routes, logger } = params;
@@ -254,19 +254,19 @@ class HttpServer {
 
   #attachRoutesMiddlewares(params: {
     app: Express;
-    routes: { http: string; health: string };
+    routes: { http: string };
     logMiddleware: LogMiddleware;
   }) {
     const {
       app,
-      routes: { http: httpRoute, health: healthCheckRoute },
+      routes: { http: httpRoute },
       logMiddleware,
     } = params;
 
     // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
-      .use(healthCheckRoute, routers.healthCheckRouter)
+      .use(routers.healthcheckRouter)
       .use(logMiddleware)
       .use(
         httpRoute,

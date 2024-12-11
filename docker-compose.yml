@@ -46,7 +46,6 @@ services:
       - SERVER_DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
       - HTTP_ROUTE=api/v0
-      - HEALTH_CHECK_ROUTE=health
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
       - ALLOWED_ORIGINS=*
       # Database URIs
@@ -57,7 +56,6 @@ services:
       # Admin user data
       - ADMIN_ROLE_ID=4d9097e1-3821-46f0-b19f-a75c02de9cb6
       - ADMIN_ROLE_NAME=admin
-      - ADMIN_ID=6a2663a5-5ffc-4142-82fa-ced4688a2972
       - ADMIN_EMAIL=admin@admin.com
       - ADMIN_PASSWORD=bla123
       # Node flags
@@ -85,8 +83,8 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/alive | grep -q '204' &&
-          curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/health/ready | grep -q '204'"
+          "curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/alive | grep -q '204' &&
+          curl -s -o /dev/null -w '%{http_code}' http://localhost:4334/ready | grep -q '204'"
         ]
       interval: 20s
       timeout: 3s

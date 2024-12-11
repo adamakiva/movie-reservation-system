@@ -16,7 +16,6 @@ type EnvironmentVariables = {
     port: string;
     baseUrl: string;
     httpRoute: string;
-    healthCheckRoute: string;
     allowedHosts: Set<string>;
     allowedOrigins: Set<string>;
     allowedMethods: Set<string>;
@@ -43,7 +42,6 @@ class EnvironmentManager {
         port: process.env.SERVER_PORT!,
         baseUrl: process.env.SERVER_BASE_URL!,
         httpRoute: process.env.HTTP_ROUTE!,
-        healthCheckRoute: process.env.HEALTH_CHECK_ROUTE!,
         allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),
         allowedOrigins: new Set(process.env.ALLOWED_ORIGINS!.split(',')),
         allowedMethods: new Set([
@@ -99,7 +97,6 @@ class EnvironmentManager {
       'SERVER_PORT',
       'SERVER_BASE_URL',
       'HTTP_ROUTE',
-      'HEALTH_CHECK_ROUTE',
       'ALLOWED_HOSTS',
       'ALLOWED_ORIGINS',
       'DATABASE_URL',
