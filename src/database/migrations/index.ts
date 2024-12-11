@@ -35,16 +35,13 @@ async function seedInitialData(
   await databaseHandler
     .insert(schemas.userModel)
     .values({
-      ...{
-        id: process.env.ADMIN_ID!,
-        firstName: 'admin',
-        lastName: 'admin',
-        email: process.env.ADMIN_EMAIL!,
-        hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
-          type: 1,
-          secret: Buffer.from(process.env.HASH_SECRET!),
-        }),
-      },
+      firstName: 'admin',
+      lastName: 'admin',
+      email: process.env.ADMIN_EMAIL!,
+      hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
+        type: 1,
+        secret: Buffer.from(process.env.HASH_SECRET!),
+      }),
       roleId,
     })
     .onConflictDoNothing();
@@ -86,7 +83,6 @@ function run() {
   const environmentVariables = new Map([
     ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],
     ['ADMIN_ROLE_NAME', process.env.ADMIN_ROLE_NAME],
-    ['ADMIN_ID', process.env.ADMIN_ID],
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
     ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
     ['HASH_SECRET', process.env.HASH_SECRET],

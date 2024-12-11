@@ -180,10 +180,6 @@ function getAdminRole() {
   return adminRole;
 }
 
-function getAdminUserId() {
-  return process.env.ADMIN_ID!;
-}
-
 /***************************** General utils **************************************/
 /**********************************************************************************/
 
@@ -334,7 +330,6 @@ export {
   generateTokens,
   getAdminRole,
   getAdminTokens,
-  getAdminUserId,
   getRequestContext,
   HTTP_STATUS_CODES,
   initServer,

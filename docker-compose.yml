@@ -56,7 +56,6 @@ services:
       # Admin user data
       - ADMIN_ROLE_ID=4d9097e1-3821-46f0-b19f-a75c02de9cb6
       - ADMIN_ROLE_NAME=admin
-      - ADMIN_ID=6a2663a5-5ffc-4142-82fa-ced4688a2972
       - ADMIN_EMAIL=admin@admin.com
       - ADMIN_PASSWORD=bla123
       # Node flags

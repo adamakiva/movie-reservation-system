@@ -4,7 +4,6 @@ import {
   before,
   getAdminRole,
   getAdminTokens,
-  getAdminUserId,
   HTTP_STATUS_CODES,
   initServer,
   randomString,
@@ -39,7 +38,6 @@ await suite('Role integration tests', async () => {
   await suite('Read', async () => {
     await test('Single page', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
-      const adminId = getAdminUserId();
 
       await seedUsers(serverParams, 32, false, async (users) => {
         const res = await sendHttpRequest({
@@ -51,16 +49,18 @@ await suite('Role integration tests', async () => {
 
         const responseBody = await res.json();
         assert.strictEqual(Array.isArray(responseBody.users), true);
-        const fetchedUsers = (responseBody.users as User[]).filter((user) => {
-          return user.id !== adminId;
-        });
-        fetchedUsers.forEach((user) => {
-          const matchingUserIndex = users.findIndex((u) => {
-            return u.id === user.id;
+
+        const fetchedUsers = responseBody.users as User[];
+        for (let i = users.length - 1; i >= 0; --i) {
+          const matchingUserIndex = fetchedUsers.findIndex((u) => {
+            return u.id === users[i]!.id;
           });
-          assert.deepStrictEqual(user, users[matchingUserIndex]);
-          users.splice(matchingUserIndex, 1);
-        });
+          if (matchingUserIndex !== -1) {
+            assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
+            users.splice(i, 1);
+          }
+        }
+        assert.strictEqual(users.length, 0);
 
         assert.strictEqual(!!responseBody.page, true);
         assert.strictEqual(responseBody.page.hasNext, false);
@@ -69,7 +69,6 @@ await suite('Role integration tests', async () => {
     });
     await test('Many pages', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
-      const adminId = getAdminUserId();
 
       await seedUsers(serverParams, 128, false, async (users) => {
         let pagination = {
@@ -88,28 +87,29 @@ await suite('Role integration tests', async () => {
 
           const responseBody = await res.json();
           assert.strictEqual(Array.isArray(responseBody.users), true);
-          const fetchedUsers = (responseBody.users as User[]).filter((user) => {
-            return user.id !== adminId;
-          });
-          fetchedUsers.forEach((user) => {
-            const matchingUserIndex = users.findIndex((u) => {
-              return u.id === user.id;
+
+          const fetchedUsers = responseBody.users as User[];
+          for (let i = users.length - 1; i >= 0; --i) {
+            const matchingUserIndex = fetchedUsers.findIndex((u) => {
+              return u.id === users[i]!.id;
             });
-            assert.deepStrictEqual(user, users[matchingUserIndex]);
-            users.splice(matchingUserIndex, 1);
-          });
+            if (matchingUserIndex !== -1) {
+              assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
+              users.splice(i, 1);
+            }
+          }
 
           assert.strictEqual(!!responseBody.page, true);
           pagination = responseBody.page;
         }
         /* eslint-enable no-await-in-loop */
+        assert.strictEqual(users.length, 0);
       });
     });
     await test('A lot pages', async () => {
       const { accessToken } = await getAdminTokens(serverParams);
 
       await seedUsers(serverParams, 8_192, false, async (users) => {
-        const adminId = getAdminUserId();
         let pagination = {
           hasNext: true,
           cursor: 'null',
@@ -126,21 +126,23 @@ await suite('Role integration tests', async () => {
 
           const responseBody = await res.json();
           assert.strictEqual(Array.isArray(responseBody.users), true);
-          const fetchedUsers = (responseBody.users as User[]).filter((user) => {
-            return user.id !== adminId;
-          });
-          fetchedUsers.forEach((user) => {
-            const matchingUserIndex = users.findIndex((u) => {
-              return u.id === user.id;
+
+          const fetchedUsers = responseBody.users as User[];
+          for (let i = users.length - 1; i >= 0; --i) {
+            const matchingUserIndex = fetchedUsers.findIndex((u) => {
+              return u.id === users[i]!.id;
             });
-            assert.deepStrictEqual(user, users[matchingUserIndex]);
-            users.splice(matchingUserIndex, 1);
-          });
+            if (matchingUserIndex !== -1) {
+              assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
+              users.splice(i, 1);
+            }
+          }
 
           assert.strictEqual(!!responseBody.page, true);
           pagination = responseBody.page;
         }
         /* eslint-enable no-await-in-loop */
+        assert.strictEqual(users.length, 0);
       });
     });
   });
