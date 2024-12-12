@@ -10,8 +10,6 @@ type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
 class Logger {
   readonly #handler;
 
-  /********************************************************************************/
-
   public constructor() {
     this.#handler = {
       debug: this.#debug.bind(this),
@@ -20,7 +18,7 @@ class Logger {
       warn: this.#warn.bind(this),
       error: this.#error.bind(this),
       fatal: this.#fatal.bind(this),
-    };
+    } as const;
   }
 
   public getHandler() {

@@ -320,8 +320,8 @@ const updateRoleBodySchema = Zod.object(
     invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: BODY.REQUIRED_ERROR_MESSAGE,
   },
-).superRefine((val, ctx) => {
-  if (!Object.keys(val).length) {
+).superRefine((roleUpdates, ctx) => {
+  if (!Object.keys(roleUpdates).length) {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
@@ -524,8 +524,8 @@ const updateUserBodySchema = Zod.object({
   })
     .uuid(ROLE.ID.ERROR_MESSAGE)
     .optional(),
-}).superRefine((val, ctx) => {
-  if (!Object.keys(val).length) {
+}).superRefine((userUpdates, ctx) => {
+  if (!Object.keys(userUpdates).length) {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
@@ -597,8 +597,8 @@ const updateGenreBodySchema = Zod.object(
     invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: BODY.REQUIRED_ERROR_MESSAGE,
   },
-).superRefine((val, ctx) => {
-  if (!Object.keys(val).length) {
+).superRefine((genreUpdates, ctx) => {
+  if (!Object.keys(genreUpdates).length) {
     ctx.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,

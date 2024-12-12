@@ -21,7 +21,7 @@ await suite('Healthcheck integration tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Liveness - Valid', async () => {
+  await test('Valid - Liveness', async () => {
     const allowedMethods = ['HEAD', 'GET'] as const;
 
     await Promise.all(
@@ -33,7 +33,7 @@ await suite('Healthcheck integration tests', async () => {
       }),
     );
   });
-  await test('Readiness - Valid', async () => {
+  await test('Valid - Readiness', async () => {
     const allowedMethods = ['HEAD', 'GET'] as const;
 
     await Promise.all(

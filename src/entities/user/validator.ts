@@ -15,41 +15,53 @@ import {
 function validateGetUsers(req: Request) {
   const { query } = req;
 
-  return parseValidationResult(
-    getUsersSchema.safeParse(query),
+  const validatedResult = getUsersSchema.safeParse(query);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 function validateGetUser(req: Request) {
   const { params } = req;
 
-  return parseValidationResult(
-    getUserSchema.safeParse(params),
+  const validatedResult = getUserSchema.safeParse(params);
+  const { userId } = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  ).userId;
+  );
+
+  return userId;
 }
 
 function validateCreateUser(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
-  return parseValidationResult(
-    createUserSchema.safeParse(body),
+  const validatedResult = createUserSchema.safeParse(body);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 function validateUpdateUser(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body, params } = req;
 
+  const validatedBodyResult = updateUserBodySchema.safeParse(body);
   const userToUpdate = parseValidationResult(
-    updateUserBodySchema.safeParse(body),
+    validatedBodyResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  const validatedParamsResult = updateUserParamsSchema.safeParse(params);
   const { userId } = parseValidationResult(
-    updateUserParamsSchema.safeParse(params),
+    validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
 
@@ -62,10 +74,13 @@ function validateUpdateUser(req: Request) {
 function validateDeleteUser(req: Request) {
   const { params } = req;
 
-  return parseValidationResult(
-    deleteUserSchema.safeParse(params),
+  const validatedResult = deleteUserSchema.safeParse(params);
+  const { userId } = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  ).userId;
+  );
+
+  return userId;
 }
 
 /**********************************************************************************/

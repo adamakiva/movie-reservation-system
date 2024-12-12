@@ -95,7 +95,7 @@ async function startServer() {
     logger,
   });
 
-  await server.listen(parseInt(serverEnvironment.port));
+  await server.listen(serverEnvironment.port);
 
   attachProcessHandlers(server, logger);
 }

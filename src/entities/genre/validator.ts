@@ -14,22 +14,28 @@ function validateCreateGenre(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
-  return parseValidationResult(
-    createGenreSchema.safeParse(body),
+  const validatedResult = createGenreSchema.safeParse(body);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 function validateUpdateGenre(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body, params } = req;
 
+  const validatedBodyResult = updateGenreBodySchema.safeParse(body);
   const { name } = parseValidationResult(
-    updateGenreBodySchema.safeParse(body),
+    validatedBodyResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  const validatedParamsResult = updateGenreParamsSchema.safeParse(params);
   const { genreId } = parseValidationResult(
-    updateGenreParamsSchema.safeParse(params),
+    validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
 
@@ -42,10 +48,13 @@ function validateUpdateGenre(req: Request) {
 function validateDeleteGenre(req: Request) {
   const { params } = req;
 
-  return parseValidationResult(
-    deleteGenreSchema.safeParse(params),
+  const validatedResult = deleteGenreSchema.safeParse(params);
+  const { genreId } = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  ).genreId;
+  );
+
+  return genreId;
 }
 
 /**********************************************************************************/

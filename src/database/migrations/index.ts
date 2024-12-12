@@ -12,38 +12,25 @@ import * as schemas from '../schemas.js';
 
 /**********************************************************************************/
 
-const MIGRATIONS_FOLDER = './src/database/migrations';
+type Role = typeof schemas.genreModel.$inferInsert;
+type User = typeof schemas.userModel.$inferInsert;
 
 /**********************************************************************************/
 
-async function seedInitialData(
-  databaseHandler: PostgresJsDatabase<typeof schemas>,
-) {
-  const createdRoles = await databaseHandler
-    .insert(schemas.roleModel)
-    .values({
-      id: process.env.ADMIN_ROLE_ID!,
-      name: process.env.ADMIN_ROLE_NAME!,
-    })
-    .returning({ roleId: schemas.roleModel.id })
-    .onConflictDoNothing();
-  if (!createdRoles.length) {
-    return;
-  }
-  const { roleId } = createdRoles[0]!;
+async function seedInitialData(params: {
+  databaseHandler: PostgresJsDatabase<typeof schemas>;
+  role: Role;
+  user: User;
+}) {
+  const { databaseHandler, role, user } = params;
 
   await databaseHandler
+    .insert(schemas.roleModel)
+    .values(role)
+    .onConflictDoNothing();
+  await databaseHandler
     .insert(schemas.userModel)
-    .values({
-      firstName: 'admin',
-      lastName: 'admin',
-      email: process.env.ADMIN_EMAIL!,
-      hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
-        type: 1,
-        secret: Buffer.from(process.env.HASH_SECRET!),
-      }),
-      roleId,
-    })
+    .values(user)
     .onConflictDoNothing();
 }
 
@@ -52,8 +39,25 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
   const databaseHandler = drizzle(connection, { schema: schemas });
 
   try {
-    await migrate(databaseHandler, { migrationsFolder: MIGRATIONS_FOLDER });
-    await seedInitialData(databaseHandler);
+    await migrate(databaseHandler, { migrationsFolder: import.meta.dirname });
+
+    await seedInitialData({
+      databaseHandler,
+      role: {
+        id: process.env.ADMIN_ROLE_ID!,
+        name: process.env.ADMIN_ROLE_NAME!,
+      },
+      user: {
+        firstName: 'admin',
+        lastName: 'admin',
+        email: process.env.ADMIN_EMAIL!,
+        hash: await argon2.hash(process.env.ADMIN_PASSWORD!, {
+          type: 1,
+          secret: Buffer.from(process.env.HASH_SECRET!),
+        }),
+        roleId: process.env.ADMIN_ROLE_ID!,
+      },
+    });
   } catch (err) {
     throw new Error(`Migration failed for ${databaseUrl}`, { cause: err });
   } finally {

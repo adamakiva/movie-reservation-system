@@ -1,44 +1,57 @@
 function strcasecmp<T extends string>(s1: T, s2: T) {
-  return s1.localeCompare(s2, undefined, {
+  const result = s1.localeCompare(s2, undefined, {
     sensitivity: 'accent',
   });
+
+  return result;
 }
 
 function isDevelopmentMode(mode?: string) {
   if (!mode) {
     return false;
   }
+  const result = !strcasecmp(mode, 'development');
 
-  return !strcasecmp(mode, 'development');
+  return result;
 }
 
 function isTestMode(mode?: string) {
   if (!mode) {
     return false;
   }
+  const result = !strcasecmp(mode, 'test');
 
-  return !strcasecmp(mode, 'test');
+  return result;
 }
 
 function isProductionMode(mode?: string) {
   if (!mode) {
     return false;
   }
+  const result = !strcasecmp(mode, 'production');
 
-  return !strcasecmp(mode, 'production');
+  return result;
 }
 
 function encodeCursor(id: string, createdAt: Date) {
-  return Buffer.from(`${id},${createdAt.toISOString()}`).toString('base64');
+  const encodedCursor = Buffer.from(
+    `${id},${createdAt.toISOString()}`,
+  ).toString('base64');
+
+  return encodedCursor;
 }
 
 function decodeCursor(cursor: string) {
-  const val = Buffer.from(cursor, 'base64').toString('utf-8').split(',');
+  const decodedCursor = Buffer.from(cursor, 'base64')
+    .toString('utf-8')
+    .split(',');
 
-  return {
-    id: val[0]!,
-    createdAt: new Date(val[1]!),
+  const result = {
+    id: decodedCursor[0]!,
+    createdAt: new Date(decodedCursor[1]!),
   } as const;
+
+  return result;
 }
 
 /**********************************************************************************/

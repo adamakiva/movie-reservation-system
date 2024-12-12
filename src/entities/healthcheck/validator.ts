@@ -24,10 +24,13 @@ function validateHealthCheck(req: Request, res: ResponseWithCtx) {
   try {
     const { method } = req;
 
-    return parseValidationResult(
-      healthCheckSchema.safeParse(method),
+    const validatedResult = healthCheckSchema.safeParse(method);
+    const parsedValidatedResult = parseValidationResult(
+      validatedResult,
       HTTP_STATUS_CODES.NOT_ALLOWED,
     );
+
+    return parsedValidatedResult;
   } catch (err) {
     // When returning 405 you **must** supply the Allow header.
     // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405

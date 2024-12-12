@@ -12,20 +12,26 @@ function validateLogin(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
-  return parseValidationResult(
-    loginSchema.safeParse(body),
+  const validatedResult = loginSchema.safeParse(body);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 function validateRefreshAccessToken(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
-  return parseValidationResult(
-    refreshTokenSchema.safeParse(body),
+  const validatedResult = refreshTokenSchema.safeParse(body);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 /**********************************************************************************/
