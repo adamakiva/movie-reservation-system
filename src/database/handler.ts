@@ -1,11 +1,12 @@
+import { drizzle, type LoggerHandler, pg, sql } from '../utils/index.js';
+
 import DatabaseLogger from './logger.js';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */
-import { drizzle, type LoggerHandler, pg, sql } from '../utils/index.js';
 import * as schemas from './schemas.js';
 
 /**********************************************************************************/
 
-export default class Database {
+class Database {
   readonly #connection;
   readonly #handler;
   readonly #models;
@@ -57,7 +58,7 @@ export default class Database {
       hall: schemas.hallModel,
       showtime: schemas.showtimeModel,
       showtimeSummary: schemas.showtimeSummaryModel,
-    };
+    } as const;
   }
 
   public async close() {
@@ -76,3 +77,7 @@ export default class Database {
     return this.#models;
   }
 }
+
+/**********************************************************************************/
+
+export default Database;

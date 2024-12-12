@@ -47,16 +47,16 @@ async function insertGenreToDatabase(
   const { genre: genreModel } = database.getModels();
 
   try {
-    return (
-      (
-        await handler
-          .insert(genreModel)
-          //@ts-expect-error Drizzle has issues with the typing which does not allow
-          // undefined value, this only a type error and works as intended
-          .values(genreToCreate)
-          .returning({ id: genreModel.id, name: genreModel.name })
-      )[0]!
-    );
+    const createdGenre = (
+      await handler
+        .insert(genreModel)
+        //@ts-expect-error Drizzle has issues with the typing which does not allow
+        // undefined value, this only a type error and works as intended
+        .values(genreToCreate)
+        .returning({ id: genreModel.id, name: genreModel.name })
+    )[0]!;
+
+    return createdGenre;
   } catch (err) {
     throw handlePossibleDuplicationError(err, genreToCreate.name);
   }

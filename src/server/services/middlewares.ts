@@ -116,6 +116,7 @@ function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
 
 function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
   const { logger } = res.locals.context;
+
   if (err instanceof Error) {
     logger.fatal(err, 'Unhandled exception');
   } else {

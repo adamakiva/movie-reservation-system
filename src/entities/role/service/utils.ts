@@ -48,16 +48,16 @@ async function insertRoleToDatabase(
   const { role: roleModel } = database.getModels();
 
   try {
-    return (
-      (
-        await handler
-          .insert(roleModel)
-          //@ts-expect-error Drizzle has issues with the typing which does not allow
-          // undefined value, this only a type error and works as intended
-          .values(roleToCreate)
-          .returning({ id: roleModel.id, name: roleModel.name })
-      )[0]!
-    );
+    const createdRole = (
+      await handler
+        .insert(roleModel)
+        //@ts-expect-error Drizzle has issues with the typing which does not allow
+        // undefined value, this only a type error and works as intended
+        .values(roleToCreate)
+        .returning({ id: roleModel.id, name: roleModel.name })
+    )[0]!;
+
+    return createdRole;
   } catch (err) {
     throw handlePossibleDuplicationError(err, roleToCreate.name);
   }

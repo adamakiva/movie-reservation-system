@@ -24,7 +24,7 @@ await suite('Authentication integration tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Login - Valid', async () => {
+  await test('Valid - Login', async () => {
     await seedUser(serverParams, true, async ({ email }, _, password) => {
       const tokens = await generateTokens({
         serverParams,
@@ -50,7 +50,7 @@ await suite('Authentication integration tests', async () => {
       });
     });
   });
-  await test('Refresh - Valid', async () => {
+  await test('Valid - Refresh', async () => {
     await seedUser(serverParams, true, async ({ email }, _, password) => {
       const { refreshToken } = await generateTokens({
         serverParams,

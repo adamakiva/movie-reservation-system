@@ -14,22 +14,28 @@ function validateCreateRole(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
 
-  return parseValidationResult(
-    createRoleSchema.safeParse(body),
+  const validatedResult = createRoleSchema.safeParse(body);
+  const parsedValidatedResult = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  return parsedValidatedResult;
 }
 
 function validateUpdateRole(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body, params } = req;
 
+  const validatedBodyResult = updateRoleBodySchema.safeParse(body);
   const { name } = parseValidationResult(
-    updateRoleBodySchema.safeParse(body),
+    validatedBodyResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
+
+  const validatedParamsResult = updateRoleParamsSchema.safeParse(params);
   const { roleId } = parseValidationResult(
-    updateRoleParamsSchema.safeParse(params),
+    validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
 
@@ -42,10 +48,13 @@ function validateUpdateRole(req: Request) {
 function validateDeleteRole(req: Request) {
   const { params } = req;
 
-  return parseValidationResult(
-    deleteRoleSchema.safeParse(params),
+  const validatedResult = deleteRoleSchema.safeParse(params);
+  const { roleId } = parseValidationResult(
+    validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  ).roleId;
+  );
+
+  return roleId;
 }
 
 /**********************************************************************************/

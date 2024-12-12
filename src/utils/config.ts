@@ -13,7 +13,7 @@ type Mode = 'development' | 'test' | 'production';
 type EnvironmentVariables = {
   mode: Mode;
   server: {
-    port: string;
+    port: number;
     baseUrl: string;
     httpRoute: string;
     allowedHosts: Set<string>;
@@ -39,7 +39,7 @@ class EnvironmentManager {
     this.#environmentVariables = {
       mode: this.#mode,
       server: {
-        port: process.env.SERVER_PORT!,
+        port: parseInt(process.env.SERVER_PORT!),
         baseUrl: process.env.SERVER_BASE_URL!,
         httpRoute: process.env.HTTP_ROUTE!,
         allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),

@@ -92,6 +92,8 @@ class AuthenticationManager {
   }
 
   public httpAuthenticationMiddleware() {
+    // Since the class function is used as a middleware we need to bind `this`
+    // to access the class methods/members
     return this.#httpAuthenticationMiddleware.bind(this);
   }
 
@@ -99,10 +101,12 @@ class AuthenticationManager {
     // JWT expects exp in seconds since epoch, not milliseconds
     const now = Math.round(Date.now() / 1_000);
 
-    return {
+    const result = {
       accessTokenExpirationTime: now + this.#access.expiresAt,
       refreshTokenExpirationTime: now + this.#refresh.expiresAt,
     } as const;
+
+    return result;
   }
 
   public async generateAccessToken(

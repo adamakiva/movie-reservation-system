@@ -32,7 +32,7 @@ await suite('Healthcheck unit tests', async () => {
   });
 
   await suite('Validation layer', async () => {
-    await test('Liveness - Invalid methods', (ctx) => {
+    await test('Invalid - Liveness validation: Invalid methods', (ctx) => {
       const disallowedMethods = [
         'POST',
         'PATCH',
@@ -74,7 +74,7 @@ await suite('Healthcheck unit tests', async () => {
         );
       });
     });
-    await test('Readiness - Invalid methods', async (ctx) => {
+    await test('Invalid - Readiness validation: Invalid methods', async (ctx) => {
       const disallowedMethods = [
         'POST',
         'PATCH',
@@ -120,7 +120,7 @@ await suite('Healthcheck unit tests', async () => {
     });
   });
   await suite('Controller layer', async () => {
-    await test('Readiness - Application is not ready', async (ctx) => {
+    await test('Invalid - Controller validation: Application is not ready', async (ctx) => {
       const { request, response } = createHttpMocks<ResponseWithCtx>({
         logger: logger,
         reqOptions: {

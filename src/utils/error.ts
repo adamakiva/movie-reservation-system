@@ -30,10 +30,12 @@ class MRSError extends Error {
   }
 
   public getClientError() {
-    return {
+    const clientError = {
       code: this.#statusCode,
       message: this.#message,
     } as const;
+
+    return clientError;
   }
 
   static #formatError(err: Error) {
@@ -48,7 +50,9 @@ class MRSError extends Error {
         ? `\n[cause]: ${this.#formatError(err.cause)}`
         : '';
 
-    return `${header}${stackTrace}${nestedCause}`;
+    const formattedError = `${header}${stackTrace}${nestedCause}`;
+
+    return formattedError;
   }
 }
 

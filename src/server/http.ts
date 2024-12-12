@@ -31,8 +31,6 @@ class HttpServer {
   readonly #requestContext;
   readonly #logger;
 
-  /********************************************************************************/
-
   public static async create(params: {
     mode: Mode;
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
@@ -73,6 +71,7 @@ class HttpServer {
       logger,
     });
 
+    // The order matters
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
     await self.#attachConfigurationMiddlewares({
@@ -80,11 +79,7 @@ class HttpServer {
       allowedMethods,
       corsOptions,
     });
-    self.#attachRoutesMiddlewares({
-      app,
-      routes,
-      logMiddleware,
-    });
+    self.#attachRoutesMiddlewares(app, logMiddleware);
 
     return self;
   }
@@ -92,19 +87,19 @@ class HttpServer {
   public async listen(port?: number) {
     const actualPort = await new Promise<number>((resolve) => {
       this.#server.once('listening', () => {
-        if (!isTestMode(this.#mode)) {
-          // Can be asserted since this is not a unix socket and we are inside
-          // the listen event
-          const { address, port } = this.#server.address() as AddressInfo;
-          const route = this.#routes.http;
+        // Can be asserted since this is not a unix socket and we are inside
+        // the listen event
+        const { address, port } = this.#server.address() as AddressInfo;
 
+        // Log server start when not in test mode
+        if (!isTestMode(this.#mode)) {
           this.#logger.info(
             `Server is running in '${this.#mode}' mode on: ` +
-              `'${address.endsWith(':') ? address : address.concat(':')}${port}${route}'`,
+              `'${address.endsWith(':') ? address : address.concat(':')}${port}${this.#routes.http}'`,
           );
         }
 
-        resolve((this.#server.address() as AddressInfo).port);
+        resolve(port);
       });
 
       this.#server.listen(port);
@@ -205,7 +200,7 @@ class HttpServer {
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.fatal(result.reason, 'Error during server termination');
-        exitCode = ERROR_CODES.EXIT_RESTART;
+        exitCode = ERROR_CODES.EXIT_NO_RESTART;
       }
     });
     if (exitCode) {
@@ -252,24 +247,14 @@ class HttpServer {
     }
   }
 
-  #attachRoutesMiddlewares(params: {
-    app: Express;
-    routes: { http: string };
-    logMiddleware: LogMiddleware;
-  }) {
-    const {
-      app,
-      routes: { http: httpRoute },
-      logMiddleware,
-    } = params;
-
+  #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
     // The order matters
     app
       .use(Middlewares.attachContext(this.#requestContext))
       .use(routers.healthcheckRouter)
       .use(logMiddleware)
       .use(
-        httpRoute,
+        this.#routes.http,
         routers.authenticationRouter,
         routers.roleRouter(this.#authentication),
         routers.userRouter(this.#authentication),
