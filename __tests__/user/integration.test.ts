@@ -26,7 +26,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Role integration tests', async () => {
+await suite('User integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();

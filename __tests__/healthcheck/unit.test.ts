@@ -20,7 +20,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Health check unit tests', async () => {
+await suite('Healthcheck unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {

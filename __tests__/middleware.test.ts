@@ -21,7 +21,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Middleware unit tests', async () => {
+await suite('Middleware tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {

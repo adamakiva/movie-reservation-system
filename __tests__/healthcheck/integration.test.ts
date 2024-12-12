@@ -12,7 +12,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Health check integration tests', async () => {
+await suite('Healthcheck integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
