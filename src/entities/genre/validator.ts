@@ -1,12 +1,81 @@
-import { type Request, HTTP_STATUS_CODES } from '../../utils/index.js';
+import { type Request, HTTP_STATUS_CODES, Zod } from '../../utils/index.js';
 
-import {
-  createGenreSchema,
-  deleteGenreSchema,
-  parseValidationResult,
-  updateGenreBodySchema,
-  updateGenreParamsSchema,
-} from '../utils.validator.js';
+import { parseValidationResult, VALIDATION } from '../utils.validator.js';
+
+const { GENRE, PARAMS, BODY } = VALIDATION;
+
+/**********************************************************************************/
+
+const createGenreSchema = Zod.object(
+  {
+    id: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .uuid(GENRE.ID.ERROR_MESSAGE)
+      .optional(),
+    name: Zod.string({
+      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
+    })
+      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase(),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const updateGenreBodySchema = Zod.object(
+  {
+    name: Zod.string({
+      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+      .toLowerCase()
+      .optional(),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+).superRefine((genreUpdates, ctx) => {
+  if (!Object.keys(genreUpdates).length) {
+    ctx.addIssue({
+      code: Zod.ZodIssueCode.custom,
+      message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+      fatal: true,
+    });
+  }
+});
+
+const updateGenreParamsSchema = Zod.object(
+  {
+    genreId: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(GENRE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const deleteGenreSchema = Zod.object(
+  {
+    genreId: Zod.string({
+      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(GENRE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
 
 /**********************************************************************************/
 

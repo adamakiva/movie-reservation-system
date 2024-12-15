@@ -1,5 +1,5 @@
 {
-  "id": "421222b7-1e2a-4c9a-8545-f0febafe752d",
+  "id": "5c38a884-92c1-40c8-8e89-d4f9e3a8d9ad",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -151,8 +151,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "relative_image_path": {
-          "name": "relative_image_path",
+        "image_path": {
+          "name": "image_path",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true

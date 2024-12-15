@@ -259,6 +259,7 @@ class HttpServer {
         routers.roleRouter(this.#authentication),
         routers.userRouter(this.#authentication),
         routers.genreRouter(this.#authentication),
+        routers.movieRouter(this.#authentication),
       )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }

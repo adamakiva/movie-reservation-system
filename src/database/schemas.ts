@@ -95,7 +95,7 @@ const movieModel = pgTable('movie', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
   title: varchar('title').unique().notNull(),
   description: varchar('description').notNull(),
-  relativeImagePath: varchar('relative_image_path').notNull(),
+  imagePath: varchar('image_path').notNull(),
   price: real('price').notNull(),
   genreId: uuid('genre_id')
     .references(

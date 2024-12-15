@@ -1,4 +1,4 @@
-import { MRSError, Zod, decodeCursor } from '../utils/index.js';
+import { MRSError, Zod } from '../utils/index.js';
 
 /**********************************************************************************/
 
@@ -168,19 +168,71 @@ const VALIDATION = {
       },
     },
   },
+  MOVIE: {
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Movie id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Movie id is required',
+      ERROR_MESSAGE: 'Movie id must be a valid UUIDV4',
+    },
+    TITLE: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Title must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Title is required',
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Title must be at least 1 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 128,
+        ERROR_MESSAGE: 'Title must be at most 128 characters long',
+      },
+    },
+    DESCRIPTION: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Description must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Description is required',
+      MIN_LENGTH: {
+        VALUE: 2,
+        ERROR_MESSAGE: 'Description must be at least 2 characters long',
+      },
+      MAX_LENGTH: {
+        VALUE: 2_048,
+        ERROR_MESSAGE: 'Description must be at most 2,048 characters long',
+      },
+    },
+    IMAGE: {
+      ERROR_MESSAGE: 'Image is not a valid URI',
+      INVALID_TYPE_ERROR_MESSAGE: 'Image must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Image is required',
+      MIN_LENGTH: {
+        VALUE: 2,
+        ERROR_MESSAGE: 'Image must be at least 2 characters long',
+      },
+      MAX_LENGTH: {
+        VALUE: 256,
+        ERROR_MESSAGE: 'Image must be at most 256 characters long',
+      },
+    },
+    PRICE: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Price must be a number',
+      REQUIRED_ERROR_MESSAGE: 'Price is required',
+      MIN_LENGTH: {
+        VALUE: 0.01,
+        ERROR_MESSAGE: 'Price must be at least 0.01$',
+      },
+      MAX_LENGTH: {
+        VALUE: 100.0,
+        ERROR_MESSAGE: 'Price must be at most 100.0$',
+      },
+    },
+    GENRE_ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Genre id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Genre id is required',
+      ERROR_MESSAGE: 'Genre id must be a valid UUIDV4',
+    },
+  },
 } as const;
 
-const {
-  BODY,
-  PARAMS,
-  QUERY,
-  PAGINATION,
-  HEALTHCHECK,
-  AUTHENTICATION,
-  ROLE,
-  USER,
-  GENRE,
-} = VALIDATION;
+const { PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -214,445 +266,4 @@ const cursorSchema = Zod.object({
 
 /**********************************************************************************/
 
-const healthCheckSchema = Zod.string({
-  invalid_type_error: HEALTHCHECK.HTTP_METHODS.INVALID_TYPE_ERROR_MESSAGE,
-  required_error: HEALTHCHECK.HTTP_METHODS.REQUIRED_ERROR_MESSAGE,
-})
-  .min(
-    HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.VALUE,
-    HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.ERROR_MESSAGE,
-  )
-  .max(
-    HEALTHCHECK.HTTP_METHODS.MAX_LENGTH.VALUE,
-    HEALTHCHECK.HTTP_METHODS.MAX_LENGTH.ERROR_MESSAGE,
-  )
-  .toUpperCase()
-  .pipe(
-    Zod.enum(HEALTHCHECK.HTTP_METHODS.NAMES, {
-      errorMap: () => {
-        return {
-          message: HEALTHCHECK.HTTP_METHODS.ERROR_MESSAGE,
-        } as const;
-      },
-    }),
-  );
-
-/**********************************************************************************/
-
-const loginSchema = Zod.object(
-  {
-    email: Zod.string({
-      invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
-    })
-      .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
-      .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
-      .email(USER.EMAIL.ERROR_MESSAGE),
-    password: Zod.string({
-      invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
-    })
-      .min(
-        USER.PASSWORD.MIN_LENGTH.VALUE,
-        USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
-      )
-      .max(
-        USER.PASSWORD.MAX_LENGTH.VALUE,
-        USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
-      ),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const refreshTokenSchema = Zod.object(
-  {
-    refreshToken: Zod.string({
-      invalid_type_error:
-        AUTHENTICATION.REFRESH.TOKEN.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: AUTHENTICATION.REFRESH.TOKEN.REQUIRED_ERROR_MESSAGE,
-    }).jwt({
-      message: AUTHENTICATION.REFRESH.TOKEN.ERROR_MESSAGE,
-    }),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-/**********************************************************************************/
-
-const createRoleSchema = Zod.object(
-  {
-    id: Zod.string({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .uuid(ROLE.ID.ERROR_MESSAGE)
-      .optional(),
-    name: Zod.string({
-      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
-    })
-      .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const updateRoleBodySchema = Zod.object(
-  {
-    name: Zod.string({
-      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase()
-      .optional(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-).superRefine((roleUpdates, ctx) => {
-  if (!Object.keys(roleUpdates).length) {
-    ctx.addIssue({
-      code: Zod.ZodIssueCode.custom,
-      message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-});
-
-const updateRoleParamsSchema = Zod.object(
-  {
-    roleId: Zod.string({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(ROLE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const deleteRoleSchema = Zod.object(
-  {
-    roleId: Zod.string({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(ROLE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-/**********************************************************************************/
-
-const getUsersSchema = Zod.object(
-  {
-    cursor: Zod.string({
-      invalid_type_error: PAGINATION.CURSOR.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .min(
-        PAGINATION.CURSOR.MIN_LENGTH.VALUE,
-        PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
-      )
-      .max(
-        PAGINATION.CURSOR.MAX_LENGTH.VALUE,
-        PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
-      )
-      .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
-      .optional(),
-    pageSize: Zod.coerce
-      .number({
-        invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-      })
-      .min(
-        PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
-        PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
-      )
-      .max(
-        PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
-        PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
-      )
-      .default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
-  },
-  {
-    invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: QUERY.REQUIRED_ERROR_MESSAGE,
-  },
-).transform(({ cursor, pageSize }, ctx) => {
-  if (!cursor || cursor === 'undefined' || cursor === 'null') {
-    return {
-      pageSize,
-    } as const;
-  }
-
-  try {
-    const { id: userId, createdAt } = cursorSchema.parse(decodeCursor(cursor));
-
-    return {
-      cursor: { userId, createdAt },
-      pageSize,
-    } as const;
-  } catch {
-    ctx.addIssue({
-      code: Zod.ZodIssueCode.custom,
-      message: PAGINATION.CURSOR.ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-
-  return Zod.NEVER;
-});
-
-const getUserSchema = Zod.object(
-  {
-    userId: Zod.string({
-      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(USER.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const createUserSchema = Zod.object({
-  firstName: Zod.string({
-    invalid_type_error: USER.FIRST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      USER.FIRST_NAME.MIN_LENGTH.VALUE,
-      USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      USER.FIRST_NAME.MAX_LENGTH.VALUE,
-      USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
-    ),
-  lastName: Zod.string({
-    invalid_type_error: USER.LAST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      USER.LAST_NAME.MIN_LENGTH.VALUE,
-      USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      USER.LAST_NAME.MAX_LENGTH.VALUE,
-      USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
-    ),
-  email: Zod.string({
-    invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
-    .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
-    .email(USER.EMAIL.ERROR_MESSAGE),
-  password: Zod.string({
-    invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(USER.PASSWORD.MIN_LENGTH.VALUE, USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE)
-    .max(
-      USER.PASSWORD.MAX_LENGTH.VALUE,
-      USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
-    ),
-  roleId: Zod.string({
-    invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-  }).uuid(ROLE.ID.ERROR_MESSAGE),
-});
-
-const updateUserBodySchema = Zod.object({
-  firstName: Zod.string({
-    invalid_type_error: USER.FIRST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      USER.FIRST_NAME.MIN_LENGTH.VALUE,
-      USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      USER.FIRST_NAME.MAX_LENGTH.VALUE,
-      USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
-    )
-    .optional(),
-  lastName: Zod.string({
-    invalid_type_error: USER.LAST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      USER.LAST_NAME.MIN_LENGTH.VALUE,
-      USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      USER.LAST_NAME.MAX_LENGTH.VALUE,
-      USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
-    )
-    .optional(),
-  email: Zod.string({
-    invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
-    .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
-    .email(USER.EMAIL.ERROR_MESSAGE)
-    .optional(),
-  password: Zod.string({
-    invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(USER.PASSWORD.MIN_LENGTH.VALUE, USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE)
-    .max(USER.PASSWORD.MAX_LENGTH.VALUE, USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE)
-    .optional(),
-  roleId: Zod.string({
-    invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-  })
-    .uuid(ROLE.ID.ERROR_MESSAGE)
-    .optional(),
-}).superRefine((userUpdates, ctx) => {
-  if (!Object.keys(userUpdates).length) {
-    ctx.addIssue({
-      code: Zod.ZodIssueCode.custom,
-      message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-});
-
-const updateUserParamsSchema = Zod.object(
-  {
-    userId: Zod.string({
-      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(USER.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const deleteUserSchema = Zod.object(
-  {
-    userId: Zod.string({
-      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(USER.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-/**********************************************************************************/
-
-const createGenreSchema = Zod.object(
-  {
-    id: Zod.string({
-      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .uuid(GENRE.ID.ERROR_MESSAGE)
-      .optional(),
-    name: Zod.string({
-      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
-    })
-      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const updateGenreBodySchema = Zod.object(
-  {
-    name: Zod.string({
-      invalid_type_error: GENRE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .min(GENRE.NAME.MIN_LENGTH.VALUE, GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(GENRE.NAME.MAX_LENGTH.VALUE, GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase()
-      .optional(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-).superRefine((genreUpdates, ctx) => {
-  if (!Object.keys(genreUpdates).length) {
-    ctx.addIssue({
-      code: Zod.ZodIssueCode.custom,
-      message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-});
-
-const updateGenreParamsSchema = Zod.object(
-  {
-    genreId: Zod.string({
-      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(GENRE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const deleteGenreSchema = Zod.object(
-  {
-    genreId: Zod.string({
-      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(GENRE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-/**********************************************************************************/
-
-export {
-  VALIDATION,
-  createGenreSchema,
-  createRoleSchema,
-  createUserSchema,
-  deleteGenreSchema,
-  deleteRoleSchema,
-  deleteUserSchema,
-  getUserSchema,
-  getUsersSchema,
-  healthCheckSchema,
-  loginSchema,
-  parseValidationResult,
-  refreshTokenSchema,
-  updateGenreBodySchema,
-  updateGenreParamsSchema,
-  updateRoleBodySchema,
-  updateRoleParamsSchema,
-  updateUserBodySchema,
-  updateUserParamsSchema,
-};
+export { cursorSchema, parseValidationResult, VALIDATION };

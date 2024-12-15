@@ -1,14 +1,221 @@
-import { type Request, HTTP_STATUS_CODES } from '../../utils/index.js';
+import {
+  type Request,
+  decodeCursor,
+  HTTP_STATUS_CODES,
+  Zod,
+} from '../../utils/index.js';
 
 import {
-  createUserSchema,
-  deleteUserSchema,
-  getUserSchema,
-  getUsersSchema,
+  cursorSchema,
   parseValidationResult,
-  updateUserBodySchema,
-  updateUserParamsSchema,
+  VALIDATION,
 } from '../utils.validator.js';
+
+const { ROLE, PARAMS, USER, PAGINATION, QUERY } = VALIDATION;
+
+/**********************************************************************************/
+
+const getUsersSchema = Zod.object(
+  {
+    cursor: Zod.string({
+      invalid_type_error: PAGINATION.CURSOR.INVALID_TYPE_ERROR_MESSAGE,
+    })
+      .min(
+        PAGINATION.CURSOR.MIN_LENGTH.VALUE,
+        PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
+      )
+      .max(
+        PAGINATION.CURSOR.MAX_LENGTH.VALUE,
+        PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
+      )
+      .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
+      .optional(),
+    pageSize: Zod.coerce
+      .number({
+        invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+      })
+      .min(
+        PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
+        PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
+      )
+      .max(
+        PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
+        PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
+      )
+      .default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
+  },
+  {
+    invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: QUERY.REQUIRED_ERROR_MESSAGE,
+  },
+).transform(({ cursor, pageSize }, ctx) => {
+  if (!cursor || cursor === 'undefined' || cursor === 'null') {
+    return {
+      pageSize,
+    } as const;
+  }
+
+  try {
+    const { id: userId, createdAt } = cursorSchema.parse(decodeCursor(cursor));
+
+    return {
+      cursor: { userId, createdAt },
+      pageSize,
+    } as const;
+  } catch {
+    ctx.addIssue({
+      code: Zod.ZodIssueCode.custom,
+      message: PAGINATION.CURSOR.ERROR_MESSAGE,
+      fatal: true,
+    });
+  }
+
+  return Zod.NEVER;
+});
+
+const getUserSchema = Zod.object(
+  {
+    userId: Zod.string({
+      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(USER.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const createUserSchema = Zod.object({
+  firstName: Zod.string({
+    invalid_type_error: USER.FIRST_NAME.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(
+      USER.FIRST_NAME.MIN_LENGTH.VALUE,
+      USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+    )
+    .max(
+      USER.FIRST_NAME.MAX_LENGTH.VALUE,
+      USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+    ),
+  lastName: Zod.string({
+    invalid_type_error: USER.LAST_NAME.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(
+      USER.LAST_NAME.MIN_LENGTH.VALUE,
+      USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+    )
+    .max(
+      USER.LAST_NAME.MAX_LENGTH.VALUE,
+      USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+    ),
+  email: Zod.string({
+    invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
+    .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
+    .email(USER.EMAIL.ERROR_MESSAGE),
+  password: Zod.string({
+    invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(USER.PASSWORD.MIN_LENGTH.VALUE, USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE)
+    .max(
+      USER.PASSWORD.MAX_LENGTH.VALUE,
+      USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
+    ),
+  roleId: Zod.string({
+    invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+  }).uuid(ROLE.ID.ERROR_MESSAGE),
+});
+
+const updateUserBodySchema = Zod.object({
+  firstName: Zod.string({
+    invalid_type_error: USER.FIRST_NAME.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(
+      USER.FIRST_NAME.MIN_LENGTH.VALUE,
+      USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+    )
+    .max(
+      USER.FIRST_NAME.MAX_LENGTH.VALUE,
+      USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+    )
+    .optional(),
+  lastName: Zod.string({
+    invalid_type_error: USER.LAST_NAME.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(
+      USER.LAST_NAME.MIN_LENGTH.VALUE,
+      USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+    )
+    .max(
+      USER.LAST_NAME.MAX_LENGTH.VALUE,
+      USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+    )
+    .optional(),
+  email: Zod.string({
+    invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
+    .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
+    .email(USER.EMAIL.ERROR_MESSAGE)
+    .optional(),
+  password: Zod.string({
+    invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
+  })
+    .min(USER.PASSWORD.MIN_LENGTH.VALUE, USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE)
+    .max(USER.PASSWORD.MAX_LENGTH.VALUE, USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE)
+    .optional(),
+  roleId: Zod.string({
+    invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+  })
+    .uuid(ROLE.ID.ERROR_MESSAGE)
+    .optional(),
+}).superRefine((userUpdates, ctx) => {
+  if (!Object.keys(userUpdates).length) {
+    ctx.addIssue({
+      code: Zod.ZodIssueCode.custom,
+      message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+      fatal: true,
+    });
+  }
+});
+
+const updateUserParamsSchema = Zod.object(
+  {
+    userId: Zod.string({
+      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(USER.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const deleteUserSchema = Zod.object(
+  {
+    userId: Zod.string({
+      invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(USER.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
 
 /**********************************************************************************/
 

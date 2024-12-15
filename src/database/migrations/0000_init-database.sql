@@ -20,7 +20,7 @@ CREATE TABLE "movie" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"title" varchar NOT NULL,
 	"description" varchar NOT NULL,
-	"relative_image_path" varchar NOT NULL,
+	"image_path" varchar NOT NULL,
 	"price" real NOT NULL,
 	"genre_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,

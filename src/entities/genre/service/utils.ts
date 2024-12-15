@@ -1,5 +1,6 @@
 import {
   asc,
+  count,
   eq,
   ERROR_CODES,
   HTTP_STATUS_CODES,
@@ -94,7 +95,21 @@ async function deleteGenreFromDatabase(
   genreId: DeleteGenreValidatedData,
 ) {
   const handler = database.getHandler();
-  const { genre: genreModel } = database.getModels();
+  const { genre: genreModel, movie: movieModel } = database.getModels();
+
+  // Only genres without attached movies are allowed to be deleted
+  const moviesWithDeletedGenre = (
+    await handler
+      .select({ count: count() })
+      .from(movieModel)
+      .where(eq(movieModel.genreId, genreId))
+  )[0]!.count;
+  if (moviesWithDeletedGenre) {
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Genre has attached movies',
+    );
+  }
 
   // I've decided that if nothing was deleted because it didn't exist in the
   // first place, it is still considered as a success since the end result
