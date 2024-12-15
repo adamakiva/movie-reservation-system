@@ -1,7 +1,6 @@
 /**
  * Since every test file import first (hoisted anyhow on ESM) and ONLY from
  * this file, we can put this here and be sure it runs before any other import
- * (except vitest internals, but we can't really change those, can we?)
  */
 import { EventEmitter } from 'node:events';
 
