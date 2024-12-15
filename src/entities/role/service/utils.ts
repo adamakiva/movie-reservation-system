@@ -51,8 +51,6 @@ async function insertRoleToDatabase(
     const createdRole = (
       await handler
         .insert(roleModel)
-        //@ts-expect-error Drizzle has issues with the typing which does not allow
-        // undefined value, this only a type error and works as intended
         .values(roleToCreate)
         .returning({ id: roleModel.id, name: roleModel.name })
     )[0]!;
@@ -74,8 +72,6 @@ async function updateRoleInDatabase(
   try {
     const updatedRoles = await handler
       .update(roleModel)
-      //@ts-expect-error Drizzle has issues with the typing which does not allow
-      // undefined value, this only a type error and works as intended
       .set(fieldsToUpdate)
       .where(eq(roleModel.id, roleId))
       .returning({ id: roleModel.id, name: roleModel.name });

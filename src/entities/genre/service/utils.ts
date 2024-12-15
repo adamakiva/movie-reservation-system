@@ -50,8 +50,6 @@ async function insertGenreToDatabase(
     const createdGenre = (
       await handler
         .insert(genreModel)
-        //@ts-expect-error Drizzle has issues with the typing which does not allow
-        // undefined value, this only a type error and works as intended
         .values(genreToCreate)
         .returning({ id: genreModel.id, name: genreModel.name })
     )[0]!;
@@ -73,8 +71,6 @@ async function updateGenreInDatabase(
   try {
     const updatedGenre = await handler
       .update(genreModel)
-      //@ts-expect-error Drizzle has issues with the typing which does not allow
-      // undefined value, this only a type error and works as intended
       .set(fieldsToUpdate)
       .where(eq(genreModel.id, genreId))
       .returning({ id: genreModel.id, name: genreModel.name });

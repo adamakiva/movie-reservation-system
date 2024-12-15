@@ -226,8 +226,6 @@ async function updateUserInDatabase(
   try {
     const updatedUsers = await handler
       .update(userModel)
-      //@ts-expect-error Drizzle has issues with the typing which does not allow
-      // undefined value, this only a type error and works as intended
       .set(fieldsToUpdate)
       .where(eq(userModel.id, userId))
       .returning({
