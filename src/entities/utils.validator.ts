@@ -199,27 +199,27 @@ const VALIDATION = {
         ERROR_MESSAGE: 'Description must be at most 2,048 characters long',
       },
     },
-    IMAGE: {
-      ERROR_MESSAGE: 'Image is not a valid URI',
-      INVALID_TYPE_ERROR_MESSAGE: 'Image must be a string',
-      REQUIRED_ERROR_MESSAGE: 'Image is required',
+    IMAGE_PATH: {
+      ERROR_MESSAGE: 'Image path is not a valid URI',
+      INVALID_TYPE_ERROR_MESSAGE: 'Image path must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Image path is required',
       MIN_LENGTH: {
         VALUE: 2,
-        ERROR_MESSAGE: 'Image must be at least 2 characters long',
+        ERROR_MESSAGE: 'Image path must be at least 2 characters long',
       },
       MAX_LENGTH: {
         VALUE: 256,
-        ERROR_MESSAGE: 'Image must be at most 256 characters long',
+        ERROR_MESSAGE: 'Image path must be at most 256 characters long',
       },
     },
     PRICE: {
       INVALID_TYPE_ERROR_MESSAGE: 'Price must be a number',
       REQUIRED_ERROR_MESSAGE: 'Price is required',
-      MIN_LENGTH: {
+      MIN_VALUE: {
         VALUE: 0.01,
         ERROR_MESSAGE: 'Price must be at least 0.01$',
       },
-      MAX_LENGTH: {
+      MAX_VALUE: {
         VALUE: 100.0,
         ERROR_MESSAGE: 'Price must be at most 100.0$',
       },

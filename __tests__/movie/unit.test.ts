@@ -21,7 +21,7 @@ import {
   VALIDATION,
 } from '../utils.js';
 
-import { generateMoviesData, seedMovie, seedMovies } from './utils.js';
+import { generateMoviesData, seedMovie } from './utils.js';
 
 /**********************************************************************************/
 
@@ -343,13 +343,13 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing first name', (ctx) => {
+  await test('Invalid - Create validation: Missing title', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          firstName: undefined,
+          title: undefined,
         },
       },
     });
@@ -364,20 +364,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.TITLE.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Empty first name', (ctx) => {
+  await test('Invalid - Create validation: Empty title', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          firstName: '',
+          title: '',
         },
       },
     });
@@ -392,20 +392,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: First name too short', (ctx) => {
+  await test('Invalid - Create validation: Title too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          firstName: 'a'.repeat(MOVIE.FIRST_NAME.MIN_LENGTH.VALUE - 1),
+          title: 'a'.repeat(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -420,20 +420,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: First name too long', (ctx) => {
+  await test('Invalid - Create validation: Title too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          firstName: 'a'.repeat(MOVIE.FIRST_NAME.MAX_LENGTH.VALUE + 1),
+          title: 'a'.repeat(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -448,20 +448,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Missing last name', (ctx) => {
+  await test('Invalid - Create validation: Missing description', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          lastName: undefined,
+          description: undefined,
         },
       },
     });
@@ -476,20 +476,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Empty last name', (ctx) => {
+  await test('Invalid - Create validation: Empty description', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          lastName: '',
+          description: '',
         },
       },
     });
@@ -504,20 +504,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Last name too short', (ctx) => {
+  await test('Invalid - Create validation: Description too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          lastName: 'a'.repeat(MOVIE.LAST_NAME.MIN_LENGTH.VALUE - 1),
+          description: 'a'.repeat(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -532,20 +532,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Last name too long', (ctx) => {
+  await test('Invalid - Create validation: Description too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          lastName: 'a'.repeat(MOVIE.LAST_NAME.MAX_LENGTH.VALUE + 1),
+          description: 'a'.repeat(MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -560,20 +560,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Missing email', (ctx) => {
+  await test('Invalid - Create validation: Missing image path', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          email: undefined,
+          imagePath: undefined,
         },
       },
     });
@@ -588,20 +588,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.EMAIL.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.IMAGE_PATH.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Empty email', (ctx) => {
+  await test('Invalid - Create validation: Empty image path', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          email: '',
+          imagePath: '',
         },
       },
     });
@@ -616,20 +616,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.EMAIL.ERROR_MESSAGE}`,
+          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Email too short', (ctx) => {
+  await test('Invalid - Create validation: Image path too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          email: 'a'.repeat(MOVIE.EMAIL.MIN_LENGTH.VALUE - 1),
+          imagePath: 'a'.repeat(MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -644,20 +644,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.EMAIL.ERROR_MESSAGE}`,
+          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Email too long', (ctx) => {
+  await test('Invalid - Create validation: Image path too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          email: `${'a'.repeat(MOVIE.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
+          imagePath: `${'a'.repeat(MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE + 1)}@ph.com`,
         },
       },
     });
@@ -672,20 +672,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Invalid email', (ctx) => {
+  await test('Invalid - Create validation: Invalid image path', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          email: randomString(),
+          imagePath: randomString(),
         },
       },
     });
@@ -700,20 +700,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.EMAIL.ERROR_MESSAGE,
+          message: MOVIE.IMAGE_PATH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Missing password', (ctx) => {
+  await test('Invalid - Create validation: Missing price', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          password: undefined,
+          price: undefined,
         },
       },
     });
@@ -728,20 +728,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Empty password', (ctx) => {
+  await test('Invalid - Create validation: Empty price', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          password: '',
+          price: '',
         },
       },
     });
@@ -756,20 +756,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Password too short', (ctx) => {
+  await test('Invalid - Create validation: Price too low', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          password: 'a'.repeat(MOVIE.PASSWORD.MIN_LENGTH.VALUE - 1),
+          price: MOVIE.PRICE.MIN_VALUE.VALUE - 1,
         },
       },
     });
@@ -784,20 +784,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Password too long', (ctx) => {
+  await test('Invalid - Create validation: Price too high', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          password: 'a'.repeat(MOVIE.PASSWORD.MAX_LENGTH.VALUE + 1),
+          PRICE: MOVIE.PRICE.MAX_VALUE.VALUE + 1,
         },
       },
     });
@@ -812,20 +812,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Missing role id', (ctx) => {
+  await test('Invalid - Create validation: Missing genre id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          roleId: undefined,
+          genreId: undefined,
         },
       },
     });
@@ -840,20 +840,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.ROLE_ID.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.GENRE_ID.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Empty role id', (ctx) => {
+  await test('Invalid - Create validation: Empty genre id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          roleId: '',
+          genreId: '',
         },
       },
     });
@@ -868,20 +868,20 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.ROLE_ID.ERROR_MESSAGE,
+          message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create validation: Invalid role id', (ctx) => {
+  await test('Invalid - Create validation: Invalid genre id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          roleId: randomString(),
+          genreId: randomString(),
         },
       },
     });
@@ -896,43 +896,15 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.ROLE_ID.ERROR_MESSAGE,
+          message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedMovie(serverParams, true, async (movie, role) => {
-      await assert.rejects(
-        async () => {
-          await service.createMovie(
-            {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              logger,
-            },
-            {
-              ...generateMoviesData([role.id], 1),
-              email: movie.email,
-            },
-          );
-        },
-        (err) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
-            code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Movie '${movie.email}' already exists`,
-          });
-
-          return true;
-        },
-      );
-    });
-  });
-  await test('Invalid - Create service: Non-existent role id', async () => {
-    const roleId = randomUUID();
+  await test('Invalid - Create service: Non-existent genre id', async () => {
+    const genreId = randomUUID();
 
     await assert.rejects(
       async () => {
@@ -942,21 +914,21 @@ await suite('Movie unit tests', async () => {
             database: serverParams.database,
             logger,
           },
-          generateMoviesData([roleId], 1),
+          generateMoviesData([genreId], 1),
         );
       },
       (err) => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
-          message: `Role '${roleId}' does not exist`,
+          message: `Genre '${genreId}' does not exist`,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation - Without updates', (ctx) => {
+  await test('Invalid - Update validation: Without updates', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
@@ -984,7 +956,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Update validation: Missing id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
-      reqOptions: { body: { roleId: randomUUID() } },
+      reqOptions: { body: { genreId: randomUUID() } },
     });
 
     const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
@@ -1009,7 +981,7 @@ await suite('Movie unit tests', async () => {
       logger,
       reqOptions: {
         params: { movieId: '' },
-        body: { roleId: randomUUID() },
+        body: { genreId: randomUUID() },
       },
     });
 
@@ -1035,7 +1007,7 @@ await suite('Movie unit tests', async () => {
       logger,
       reqOptions: {
         params: { movieId: randomString() },
-        body: { roleId: randomUUID() },
+        body: { genreId: randomUUID() },
       },
     });
 
@@ -1056,12 +1028,12 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty first name', (ctx) => {
+  await test('Invalid - Update validation: Empty title', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { firstName: '', roleId: randomUUID() },
+        body: { title: '', genreId: randomUUID() },
       },
     });
 
@@ -1075,21 +1047,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: First name too short', (ctx) => {
+  await test('Invalid - Update validation: Title too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          firstName: 'a'.repeat(MOVIE.FIRST_NAME.MIN_LENGTH.VALUE - 1),
-          roleId: randomUUID(),
+          title: 'a'.repeat(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
+          genreId: randomUUID(),
         },
       },
     });
@@ -1104,21 +1076,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: First name too long', (ctx) => {
+  await test('Invalid - Update validation: Title too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          firstName: 'a'.repeat(MOVIE.FIRST_NAME.MAX_LENGTH.VALUE + 1),
-          roleId: randomUUID(),
+          title: 'a'.repeat(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
+          genreId: randomUUID(),
         },
       },
     });
@@ -1133,19 +1105,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Empty last name', (ctx) => {
+  await test('Invalid - Update validation: Empty description', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { lastName: '', roleId: randomUUID() },
+        body: { description: '', genreId: randomUUID() },
       },
     });
 
@@ -1159,21 +1131,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Last name too short', (ctx) => {
+  await test('Invalid - Update validation: Description too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          lastName: 'a'.repeat(MOVIE.LAST_NAME.MIN_LENGTH.VALUE - 1),
-          roleId: randomUUID(),
+          description: 'a'.repeat(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1),
+          genreId: randomUUID(),
         },
       },
     });
@@ -1188,21 +1160,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Last name too long', (ctx) => {
+  await test('Invalid - Update validation: Description too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          lastName: 'a'.repeat(MOVIE.LAST_NAME.MAX_LENGTH.VALUE + 1),
-          roleId: randomUUID(),
+          description: 'a'.repeat(MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1),
+          genreId: randomUUID(),
         },
       },
     });
@@ -1217,19 +1189,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Empty email', (ctx) => {
+  await test('Invalid - Update validation: Empty image path', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { email: '', roleId: randomUUID() },
+        body: { imagePath: '', genreId: randomUUID() },
       },
     });
 
@@ -1243,21 +1215,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.EMAIL.ERROR_MESSAGE}`,
+          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Email too short', (ctx) => {
+  await test('Invalid - Update validation: Image path too short', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          email: 'a'.repeat(MOVIE.EMAIL.MIN_LENGTH.VALUE - 1),
-          roleId: randomUUID(),
+          imagePath: 'a'.repeat(MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE - 1),
+          genreId: randomUUID(),
         },
       },
     });
@@ -1272,21 +1244,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.EMAIL.ERROR_MESSAGE}`,
+          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Email too long', (ctx) => {
+  await test('Invalid - Update validation: Image path too long', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          email: `${'a'.repeat(MOVIE.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
-          roleId: randomUUID(),
+          imagePath: `${'a'.repeat(MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE + 1)}@ph.com`,
+          genreId: randomUUID(),
         },
       },
     });
@@ -1301,19 +1273,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Invalid email', (ctx) => {
+  await test('Invalid - Update validation: Invalid image path', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { email: randomString(32), roleId: randomUUID() },
+        body: { imagePath: randomString(32), genreId: randomUUID() },
       },
     });
 
@@ -1327,19 +1299,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.EMAIL.ERROR_MESSAGE,
+          message: MOVIE.IMAGE_PATH.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Empty password', (ctx) => {
+  await test('Invalid - Update validation: Empty price', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { password: '', roleId: randomUUID() },
+        body: { price: '', genreId: randomUUID() },
       },
     });
 
@@ -1353,21 +1325,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Password too short', (ctx) => {
+  await test('Invalid - Update validation: Price too low', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          password: 'a'.repeat(MOVIE.PASSWORD.MIN_LENGTH.VALUE - 1),
-          roleId: randomUUID(),
+          price: MOVIE.PRICE.MIN_VALUE.VALUE - 1,
+          genreId: randomUUID(),
         },
       },
     });
@@ -1382,21 +1354,21 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Password too long', (ctx) => {
+  await test('Invalid - Update validation: Price too high', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
         body: {
-          password: 'a'.repeat(MOVIE.PASSWORD.MAX_LENGTH.VALUE + 1),
-          roleId: randomUUID(),
+          price: MOVIE.PRICE.MAX_VALUE.VALUE + 1,
+          genreId: randomUUID(),
         },
       },
     });
@@ -1411,19 +1383,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Empty role id', (ctx) => {
+  await test('Invalid - Update validation: Empty genre id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { firstName: randomString(), roleId: '' },
+        body: { title: randomString(), genreId: '' },
       },
     });
 
@@ -1437,19 +1409,19 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.ROLE_ID.ERROR_MESSAGE,
+          message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
 
         return true;
       },
     );
   });
-  await test('Invalid - Update validation: Invalid role id', (ctx) => {
+  await test('Invalid - Update validation: Invalid genre id', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
-        body: { firstName: randomString(), roleId: randomString() },
+        body: { title: randomString(), genreId: randomString() },
       },
     });
 
@@ -1463,7 +1435,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.ROLE_ID.ERROR_MESSAGE,
+          message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
 
         return true;
@@ -1483,7 +1455,7 @@ await suite('Movie unit tests', async () => {
           },
           {
             movieId,
-            firstName: randomString(16),
+            title: randomString(16),
           },
         );
       },
@@ -1498,38 +1470,10 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedMovies(serverParams, 2, false, async (movies) => {
-      await assert.rejects(
-        async () => {
-          await service.updateMovie(
-            {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              logger,
-            },
-            {
-              movieId: movies[0]!.id,
-              email: movies[1]!.email,
-            },
-          );
-        },
-        (err) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
-            code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Movie '${movies[1]!.email}' already exists`,
-          });
+  await test('Invalid - Update service: Non-existent genre id', async () => {
+    const updatedGenreId = randomUUID();
 
-          return true;
-        },
-      );
-    });
-  });
-  await test('Invalid - Update service: Non-existent role id', async () => {
-    const updatedRoleId = randomUUID();
-
-    await seedMovie(serverParams, true, async (movie) => {
+    await seedMovie(serverParams, async (movie) => {
       await assert.rejects(
         async () => {
           await service.updateMovie(
@@ -1540,7 +1484,7 @@ await suite('Movie unit tests', async () => {
             },
             {
               movieId: movie.id,
-              roleId: updatedRoleId,
+              genreId: updatedGenreId,
             },
           );
         },
@@ -1548,7 +1492,7 @@ await suite('Movie unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.NOT_FOUND,
-            message: `Role '${updatedRoleId}' does not exist`,
+            message: `Genre '${updatedGenreId}' does not exist`,
           });
 
           return true;

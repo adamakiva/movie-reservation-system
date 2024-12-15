@@ -956,7 +956,7 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation - Without updates', (ctx) => {
+  await test('Invalid - Update validation: Without updates', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
       reqOptions: {
