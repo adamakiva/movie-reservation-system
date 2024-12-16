@@ -105,18 +105,6 @@ const createMovieSchema = Zod.object({
       MOVIE.DESCRIPTION.MAX_LENGTH.VALUE,
       MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
     ),
-  imagePath: Zod.string({
-    invalid_type_error: MOVIE.IMAGE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: MOVIE.IMAGE_PATH.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE,
-      MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE,
-      MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
-    ),
   price: Zod.coerce
     .number({
       invalid_type_error: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
@@ -149,19 +137,6 @@ const updateMovieBodySchema = Zod.object({
     .max(
       MOVIE.DESCRIPTION.MAX_LENGTH.VALUE,
       MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
-    )
-    .optional(),
-  IMAGE_PATHPath: Zod.string({
-    invalid_type_error: MOVIE.IMAGE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: MOVIE.IMAGE_PATH.REQUIRED_ERROR_MESSAGE,
-  })
-    .min(
-      MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE,
-      MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE,
-      MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
     )
     .optional(),
   price: Zod.coerce

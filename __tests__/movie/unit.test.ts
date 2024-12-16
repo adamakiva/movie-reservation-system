@@ -567,146 +567,6 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing image path', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        body: {
-          ...generateMoviesData([randomUUID()], 1),
-          imagePath: undefined,
-        },
-      },
-    });
-
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
-
-    assert.throws(
-      () => {
-        validateCreateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.IMAGE_PATH.REQUIRED_ERROR_MESSAGE,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Create validation: Empty image path', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        body: {
-          ...generateMoviesData([randomUUID()], 1),
-          imagePath: '',
-        },
-      },
-    });
-
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
-
-    assert.throws(
-      () => {
-        validateCreateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Create validation: Image path too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        body: {
-          ...generateMoviesData([randomUUID()], 1),
-          imagePath: 'a'.repeat(MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE - 1),
-        },
-      },
-    });
-
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
-
-    assert.throws(
-      () => {
-        validateCreateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Create validation: Image path too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        body: {
-          ...generateMoviesData([randomUUID()], 1),
-          imagePath: `${'a'.repeat(MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE + 1)}@ph.com`,
-        },
-      },
-    });
-
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
-
-    assert.throws(
-      () => {
-        validateCreateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Create validation: Invalid image path', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        body: {
-          ...generateMoviesData([randomUUID()], 1),
-          imagePath: randomString(),
-        },
-      },
-    });
-
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
-
-    assert.throws(
-      () => {
-        validateCreateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.IMAGE_PATH.ERROR_MESSAGE,
-        });
-
-        return true;
-      },
-    );
-  });
   await test('Invalid - Create validation: Missing price', (ctx) => {
     const { request } = createHttpMocks<ResponseWithCtx>({
       logger,
@@ -728,7 +588,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
 
         return true;
@@ -797,7 +657,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...generateMoviesData([randomUUID()], 1),
-          PRICE: MOVIE.PRICE.MAX_VALUE.VALUE + 1,
+          price: MOVIE.PRICE.MAX_VALUE.VALUE + 1,
         },
       },
     });
@@ -1190,116 +1050,6 @@ await suite('Movie unit tests', async () => {
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Update validation: Empty image path', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        params: { movieId: randomUUID() },
-        body: { imagePath: '', genreId: randomUUID() },
-      },
-    });
-
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
-
-    assert.throws(
-      () => {
-        validateUpdateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Update validation: Image path too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        params: { movieId: randomUUID() },
-        body: {
-          imagePath: 'a'.repeat(MOVIE.IMAGE_PATH.MIN_LENGTH.VALUE - 1),
-          genreId: randomUUID(),
-        },
-      },
-    });
-
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
-
-    assert.throws(
-      () => {
-        validateUpdateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: `${MOVIE.IMAGE_PATH.MIN_LENGTH.ERROR_MESSAGE}, ${MOVIE.IMAGE_PATH.ERROR_MESSAGE}`,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Update validation: Image path too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        params: { movieId: randomUUID() },
-        body: {
-          imagePath: `${'a'.repeat(MOVIE.IMAGE_PATH.MAX_LENGTH.VALUE + 1)}@ph.com`,
-          genreId: randomUUID(),
-        },
-      },
-    });
-
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
-
-    assert.throws(
-      () => {
-        validateUpdateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.IMAGE_PATH.MAX_LENGTH.ERROR_MESSAGE,
-        });
-
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Update validation: Invalid image path', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
-      logger,
-      reqOptions: {
-        params: { movieId: randomUUID() },
-        body: { imagePath: randomString(32), genreId: randomUUID() },
-      },
-    });
-
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
-
-    assert.throws(
-      () => {
-        validateUpdateMovieSpy(request);
-      },
-      (err) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
-          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.IMAGE_PATH.ERROR_MESSAGE,
         });
 
         return true;

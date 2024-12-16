@@ -15,7 +15,6 @@ import {
 type CreateMovie = {
   title: string;
   description: string;
-  imagePath: string;
   price: number;
   genreId: string;
 };
@@ -90,7 +89,6 @@ function generateMoviesData<T extends number = 1>(
     return {
       title: randomString(16),
       description: randomString(256),
-      imagePath: `/home/ph/${randomString(8)}`,
       price: randomNumber(0, 99),
       genreId: genreIds[randomNumber(0, genreIds.length - 1)],
     } as CreateMovie;
@@ -120,7 +118,6 @@ function generateMoviesSeedData(amount: number) {
       id: randomUUID(),
       title: movieData.title,
       description: movieData.description,
-      imagePath: movieData.imagePath,
       price: movieData.price,
       genreId: movieData.genreId,
     };

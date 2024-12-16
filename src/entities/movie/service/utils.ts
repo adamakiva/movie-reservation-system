@@ -31,7 +31,6 @@ type Movie = {
   id: string;
   title: string;
   description: string;
-  imagePath: string;
   price: number;
   genre: string;
 };
@@ -51,7 +50,6 @@ async function getPaginatedMoviesFromDatabase(
       id: movieModel.id,
       title: movieModel.title,
       description: movieModel.description,
-      imagePath: movieModel.imagePath,
       price: movieModel.price,
       genre: genreModel.name,
       createdAt: movieModel.createdAt,
@@ -128,7 +126,6 @@ async function getMovieFromDatabase(
       id: movieModel.id,
       title: movieModel.title,
       description: movieModel.description,
-      imagePath: movieModel.imagePath,
       price: movieModel.price,
       genre: genreModel.name,
     })
@@ -181,7 +178,6 @@ async function insertMovieToDatabase(
         id: movieModel.id,
         title: movieModel.title,
         description: movieModel.description,
-        imagePath: movieModel.imagePath,
         price: movieModel.price,
       })
     )[0]!;
@@ -225,7 +221,6 @@ async function updateMovieInDatabase(
         id: movieModel.id,
         title: movieModel.title,
         description: movieModel.description,
-        imagePath: movieModel.imagePath,
         price: movieModel.price,
         genreId: movieModel.genreId,
       });
@@ -240,7 +235,7 @@ async function updateMovieInDatabase(
     if (err instanceof pg.PostgresError) {
       throw new MRSError(
         HTTP_STATUS_CODES.NOT_FOUND,
-        `Role '${movieToUpdate.genreId!}' does not exist`,
+        `Genre '${movieToUpdate.genreId!}' does not exist`,
       );
     }
 

@@ -173,7 +173,6 @@ await suite('Movie integration tests', async () => {
         const movieData = {
           title: randomString(16),
           description: randomString(256),
-          imagePath: `/home/ph/${randomString(8)}`,
           price: randomNumber(0, 99),
           genreId: genre.id,
         } as const;
@@ -215,7 +214,6 @@ await suite('Movie integration tests', async () => {
       const updatedMovieData = {
         title: randomString(16),
         description: randomString(256),
-        imagePath: `/home/ph/${randomString(8)}`,
         price: randomNumber(0, 99),
         genreId: genre.id,
       } as const;
