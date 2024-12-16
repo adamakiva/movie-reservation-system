@@ -14,7 +14,7 @@ import {
   terminateServer,
   test,
   type LoggerHandler,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
 } from '../utils.js';
 
@@ -32,7 +32,7 @@ await suite('Healthcheck unit tests', async () => {
   });
 
   await suite('Validation layer', async () => {
-    await test('Invalid - Liveness validation: Invalid methods', (ctx) => {
+    await test('Invalid - Liveness validation: Invalid methods', (context) => {
       const disallowedMethods = [
         'POST',
         'PATCH',
@@ -41,12 +41,12 @@ await suite('Healthcheck unit tests', async () => {
         'OPTIONS',
       ] as const;
 
-      const livenessHealthCheckMock = ctx.mock.fn(
+      const livenessHealthCheckMock = context.mock.fn(
         controller.livenessHealthCheck,
       );
 
       disallowedMethods.forEach((disallowedMethod) => {
-        const { request, response } = createHttpMocks<ResponseWithCtx>({
+        const { request, response } = createHttpMocks<ResponseWithContext>({
           logger: logger,
           reqOptions: {
             method: disallowedMethod,
@@ -74,7 +74,7 @@ await suite('Healthcheck unit tests', async () => {
         );
       });
     });
-    await test('Invalid - Readiness validation: Invalid methods', async (ctx) => {
+    await test('Invalid - Readiness validation: Invalid methods', async (context) => {
       const disallowedMethods = [
         'POST',
         'PATCH',
@@ -83,13 +83,13 @@ await suite('Healthcheck unit tests', async () => {
         'OPTIONS',
       ] as const;
 
-      const readinessHealthCheckMock = ctx.mock.fn(
+      const readinessHealthCheckMock = context.mock.fn(
         controller.readinessHealthCheck,
       );
 
       await Promise.all(
         disallowedMethods.map(async (disallowedMethod) => {
-          const { request, response } = createHttpMocks<ResponseWithCtx>({
+          const { request, response } = createHttpMocks<ResponseWithContext>({
             logger: logger,
             reqOptions: {
               method: disallowedMethod,
@@ -120,8 +120,8 @@ await suite('Healthcheck unit tests', async () => {
     });
   });
   await suite('Controller layer', async () => {
-    await test('Invalid - Controller validation: Application is not ready', async (ctx) => {
-      const { request, response } = createHttpMocks<ResponseWithCtx>({
+    await test('Invalid - Controller validation: Application is not ready', async (context) => {
+      const { request, response } = createHttpMocks<ResponseWithContext>({
         logger: logger,
         reqOptions: {
           method: 'HEAD',
@@ -135,7 +135,7 @@ await suite('Healthcheck unit tests', async () => {
         },
       };
 
-      const validateHealthCheckMiddlewareSpy = ctx.mock.fn(
+      const validateHealthCheckMiddlewareSpy = context.mock.fn(
         controller.readinessHealthCheck,
       );
 

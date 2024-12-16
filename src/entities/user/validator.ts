@@ -48,7 +48,7 @@ const getUsersSchema = Zod.object(
     invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: QUERY.REQUIRED_ERROR_MESSAGE,
   },
-).transform(({ cursor, pageSize }, ctx) => {
+).transform(({ cursor, pageSize }, context) => {
   if (!cursor || cursor === 'undefined' || cursor === 'null') {
     return {
       pageSize,
@@ -63,7 +63,7 @@ const getUsersSchema = Zod.object(
       pageSize,
     } as const;
   } catch {
-    ctx.addIssue({
+    context.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: PAGINATION.CURSOR.ERROR_MESSAGE,
       fatal: true,
@@ -181,9 +181,9 @@ const updateUserBodySchema = Zod.object({
   })
     .uuid(ROLE.ID.ERROR_MESSAGE)
     .optional(),
-}).superRefine((userUpdates, ctx) => {
+}).superRefine((userUpdates, context) => {
   if (!Object.keys(userUpdates).length) {
-    ctx.addIssue({
+    context.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
       fatal: true,

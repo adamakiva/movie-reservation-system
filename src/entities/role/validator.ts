@@ -41,9 +41,9 @@ const updateRoleBodySchema = Zod.object(
     invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: BODY.REQUIRED_ERROR_MESSAGE,
   },
-).superRefine((roleUpdates, ctx) => {
+).superRefine((roleUpdates, context) => {
   if (!Object.keys(roleUpdates).length) {
-    ctx.addIssue({
+    context.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
       fatal: true,

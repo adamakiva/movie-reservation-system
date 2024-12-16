@@ -199,6 +199,48 @@ const VALIDATION = {
         ERROR_MESSAGE: 'Description must be at most 2,048 characters long',
       },
     },
+    POSTER: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Poster must be a valid image',
+      REQUIRED_ERROR_MESSAGE: 'Poster is required',
+      FILE_NAME: {
+        INVALID_TYPE_ERROR_MESSAGE: 'Poster file name be a valid image',
+        REQUIRED_ERROR_MESSAGE: 'Poster file name is required',
+        MIN_LENGTH: {
+          VALUE: 1,
+          ERROR_MESSAGE: 'Poster file name must be at least 1 character long',
+        },
+        MAX_LENGTH: {
+          VALUE: 256,
+          ERROR_MESSAGE: 'Poster file name must be at most 256 characters long',
+        },
+      },
+      FILE_PATH: {
+        INVALID_TYPE_ERROR_MESSAGE: 'Poster file path must be a valid image',
+        REQUIRED_ERROR_MESSAGE: 'Poster file path is required',
+        MIN_LENGTH: {
+          VALUE: 3,
+          ERROR_MESSAGE:
+            'Poster file path name must be at least 3 characters long',
+        },
+        MAX_LENGTH: {
+          VALUE: 512,
+          ERROR_MESSAGE:
+            'Poster file path name must be at most 256 characters long',
+        },
+      },
+      FILE_SIZE: {
+        INVALID_TYPE_ERROR_MESSAGE: 'Poster file size must be a valid number',
+        REQUIRED_ERROR_MESSAGE: 'Poster file size is required',
+        MIN_VALUE: {
+          VALUE: 1, // In bytes
+          ERROR_MESSAGE: 'Poster size is too small',
+        },
+        MAX_VALUE: {
+          VALUE: 4_194_304, // In bytes
+          ERROR_MESSAGE: 'Poster size is too large',
+        },
+      },
+    },
     PRICE: {
       INVALID_TYPE_ERROR_MESSAGE: 'Price must be a number',
       REQUIRED_ERROR_MESSAGE: 'Price is required',

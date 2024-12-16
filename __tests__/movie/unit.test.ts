@@ -13,7 +13,7 @@ import {
   MRSError,
   randomString,
   randomUUID,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
   suite,
   terminateServer,
@@ -40,12 +40,12 @@ await suite('Movie unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Invalid - Read single validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateGetMovieSpy = ctx.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
 
     assert.throws(
       () => {
@@ -62,15 +62,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: '' },
       },
     });
 
-    const validateGetMovieSpy = ctx.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
 
     assert.throws(
       () => {
@@ -87,15 +87,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomString() },
       },
     });
 
-    const validateGetMovieSpy = ctx.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
 
     assert.throws(
       () => {
@@ -112,9 +112,9 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single service: Non-existent entry', async (ctx) => {
+  await test('Invalid - Read single service: Non-existent entry', async (context) => {
     const { authentication, database } = serverParams;
-    ctx.mock.method(database, 'getHandler', () => {
+    context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
           return {
@@ -133,7 +133,7 @@ await suite('Movie unit tests', async () => {
         },
       } as const;
     });
-    const getMovieSpy = ctx.mock.fn(service.getMovie);
+    const getMovieSpy = context.mock.fn(service.getMovie);
 
     await assert.rejects(
       async () => {
@@ -156,15 +156,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Empty cursor', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Empty cursor', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: '' },
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -181,8 +181,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Cursor too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Cursor too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -193,7 +193,7 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -210,8 +210,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Cursor too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Cursor too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -222,7 +222,7 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -239,15 +239,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Invalid cursor', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -264,8 +264,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Page size too low', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Page size too low', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -274,7 +274,7 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -291,8 +291,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Page size too high', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Page size too high', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -301,7 +301,7 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -318,15 +318,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Invalid page size', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Invalid page size', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { pageSize: randomString(8) },
       },
     });
 
-    const validateGetMoviesSpy = ctx.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
 
     assert.throws(
       () => {
@@ -343,8 +343,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing title', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing title', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -354,7 +354,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -371,8 +373,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty title', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty title', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -382,7 +384,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -399,8 +403,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Title too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Title too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -410,7 +414,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -427,8 +433,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Title too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Title too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -438,7 +444,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -455,8 +463,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing description', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing description', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -466,7 +474,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -483,8 +493,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty description', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty description', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -494,7 +504,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -511,8 +523,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Description too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Description too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -522,7 +534,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -539,8 +553,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Description too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Description too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -550,7 +564,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -567,8 +583,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing price', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing price', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -578,7 +594,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -595,8 +613,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty price', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty price', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -606,7 +624,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -623,8 +643,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Price too low', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Price too low', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -634,7 +654,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -651,8 +673,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Price too high', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Price too high', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -662,7 +684,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -679,8 +703,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing genre id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing genre id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -690,7 +714,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -707,8 +733,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty genre id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty genre id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -718,7 +744,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -735,8 +763,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Invalid genre id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Invalid genre id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -746,7 +774,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateCreateMovieSpy = ctx.mock.fn(validator.validateCreateMovie);
+    const validateCreateMovieSpy = context.mock.fn(
+      validator.validateCreateMovie,
+    );
 
     assert.throws(
       () => {
@@ -788,15 +818,17 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Without updates', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Without updates', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -813,13 +845,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { body: { genreId: randomUUID() } },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -836,8 +870,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: '' },
@@ -845,7 +879,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -862,8 +898,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomString() },
@@ -871,7 +907,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -888,8 +926,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty title', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty title', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -897,7 +935,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -914,8 +954,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Title too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Title too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -926,7 +966,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -943,8 +985,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Title too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Title too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -955,7 +997,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -972,8 +1016,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty description', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty description', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -981,7 +1025,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -998,8 +1044,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Description too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Description too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1010,7 +1056,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1027,8 +1075,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Description too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Description too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1039,7 +1087,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1056,8 +1106,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty price', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty price', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1065,7 +1115,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1082,8 +1134,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Price too low', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Price too low', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1094,7 +1146,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1111,8 +1165,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Price too high', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Price too high', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1123,7 +1177,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1140,8 +1196,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty genre id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty genre id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1149,7 +1205,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1166,8 +1224,8 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid genre id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid genre id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movieId: randomUUID() },
@@ -1175,7 +1233,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateUpdateMovieSpy = ctx.mock.fn(validator.validateUpdateMovie);
+    const validateUpdateMovieSpy = context.mock.fn(
+      validator.validateUpdateMovie,
+    );
 
     assert.throws(
       () => {
@@ -1250,12 +1310,14 @@ await suite('Movie unit tests', async () => {
       );
     });
   });
-  await test('Invalid - Delete validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateDeleteMovieSpy = ctx.mock.fn(validator.validateDeleteMovie);
+    const validateDeleteMovieSpy = context.mock.fn(
+      validator.validateDeleteMovie,
+    );
 
     assert.throws(
       () => {
@@ -1272,13 +1334,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { movieId: '' } },
     });
 
-    const validateDeleteMovieSpy = ctx.mock.fn(validator.validateDeleteMovie);
+    const validateDeleteMovieSpy = context.mock.fn(
+      validator.validateDeleteMovie,
+    );
 
     assert.throws(
       () => {
@@ -1295,13 +1359,15 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { movieId: randomString() } },
     });
 
-    const validateDeleteMovieSpy = ctx.mock.fn(validator.validateDeleteMovie);
+    const validateDeleteMovieSpy = context.mock.fn(
+      validator.validateDeleteMovie,
+    );
 
     assert.throws(
       () => {

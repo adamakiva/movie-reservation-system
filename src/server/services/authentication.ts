@@ -6,7 +6,7 @@ import {
   readFile,
   type NextFunction,
   type Request,
-  type ResponseWithCtx,
+  type ResponseWithContext,
 } from '../../utils/index.js';
 
 /**********************************************************************************/
@@ -208,7 +208,7 @@ class AuthenticationManager {
 
   async #httpAuthenticationMiddleware(
     req: Request,
-    _res: ResponseWithCtx,
+    _res: ResponseWithContext,
     next: NextFunction,
   ) {
     await this.#checkAuthenticationToken(req.headers.authorization);

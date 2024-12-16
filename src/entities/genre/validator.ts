@@ -41,9 +41,9 @@ const updateGenreBodySchema = Zod.object(
     invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: BODY.REQUIRED_ERROR_MESSAGE,
   },
-).superRefine((genreUpdates, ctx) => {
+).superRefine((genreUpdates, context) => {
   if (!Object.keys(genreUpdates).length) {
-    ctx.addIssue({
+    context.addIssue({
       code: Zod.ZodIssueCode.custom,
       message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
       fatal: true,

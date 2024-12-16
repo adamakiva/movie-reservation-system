@@ -2,7 +2,7 @@ import {
   HTTP_STATUS_CODES,
   Zod,
   type Request,
-  type ResponseWithCtx,
+  type ResponseWithContext,
 } from '../../utils/index.js';
 
 import { parseValidationResult, VALIDATION } from '../utils.validator.js';
@@ -36,7 +36,7 @@ const healthCheckSchema = Zod.string({
 
 /**********************************************************************************/
 
-function validateHealthCheck(req: Request, res: ResponseWithCtx) {
+function validateHealthCheck(req: Request, res: ResponseWithContext) {
   try {
     const { method } = req;
 

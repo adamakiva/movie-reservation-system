@@ -17,7 +17,7 @@ import {
   test,
   VALIDATION,
   type LoggerHandler,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
 } from '../utils.js';
 
@@ -40,12 +40,12 @@ await suite('Role unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Invalid - Create validation: Missing name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateCreateRoleSpy = ctx.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
 
     assert.throws(
       () => {
@@ -62,8 +62,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -72,7 +72,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = ctx.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
 
     assert.throws(
       () => {
@@ -89,8 +89,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -99,7 +99,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = ctx.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
 
     assert.throws(
       () => {
@@ -116,8 +116,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -126,7 +126,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = ctx.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
 
     assert.throws(
       () => {
@@ -168,8 +168,8 @@ await suite('Role unit tests', async () => {
       );
     });
   });
-  await test('Invalid - Update validation: Without updates', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Without updates', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -178,7 +178,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -195,8 +195,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -205,7 +205,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -222,8 +222,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -235,7 +235,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -252,8 +252,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -265,7 +265,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -282,8 +282,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Missing name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Missing name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -295,7 +295,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -312,8 +312,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -325,7 +325,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -342,8 +342,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -355,7 +355,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = ctx.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
 
     assert.throws(
       () => {
@@ -397,12 +397,12 @@ await suite('Role unit tests', async () => {
       );
     });
   });
-  await test('Invalid - Delete validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateDeleteRoleSpy = ctx.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
 
     assert.throws(
       () => {
@@ -419,8 +419,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -429,7 +429,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateDeleteRoleSpy = ctx.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
 
     assert.throws(
       () => {
@@ -446,8 +446,8 @@ await suite('Role unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -456,7 +456,7 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateDeleteRoleSpy = ctx.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
 
     assert.throws(
       () => {

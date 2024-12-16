@@ -1,7 +1,10 @@
-import { readFile } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
+import { createWriteStream } from 'node:fs';
+import { readFile, unlink } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { pipeline } from 'node:stream';
 
 import argon2 from 'argon2';
 import compress from 'compression';
@@ -26,6 +29,8 @@ import express, {
   type Response,
 } from 'express';
 import * as jose from 'jose';
+import { extension as findExtension } from 'mime-types';
+import multer from 'multer';
 import pg from 'postgres';
 import Zod from 'zod';
 
@@ -53,8 +58,8 @@ type RemoveUndefinedFields<T, K extends keyof T> = {
 
 /********************************** Http ******************************************/
 
-type ResponseWithoutCtx = Response<unknown, object>;
-type ResponseWithCtx = Response<unknown, { context: RequestContext }>;
+type ResponseWithoutContext = Response<unknown, object>;
+type ResponseWithContext = Response<unknown, { context: RequestContext }>;
 
 type RequestContext = {
   authentication: AuthenticationManager;
@@ -103,23 +108,30 @@ export {
   cors,
   count,
   createServer,
+  createWriteStream,
   decodeCursor,
   drizzle,
   encodeCursor,
   eq,
   express,
+  findExtension,
   gt,
   isDevelopmentMode,
   isProductionMode,
   isTestMode,
+  join,
   jose,
   json,
+  multer,
   or,
   pg,
+  pipeline,
+  randomBytes,
   readFile,
   resolve,
   sql,
   strcasecmp,
+  unlink,
   type AddressInfo,
   type CorsOptions,
   type Credentials,
@@ -135,7 +147,7 @@ export {
   type Request,
   type RequestContext,
   type Response,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
   type Server,
 };

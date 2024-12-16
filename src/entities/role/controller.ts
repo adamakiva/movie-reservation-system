@@ -1,7 +1,7 @@
 import {
   HTTP_STATUS_CODES,
   type Request,
-  type ResponseWithCtx,
+  type ResponseWithContext,
 } from '../../utils/index.js';
 
 import * as roleService from './service/index.js';
@@ -9,13 +9,13 @@ import * as roleValidator from './validator.js';
 
 /**********************************************************************************/
 
-async function getRoles(_req: Request, res: ResponseWithCtx) {
+async function getRoles(_req: Request, res: ResponseWithContext) {
   const roles = await roleService.getRoles(res.locals.context);
 
   res.status(HTTP_STATUS_CODES.SUCCESS).json(roles);
 }
 
-async function createRole(req: Request, res: ResponseWithCtx) {
+async function createRole(req: Request, res: ResponseWithContext) {
   const roleToCreate = roleValidator.validateCreateRole(req);
 
   const createRole = await roleService.createRole(
@@ -26,7 +26,7 @@ async function createRole(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.CREATED).json(createRole);
 }
 
-async function updateRole(req: Request, res: ResponseWithCtx) {
+async function updateRole(req: Request, res: ResponseWithContext) {
   const roleToUpdate = roleValidator.validateUpdateRole(req);
 
   const updatedRole = await roleService.updateRole(
@@ -37,7 +37,7 @@ async function updateRole(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedRole);
 }
 
-async function deleteRole(req: Request, res: ResponseWithCtx) {
+async function deleteRole(req: Request, res: ResponseWithContext) {
   const roleId = roleValidator.validateDeleteRole(req);
 
   await roleService.deleteRole(res.locals.context, roleId);

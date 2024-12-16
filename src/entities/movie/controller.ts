@@ -1,7 +1,7 @@
 import {
   HTTP_STATUS_CODES,
   type Request,
-  type ResponseWithCtx,
+  type ResponseWithContext,
 } from '../../utils/index.js';
 
 import * as movieService from './service/index.js';
@@ -9,7 +9,7 @@ import * as movieValidator from './validator.js';
 
 /**********************************************************************************/
 
-async function getMovies(req: Request, res: ResponseWithCtx) {
+async function getMovies(req: Request, res: ResponseWithContext) {
   const pagination = movieValidator.validateGetMovies(req);
 
   const movies = await movieService.getMovies(res.locals.context, pagination);
@@ -17,7 +17,7 @@ async function getMovies(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.SUCCESS).json(movies);
 }
 
-async function getMovie(req: Request, res: ResponseWithCtx) {
+async function getMovie(req: Request, res: ResponseWithContext) {
   const movieId = movieValidator.validateGetMovie(req);
 
   const movie = await movieService.getMovie(res.locals.context, movieId);
@@ -25,7 +25,7 @@ async function getMovie(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.SUCCESS).json(movie);
 }
 
-async function createMovie(req: Request, res: ResponseWithCtx) {
+async function createMovie(req: Request, res: ResponseWithContext) {
   const movieToCreate = movieValidator.validateCreateMovie(req);
 
   const createdMovie = await movieService.createMovie(
@@ -36,7 +36,7 @@ async function createMovie(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.CREATED).json(createdMovie);
 }
 
-async function updateMovie(req: Request, res: ResponseWithCtx) {
+async function updateMovie(req: Request, res: ResponseWithContext) {
   const movieToUpdate = movieValidator.validateUpdateMovie(req);
 
   const updatedMovie = await movieService.updateMovie(
@@ -47,7 +47,7 @@ async function updateMovie(req: Request, res: ResponseWithCtx) {
   res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedMovie);
 }
 
-async function deleteMovie(req: Request, res: ResponseWithCtx) {
+async function deleteMovie(req: Request, res: ResponseWithContext) {
   const movieId = movieValidator.validateDeleteMovie(req);
 
   await movieService.deleteMovie(res.locals.context, movieId);

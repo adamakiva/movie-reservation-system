@@ -18,6 +18,7 @@ process.on('warning', (warn) => {
 
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
@@ -44,8 +45,8 @@ import {
   Logger,
   MRSError,
   type LoggerHandler,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
 } from '../src/utils/index.js';
 
 const { PostgresError } = pg;
@@ -105,6 +106,15 @@ async function createServer() {
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
+    },
+    fileParserParams: {
+      generatedNameLength: 16,
+      saveDir: tmpdir(),
+      logger: logger,
+      limits: {
+        fileSize: 4_194_304, // 4mb
+        files: 1, // Currently only 1 file is expected, change if needed
+      },
     },
     corsOptions: {
       methods: Array.from(serverEnvironment.allowedMethods),
@@ -347,7 +357,7 @@ export {
   type MockResponse,
   type NextFunction,
   type Request,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
   type ServerParams,
 };

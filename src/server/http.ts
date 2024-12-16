@@ -17,8 +17,11 @@ import {
   type Server,
 } from '../utils/index.js';
 
-import AuthenticationManager from './services/authentication.js';
-import * as Middlewares from './services/middlewares.js';
+import {
+  AuthenticationManager,
+  FileParser,
+  Middlewares,
+} from './services/index.js';
 
 /**********************************************************************************/
 
@@ -26,6 +29,7 @@ class HttpServer {
   readonly #mode;
   readonly #database;
   readonly #authentication;
+  readonly #fileParser;
   readonly #server;
   readonly #routes;
   readonly #requestContext;
@@ -34,6 +38,7 @@ class HttpServer {
   public static async create(params: {
     mode: Mode;
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    fileParserParams: ConstructorParameters<typeof FileParser>[0];
     corsOptions: CorsOptions;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
@@ -44,6 +49,7 @@ class HttpServer {
     const {
       mode,
       authenticationParams,
+      fileParserParams,
       corsOptions,
       databaseParams,
       allowedMethods,
@@ -54,6 +60,7 @@ class HttpServer {
 
     const authentication =
       await AuthenticationManager.create(authenticationParams);
+    const fileParser = new FileParser(fileParserParams);
     const database = new Database({ ...databaseParams, logger });
 
     const app = express().disable('x-powered-by');
@@ -65,6 +72,7 @@ class HttpServer {
     const self = new HttpServer({
       mode,
       authentication,
+      fileParser,
       database,
       server,
       routes,
@@ -125,15 +133,25 @@ class HttpServer {
   private constructor(params: {
     mode: Mode;
     authentication: AuthenticationManager;
+    fileParser: FileParser;
     database: Database;
     server: Server;
     routes: { http: string };
     logger: LoggerHandler;
   }) {
-    const { mode, authentication, database, server, routes, logger } = params;
+    const {
+      mode,
+      authentication,
+      fileParser,
+      database,
+      server,
+      routes,
+      logger,
+    } = params;
 
     this.#mode = mode;
     this.#authentication = authentication;
+    this.#fileParser = fileParser;
     this.#database = database;
     this.#server = server;
     this.#routes = routes;
@@ -259,7 +277,7 @@ class HttpServer {
         routers.roleRouter(this.#authentication),
         routers.userRouter(this.#authentication),
         routers.genreRouter(this.#authentication),
-        routers.movieRouter(this.#authentication),
+        routers.movieRouter(this.#authentication, this.#fileParser),
       )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
