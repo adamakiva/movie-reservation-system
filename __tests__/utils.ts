@@ -220,6 +220,17 @@ function randomUUID<T extends number = 1>(
   return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
+function shuffleArray(array: unknown[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    // Generate a random index between 0 and i (inclusive)
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+
+    // Swap elements at i and randomIndex
+    [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
+  }
+  return array;
+}
+
 /******************************* API calls ****************************************/
 /**********************************************************************************/
 
@@ -344,6 +355,7 @@ export {
   randomString,
   randomUUID,
   sendHttpRequest,
+  shuffleArray,
   suite,
   terminateServer,
   test,

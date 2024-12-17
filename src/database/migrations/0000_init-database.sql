@@ -27,6 +27,14 @@ CREATE TABLE "movie" (
 	CONSTRAINT "movie_title_unique" UNIQUE("title")
 );
 --> statement-breakpoint
+CREATE TABLE "movie_poster" (
+	"movie_id" uuid PRIMARY KEY NOT NULL,
+	"file_full_path" varchar NOT NULL,
+	"file_size_in_bytes" varchar NOT NULL,
+	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "role" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar NOT NULL,
@@ -68,10 +76,13 @@ CREATE TABLE "user" (
 );
 --> statement-breakpoint
 ALTER TABLE "movie" ADD CONSTRAINT "movie_genre_id_genre_id_fk" FOREIGN KEY ("genre_id") REFERENCES "public"."genre"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "movie_poster" ADD CONSTRAINT "movie_poster_movie_id_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "showtime" ADD CONSTRAINT "showtime_movie_id_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "showtime" ADD CONSTRAINT "showtime_hall_id_hall_id_fk" FOREIGN KEY ("hall_id") REFERENCES "public"."hall"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "user" ADD CONSTRAINT "user_role_id_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
 CREATE UNIQUE INDEX "genre_name_unique_index" ON "genre" USING btree ("name");--> statement-breakpoint
+CREATE INDEX "movie_genre_id_index" ON "movie" USING btree ("genre_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "movie_cursor_unique_index" ON "movie" USING btree ("id","created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "role_name_unique_index" ON "role" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "showtime_movie_index" ON "showtime" USING btree ("movie_id");--> statement-breakpoint
 CREATE INDEX "showtime_hall_index" ON "showtime" USING btree ("hall_id");--> statement-breakpoint

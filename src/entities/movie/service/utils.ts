@@ -28,6 +28,10 @@ type Movie = {
   price: number;
   genre: string;
 };
+type MoviePoster = {
+  fileFullPath: string;
+  fileSizeInBytes: string;
+};
 
 /**********************************************************************************/
 
@@ -61,5 +65,6 @@ export {
   type GetMoviesValidatedData,
   type GetMovieValidatedData,
   type Movie,
+  type MoviePoster,
   type UpdateMovieValidatedData,
 };

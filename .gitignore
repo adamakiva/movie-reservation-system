@@ -26,3 +26,4 @@
 !LICENSE
 !.npmrc
 !**/*/postgresql.conf
+!*.jpg

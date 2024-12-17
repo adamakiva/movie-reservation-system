@@ -1,12 +1,18 @@
 import { inArray } from 'drizzle-orm';
 
 import type { Genre } from '../../src/entities/genre/service/utils.js';
-import type { Movie } from '../../src/entities/movie/service/utils.js';
+import type {
+  Movie,
+  MoviePoster,
+} from '../../src/entities/movie/service/utils.js';
 
+import { readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   randomNumber,
   randomString,
   randomUUID,
+  shuffleArray,
   type ServerParams,
 } from '../utils.js';
 
@@ -19,6 +25,11 @@ type CreateMovie = {
   poster: File;
   genreId: string;
 };
+type CreateMoviePoster = {
+  movieId: string;
+  fileFullPath: string;
+  fileSizeInBytes: string;
+};
 
 /**********************************************************************************/
 
@@ -29,23 +40,33 @@ async function seedMovie(
     createdMovie: Movie,
     // eslint-disable-next-line no-unused-vars
     genre: Genre,
+    // eslint-disable-next-line no-unused-vars
+    moviePoster: MoviePoster,
   ) => Promise<unknown>,
 ) {
   const { database } = serverParams;
   const handler = database.getHandler();
-  const { movie: movieModel, genre: genreModel } = database.getModels();
+  const {
+    movie: movieModel,
+    moviePoster: moviePosterModel,
+    genre: genreModel,
+  } = database.getModels();
 
-  const entitiesToCreate = generateMoviesSeedData(1);
+  const entitiesToCreate = await generateMoviesSeedData(1);
 
   // This can be inside a transaction but for the same reason the delete
   // in the finally block may fail as well, resulting in the same effect
   await handler.insert(genreModel).values(entitiesToCreate.genresToCreate);
   await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
+  await handler
+    .insert(moviePosterModel)
+    .values(entitiesToCreate.moviePosterToCreate);
 
   try {
     const callbackResponse = await fn(
       sanitizeSeededMoviesResponse(entitiesToCreate)[0]!,
       entitiesToCreate.genresToCreate[0]!,
+      entitiesToCreate.moviePosterToCreate[0]!,
     );
 
     return callbackResponse;
@@ -62,14 +83,21 @@ async function seedMovies(
 ) {
   const { database } = serverParams;
   const handler = database.getHandler();
-  const { movie: movieModel, genre: genreModel } = database.getModels();
+  const {
+    movie: movieModel,
+    moviePoster: moviePosterModel,
+    genre: genreModel,
+  } = database.getModels();
 
-  const entitiesToCreate = generateMoviesSeedData(amount);
+  const entitiesToCreate = await generateMoviesSeedData(amount);
 
   // This can be inside a transaction but for the same reason the delete
   // in the finally block may fail as well, resulting in the same effect
   await handler.insert(genreModel).values(entitiesToCreate.genresToCreate);
   await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
+  await handler
+    .insert(moviePosterModel)
+    .values(entitiesToCreate.moviePosterToCreate);
 
   try {
     const callbackResponse = await fn(
@@ -100,7 +128,40 @@ function generateMoviesData<T extends number = 1>(
     : CreateMovie[];
 }
 
-function generateMoviesSeedData(amount: number) {
+async function generateMoviePostersData<T extends number = 1>(
+  movieIds: string[],
+  amount = 1 as T,
+): Promise<T extends 1 ? CreateMoviePoster : CreateMoviePoster[]> {
+  const shuffledMovieIds = shuffleArray(movieIds);
+  // eslint-disable-next-line @security/detect-non-literal-fs-filename
+  const imageNames = await readdir(join(import.meta.dirname, 'images'));
+  const moviePosters = await Promise.all(
+    imageNames.map(async (imageName) => {
+      const fileFullPath = join(import.meta.dirname, 'images', imageName);
+      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const fileSizeInBytes = String((await stat(fileFullPath)).size);
+
+      return {
+        fileFullPath,
+        fileSizeInBytes,
+      };
+    }),
+  );
+
+  const moviePostersToCreate = moviePosters.map((moviePoster) => {
+    return {
+      movieId: shuffledMovieIds[randomNumber(0, shuffledMovieIds.length)],
+      fileFullPath: moviePoster.fileFullPath,
+      fileSizeInBytes: moviePoster.fileSizeInBytes,
+    };
+  });
+
+  return (
+    amount === 1 ? moviePostersToCreate[0]! : moviePostersToCreate
+  ) as T extends 1 ? CreateMoviePoster : CreateMoviePoster[];
+}
+
+async function generateMoviesSeedData(amount: number) {
   const genresToCreate = [...Array(Math.ceil(amount / 4))].map(() => {
     return { id: randomUUID(), name: randomString(8) };
   });
@@ -124,9 +185,17 @@ function generateMoviesSeedData(amount: number) {
     };
   });
 
+  const moviePosterToCreate = await generateMoviePostersData(
+    moviesToCreate.map(({ id }) => {
+      return id;
+    }),
+    amount,
+  );
+
   return {
     genresToCreate,
     moviesToCreate,
+    moviePosterToCreate,
   };
 }
 
