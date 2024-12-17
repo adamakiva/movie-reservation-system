@@ -1,10 +1,15 @@
 import { randomBytes } from 'node:crypto';
-import { createWriteStream } from 'node:fs';
-import { readFile, unlink } from 'node:fs/promises';
+import {
+  createReadStream,
+  createWriteStream,
+  unlink,
+  type PathLike,
+} from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { join, resolve } from 'node:path';
-import { pipeline } from 'node:stream';
+import { extname, join, resolve } from 'node:path';
+import { pipeline, type Readable, type Writable } from 'node:stream';
 
 import argon2 from 'argon2';
 import compress from 'compression';
@@ -29,19 +34,27 @@ import express, {
   type Response,
 } from 'express';
 import * as jose from 'jose';
-import { extension as findExtension } from 'mime-types';
+import {
+  contentType as buildContentType,
+  extension as findExtension,
+  lookup as lookupMimeType,
+} from 'mime-types';
 import multer from 'multer';
 import pg from 'postgres';
 import Zod from 'zod';
 
 import type { Database } from '../database/index.js';
-import type { AuthenticationManager } from '../server/services/index.js';
+import type {
+  AuthenticationManager,
+  FileManager,
+} from '../server/services/index.js';
 
 import EnvironmentManager, { type Mode } from './config.js';
 import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
 import MRSError from './error.js';
 import {
   decodeCursor,
+  emptyFunction,
   encodeCursor,
   isDevelopmentMode,
   isProductionMode,
@@ -64,6 +77,7 @@ type ResponseWithContext = Response<unknown, { context: RequestContext }>;
 type RequestContext = {
   authentication: AuthenticationManager;
   database: Database;
+  fileManager: FileManager;
   logger: ReturnType<Logger['getHandler']>;
 };
 
@@ -104,16 +118,20 @@ export {
   and,
   argon2,
   asc,
+  buildContentType,
   compress,
   cors,
   count,
+  createReadStream,
   createServer,
   createWriteStream,
   decodeCursor,
   drizzle,
+  emptyFunction,
   encodeCursor,
   eq,
   express,
+  extname,
   findExtension,
   gt,
   isDevelopmentMode,
@@ -122,6 +140,7 @@ export {
   join,
   jose,
   json,
+  lookupMimeType,
   multer,
   or,
   pg,
@@ -143,6 +162,8 @@ export {
   type Mode,
   type NextFunction,
   type PaginatedResult,
+  type PathLike,
+  type Readable,
   type RemoveUndefinedFields,
   type Request,
   type RequestContext,
@@ -150,4 +171,5 @@ export {
   type ResponseWithContext,
   type ResponseWithoutContext,
   type Server,
+  type Writable,
 };

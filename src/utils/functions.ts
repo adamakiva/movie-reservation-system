@@ -54,10 +54,15 @@ function decodeCursor(cursor: string) {
   return result;
 }
 
+function emptyFunction() {
+  // On purpose
+}
+
 /**********************************************************************************/
 
 export {
   decodeCursor,
+  emptyFunction,
   encodeCursor,
   isDevelopmentMode,
   isProductionMode,

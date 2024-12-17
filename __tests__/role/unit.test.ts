@@ -147,6 +147,7 @@ await suite('Role unit tests', async () => {
     await seedRole(serverParams, async (role) => {
       const context = {
         authentication: serverParams.authentication,
+        fileManager: serverParams.fileManager,
         database: serverParams.database,
         logger,
       };
@@ -376,6 +377,7 @@ await suite('Role unit tests', async () => {
     await seedRoles(serverParams, 2, async (roles) => {
       const context = {
         authentication: serverParams.authentication,
+        fileManager: serverParams.fileManager,
         database: serverParams.database,
         logger,
       };

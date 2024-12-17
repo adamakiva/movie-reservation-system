@@ -1,6 +1,6 @@
 import type {
   AuthenticationManager,
-  FileParser,
+  FileManager,
 } from '../../server/services/index.js';
 import { Router, json } from '../../utils/index.js';
 
@@ -8,7 +8,10 @@ import * as movieController from './controller.js';
 
 /**********************************************************************************/
 
-function router(authentication: AuthenticationManager, fileParser: FileParser) {
+function router(
+  authentication: AuthenticationManager,
+  fileManager: FileManager,
+) {
   const router = Router()
     .get(
       '/movies',
@@ -22,18 +25,24 @@ function router(authentication: AuthenticationManager, fileParser: FileParser) {
       authentication.httpAuthenticationMiddleware(),
       movieController.getMovie,
     )
+    .get(
+      '/movies/poster/:movieId',
+      json({ limit: 0 }),
+      authentication.httpAuthenticationMiddleware(),
+      movieController.getMoviePoster,
+    )
     .post(
       '/movies',
       json({ limit: '4mb' }),
       authentication.httpAuthenticationMiddleware(),
-      fileParser.single('poster'),
+      fileManager.single('poster'),
       movieController.createMovie,
     )
     .put(
       '/movies/:movieId',
       json({ limit: '4mb' }),
       authentication.httpAuthenticationMiddleware(),
-      fileParser.single('poster'),
+      fileManager.single('poster'),
       movieController.updateMovie,
     )
     .delete(

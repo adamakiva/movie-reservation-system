@@ -55,6 +55,7 @@ class Database {
       user: schemas.userModel,
       genre: schemas.genreModel,
       movie: schemas.movieModel,
+      moviePoster: schemas.moviePosterModel,
       hall: schemas.hallModel,
       showtime: schemas.showtimeModel,
       showtimeSummary: schemas.showtimeSummaryModel,

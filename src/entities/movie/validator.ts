@@ -11,6 +11,8 @@ import {
   VALIDATION,
 } from '../utils.validator.js';
 
+/**********************************************************************************/
+
 const { GENRE, MOVIE, PAGINATION, PARAMS, QUERY } = VALIDATION;
 
 /**********************************************************************************/
@@ -74,6 +76,19 @@ const getMoviesSchema = Zod.object(
 });
 
 const getMovieSchema = Zod.object(
+  {
+    movieId: Zod.string({
+      invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(MOVIE.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const getMoviePosterSchema = Zod.object(
   {
     movieId: Zod.string({
       invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
@@ -305,6 +320,18 @@ function validateGetMovie(req: Request) {
   return movieId;
 }
 
+function validateGetMoviePoster(req: Request) {
+  const { params } = req;
+
+  const validatedResult = getMoviePosterSchema.safeParse(params);
+  const { movieId } = parseValidationResult(
+    validatedResult,
+    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+  );
+
+  return movieId;
+}
+
 function validateCreateMovie(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body } = req;
@@ -358,6 +385,7 @@ export {
   validateCreateMovie,
   validateDeleteMovie,
   validateGetMovie,
+  validateGetMoviePoster,
   validateGetMovies,
   validateUpdateMovie,
 };

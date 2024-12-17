@@ -25,6 +25,13 @@ async function getMovie(req: Request, res: ResponseWithContext) {
   res.status(HTTP_STATUS_CODES.SUCCESS).json(movie);
 }
 
+async function getMoviePoster(req: Request, res: ResponseWithContext) {
+  const movieId = movieValidator.validateGetMoviePoster(req);
+
+  // The response is handled in a lower level
+  await movieService.getMoviePoster(res, movieId);
+}
+
 async function createMovie(req: Request, res: ResponseWithContext) {
   const movieToCreate = movieValidator.validateCreateMovie(req);
 
@@ -57,4 +64,11 @@ async function deleteMovie(req: Request, res: ResponseWithContext) {
 
 /**********************************************************************************/
 
-export { createMovie, deleteMovie, getMovie, getMovies, updateMovie };
+export {
+  createMovie,
+  deleteMovie,
+  getMovie,
+  getMoviePoster,
+  getMovies,
+  updateMovie,
+};

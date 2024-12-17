@@ -66,7 +66,7 @@ async function startServer() {
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
     },
-    fileParserParams: {
+    fileManagerParams: {
       generatedNameLength: 32,
       saveDir: join(import.meta.dirname, '..', 'posters'),
       logger: logger,

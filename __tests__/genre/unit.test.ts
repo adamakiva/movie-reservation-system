@@ -155,6 +155,7 @@ await suite('Genre unit tests', async () => {
     await seedGenre(serverParams, async (genre) => {
       const context = {
         authentication: serverParams.authentication,
+        fileManager: serverParams.fileManager,
         database: serverParams.database,
         logger,
       };
@@ -398,6 +399,7 @@ await suite('Genre unit tests', async () => {
     await seedGenres(serverParams, 2, async (genres) => {
       const context = {
         authentication: serverParams.authentication,
+        fileManager: serverParams.fileManager,
         database: serverParams.database,
         logger,
       };

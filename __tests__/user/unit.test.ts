@@ -113,7 +113,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { authentication, database } = serverParams;
+    const { authentication, fileManager, database } = serverParams;
     context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
@@ -140,6 +140,7 @@ await suite('User unit tests', async () => {
         await getUserSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -910,6 +911,7 @@ await suite('User unit tests', async () => {
           await service.createUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },
@@ -939,6 +941,7 @@ await suite('User unit tests', async () => {
         await service.createUser(
           {
             authentication: serverParams.authentication,
+            fileManager: serverParams.fileManager,
             database: serverParams.database,
             logger,
           },
@@ -1478,6 +1481,7 @@ await suite('User unit tests', async () => {
         await service.updateUser(
           {
             authentication: serverParams.authentication,
+            fileManager: serverParams.fileManager,
             database: serverParams.database,
             logger,
           },
@@ -1505,6 +1509,7 @@ await suite('User unit tests', async () => {
           await service.updateUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },
@@ -1535,6 +1540,7 @@ await suite('User unit tests', async () => {
           await service.updateUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },

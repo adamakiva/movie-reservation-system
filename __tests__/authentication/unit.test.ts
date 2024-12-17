@@ -205,7 +205,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Non-existent user', async (context) => {
-    const { authentication, database } = serverParams;
+    const { authentication, fileManager, database } = serverParams;
 
     const loginSpy = context.mock.fn(service.login);
 
@@ -214,6 +214,7 @@ await suite('Authentication unit tests', async () => {
         await loginSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -234,7 +235,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Incorrect password', async (context) => {
-    const { authentication, database } = serverParams;
+    const { authentication, fileManager, database } = serverParams;
 
     context.mock.method(database, 'getHandler', () => {
       return {
@@ -262,6 +263,7 @@ await suite('Authentication unit tests', async () => {
         await loginSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -335,7 +337,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh service: Malformed JWT', async (context) => {
-    const { authentication, database } = serverParams;
+    const { authentication, fileManager, database } = serverParams;
 
     const refreshAccessTokenSpy = context.mock.fn(service.refreshAccessToken);
 
@@ -344,6 +346,7 @@ await suite('Authentication unit tests', async () => {
         await refreshAccessTokenSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -361,7 +364,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
-    const { authentication, database } = serverParams;
+    const { authentication, fileManager, database } = serverParams;
 
     context.mock.method(authentication, 'validateToken', async () => {
       return await Promise.resolve({
@@ -375,6 +378,7 @@ await suite('Authentication unit tests', async () => {
         await refreshAccessTokenSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },

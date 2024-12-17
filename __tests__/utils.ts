@@ -39,6 +39,7 @@ import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/services/middlewares.js';
 import {
   CONFIGURATIONS,
+  emptyFunction,
   EnvironmentManager,
   ERROR_CODES,
   HTTP_STATUS_CODES,
@@ -107,7 +108,7 @@ async function createServer() {
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
     },
-    fileParserParams: {
+    fileManagerParams: {
       generatedNameLength: 16,
       saveDir: tmpdir(),
       logger: logger,
@@ -160,6 +161,7 @@ async function createServer() {
   return {
     server: server,
     authentication: server.getAuthentication(),
+    fileManager: server.getFileManager(),
     database: server.getDatabase(),
     environmentManager,
     routes: {
@@ -285,11 +287,11 @@ function mockLogger() {
   const mockLogger = {
     logger: {
       ...loggerHandler,
-      debug: disableLogFn,
-      info: disableLogFn,
-      log: disableLogFn,
-      warn: disableLogFn,
-      error: disableLogFn,
+      debug: emptyFunction,
+      info: emptyFunction,
+      log: emptyFunction,
+      warn: emptyFunction,
+      error: emptyFunction,
     },
     logMiddleware: (_req: Request, _res: Response, next: NextFunction) => {
       // Disable logging middleware
@@ -298,10 +300,6 @@ function mockLogger() {
   } as const;
 
   return mockLogger;
-}
-
-function disableLogFn() {
-  // Disable logs
 }
 
 function createHttpMocks<T extends Response = Response>(params: {

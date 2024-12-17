@@ -1,4 +1,5 @@
 import {
+  createReadStream,
   createWriteStream,
   findExtension,
   HTTP_STATUS_CODES,
@@ -8,12 +9,14 @@ import {
   pipeline,
   randomBytes,
   unlink,
+  type PathLike,
   type RequestContext,
+  type Writable,
 } from '../../utils/index.js';
 
 /**********************************************************************************/
 
-class FileParser implements multer.StorageEngine {
+class fileManager implements multer.StorageEngine {
   readonly #generatedNameLength;
   readonly #saveDir;
   readonly #logger;
@@ -42,31 +45,69 @@ class FileParser implements multer.StorageEngine {
     return this.#upload.array(...params);
   }
 
+  public streamFile(dest: Writable, path: PathLike) {
+    pipeline(createReadStream(path), dest, (err) => {
+      if (!err) {
+        return;
+      }
+
+      throw new MRSError(
+        HTTP_STATUS_CODES.SERVER_ERROR,
+        `Failure to stream file: '${path}' to destination`,
+        err.cause,
+      );
+    });
+  }
+
+  public deleteFile(...params: Parameters<typeof unlink>) {
+    const [path, callback] = params;
+
+    unlink(path, (err) => {
+      if (err) {
+        this.#logger.warn(`Failure to delete file: ${path}`, err);
+      }
+
+      callback(err);
+    });
+  }
+
+  /********************************************************************************/
+
   public _handleFile(
     ...params: Parameters<multer.StorageEngine['_handleFile']>
   ) {
     const [, file, callback] = params;
 
+    const extension = findExtension(file.mimetype);
+    if (!extension) {
+      callback(
+        new MRSError(
+          HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          `Mime-type '${file.mimetype}' is not recognized`,
+        ),
+      );
+    }
     this.#generateFileName((err, filename) => {
       if (err) {
         callback(err);
         return;
       }
 
-      const extension = findExtension(file.mimetype);
-      if (!extension) {
-        callback(
-          new MRSError(
-            HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-            `Mime-type '${file.mimetype}' is not recognized`,
-          ),
-        );
-      }
-      file.path = join(this.#saveDir, filename);
+      file.path = join(this.#saveDir, `${filename}.${extension}`);
 
       const outStream = createWriteStream(file.path);
       pipeline(file.stream, outStream, (err) => {
-        callback(err, {
+        if (err) {
+          callback(
+            new MRSError(
+              HTTP_STATUS_CODES.SERVER_ERROR,
+              `Failure to stream user file to destination: '${file.path}'`,
+              err.cause,
+            ),
+          );
+        }
+
+        callback(null, {
           filename,
           path: file.path,
           size: outStream.bytesWritten,
@@ -80,13 +121,9 @@ class FileParser implements multer.StorageEngine {
   ) {
     const [, file, callback] = params;
 
-    unlink(file.path)
-      .catch((err: unknown) => {
-        this.#logger.warn(`Failure to remove file: ${file.path}`, err);
-      })
-      .finally(() => {
-        callback(null);
-      });
+    this.deleteFile(file.path, () => {
+      callback(null);
+    });
   }
 
   #generateFileName(
@@ -101,4 +138,4 @@ class FileParser implements multer.StorageEngine {
 
 /**********************************************************************************/
 
-export default FileParser;
+export default fileManager;

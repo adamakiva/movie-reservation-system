@@ -16,6 +16,7 @@ type CreateMovie = {
   title: string;
   description: string;
   price: number;
+  poster: File;
   genreId: string;
 };
 
