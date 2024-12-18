@@ -122,18 +122,6 @@ const createMovieSchema = Zod.object({
     ),
   poster: Zod.object(
     {
-      filename: Zod.string({
-        invalid_type_error: MOVIE.POSTER.FILE_NAME.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.POSTER.FILE_NAME.REQUIRED_ERROR_MESSAGE,
-      })
-        .min(
-          MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_NAME.MIN_LENGTH.ERROR_MESSAGE,
-        )
-        .max(
-          MOVIE.POSTER.FILE_NAME.MAX_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_NAME.MAX_LENGTH.ERROR_MESSAGE,
-        ),
       path: Zod.string({
         invalid_type_error: MOVIE.POSTER.FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
@@ -146,11 +134,14 @@ const createMovieSchema = Zod.object({
           MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE,
           MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         ),
-      size: Zod.coerce
-        .number({
-          invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-          required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
-        })
+      mimeType: Zod.string({
+        invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+      }),
+      size: Zod.number({
+        invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
+      })
         .min(
           MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE,
           MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
@@ -201,18 +192,6 @@ const updateMovieBodySchema = Zod.object({
     .optional(),
   poster: Zod.object(
     {
-      filename: Zod.string({
-        invalid_type_error: MOVIE.POSTER.FILE_NAME.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.POSTER.FILE_NAME.REQUIRED_ERROR_MESSAGE,
-      })
-        .min(
-          MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_NAME.MIN_LENGTH.ERROR_MESSAGE,
-        )
-        .max(
-          MOVIE.POSTER.FILE_NAME.MAX_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_NAME.MAX_LENGTH.ERROR_MESSAGE,
-        ),
       path: Zod.string({
         invalid_type_error: MOVIE.POSTER.FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
@@ -225,11 +204,14 @@ const updateMovieBodySchema = Zod.object({
           MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE,
           MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         ),
-      size: Zod.coerce
-        .number({
-          invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-          required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
-        })
+      mimeType: Zod.string({
+        invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+      }),
+      size: Zod.number({
+        invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
+      })
         .min(
           MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE,
           MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
@@ -334,9 +316,12 @@ function validateGetMoviePoster(req: Request) {
 
 function validateCreateMovie(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const { body } = req;
+  const { body, file } = req;
 
-  const validatedResult = createMovieSchema.safeParse(body);
+  const validatedResult = createMovieSchema.safeParse({
+    ...body,
+    poster: file,
+  });
   const parsedValidatedResult = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,

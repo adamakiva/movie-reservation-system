@@ -1,14 +1,16 @@
 import {
   type DatabaseHandler,
-  emptyFunction,
   eq,
   HTTP_STATUS_CODES,
   MRSError,
-  pg,
   type RequestContext,
 } from '../../../utils/index.js';
 
-import type { Movie, UpdateMovieValidatedData } from './utils.js';
+import {
+  handlePossibleMissingGenreError,
+  type Movie,
+  type UpdateMovieValidatedData,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -16,13 +18,7 @@ async function updateMovie(
   context: RequestContext,
   movieToUpdate: UpdateMovieValidatedData,
 ): Promise<Movie> {
-  const { database, fileManager } = context;
-
-  const updatedMovie = await updateMovieAndPoster({
-    database,
-    fileManager,
-    movieToUpdate,
-  });
+  const updatedMovie = await updateMovieAndPoster(context, movieToUpdate);
 
   return updatedMovie;
 }
@@ -30,12 +26,11 @@ async function updateMovie(
 /**********************************************************************************/
 
 // Track this issue for more optimized solution: https://github.com/drizzle-team/drizzle-orm/issues/2078
-async function updateMovieAndPoster(params: {
-  database: RequestContext['database'];
-  fileManager: RequestContext['fileManager'];
-  movieToUpdate: UpdateMovieValidatedData;
-}) {
-  const { database, fileManager, movieToUpdate } = params;
+async function updateMovieAndPoster(
+  context: RequestContext,
+  movieToUpdate: UpdateMovieValidatedData,
+) {
+  const { database, fileManager, logger } = context;
   const handler = database.getHandler();
   const {
     movie: movieModel,
@@ -43,6 +38,7 @@ async function updateMovieAndPoster(params: {
     genre: genreModel,
   } = database.getModels();
   const { movieId, poster, ...fieldsToUpdate } = movieToUpdate;
+  const now = new Date();
 
   return await handler.transaction(async (transaction) => {
     await Promise.all([
@@ -50,14 +46,17 @@ async function updateMovieAndPoster(params: {
         transaction,
         moviePosterModel,
         fileManager,
+        logger,
         movieId,
         poster,
+        updatedAt: now,
       }),
       updateMovieInDatabase({
         transaction,
         movieModel,
         movieId,
         fieldsToUpdate,
+        updatedAt: now,
       }),
     ]);
 
@@ -87,18 +86,27 @@ async function updateMoviePoster(params: {
     RequestContext['database']['getModels']
   >['moviePoster'];
   fileManager: RequestContext['fileManager'];
+  logger: RequestContext['logger'];
   movieId: string;
   poster: UpdateMovieValidatedData['poster'];
+  updatedAt: Date;
 }) {
-  const { transaction, moviePosterModel, fileManager, movieId, poster } =
-    params;
+  const {
+    transaction,
+    moviePosterModel,
+    fileManager,
+    logger,
+    movieId,
+    poster,
+    updatedAt,
+  } = params;
 
   if (!poster) {
     return;
   }
 
   const moviePoster = await transaction
-    .select({ fullPath: moviePosterModel.fileFullPath })
+    .select({ path: moviePosterModel.path })
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
   if (!moviePoster.length) {
@@ -111,12 +119,15 @@ async function updateMoviePoster(params: {
   await transaction
     .update(moviePosterModel)
     .set({
-      fileFullPath: poster.path,
-      fileSizeInBytes: String(poster.size),
+      path: poster.path,
+      size: poster.size,
+      updatedAt,
     })
     .where(eq(moviePosterModel.movieId, movieId));
 
-  fileManager.deleteFile(moviePoster[0]!.fullPath, emptyFunction);
+  fileManager.deleteFile(moviePoster[0]!.path).catch((err: unknown) => {
+    logger.warn(`Failure to delete old file: ${moviePoster[0]!.path}`, err);
+  });
 }
 
 async function updateMovieInDatabase(params: {
@@ -124,8 +135,10 @@ async function updateMovieInDatabase(params: {
   movieModel: ReturnType<RequestContext['database']['getModels']>['movie'];
   movieId: string;
   fieldsToUpdate: Omit<UpdateMovieValidatedData, 'movieId' | 'poster'>;
+  updatedAt: Date;
 }) {
-  const { transaction, movieModel, movieId, fieldsToUpdate } = params;
+  const { transaction, movieModel, movieId, fieldsToUpdate, updatedAt } =
+    params;
 
   if (!Object.keys(fieldsToUpdate).length) {
     return;
@@ -134,7 +147,7 @@ async function updateMovieInDatabase(params: {
   try {
     const updatedMovie = await transaction
       .update(movieModel)
-      .set(fieldsToUpdate)
+      .set({ ...fieldsToUpdate, updatedAt })
       .where(eq(movieModel.id, movieId))
       .returning({
         id: movieModel.id,
@@ -146,14 +159,7 @@ async function updateMovieInDatabase(params: {
       );
     }
   } catch (err) {
-    if (err instanceof pg.PostgresError) {
-      throw new MRSError(
-        HTTP_STATUS_CODES.NOT_FOUND,
-        `Genre '${fieldsToUpdate.genreId!}' does not exist`,
-      );
-    }
-
-    throw err;
+    throw handlePossibleMissingGenreError(err, fieldsToUpdate.genreId!);
   }
 }
 

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { seedGenre } from '../genre/utils.js';
 import {
   after,
@@ -26,7 +27,7 @@ import {
 
 /**********************************************************************************/
 
-await suite('Movie integration tests', async () => {
+await suite.only('Movie integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -170,19 +171,29 @@ await suite('Movie integration tests', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
     await seedGenre(serverParams, async (genre) => {
       try {
-        const movieData = {
-          title: randomString(16),
-          description: randomString(256),
-          price: randomNumber(0, 99),
-          genreId: genre.id,
-        } as const;
+        const { poster, ...movieData } = await generateMoviesData(
+          [genre.id],
+          1,
+        );
+        // eslint-disable-next-line @security/detect-non-literal-fs-filename
+        const file = new Blob([await readFile(poster.path)]);
+
+        const formData = new FormData();
+        Object.entries(movieData).forEach(([key, value]) => {
+          formData.append(key, String(value));
+        });
+        formData.append('poster', file, `${randomString()}.jpg`);
 
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/movies`,
           method: 'POST',
           headers: { Authorization: accessToken },
-          payload: movieData,
+          payload: formData,
         });
+        // TODO There is an issue when this function throws, that the genre cleanup
+        // happens before the movies cleanup which makes since due the order of
+        // the cleanup and the async queue. Think of a way to resolve it
+        // console.log(await res.json());
         assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
         const { id, ...createdMovie } = (await res.json()) as Movie;

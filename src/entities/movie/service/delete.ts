@@ -1,8 +1,4 @@
-import {
-  type RequestContext,
-  emptyFunction,
-  eq,
-} from '../../../utils/index.js';
+import { type RequestContext, eq } from '../../../utils/index.js';
 
 import type { DeleteMovieValidatedData } from './utils.js';
 
@@ -12,45 +8,42 @@ async function deleteMovie(
   context: RequestContext,
   movieId: DeleteMovieValidatedData,
 ): Promise<void> {
-  await deleteMovieFromDatabase({
-    database: context.database,
-    fileManager: context.fileManager,
-    movieId,
-  });
+  await deleteMovieFromDatabase(context, movieId);
 }
 
 /**********************************************************************************/
 
-async function deleteMovieFromDatabase(params: {
-  database: RequestContext['database'];
-  fileManager: RequestContext['fileManager'];
-  movieId: DeleteMovieValidatedData;
-}) {
-  const { database, fileManager, movieId } = params;
+async function deleteMovieFromDatabase(
+  context: RequestContext,
+  movieId: DeleteMovieValidatedData,
+) {
+  const { database, fileManager, logger } = context;
   const handler = database.getHandler();
   const { movie: movieModel, moviePoster: moviePosterModel } =
     database.getModels();
 
-  const fullPath = await handler.transaction(async (transaction) => {
+  const path = await handler.transaction(async (transaction) => {
     // I've decided that if nothing was deleted because it didn't exist in the
     // first place, it is still considered as a success since the end result
     // is the same
     const deletedMoviePoster = await transaction
       .delete(moviePosterModel)
       .where(eq(moviePosterModel, movieId))
-      .returning({ fullPath: moviePosterModel.fileFullPath });
+      .returning({ path: moviePosterModel.path });
     if (!deletedMoviePoster.length) {
       return '';
     }
     await transaction.delete(movieModel).where(eq(movieModel, movieId));
 
-    return deletedMoviePoster[0]!.fullPath;
+    return deletedMoviePoster[0]!.path;
   });
-  if (!fullPath) {
+  if (!path) {
     return;
   }
 
-  fileManager.deleteFile(fullPath, emptyFunction);
+  fileManager.deleteFile(path).catch((err: unknown) => {
+    logger.warn(`Failure to delete file: ${path}`, err);
+  });
 }
 
 /**********************************************************************************/

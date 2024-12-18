@@ -1,14 +1,10 @@
-import {
-  HTTP_STATUS_CODES,
-  MRSError,
-  type RequestContext,
-  pg,
-} from '../../../utils/index.js';
+import type { RequestContext } from '../../../utils/index.js';
 
 import {
   type CreateMovieValidatedData,
   type Movie,
   findGenreNameById,
+  handlePossibleMissingGenreError,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -56,22 +52,18 @@ async function insertMovieToDatabase(
       )[0]!;
       await transaction.insert(moviePosterModel).values({
         movieId: createdMovie.id,
-        fileFullPath: poster.path,
-        fileSizeInBytes: String(poster.size),
+        // Get the extension from the path. Since the program built the path
+        // we can assume it is valid
+        mimeType: poster.mimeType,
+        path: poster.path,
+        size: poster.size,
         createdAt: now,
         updatedAt: now,
       });
 
       return createdMovie;
     } catch (err) {
-      if (err instanceof pg.PostgresError) {
-        throw new MRSError(
-          HTTP_STATUS_CODES.NOT_FOUND,
-          `Genre '${movieToCreate.genreId}' does not exist`,
-        );
-      }
-
-      throw err;
+      throw handlePossibleMissingGenreError(err, movieToCreate.genreId);
     }
   });
 

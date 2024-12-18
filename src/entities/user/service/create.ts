@@ -58,11 +58,13 @@ async function insertUserToDatabase(
           throw new MRSError(
             HTTP_STATUS_CODES.CONFLICT,
             `User '${userToCreate.email}' already exists`,
+            err.cause,
           );
         case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
           throw new MRSError(
             HTTP_STATUS_CODES.NOT_FOUND,
             `Role '${userToCreate.roleId}' does not exist`,
+            err.cause,
           );
       }
     }

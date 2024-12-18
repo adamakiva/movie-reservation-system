@@ -3,6 +3,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  integer,
   pgTable,
   point,
   real,
@@ -135,8 +136,11 @@ const moviePosterModel = pgTable('movie_poster', {
       // the actual file as well. As a result it is done manually
       { onDelete: 'no action', onUpdate: 'cascade' },
     ),
-  fileFullPath: varchar('file_full_path').notNull(),
-  fileSizeInBytes: varchar('file_size_in_bytes').notNull(),
+  // Includes file name and extension
+  path: varchar('path').notNull(),
+  mimeType: varchar('mime_type').notNull(),
+  // In bytes
+  size: integer('size').notNull(),
   ...timestamps,
 });
 

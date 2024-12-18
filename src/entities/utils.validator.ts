@@ -228,6 +228,10 @@ const VALIDATION = {
             'Poster file path name must be at most 256 characters long',
         },
       },
+      MIME_TYPE: {
+        INVALID_TYPE_ERROR_MESSAGE: 'Poster mime type must be a valid string',
+        REQUIRED_ERROR_MESSAGE: 'Poster mime type is required',
+      },
       FILE_SIZE: {
         INVALID_TYPE_ERROR_MESSAGE: 'Poster file size must be a valid number',
         REQUIRED_ERROR_MESSAGE: 'Poster file size is required',

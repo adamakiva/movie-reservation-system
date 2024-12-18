@@ -29,7 +29,7 @@ const { MOVIE, PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 
-await suite('Movie unit tests', async () => {
+await suite.only('Movie unit tests', async () => {
   let logger: LoggerHandler = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
@@ -344,14 +344,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing title', (context) => {
+  await test('Invalid - Create validation: Missing title', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           title: undefined,
         },
+        file: poster,
       },
     });
 
@@ -374,14 +379,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty title', (context) => {
+  await test('Invalid - Create validation: Empty title', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           title: '',
         },
+        file: poster,
       },
     });
 
@@ -404,14 +414,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Title too short', (context) => {
+  await test('Invalid - Create validation: Title too short', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           title: 'a'.repeat(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
         },
+        file: poster,
       },
     });
 
@@ -434,14 +449,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Title too long', (context) => {
+  await test('Invalid - Create validation: Title too long', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           title: 'a'.repeat(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
         },
+        file: poster,
       },
     });
 
@@ -464,14 +484,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing description', (context) => {
+  await test('Invalid - Create validation: Missing description', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           description: undefined,
         },
+        file: poster,
       },
     });
 
@@ -494,14 +519,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty description', (context) => {
+  await test('Invalid - Create validation: Empty description', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           description: '',
         },
+        file: poster,
       },
     });
 
@@ -524,14 +554,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Description too short', (context) => {
+  await test('Invalid - Create validation: Description too short', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           description: 'a'.repeat(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1),
         },
+        file: poster,
       },
     });
 
@@ -554,14 +589,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Description too long', (context) => {
+  await test('Invalid - Create validation: Description too long', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           description: 'a'.repeat(MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1),
         },
+        file: poster,
       },
     });
 
@@ -584,14 +624,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing price', (context) => {
+  await test('Invalid - Create validation: Missing price', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           price: undefined,
         },
+        file: poster,
       },
     });
 
@@ -614,14 +659,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty price', (context) => {
+  await test('Invalid - Create validation: Empty price', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           price: '',
         },
+        file: poster,
       },
     });
 
@@ -644,14 +694,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Price too low', (context) => {
+  await test('Invalid - Create validation: Price too low', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           price: MOVIE.PRICE.MIN_VALUE.VALUE - 1,
         },
+        file: poster,
       },
     });
 
@@ -674,14 +729,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Price too high', (context) => {
+  await test('Invalid - Create validation: Price too high', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           price: MOVIE.PRICE.MAX_VALUE.VALUE + 1,
         },
+        file: poster,
       },
     });
 
@@ -704,14 +764,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing genre id', (context) => {
+  await test('Invalid - Create validation: Missing genre id', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           genreId: undefined,
         },
+        file: poster,
       },
     });
 
@@ -734,14 +799,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty genre id', (context) => {
+  await test('Invalid - Create validation: Empty genre id', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           genreId: '',
         },
+        file: poster,
       },
     });
 
@@ -764,14 +834,19 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Invalid genre id', (context) => {
+  await test('Invalid - Create validation: Invalid genre id', async (context) => {
+    const { poster, ...movieData } = await generateMoviesData(
+      [randomUUID()],
+      1,
+    );
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateMoviesData([randomUUID()], 1),
+          ...movieData,
           genreId: randomString(),
         },
+        file: poster,
       },
     });
 
@@ -794,35 +869,33 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
-  await test.todo(
-    'Invalid - Create service: Non-existent genre id',
-    async () => {
-      const genreId = randomUUID();
+  await test('Invalid - Create service: Non-existent genre id', async () => {
+    const genreId = randomUUID();
+    const movieData = await generateMoviesData([genreId], 1);
 
-      await assert.rejects(
-        async () => {
-          await service.createMovie(
-            {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              fileManager: serverParams.fileManager,
-              logger,
-            },
-            generateMoviesData([genreId], 1),
-          );
-        },
-        (err) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
-            code: HTTP_STATUS_CODES.NOT_FOUND,
-            message: `Genre '${genreId}' does not exist`,
-          });
+    await assert.rejects(
+      async () => {
+        await service.createMovie(
+          {
+            authentication: serverParams.authentication,
+            database: serverParams.database,
+            fileManager: serverParams.fileManager,
+            logger,
+          },
+          movieData,
+        );
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.NOT_FOUND,
+          message: `Genre '${genreId}' does not exist`,
+        });
 
-          return true;
-        },
-      );
-    },
-  );
+        return true;
+      },
+    );
+  });
   await test('Invalid - Update validation: Without updates', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,

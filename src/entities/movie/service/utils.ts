@@ -1,7 +1,9 @@
 import {
   eq,
+  ERROR_CODES,
   HTTP_STATUS_CODES,
   MRSError,
+  pg,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -29,8 +31,10 @@ type Movie = {
   genre: string;
 };
 type MoviePoster = {
-  fileFullPath: string;
-  fileSizeInBytes: string;
+  movieId: string;
+  path: string;
+  mimeType: string;
+  size: number;
 };
 
 /**********************************************************************************/
@@ -56,10 +60,26 @@ async function findGenreNameById(params: {
   return genres[0]!.name;
 }
 
+function handlePossibleMissingGenreError(err: unknown, conflictField: string) {
+  if (
+    err instanceof pg.PostgresError &&
+    err.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
+  ) {
+    return new MRSError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Genre '${conflictField}' does not exist`,
+      err.cause,
+    );
+  }
+
+  return err;
+}
+
 /**********************************************************************************/
 
 export {
   findGenreNameById,
+  handlePossibleMissingGenreError,
   type CreateMovieValidatedData,
   type DeleteMovieValidatedData,
   type GetMoviesValidatedData,

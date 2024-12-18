@@ -1,5 +1,5 @@
 {
-  "id": "c93d8e45-0430-454f-98dc-4be9b5c44f59",
+  "id": "e339b9fa-69a4-4a4b-8af5-b4fd60d8eef0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -255,15 +255,21 @@
           "primaryKey": true,
           "notNull": true
         },
-        "file_full_path": {
-          "name": "file_full_path",
+        "path": {
+          "name": "path",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "file_size_in_bytes": {
-          "name": "file_size_in_bytes",
+        "mime_type": {
+          "name": "mime_type",
           "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },

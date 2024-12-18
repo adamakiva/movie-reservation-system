@@ -1,3 +1,6 @@
+import { readdir, readFile, stat } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { inArray } from 'drizzle-orm';
 
 import type { Genre } from '../../src/entities/genre/service/utils.js';
@@ -6,8 +9,7 @@ import type {
   MoviePoster,
 } from '../../src/entities/movie/service/utils.js';
 
-import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { fileType } from '../../src/utils/index.js';
 import {
   randomNumber,
   randomString,
@@ -22,13 +24,13 @@ type CreateMovie = {
   title: string;
   description: string;
   price: number;
-  poster: File;
+  poster: CreateMoviePoster;
   genreId: string;
 };
 type CreateMoviePoster = {
-  movieId: string;
-  fileFullPath: string;
-  fileSizeInBytes: string;
+  path: string;
+  mimeType: string;
+  size: number;
 };
 
 /**********************************************************************************/
@@ -41,7 +43,7 @@ async function seedMovie(
     // eslint-disable-next-line no-unused-vars
     genre: Genre,
     // eslint-disable-next-line no-unused-vars
-    moviePoster: MoviePoster,
+    createdMoviePoster: MoviePoster,
   ) => Promise<unknown>,
 ) {
   const { database } = serverParams;
@@ -60,13 +62,13 @@ async function seedMovie(
   await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
   await handler
     .insert(moviePosterModel)
-    .values(entitiesToCreate.moviePosterToCreate);
+    .values(entitiesToCreate.moviePostersToCreate);
 
   try {
     const callbackResponse = await fn(
       sanitizeSeededMoviesResponse(entitiesToCreate)[0]!,
       entitiesToCreate.genresToCreate[0]!,
-      entitiesToCreate.moviePosterToCreate[0]!,
+      entitiesToCreate.moviePostersToCreate[0]!,
     );
 
     return callbackResponse;
@@ -97,7 +99,7 @@ async function seedMovies(
   await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
   await handler
     .insert(moviePosterModel)
-    .values(entitiesToCreate.moviePosterToCreate);
+    .values(entitiesToCreate.moviePostersToCreate);
 
   try {
     const callbackResponse = await fn(
@@ -110,15 +112,19 @@ async function seedMovies(
   }
 }
 
-function generateMoviesData<T extends number = 1>(
+async function generateMoviesData<T extends number = 1>(
   genreIds: string[],
   amount = 1 as T,
-): T extends 1 ? CreateMovie : CreateMovie[] {
+): Promise<T extends 1 ? CreateMovie : CreateMovie[]> {
+  // -1 To force returning all movie posters
+  const moviePosters = shuffleArray(await generateMoviePostersData(-1));
+
   const movies = [...Array(amount)].map(() => {
     return {
       title: randomString(16),
       description: randomString(256),
-      price: randomNumber(0, 99),
+      price: randomNumber(0, 99) + 1,
+      poster: moviePosters[randomNumber(0, moviePosters.length - 1)]!,
       genreId: genreIds[randomNumber(0, genreIds.length - 1)],
     } as CreateMovie;
   });
@@ -129,48 +135,40 @@ function generateMoviesData<T extends number = 1>(
 }
 
 async function generateMoviePostersData<T extends number = 1>(
-  movieIds: string[],
   amount = 1 as T,
 ): Promise<T extends 1 ? CreateMoviePoster : CreateMoviePoster[]> {
-  const shuffledMovieIds = shuffleArray(movieIds);
   // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const imageNames = await readdir(join(import.meta.dirname, 'images'));
   const moviePosters = await Promise.all(
     imageNames.map(async (imageName) => {
-      const fileFullPath = join(import.meta.dirname, 'images', imageName);
+      const path = join(import.meta.dirname, 'images', imageName);
       // eslint-disable-next-line @security/detect-non-literal-fs-filename
-      const fileSizeInBytes = String((await stat(fileFullPath)).size);
+      const { size } = await stat(path);
 
       return {
-        fileFullPath,
-        fileSizeInBytes,
+        path,
+        mimeType: (await fileType.fileTypeFromFile(path))!.mime,
+        size,
       };
     }),
   );
 
-  const moviePostersToCreate = moviePosters.map((moviePoster) => {
-    return {
-      movieId: shuffledMovieIds[randomNumber(0, shuffledMovieIds.length)],
-      fileFullPath: moviePoster.fileFullPath,
-      fileSizeInBytes: moviePoster.fileSizeInBytes,
-    };
-  });
-
-  return (
-    amount === 1 ? moviePostersToCreate[0]! : moviePostersToCreate
-  ) as T extends 1 ? CreateMoviePoster : CreateMoviePoster[];
+  return (amount === 1 ? moviePosters[0]! : moviePosters) as T extends 1
+    ? CreateMoviePoster
+    : CreateMoviePoster[];
 }
 
 async function generateMoviesSeedData(amount: number) {
   const genresToCreate = [...Array(Math.ceil(amount / 4))].map(() => {
     return { id: randomUUID(), name: randomString(8) };
   });
-  let moviesData = generateMoviesData(
+  let moviesData = (await generateMoviesData(
     genresToCreate.map((genre) => {
       return genre.id;
     }),
     amount,
-  ) as CreateMovie | CreateMovie[];
+    // Possible for the generated data to either be an array or not
+  )) as CreateMovie | CreateMovie[];
   if (!Array.isArray(moviesData)) {
     moviesData = [moviesData];
   }
@@ -184,18 +182,30 @@ async function generateMoviesSeedData(amount: number) {
       genreId: movieData.genreId,
     };
   });
-
-  const moviePosterToCreate = await generateMoviePostersData(
-    moviesToCreate.map(({ id }) => {
-      return id;
+  const shuffledMovieIds = shuffleArray(
+    moviesToCreate.map((movieToCreate) => {
+      return movieToCreate.id;
     }),
-    amount,
   );
+
+  // Possible for the generated data to either be an array or not
+  let moviePosters = (await generateMoviePostersData(amount)) as
+    | CreateMoviePoster
+    | CreateMoviePoster[];
+  if (!Array.isArray(moviePosters)) {
+    moviePosters = [moviePosters];
+  }
+  const moviePostersToCreate = moviePosters.map((moviePosterToCreate) => {
+    return {
+      ...moviePosterToCreate,
+      movieId: shuffledMovieIds[randomNumber(0, shuffledMovieIds.length - 1)]!,
+    };
+  });
 
   return {
     genresToCreate,
     moviesToCreate,
-    moviePosterToCreate,
+    moviePostersToCreate,
   };
 }
 
@@ -221,9 +231,22 @@ async function cleanupCreatedMovies(
   createdEntities: Awaited<ReturnType<typeof generateMoviesSeedData>>,
 ) {
   const handler = database.getHandler();
-  const { movie: movieModel, genre: genreModel } = database.getModels();
-  const { moviesToCreate, genresToCreate } = createdEntities;
+  const {
+    movie: movieModel,
+    moviePoster: moviePosterModel,
+    genre: genreModel,
+  } = database.getModels();
+  const { moviesToCreate, moviePostersToCreate, genresToCreate } =
+    createdEntities;
 
+  await handler.delete(moviePosterModel).where(
+    inArray(
+      moviePosterModel.movieId,
+      moviePostersToCreate.map((moviePosterToCreate) => {
+        return moviePosterToCreate.movieId;
+      }),
+    ),
+  );
   await handler.delete(movieModel).where(
     inArray(
       movieModel.id,
@@ -251,8 +274,14 @@ async function deleteMovies(serverParams: ServerParams, ...movieIds: string[]) {
   }
 
   const databaseHandler = serverParams.database.getHandler();
-  const { movie: movieModel } = serverParams.database.getModels();
+  const { movie: movieModel, moviePoster: moviePosterModel } =
+    serverParams.database.getModels();
 
+  // Note: The actual files are written to 'os.tmpdir()' from the tests so there's
+  // no need to remove them manually
+  await databaseHandler
+    .delete(moviePosterModel)
+    .where(inArray(moviePosterModel.movieId, movieIds));
   await databaseHandler
     .delete(movieModel)
     .where(inArray(movieModel.id, movieIds));
@@ -262,7 +291,9 @@ async function deleteMovies(serverParams: ServerParams, ...movieIds: string[]) {
 
 export {
   deleteMovies,
+  generateMoviePostersData,
   generateMoviesData,
+  readFile,
   seedMovie,
   seedMovies,
   type CreateMovie,

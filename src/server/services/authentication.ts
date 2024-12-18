@@ -245,6 +245,7 @@ class AuthenticationManager {
         throw new MRSError(
           HTTP_STATUS_CODES.UNAUTHORIZED,
           'Malformed JWT token',
+          err.cause,
         );
       }
     }

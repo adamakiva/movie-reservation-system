@@ -220,14 +220,17 @@ function randomUUID<T extends number = 1>(
   return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
-function shuffleArray(array: unknown[]) {
+function shuffleArray<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     // Generate a random index between 0 and i (inclusive)
     const randomIndex = Math.floor(Math.random() * (i + 1));
 
     // Swap elements at i and randomIndex
-    [array[i], array[randomIndex]] = [array[randomIndex], array[i]];
+    const tmp = array[i];
+    array[i] = array[randomIndex]!;
+    array[randomIndex] = tmp!;
   }
+
   return array;
 }
 
@@ -244,7 +247,7 @@ function sendHttpRequest<
 }) {
   const { route, method, payload, headers } = params;
 
-  const fetchResponse = fetch(route, {
+  let fetchOptions: RequestInit = {
     method,
     cache: 'no-store',
     mode: 'same-origin',
@@ -255,7 +258,15 @@ function sendHttpRequest<
       Accept: 'application/json',
     },
     redirect: 'follow',
-  });
+  };
+  if (payload instanceof FormData) {
+    fetchOptions = {
+      ...fetchOptions,
+      body: payload,
+      headers: { ...headers },
+    };
+  }
+  const fetchResponse = fetch(route, fetchOptions);
 
   return fetchResponse;
 }

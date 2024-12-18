@@ -1,10 +1,8 @@
 import {
   and,
   asc,
-  buildContentType,
   encodeCursor,
   eq,
-  extname,
   gt,
   HTTP_STATUS_CODES,
   MRSError,
@@ -52,7 +50,7 @@ async function getMoviePoster(
     movieId,
   );
 
-  streamMoviePosterResponse(res, moviePosterMetadata);
+  await streamMoviePosterResponse(res, moviePosterMetadata);
 }
 
 /**********************************************************************************/
@@ -171,8 +169,9 @@ async function getMoviePosterMetadataFromDatabase(
 
   const moviePosters = await handler
     .select({
-      fullPath: moviePosterModel.fileFullPath,
-      sizeInBytes: moviePosterModel.fileSizeInBytes,
+      path: moviePosterModel.path,
+      mimeType: moviePosterModel.mimeType,
+      size: moviePosterModel.size,
     })
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
@@ -182,35 +181,29 @@ async function getMoviePosterMetadataFromDatabase(
       `Movie '${movieId}' does not exist`,
     );
   }
-  const { fullPath, sizeInBytes } = moviePosters[0]!;
-
-  const contentType = buildContentType(extname(fullPath));
-  if (!contentType) {
-    throw new MRSError(
-      HTTP_STATUS_CODES.SERVER_ERROR,
-      'Should not be possible. The database is corrupted',
-    );
-  }
+  const { path, mimeType, size } = moviePosters[0]!;
 
   return {
-    fullPath,
-    sizeInBytes,
-    contentType,
+    path,
+    size,
+    // Pay attention if the mime type needs the addition of charset, and if so
+    // make sure it is handled
+    contentType: mimeType,
   };
 }
 
-function streamMoviePosterResponse(
+async function streamMoviePosterResponse(
   res: ResponseWithContext,
   movieMetadata: Awaited<ReturnType<typeof getMoviePosterMetadataFromDatabase>>,
 ) {
-  const { fullPath, contentType, sizeInBytes } = movieMetadata;
+  const { path, contentType, size } = movieMetadata;
 
   res.status(HTTP_STATUS_CODES.SUCCESS).writeHead(HTTP_STATUS_CODES.SUCCESS, {
     'content-type': contentType,
-    'content-length': sizeInBytes,
+    'content-length': size,
   });
 
-  res.locals.context.fileManager.streamFile(res, fullPath);
+  await res.locals.context.fileManager.streamFile(res, path);
 }
 
 /**********************************************************************************/

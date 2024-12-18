@@ -1,15 +1,12 @@
-import { randomBytes } from 'node:crypto';
-import {
-  createReadStream,
-  createWriteStream,
-  unlink,
-  type PathLike,
-} from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { randomBytes as randomBytesSync } from 'node:crypto';
+import { createReadStream, createWriteStream, type PathLike } from 'node:fs';
+import { readFile, unlink } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { extname, join, resolve } from 'node:path';
-import { pipeline, type Readable, type Writable } from 'node:stream';
+import type { Readable, Writable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { promisify } from 'node:util';
 
 import argon2 from 'argon2';
 import compress from 'compression';
@@ -33,12 +30,8 @@ import express, {
   type Request,
   type Response,
 } from 'express';
+import * as fileType from 'file-type';
 import * as jose from 'jose';
-import {
-  contentType as buildContentType,
-  extension as findExtension,
-  lookup as lookupMimeType,
-} from 'mime-types';
 import multer from 'multer';
 import pg from 'postgres';
 import Zod from 'zod';
@@ -62,6 +55,10 @@ import {
   strcasecmp,
 } from './functions.js';
 import Logger, { type LogMiddleware, type LoggerHandler } from './logger.js';
+
+/**********************************************************************************/
+
+const randomBytes = promisify(randomBytesSync);
 
 /********************************* General ****************************************/
 
@@ -118,7 +115,6 @@ export {
   and,
   argon2,
   asc,
-  buildContentType,
   compress,
   cors,
   count,
@@ -132,7 +128,7 @@ export {
   eq,
   express,
   extname,
-  findExtension,
+  fileType,
   gt,
   isDevelopmentMode,
   isProductionMode,
@@ -140,7 +136,6 @@ export {
   join,
   jose,
   json,
-  lookupMimeType,
   multer,
   or,
   pg,

@@ -29,8 +29,9 @@ CREATE TABLE "movie" (
 --> statement-breakpoint
 CREATE TABLE "movie_poster" (
 	"movie_id" uuid PRIMARY KEY NOT NULL,
-	"file_full_path" varchar NOT NULL,
-	"file_size_in_bytes" varchar NOT NULL,
+	"path" varchar NOT NULL,
+	"mime_type" varchar NOT NULL,
+	"size" integer NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
 );

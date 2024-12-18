@@ -75,11 +75,13 @@ async function updateUserInDatabase(
           throw new MRSError(
             HTTP_STATUS_CODES.CONFLICT,
             `User '${userToUpdate.email!}' already exists`,
+            err.cause,
           );
         case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
           throw new MRSError(
             HTTP_STATUS_CODES.NOT_FOUND,
             `Role '${userToUpdate.roleId!}' does not exist`,
+            err.cause,
           );
       }
     }
