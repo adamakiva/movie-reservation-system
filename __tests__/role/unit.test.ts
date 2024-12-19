@@ -21,7 +21,7 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { seedRole, seedRoles } from './utils.js';
+import { deleteRoles, seedRole, seedRoles } from './utils.js';
 
 /**********************************************************************************/
 
@@ -144,18 +144,25 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedRole(serverParams, async (role) => {
-      const context = {
-        authentication: serverParams.authentication,
-        fileManager: serverParams.fileManager,
-        database: serverParams.database,
-        logger,
-      };
+    const roleIds: string[] = [];
+
+    const role = await seedRole(serverParams);
+    roleIds.push(role.id);
+
+    try {
       const roleToCreate = { name: role.name };
 
       await assert.rejects(
         async () => {
-          await service.createRole(context, roleToCreate);
+          await service.createRole(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            roleToCreate,
+          );
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -167,7 +174,9 @@ await suite('Role unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({
@@ -374,18 +383,29 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedRoles(serverParams, 2, async (roles) => {
-      const context = {
-        authentication: serverParams.authentication,
-        fileManager: serverParams.fileManager,
-        database: serverParams.database,
-        logger,
-      };
+    const roleIds: string[] = [];
+
+    const roles = await seedRoles(serverParams, 2);
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
 
       await assert.rejects(
         async () => {
-          await service.updateRole(context, roleToUpdate);
+          await service.updateRole(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            roleToUpdate,
+          );
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -397,7 +417,9 @@ await suite('Role unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({

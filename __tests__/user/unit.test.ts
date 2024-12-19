@@ -21,7 +21,13 @@ import {
   VALIDATION,
 } from '../utils.js';
 
-import { generateUsersData, seedUser, seedUsers } from './utils.js';
+import {
+  deleteRoles,
+  deleteUsers,
+  generateRandomUserData,
+  seedUser,
+  seedUsers,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -349,7 +355,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: undefined,
         },
       },
@@ -377,7 +383,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: '',
         },
       },
@@ -405,7 +411,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: 'a'.repeat(USER.FIRST_NAME.MIN_LENGTH.VALUE - 1),
         },
       },
@@ -433,7 +439,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: 'a'.repeat(USER.FIRST_NAME.MAX_LENGTH.VALUE + 1),
         },
       },
@@ -461,7 +467,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: undefined,
         },
       },
@@ -489,7 +495,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: '',
         },
       },
@@ -517,7 +523,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: 'a'.repeat(USER.LAST_NAME.MIN_LENGTH.VALUE - 1),
         },
       },
@@ -545,7 +551,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: 'a'.repeat(USER.LAST_NAME.MAX_LENGTH.VALUE + 1),
         },
       },
@@ -573,7 +579,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: undefined,
         },
       },
@@ -601,7 +607,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: '',
         },
       },
@@ -629,7 +635,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: 'a'.repeat(USER.EMAIL.MIN_LENGTH.VALUE - 1),
         },
       },
@@ -657,7 +663,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: `${'a'.repeat(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
         },
       },
@@ -685,7 +691,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: randomString(),
         },
       },
@@ -713,7 +719,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: undefined,
         },
       },
@@ -741,7 +747,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: '',
         },
       },
@@ -769,7 +775,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: 'a'.repeat(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
         },
       },
@@ -797,7 +803,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: 'a'.repeat(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
         },
       },
@@ -825,7 +831,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: undefined,
         },
       },
@@ -853,7 +859,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: '',
         },
       },
@@ -881,7 +887,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: randomString(),
         },
       },
@@ -905,10 +911,21 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedUser(serverParams, true, async (user, role) => {
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
+
+    const { createdUser: user, createdRole: role } = await seedUser(
+      serverParams,
+      true,
+    );
+    userIds.push(user.id);
+    roleIds.push(role.id);
+
+    try {
       await assert.rejects(
         async () => {
-          await service.createUser(
+          // In case the function does not throw, we want to clean the created entry
+          const createdUser = await service.createUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -916,10 +933,11 @@ await suite('User unit tests', async () => {
               logger,
             },
             {
-              ...generateUsersData([role.id], 1),
+              ...generateRandomUserData(role.id),
               email: user.email,
             },
           );
+          userIds.push(createdUser.id);
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -931,7 +949,10 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
     const roleId = randomUUID();
@@ -945,7 +966,7 @@ await suite('User unit tests', async () => {
             database: serverParams.database,
             logger,
           },
-          generateUsersData([roleId], 1),
+          generateRandomUserData(roleId),
         );
       },
       (err) => {
@@ -1503,7 +1524,26 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedUsers(serverParams, 2, false, async (users) => {
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
+
+    const { createdUsers: users, createdRoles: roles } = await seedUsers(
+      serverParams,
+      2,
+      false,
+    );
+    userIds.push(
+      ...users.map(({ id }) => {
+        return id;
+      }),
+    );
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       await assert.rejects(
         async () => {
           await service.updateUser(
@@ -1529,12 +1569,24 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
 
-    await seedUser(serverParams, true, async (user) => {
+    const { createdUser: user, createdRole: role } = await seedUser(
+      serverParams,
+      true,
+    );
+    userIds.push(user.id);
+    roleIds.push(role.id);
+
+    try {
       await assert.rejects(
         async () => {
           await service.updateUser(
@@ -1560,7 +1612,10 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({

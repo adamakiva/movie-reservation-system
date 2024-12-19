@@ -21,7 +21,7 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { seedGenre, seedGenres } from './utils.js';
+import { deleteGenres, seedGenre, seedGenres } from './utils.js';
 
 /**********************************************************************************/
 
@@ -152,18 +152,27 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedGenre(serverParams, async (genre) => {
-      const context = {
-        authentication: serverParams.authentication,
-        fileManager: serverParams.fileManager,
-        database: serverParams.database,
-        logger,
-      };
-      const genreToCreate = { name: genre.name };
+    const genreIds: string[] = [];
 
+    const genre = await seedGenre(serverParams);
+    genreIds.push(genre.id);
+
+    const genreToCreate = { name: genre.name };
+
+    try {
       await assert.rejects(
         async () => {
-          await service.createGenre(context, genreToCreate);
+          // In case the function does not throw, we want to clean the created entry
+          const duplicateGenre = await service.createGenre(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            genreToCreate,
+          );
+          genreIds.push(duplicateGenre.id);
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -175,7 +184,9 @@ await suite('Genre unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({
@@ -396,21 +407,31 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedGenres(serverParams, 2, async (genres) => {
-      const context = {
-        authentication: serverParams.authentication,
-        fileManager: serverParams.fileManager,
-        database: serverParams.database,
-        logger,
-      };
-      const genreToUpdate = {
-        genreId: genres[0]!.id,
-        name: genres[1]!.name,
-      };
+    const genreIds: string[] = [];
+    const genres = await seedGenres(serverParams, 2);
+    genreIds.push(
+      ...genres.map(({ id }) => {
+        return id;
+      }),
+    );
 
+    const genreToUpdate = {
+      genreId: genres[0]!.id,
+      name: genres[1]!.name,
+    };
+
+    try {
       await assert.rejects(
         async () => {
-          await service.updateGenre(context, genreToUpdate);
+          await service.updateGenre(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            genreToUpdate,
+          );
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -422,7 +443,9 @@ await suite('Genre unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({

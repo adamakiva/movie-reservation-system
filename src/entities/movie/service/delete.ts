@@ -28,12 +28,12 @@ async function deleteMovieFromDatabase(
     // is the same
     const deletedMoviePoster = await transaction
       .delete(moviePosterModel)
-      .where(eq(moviePosterModel, movieId))
+      .where(eq(moviePosterModel.movieId, movieId))
       .returning({ path: moviePosterModel.path });
     if (!deletedMoviePoster.length) {
       return '';
     }
-    await transaction.delete(movieModel).where(eq(movieModel, movieId));
+    await transaction.delete(movieModel).where(eq(movieModel.id, movieId));
 
     return deletedMoviePoster[0]!.path;
   });

@@ -63,7 +63,7 @@ async function updateMovieAndPoster(
     // The entry must exist since we are in the same transaction.
     // If for some reason it is not, check the transaction isolation level
     const updatedMovie = (
-      await handler
+      await transaction
         .select({
           id: movieModel.id,
           title: movieModel.title,

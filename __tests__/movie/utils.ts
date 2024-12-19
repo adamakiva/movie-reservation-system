@@ -3,18 +3,14 @@ import { join } from 'node:path';
 
 import { inArray } from 'drizzle-orm';
 
-import type { Genre } from '../../src/entities/genre/service/utils.js';
-import type {
-  Movie,
-  MoviePoster,
-} from '../../src/entities/movie/service/utils.js';
-
+import type { Movie } from '../../src/entities/movie/service/utils.js';
 import { fileType } from '../../src/utils/index.js';
+
+import { deleteGenres, generateGenresData, seedGenre } from '../genre/utils.js';
 import {
   randomNumber,
   randomString,
   randomUUID,
-  shuffleArray,
   type ServerParams,
 } from '../utils.js';
 
@@ -35,17 +31,18 @@ type CreateMoviePoster = {
 
 /**********************************************************************************/
 
-async function seedMovie(
-  serverParams: ServerParams,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    createdMovie: Movie,
-    // eslint-disable-next-line no-unused-vars
-    genre: Genre,
-    // eslint-disable-next-line no-unused-vars
-    createdMoviePoster: MoviePoster,
-  ) => Promise<unknown>,
-) {
+async function seedMovie(serverParams: ServerParams) {
+  const { createdMovies, createdGenres, createdMoviePosters } =
+    await seedMovies(serverParams, 1);
+
+  return {
+    createdMovie: createdMovies[0]!,
+    createdGenre: createdGenres[0]!,
+    createdMoviePosters,
+  };
+}
+
+async function seedMovies(serverParams: ServerParams, amount: number) {
   const { database } = serverParams;
   const handler = database.getHandler();
   const {
@@ -54,89 +51,94 @@ async function seedMovie(
     genre: genreModel,
   } = database.getModels();
 
-  const entitiesToCreate = await generateMoviesSeedData(1);
+  const moviesToCreate = generateMoviesData(amount);
+  // Pay attention that this only generate a single role for a single user for
+  // a proper cleanup of the 'seedUser' function
+  const genresToCreate = generateGenresData(Math.ceil(amount / 3));
+  const moviePostersToCreate = await generateMoviePostersData();
 
-  // This can be inside a transaction but for the same reason the delete
-  // in the finally block may fail as well, resulting in the same effect
-  await handler.insert(genreModel).values(entitiesToCreate.genresToCreate);
-  await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
-  await handler
-    .insert(moviePosterModel)
-    .values(entitiesToCreate.moviePostersToCreate);
-
-  try {
-    const callbackResponse = await fn(
-      sanitizeSeededMoviesResponse(entitiesToCreate)[0]!,
-      entitiesToCreate.genresToCreate[0]!,
-      entitiesToCreate.moviePostersToCreate[0]!,
+  const createdEntities = await handler.transaction(async (transaction) => {
+    const createdGenres = await transaction
+      .insert(genreModel)
+      .values(genresToCreate)
+      .returning({ id: genreModel.id, name: genreModel.name });
+    const createdMovies = await transaction
+      .insert(movieModel)
+      .values(
+        moviesToCreate.map((movieToCreate) => {
+          return {
+            ...movieToCreate,
+            genreId:
+              createdGenres[randomNumber(0, createdGenres.length - 1)]!.id,
+          };
+        }),
+      )
+      .returning({
+        id: movieModel.id,
+        title: movieModel.title,
+        description: movieModel.description,
+        price: movieModel.price,
+        genreId: movieModel.genreId,
+      });
+    const createdMoviePosters = await Promise.all(
+      createdMovies.map(async (createdMovie) => {
+        return (
+          await transaction
+            .insert(moviePosterModel)
+            .values({
+              ...moviePostersToCreate[
+                randomNumber(0, moviePostersToCreate.length - 1)
+              ]!,
+              movieId: createdMovie.id,
+            })
+            .returning({
+              path: moviePosterModel.path,
+              mimeType: moviePosterModel.mimeType,
+              size: moviePosterModel.size,
+            })
+        )[0]!;
+      }),
     );
 
-    return callbackResponse;
-  } finally {
-    await cleanupCreatedMovies(database, entitiesToCreate);
-  }
+    return {
+      createdGenres,
+      createdMovies,
+      createdMoviePosters,
+    };
+  });
+
+  const createdMovies = createdEntities.createdMovies.map((createdMovie) => {
+    const { genreId, ...fields } = createdMovie;
+    const genreName = createdEntities.createdGenres.find((genre) => {
+      return genre.id === genreId;
+    })!.name;
+
+    return {
+      ...fields,
+      genre: genreName,
+    };
+  });
+
+  return {
+    createdGenres: createdEntities.createdGenres,
+    createdMovies,
+    createdMoviePosters: createdEntities.createdMoviePosters,
+  };
 }
 
-async function seedMovies(
-  serverParams: ServerParams,
-  amount: number,
-  // eslint-disable-next-line no-unused-vars
-  fn: (createdMovie: Movie[]) => Promise<unknown>,
-) {
-  const { database } = serverParams;
-  const handler = database.getHandler();
-  const {
-    movie: movieModel,
-    moviePoster: moviePosterModel,
-    genre: genreModel,
-  } = database.getModels();
-
-  const entitiesToCreate = await generateMoviesSeedData(amount);
-
-  // This can be inside a transaction but for the same reason the delete
-  // in the finally block may fail as well, resulting in the same effect
-  await handler.insert(genreModel).values(entitiesToCreate.genresToCreate);
-  await handler.insert(movieModel).values(entitiesToCreate.moviesToCreate);
-  await handler
-    .insert(moviePosterModel)
-    .values(entitiesToCreate.moviePostersToCreate);
-
-  try {
-    const callbackResponse = await fn(
-      sanitizeSeededMoviesResponse(entitiesToCreate),
-    );
-
-    return callbackResponse;
-  } finally {
-    await cleanupCreatedMovies(database, entitiesToCreate);
-  }
-}
-
-async function generateMoviesData<T extends number = 1>(
-  genreIds: string[],
-  amount = 1 as T,
-): Promise<T extends 1 ? CreateMovie : CreateMovie[]> {
-  // -1 To force returning all movie posters
-  const moviePosters = shuffleArray(await generateMoviePostersData(-1));
-
+function generateMoviesData(amount = 1) {
   const movies = [...Array(amount)].map(() => {
     return {
       title: randomString(16),
       description: randomString(256),
       price: randomNumber(0, 99) + 1,
-      poster: moviePosters[randomNumber(0, moviePosters.length - 1)]!,
-      genreId: genreIds[randomNumber(0, genreIds.length - 1)],
     } as CreateMovie;
   });
 
-  return (amount === 1 ? movies[0]! : movies) as T extends 1
-    ? CreateMovie
-    : CreateMovie[];
+  return movies;
 }
 
-async function generateMoviePostersData<T extends number = 1>(
-  amount = 1 as T,
-): Promise<T extends 1 ? CreateMoviePoster : CreateMoviePoster[]> {
+async function generateRandomMovieData(genreId?: string) {
   // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const imageNames = await readdir(join(import.meta.dirname, 'images'));
   const moviePosters = await Promise.all(
@@ -153,116 +155,31 @@ async function generateMoviePostersData<T extends number = 1>(
     }),
   );
 
-  return (amount === 1 ? moviePosters[0]! : moviePosters) as T extends 1
-    ? CreateMoviePoster
-    : CreateMoviePoster[];
-}
-
-async function generateMoviesSeedData(amount: number) {
-  const genresToCreate = [...Array(Math.ceil(amount / 4))].map(() => {
-    return { id: randomUUID(), name: randomString(8) };
-  });
-  let moviesData = (await generateMoviesData(
-    genresToCreate.map((genre) => {
-      return genre.id;
-    }),
-    amount,
-    // Possible for the generated data to either be an array or not
-  )) as CreateMovie | CreateMovie[];
-  if (!Array.isArray(moviesData)) {
-    moviesData = [moviesData];
-  }
-
-  const moviesToCreate = moviesData.map((movieData) => {
-    return {
-      id: randomUUID(),
-      title: movieData.title,
-      description: movieData.description,
-      price: movieData.price,
-      genreId: movieData.genreId,
-    };
-  });
-  const shuffledMovieIds = shuffleArray(
-    moviesToCreate.map((movieToCreate) => {
-      return movieToCreate.id;
-    }),
-  );
-
-  // Possible for the generated data to either be an array or not
-  let moviePosters = (await generateMoviePostersData(amount)) as
-    | CreateMoviePoster
-    | CreateMoviePoster[];
-  if (!Array.isArray(moviePosters)) {
-    moviePosters = [moviePosters];
-  }
-  const moviePostersToCreate = moviePosters.map((moviePosterToCreate) => {
-    return {
-      ...moviePosterToCreate,
-      movieId: shuffledMovieIds[randomNumber(0, shuffledMovieIds.length - 1)]!,
-    };
-  });
-
   return {
-    genresToCreate,
-    moviesToCreate,
-    moviePostersToCreate,
+    ...generateMoviesData(1)[0]!,
+    poster: moviePosters[randomNumber(0, moviePosters.length - 1)]!,
+    genreId: genreId ?? randomUUID(),
   };
 }
 
-function sanitizeSeededMoviesResponse(
-  createdEntities: Awaited<ReturnType<typeof generateMoviesSeedData>>,
-) {
-  const { moviesToCreate, genresToCreate } = createdEntities;
+async function generateMoviePostersData() {
+  // eslint-disable-next-line @security/detect-non-literal-fs-filename
+  const imageNames = await readdir(join(import.meta.dirname, 'images'));
+  const moviePosters = await Promise.all(
+    imageNames.map(async (imageName) => {
+      const path = join(import.meta.dirname, 'images', imageName);
+      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const { size } = await stat(path);
 
-  return moviesToCreate.map((movieToCreate) => {
-    const { genreId, ...fields } = {
-      ...movieToCreate,
-      genre: genresToCreate.find((genre) => {
-        return genre.id === movieToCreate.genreId;
-      })!.name,
-    };
-
-    return fields;
-  });
-}
-
-async function cleanupCreatedMovies(
-  database: ServerParams['database'],
-  createdEntities: Awaited<ReturnType<typeof generateMoviesSeedData>>,
-) {
-  const handler = database.getHandler();
-  const {
-    movie: movieModel,
-    moviePoster: moviePosterModel,
-    genre: genreModel,
-  } = database.getModels();
-  const { moviesToCreate, moviePostersToCreate, genresToCreate } =
-    createdEntities;
-
-  await handler.delete(moviePosterModel).where(
-    inArray(
-      moviePosterModel.movieId,
-      moviePostersToCreate.map((moviePosterToCreate) => {
-        return moviePosterToCreate.movieId;
-      }),
-    ),
+      return {
+        path,
+        mimeType: (await fileType.fileTypeFromFile(path))!.mime,
+        size,
+      };
+    }),
   );
-  await handler.delete(movieModel).where(
-    inArray(
-      movieModel.id,
-      moviesToCreate.map((movieToCreate) => {
-        return movieToCreate.id;
-      }),
-    ),
-  );
-  await handler.delete(genreModel).where(
-    inArray(
-      genreModel.id,
-      genresToCreate.map((genreToCreate) => {
-        return genreToCreate.id;
-      }),
-    ),
-  );
+
+  return moviePosters;
 }
 
 async function deleteMovies(serverParams: ServerParams, ...movieIds: string[]) {
@@ -290,10 +207,12 @@ async function deleteMovies(serverParams: ServerParams, ...movieIds: string[]) {
 /**********************************************************************************/
 
 export {
+  deleteGenres,
   deleteMovies,
-  generateMoviePostersData,
   generateMoviesData,
+  generateRandomMovieData,
   readFile,
+  seedGenre,
   seedMovie,
   seedMovies,
   type CreateMovie,

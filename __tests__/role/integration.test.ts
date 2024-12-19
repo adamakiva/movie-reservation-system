@@ -28,9 +28,20 @@ await suite('Role integration tests', async () => {
   });
 
   await test('Valid - Read many', async () => {
+    const roleIds: string[] = [];
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const roles = await seedRoles(serverParams, 32);
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
 
-    await seedRoles(serverParams, 32, async (roles) => {
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles`,
         method: 'GET',
@@ -46,12 +57,22 @@ await suite('Role integration tests', async () => {
 
         assert.deepStrictEqual(role, matchingRole);
       });
-    });
+    } finally {
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Valid - Read a lot', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const roleIds: string[] = [];
 
-    await seedRoles(serverParams, 8_192, async (roles) => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const roles = await seedRoles(serverParams, 8_192);
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles`,
         method: 'GET',
@@ -67,7 +88,9 @@ await suite('Role integration tests', async () => {
 
         assert.deepStrictEqual(role, matchingRole);
       });
-    });
+    } finally {
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Create request with excess size', async () => {
     const { status } = await sendHttpRequest({
@@ -79,13 +102,13 @@ await suite('Role integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let roleId = '';
+    const roleIds: string[] = [];
+
+    const { accessToken } = await getAdminTokens(serverParams);
+
+    const roleData = { name: randomString(16) } as const;
 
     try {
-      const { accessToken } = await getAdminTokens(serverParams);
-
-      const roleData = { name: randomString(16) } as const;
-
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles`,
         method: 'POST',
@@ -95,14 +118,14 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Role;
-      roleId = id;
+      roleIds.push(id);
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...roleData, name: roleData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteRoles(serverParams, roleId);
+      await deleteRoles(serverParams, ...roleIds);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -115,11 +138,19 @@ await suite('Role integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
+    const roleIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const role = await seedRole(serverParams);
+    roleIds.push(role.id);
 
-    await seedRole(serverParams, async (role) => {
-      const updatedRoleData = { name: randomString(16) } as const;
+    const updatedRoleData = { name: randomString(16) } as const;
 
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles/${role.id}`,
         method: 'PUT',
@@ -139,16 +170,18 @@ await suite('Role integration tests', async () => {
         },
         updatedRole,
       );
-    });
+    } finally {
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Valid - Delete existent role', async () => {
-    let roleId = '';
+    const roleIds: string[] = [];
+
+    const { accessToken } = await getAdminTokens(serverParams);
+
+    const roleData = { name: randomString() } as const;
 
     try {
-      const { accessToken } = await getAdminTokens(serverParams);
-
-      const roleData = { name: randomString() } as const;
-
       let res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles`,
         method: 'POST',
@@ -158,7 +191,7 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id } = (await res.json()) as Role;
-      roleId = id;
+      roleIds.push(id);
 
       res = await sendHttpRequest({
         route: `${serverParams.routes.http}/roles/${id}`,
@@ -171,7 +204,7 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteRoles(serverParams, roleId);
+      await deleteRoles(serverParams, ...roleIds);
     }
   });
   await test('Valid - Delete non-existent role', async () => {

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { seedGenre } from '../genre/utils.js';
+
 import {
   after,
   assert,
@@ -18,8 +18,10 @@ import {
 } from '../utils.js';
 
 import {
+  deleteGenres,
   deleteMovies,
-  generateMoviesData,
+  generateRandomMovieData,
+  seedGenre,
   seedMovie,
   seedMovies,
   type Movie,
@@ -27,7 +29,7 @@ import {
 
 /**********************************************************************************/
 
-await suite.only('Movie integration tests', async () => {
+await suite('Movie integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -37,9 +39,30 @@ await suite.only('Movie integration tests', async () => {
   });
 
   await test('Valid - Read a single page', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
 
-    await seedMovies(serverParams, 32, async (movies) => {
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdGenres: genres, createdMovies: movies } = await seedMovies(
+      serverParams,
+      32,
+    );
+    genreIds.push(
+      ...genres.map(({ id }) => {
+        return id;
+      }),
+    );
+    movieIds.push(
+      ...movies.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies?${new URLSearchParams({ pageSize: '64' })}`,
         method: 'GET',
@@ -65,17 +88,41 @@ await suite.only('Movie integration tests', async () => {
       assert.strictEqual(!!responseBody.page, true);
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
-    });
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Valid - Read many pages', async () => {
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies: movies, createdGenres: genres } = await seedMovies(
+      serverParams,
+      128,
+    );
+    genreIds.push(
+      ...genres.map(({ id }) => {
+        return id;
+      }),
+    );
+    movieIds.push(
+      ...movies.map(({ id }) => {
+        return id;
+      }),
+    );
 
-    await seedMovies(serverParams, 128, async (movies) => {
-      let pagination = {
-        hasNext: true,
-        cursor: 'null',
-      };
+    let pagination = {
+      hasNext: true,
+      cursor: 'null',
+    };
 
+    try {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
@@ -107,17 +154,41 @@ await suite.only('Movie integration tests', async () => {
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(movies.length, 0);
-    });
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Valid - Read a lot pages', async () => {
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const { createdGenres: genres, createdMovies: movies } = await seedMovies(
+      serverParams,
+      8_192,
+    );
+    genreIds.push(
+      ...genres.map(({ id }) => {
+        return id;
+      }),
+    );
+    movieIds.push(
+      ...movies.map(({ id }) => {
+        return id;
+      }),
+    );
 
-    await seedMovies(serverParams, 8_192, async (movies) => {
-      let pagination = {
-        hasNext: true,
-        cursor: 'null',
-      };
+    let pagination = {
+      hasNext: true,
+      cursor: 'null',
+    };
 
+    try {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
@@ -149,14 +220,17 @@ await suite.only('Movie integration tests', async () => {
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(movies.length, 0);
-    });
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Invalid - Create request with excess size', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies`,
       method: 'POST',
       payload: {
-        firstName: 'a'.repeat(65_536),
+        firstName: 'a'.repeat(8_388_608),
         lastName: randomString(),
         email: `${randomString(8)}@ph.com`,
         password: '12345678',
@@ -167,68 +241,76 @@ await suite.only('Movie integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let movieId = '';
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
     const { accessToken } = await getAdminTokens(serverParams);
-    await seedGenre(serverParams, async (genre) => {
-      try {
-        const { poster, ...movieData } = await generateMoviesData(
-          [genre.id],
-          1,
-        );
-        // eslint-disable-next-line @security/detect-non-literal-fs-filename
-        const file = new Blob([await readFile(poster.path)]);
+    const genre = await seedGenre(serverParams);
+    genreIds.push(genre.id);
 
-        const formData = new FormData();
-        Object.entries(movieData).forEach(([key, value]) => {
-          formData.append(key, String(value));
-        });
-        formData.append('poster', file, `${randomString()}.jpg`);
+    try {
+      const { poster, ...movieData } = await generateRandomMovieData(genre.id);
+      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const file = new Blob([await readFile(poster.path)]);
 
-        const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies`,
-          method: 'POST',
-          headers: { Authorization: accessToken },
-          payload: formData,
-        });
-        // TODO There is an issue when this function throws, that the genre cleanup
-        // happens before the movies cleanup which makes since due the order of
-        // the cleanup and the async queue. Think of a way to resolve it
-        // console.log(await res.json());
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      const formData = new FormData();
+      Object.entries(movieData).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      formData.append('poster', file, `${randomString()}.jpg`);
 
-        const { id, ...createdMovie } = (await res.json()) as Movie;
-        const { genreId: _, ...expectedMovie } = movieData;
-        movieId = id;
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/movies`,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: formData,
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-        assert.deepStrictEqual(createdMovie, {
-          ...expectedMovie,
-          genre: genre.name,
-        });
-      } finally {
-        await deleteMovies(serverParams, movieId);
-      }
-    });
+      const { id, ...createdMovie } = (await res.json()) as Movie;
+      const { genreId: _, ...expectedMovie } = movieData;
+      movieIds.push(id);
+
+      assert.deepStrictEqual(createdMovie, {
+        ...expectedMovie,
+        genre: genre.name,
+      });
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Invalid - Update request with excess size', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: 'a'.repeat(65_536) },
+      payload: { firstName: 'a'.repeat(8_388_608) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const { createdGenre: genre, createdMovie: movie } =
+      await seedMovie(serverParams);
+    genreIds.push(genre.id);
+    movieIds.push(movie.id);
 
-    await seedMovie(serverParams, async (movie, genre) => {
-      const updatedMovieData = {
-        title: randomString(16),
-        description: randomString(256),
-        price: randomNumber(0, 99),
-        genreId: genre.id,
-      } as const;
+    const updatedMovieData = {
+      title: randomString(16),
+      description: randomString(256),
+      price: randomNumber(0, 99),
+      genreId: genre.id,
+    } as const;
 
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies/${movie.id}`,
         method: 'PUT',
@@ -247,39 +329,57 @@ await suite.only('Movie integration tests', async () => {
         },
         updatedMovie,
       );
-    });
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Valid - Delete existent movie', async () => {
-    let movieId = '';
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
+    const genre = await seedGenre(serverParams);
+    genreIds.push(genre.id);
 
-    await seedGenre(serverParams, async (genre) => {
-      try {
-        let res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies`,
-          method: 'POST',
-          headers: { Authorization: accessToken },
-          payload: generateMoviesData([genre.id], 1),
-        });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+    try {
+      const { poster, ...movieData } = await generateRandomMovieData(genre.id);
+      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const file = new Blob([await readFile(poster.path)]);
+      const formData = new FormData();
+      Object.entries(movieData).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      formData.append('poster', file, `${randomString()}.jpg`);
 
-        const { id } = (await res.json()) as Movie;
-        movieId = id;
+      let res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/movies`,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: formData,
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-        res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies/${id}`,
-          method: 'DELETE',
-          headers: { Authorization: accessToken },
-        });
+      const { id } = (await res.json()) as Movie;
+      movieIds.push(id);
 
-        const responseBody = await res.text();
+      res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/movies/${id}`,
+        method: 'DELETE',
+        headers: { Authorization: accessToken },
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
 
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-        assert.strictEqual(responseBody, '');
-      } finally {
-        await deleteMovies(serverParams, movieId);
-      }
-    });
+      const responseBody = await res.text();
+      assert.strictEqual(responseBody, '');
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
   await test('Valid - Delete non-existent movie', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
