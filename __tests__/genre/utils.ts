@@ -1,6 +1,8 @@
 import { inArray } from 'drizzle-orm';
 
+import * as serviceFunctions from '../../src/entities/genre/service/index.js';
 import type { Genre } from '../../src/entities/genre/service/utils.js';
+import * as validationFunctions from '../../src/entities/genre/validator.js';
 
 import { randomString, type ServerParams } from '../utils.js';
 
@@ -61,6 +63,8 @@ export {
   generateGenresData,
   seedGenre,
   seedGenres,
+  serviceFunctions,
+  validationFunctions,
   type CreateGenre,
   type Genre,
 };

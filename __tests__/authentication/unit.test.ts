@@ -1,5 +1,5 @@
-import * as service from '../../src/entities/authentication/service/index.js';
-import * as validator from '../../src/entities/authentication/validator.js';
+import * as serviceFunctions from '../../src/entities/authentication/service/index.js';
+import * as validationFunctions from '../../src/entities/authentication/validator.js';
 
 import {
   after,
@@ -48,7 +48,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -76,7 +76,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -104,7 +104,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -131,7 +131,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -159,7 +159,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -187,7 +187,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = context.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -207,7 +207,7 @@ await suite('Authentication unit tests', async () => {
   await test('Invalid - Login service: Non-existent user', async (context) => {
     const { authentication, fileManager, database } = serverParams;
 
-    const loginSpy = context.mock.fn(service.login);
+    const loginSpy = context.mock.fn(serviceFunctions.login);
 
     await assert.rejects(
       async () => {
@@ -256,7 +256,7 @@ await suite('Authentication unit tests', async () => {
         },
       } as const;
     });
-    const loginSpy = context.mock.fn(service.login);
+    const loginSpy = context.mock.fn(serviceFunctions.login);
 
     await assert.rejects(
       async () => {
@@ -289,7 +289,7 @@ await suite('Authentication unit tests', async () => {
     });
 
     const validateRefreshAccessTokenSpy = context.mock.fn(
-      validator.validateRefreshAccessToken,
+      validationFunctions.validateRefreshAccessToken,
     );
 
     assert.throws(
@@ -318,7 +318,7 @@ await suite('Authentication unit tests', async () => {
     });
 
     const validateRefreshAccessTokenSpy = context.mock.fn(
-      validator.validateRefreshAccessToken,
+      validationFunctions.validateRefreshAccessToken,
     );
 
     assert.throws(
@@ -339,7 +339,9 @@ await suite('Authentication unit tests', async () => {
   await test('Invalid - Refresh service: Malformed JWT', async (context) => {
     const { authentication, fileManager, database } = serverParams;
 
-    const refreshAccessTokenSpy = context.mock.fn(service.refreshAccessToken);
+    const refreshAccessTokenSpy = context.mock.fn(
+      serviceFunctions.refreshAccessToken,
+    );
 
     await assert.rejects(
       async () => {
@@ -371,7 +373,9 @@ await suite('Authentication unit tests', async () => {
         payload: { sub: undefined },
       });
     });
-    const refreshAccessTokenSpy = context.mock.fn(service.refreshAccessToken);
+    const refreshAccessTokenSpy = context.mock.fn(
+      serviceFunctions.refreshAccessToken,
+    );
 
     await assert.rejects(
       async () => {

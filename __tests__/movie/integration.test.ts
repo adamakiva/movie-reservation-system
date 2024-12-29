@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import {
   after,
   assert,
@@ -18,9 +16,12 @@ import {
 } from '../utils.js';
 
 import {
+  compareFiles,
   deleteGenres,
   deleteMovies,
-  generateRandomMovieData,
+  generateMovieDataIncludingPoster,
+  generateMoviePostersData,
+  readFile,
   seedGenre,
   seedMovie,
   seedMovies,
@@ -225,6 +226,34 @@ await suite('Movie integration tests', async () => {
       await deleteGenres(serverParams, ...genreIds);
     }
   });
+  await test('Valid - Read movie poster', async () => {
+    const genreIds: string[] = [];
+    const movieIds: string[] = [];
+
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdGenre, createdMovie, createdMoviePoster } =
+      await seedMovie(serverParams);
+    genreIds.push(createdGenre.id);
+    movieIds.push(createdMovie.id);
+
+    try {
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/movies/poster/${createdMovie.id}`,
+        method: 'GET',
+        headers: { Authorization: accessToken },
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+      await compareFiles(res, createdMoviePoster.path);
+    } finally {
+      await deleteMovies(serverParams, ...movieIds);
+      await deleteGenres(serverParams, ...genreIds);
+    }
+  });
   await test('Invalid - Create request with excess size', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies`,
@@ -249,8 +278,9 @@ await suite('Movie integration tests', async () => {
     genreIds.push(genre.id);
 
     try {
-      const { poster, ...movieData } = await generateRandomMovieData(genre.id);
-      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const { poster, ...movieData } = await generateMovieDataIncludingPoster(
+        genre.id,
+      );
       const file = new Blob([await readFile(poster.path)]);
 
       const formData = new FormData();
@@ -303,14 +333,26 @@ await suite('Movie integration tests', async () => {
     genreIds.push(genre.id);
     movieIds.push(movie.id);
 
-    const updatedMovieData = {
-      title: randomString(16),
-      description: randomString(256),
-      price: randomNumber(0, 99),
-      genreId: genre.id,
-    } as const;
-
     try {
+      const updatedGenre = await seedGenre(serverParams);
+      genreIds.push(updatedGenre.id);
+
+      const updatedMovieData = {
+        title: randomString(16),
+        description: randomString(256),
+        price: randomNumber(0, 99),
+        genreId: updatedGenre.id,
+      } as const;
+
+      const poster = (await generateMoviePostersData())[0]!;
+      const file = new Blob([await readFile(poster.path)]);
+
+      const formData = new FormData();
+      Object.entries(updatedMovieData).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
+      formData.append('poster', file, `${randomString()}.jpg`);
+
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies/${movie.id}`,
         method: 'PUT',
@@ -325,7 +367,7 @@ await suite('Movie integration tests', async () => {
         {
           ...movie,
           ...updatedMovieFields,
-          genre: genre.name,
+          genre: updatedGenre.name,
         },
         updatedMovie,
       );
@@ -347,8 +389,9 @@ await suite('Movie integration tests', async () => {
     genreIds.push(genre.id);
 
     try {
-      const { poster, ...movieData } = await generateRandomMovieData(genre.id);
-      // eslint-disable-next-line @security/detect-non-literal-fs-filename
+      const { poster, ...movieData } = await generateMovieDataIncludingPoster(
+        genre.id,
+      );
       const file = new Blob([await readFile(poster.path)]);
       const formData = new FormData();
       Object.entries(movieData).forEach(([key, value]) => {

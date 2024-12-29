@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/movie/service/index.js';
-import * as validator from '../../src/entities/movie/validator.js';
-
 import {
   after,
   assert,
@@ -24,8 +21,10 @@ import {
 import {
   deleteGenres,
   deleteMovies,
-  generateRandomMovieData,
+  generateMovieDataIncludingPoster,
   seedMovie,
+  serviceFunctions,
+  validationFunctions,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -50,7 +49,9 @@ await suite('Movie unit tests', async () => {
       logger,
     });
 
-    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(
+      validationFunctions.validateGetMovie,
+    );
 
     assert.throws(
       () => {
@@ -75,7 +76,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(
+      validationFunctions.validateGetMovie,
+    );
 
     assert.throws(
       () => {
@@ -100,7 +103,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMovieSpy = context.mock.fn(validator.validateGetMovie);
+    const validateGetMovieSpy = context.mock.fn(
+      validationFunctions.validateGetMovie,
+    );
 
     assert.throws(
       () => {
@@ -138,7 +143,7 @@ await suite('Movie unit tests', async () => {
         },
       } as const;
     });
-    const getMovieSpy = context.mock.fn(service.getMovie);
+    const getMovieSpy = context.mock.fn(serviceFunctions.getMovie);
 
     await assert.rejects(
       async () => {
@@ -170,7 +175,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -199,7 +206,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -228,7 +237,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -253,7 +264,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -280,7 +293,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -307,7 +322,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -332,7 +349,9 @@ await suite('Movie unit tests', async () => {
       },
     });
 
-    const validateGetMoviesSpy = context.mock.fn(validator.validateGetMovies);
+    const validateGetMoviesSpy = context.mock.fn(
+      validationFunctions.validateGetMovies,
+    );
 
     assert.throws(
       () => {
@@ -351,7 +370,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Missing title', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -364,7 +383,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -384,7 +403,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Empty title', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -397,7 +416,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -417,7 +436,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Title too short', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -430,7 +449,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -450,7 +469,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Title too long', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -463,7 +482,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -483,7 +502,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Missing description', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -496,7 +515,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -516,7 +535,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Empty description', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -529,7 +548,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -549,7 +568,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Description too short', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -562,7 +581,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -582,7 +601,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Description too long', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -595,7 +614,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -613,9 +632,368 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
+  await test('Invalid - Create validation: Missing poster', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Missing poster path', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          path: undefined,
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Empty poster path', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          path: '',
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Poster path too short', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          path: 'a'.repeat(MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE - 1),
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Poster path too long', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          path: 'a'.repeat(MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE + 1),
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Missing mime type', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          mimeType: undefined,
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Empty mime path', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          mimeType: '',
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Missing poster size', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          size: undefined,
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Empty poster size', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          size: '',
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Poster size too small', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE - 1,
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Create validation: Poster size too large', async (context) => {
+    const { poster, ...movieData } =
+      await generateMovieDataIncludingPoster(randomUUID());
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: movieData,
+        file: {
+          ...poster,
+          size: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.VALUE + 1,
+        },
+      },
+    });
+
+    const validateCreateMovieSpy = context.mock.fn(
+      validationFunctions.validateCreateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateCreateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
   await test('Invalid - Create validation: Missing price', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -628,7 +1006,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -648,7 +1026,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Empty price', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -661,7 +1039,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -681,7 +1059,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Price too low', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -694,7 +1072,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -714,7 +1092,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Price too high', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -727,7 +1105,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -747,7 +1125,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Missing genre id', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -760,7 +1138,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -780,7 +1158,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Empty genre id', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -793,7 +1171,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -813,7 +1191,7 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create validation: Invalid genre id', async (context) => {
     const { poster, ...movieData } =
-      await generateRandomMovieData(randomUUID());
+      await generateMovieDataIncludingPoster(randomUUID());
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -826,7 +1204,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateCreateMovieSpy = context.mock.fn(
-      validator.validateCreateMovie,
+      validationFunctions.validateCreateMovie,
     );
 
     assert.throws(
@@ -846,11 +1224,11 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Create service: Non-existent genre id', async () => {
     const genreId = randomUUID();
-    const movieData = await generateRandomMovieData(genreId);
+    const movieData = await generateMovieDataIncludingPoster(genreId);
 
     await assert.rejects(
       async () => {
-        await service.createMovie(
+        await serviceFunctions.createMovie(
           {
             authentication: serverParams.authentication,
             database: serverParams.database,
@@ -880,7 +1258,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -905,7 +1283,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -933,7 +1311,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -961,7 +1339,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -989,7 +1367,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1020,7 +1398,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1051,7 +1429,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1079,7 +1457,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1110,7 +1488,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1141,7 +1519,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1159,6 +1537,326 @@ await suite('Movie unit tests', async () => {
       },
     );
   });
+  await test('Invalid - Update validation: Missing poster path', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: undefined,
+          mimeType: 'application/json',
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Empty poster path', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '',
+          mimeType: 'application/json',
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Poster path too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: 'a'.repeat(MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE - 1),
+          mimeType: 'application/json',
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Poster path too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: 'a'.repeat(MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE + 1),
+          mimeType: 'application/json',
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Missing mime type', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: undefined,
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Empty mime path', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: '',
+          size: 2_048,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Missing poster size', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: 'application/json',
+          size: undefined,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Empty poster size', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: 'application/json',
+          size: '',
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Poster size too small', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: 'application/json',
+          size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE - 1,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
+  await test('Invalid - Update validation: Poster size too large', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        params: { movieId: randomUUID() },
+        file: {
+          path: '/tmp',
+          mimeType: 'application/json',
+          size: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.VALUE + 1,
+        },
+      },
+    });
+
+    const validateUpdateMovieSpy = context.mock.fn(
+      validationFunctions.validateUpdateMovie,
+    );
+
+    assert.throws(
+      () => {
+        validateUpdateMovieSpy(request);
+      },
+      (err) => {
+        assert.strictEqual(err instanceof MRSError, true);
+        assert.deepStrictEqual((err as MRSError).getClientError(), {
+          code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+          message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
+        });
+
+        return true;
+      },
+    );
+  });
   await test('Invalid - Update validation: Empty price', (context) => {
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
@@ -1169,7 +1867,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1200,7 +1898,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1231,7 +1929,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1259,7 +1957,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1287,7 +1985,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateUpdateMovieSpy = context.mock.fn(
-      validator.validateUpdateMovie,
+      validationFunctions.validateUpdateMovie,
     );
 
     assert.throws(
@@ -1310,7 +2008,7 @@ await suite('Movie unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await service.updateMovie(
+        await serviceFunctions.updateMovie(
           {
             authentication: serverParams.authentication,
             database: serverParams.database,
@@ -1347,7 +2045,7 @@ await suite('Movie unit tests', async () => {
     try {
       await assert.rejects(
         async () => {
-          await service.updateMovie(
+          await serviceFunctions.updateMovie(
             {
               authentication: serverParams.authentication,
               database: serverParams.database,
@@ -1381,7 +2079,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateDeleteMovieSpy = context.mock.fn(
-      validator.validateDeleteMovie,
+      validationFunctions.validateDeleteMovie,
     );
 
     assert.throws(
@@ -1406,7 +2104,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateDeleteMovieSpy = context.mock.fn(
-      validator.validateDeleteMovie,
+      validationFunctions.validateDeleteMovie,
     );
 
     assert.throws(
@@ -1431,7 +2129,7 @@ await suite('Movie unit tests', async () => {
     });
 
     const validateDeleteMovieSpy = context.mock.fn(
-      validator.validateDeleteMovie,
+      validationFunctions.validateDeleteMovie,
     );
 
     assert.throws(

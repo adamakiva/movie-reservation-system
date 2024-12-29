@@ -1,9 +1,13 @@
+import assert from 'node:assert/strict';
+import type { PathLike } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { inArray } from 'drizzle-orm';
 
+import * as serviceFunctions from '../../src/entities/movie/service/index.js';
 import type { Movie } from '../../src/entities/movie/service/utils.js';
+import * as validationFunctions from '../../src/entities/movie/validator.js';
 import { fileType } from '../../src/utils/index.js';
 
 import { deleteGenres, generateGenresData, seedGenre } from '../genre/utils.js';
@@ -38,7 +42,7 @@ async function seedMovie(serverParams: ServerParams) {
   return {
     createdMovie: createdMovies[0]!,
     createdGenre: createdGenres[0]!,
-    createdMoviePosters,
+    createdMoviePoster: createdMoviePosters[0]!,
   };
 }
 
@@ -138,7 +142,7 @@ function generateMoviesData(amount = 1) {
   return movies;
 }
 
-async function generateRandomMovieData(genreId?: string) {
+async function generateMovieDataIncludingPoster(genreId?: string) {
   // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const imageNames = await readdir(join(import.meta.dirname, 'images'));
   const moviePosters = await Promise.all(
@@ -204,17 +208,31 @@ async function deleteMovies(serverParams: ServerParams, ...movieIds: string[]) {
     .where(inArray(movieModel.id, movieIds));
 }
 
+async function compareFiles(dest: Response, src: PathLike) {
+  const [responseBody, expectedFile] = await Promise.all([
+    dest.bytes(),
+    // eslint-disable-next-line @security/detect-non-literal-fs-filename
+    readFile(src),
+  ]);
+
+  assert.strictEqual(expectedFile.compare(responseBody) === 0, true);
+}
+
 /**********************************************************************************/
 
 export {
+  compareFiles,
   deleteGenres,
   deleteMovies,
+  generateMovieDataIncludingPoster,
+  generateMoviePostersData,
   generateMoviesData,
-  generateRandomMovieData,
   readFile,
   seedGenre,
   seedMovie,
   seedMovies,
+  serviceFunctions,
+  validationFunctions,
   type CreateMovie,
   type Movie,
 };

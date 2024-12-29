@@ -37,7 +37,7 @@ const VALIDATION = {
       },
       MAX_LENGTH: {
         VALUE: 64,
-        ERROR_MESSAGE: 'Page size must be at most 128 characters long',
+        ERROR_MESSAGE: 'Page size must be at most 64 characters long',
       },
     },
   },
@@ -110,11 +110,11 @@ const VALIDATION = {
       REQUIRED_ERROR_MESSAGE: 'Last name is required',
       MIN_LENGTH: {
         VALUE: 1,
-        ERROR_MESSAGE: 'Last name must be at least 2 characters long',
+        ERROR_MESSAGE: 'Last name must be at least 1 character long',
       },
       MAX_LENGTH: {
         VALUE: 128,
-        ERROR_MESSAGE: 'Last name must be at most 64 characters long',
+        ERROR_MESSAGE: 'Last name must be at most 128 characters long',
       },
     },
     EMAIL: {
@@ -218,14 +218,14 @@ const VALIDATION = {
         INVALID_TYPE_ERROR_MESSAGE: 'Poster file path must be a valid image',
         REQUIRED_ERROR_MESSAGE: 'Poster file path is required',
         MIN_LENGTH: {
-          VALUE: 3,
+          VALUE: 1,
           ERROR_MESSAGE:
-            'Poster file path name must be at least 3 characters long',
+            'Poster file path name must be at least 1 character long',
         },
         MAX_LENGTH: {
           VALUE: 512,
           ERROR_MESSAGE:
-            'Poster file path name must be at most 256 characters long',
+            'Poster file path name must be at most 512 characters long',
         },
       },
       MIME_TYPE: {

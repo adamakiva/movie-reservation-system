@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/role/service/index.js';
-import * as validator from '../../src/entities/role/validator.js';
-
 import {
   after,
   assert,
@@ -21,7 +18,13 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { deleteRoles, seedRole, seedRoles } from './utils.js';
+import {
+  deleteRoles,
+  seedRole,
+  seedRoles,
+  serviceFunctions,
+  validationFunctions,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -45,7 +48,9 @@ await suite('Role unit tests', async () => {
       logger,
     });
 
-    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(
+      validationFunctions.validateCreateRole,
+    );
 
     assert.throws(
       () => {
@@ -72,7 +77,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(
+      validationFunctions.validateCreateRole,
+    );
 
     assert.throws(
       () => {
@@ -99,7 +106,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(
+      validationFunctions.validateCreateRole,
+    );
 
     assert.throws(
       () => {
@@ -126,7 +135,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateCreateRoleSpy = context.mock.fn(validator.validateCreateRole);
+    const validateCreateRoleSpy = context.mock.fn(
+      validationFunctions.validateCreateRole,
+    );
 
     assert.throws(
       () => {
@@ -154,7 +165,7 @@ await suite('Role unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await service.createRole(
+          await serviceFunctions.createRole(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -188,7 +199,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -215,7 +228,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -245,7 +260,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -275,7 +292,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -305,7 +324,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -335,7 +356,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -365,7 +388,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateUpdateRoleSpy = context.mock.fn(validator.validateUpdateRole);
+    const validateUpdateRoleSpy = context.mock.fn(
+      validationFunctions.validateUpdateRole,
+    );
 
     assert.throws(
       () => {
@@ -397,7 +422,7 @@ await suite('Role unit tests', async () => {
 
       await assert.rejects(
         async () => {
-          await service.updateRole(
+          await serviceFunctions.updateRole(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -426,7 +451,9 @@ await suite('Role unit tests', async () => {
       logger,
     });
 
-    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(
+      validationFunctions.validateDeleteRole,
+    );
 
     assert.throws(
       () => {
@@ -453,7 +480,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(
+      validationFunctions.validateDeleteRole,
+    );
 
     assert.throws(
       () => {
@@ -480,7 +509,9 @@ await suite('Role unit tests', async () => {
       },
     });
 
-    const validateDeleteRoleSpy = context.mock.fn(validator.validateDeleteRole);
+    const validateDeleteRoleSpy = context.mock.fn(
+      validationFunctions.validateDeleteRole,
+    );
 
     assert.throws(
       () => {

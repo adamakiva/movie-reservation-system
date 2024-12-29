@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/user/service/index.js';
-import * as validator from '../../src/entities/user/validator.js';
-
 import {
   after,
   assert,
@@ -27,6 +24,8 @@ import {
   generateRandomUserData,
   seedUser,
   seedUsers,
+  serviceFunctions,
+  validationFunctions,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -51,7 +50,9 @@ await suite('User unit tests', async () => {
       logger,
     });
 
-    const validateGetUserSpy = context.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -76,7 +77,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUserSpy = context.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -101,7 +104,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUserSpy = context.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -139,7 +144,7 @@ await suite('User unit tests', async () => {
         },
       } as const;
     });
-    const getUserSpy = context.mock.fn(service.getUser);
+    const getUserSpy = context.mock.fn(serviceFunctions.getUser);
 
     await assert.rejects(
       async () => {
@@ -171,7 +176,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -200,7 +207,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -229,7 +238,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -254,7 +265,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -281,7 +294,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -308,7 +323,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -333,7 +350,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = context.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -361,7 +380,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -389,7 +410,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -417,7 +440,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -445,7 +470,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -473,7 +500,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -501,7 +530,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -529,7 +560,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -557,7 +590,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -585,7 +620,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -613,7 +650,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -641,7 +680,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -669,7 +710,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -697,7 +740,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -725,7 +770,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -753,7 +800,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -781,7 +830,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -809,7 +860,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -837,7 +890,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -865,7 +920,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -893,7 +950,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateCreateUserSpy = context.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -925,7 +984,7 @@ await suite('User unit tests', async () => {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const createdUser = await service.createUser(
+          const createdUser = await serviceFunctions.createUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -959,7 +1018,7 @@ await suite('User unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await service.createUser(
+        await serviceFunctions.createUser(
           {
             authentication: serverParams.authentication,
             fileManager: serverParams.fileManager,
@@ -988,7 +1047,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1011,7 +1072,9 @@ await suite('User unit tests', async () => {
       reqOptions: { body: { roleId: randomUUID() } },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1037,7 +1100,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1063,7 +1128,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1089,7 +1156,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1118,7 +1187,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1147,7 +1218,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1173,7 +1246,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1202,7 +1277,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1231,7 +1308,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1257,7 +1336,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1286,7 +1367,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1315,7 +1398,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1341,7 +1426,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1367,7 +1454,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1396,7 +1485,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1425,7 +1516,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1451,7 +1544,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1477,7 +1572,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = context.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1499,7 +1596,7 @@ await suite('User unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await service.updateUser(
+        await serviceFunctions.updateUser(
           {
             authentication: serverParams.authentication,
             fileManager: serverParams.fileManager,
@@ -1546,7 +1643,7 @@ await suite('User unit tests', async () => {
     try {
       await assert.rejects(
         async () => {
-          await service.updateUser(
+          await serviceFunctions.updateUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -1589,7 +1686,7 @@ await suite('User unit tests', async () => {
     try {
       await assert.rejects(
         async () => {
-          await service.updateUser(
+          await serviceFunctions.updateUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -1622,7 +1719,9 @@ await suite('User unit tests', async () => {
       logger,
     });
 
-    const validateDeleteUserSpy = context.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {
@@ -1645,7 +1744,9 @@ await suite('User unit tests', async () => {
       reqOptions: { params: { userId: '' } },
     });
 
-    const validateDeleteUserSpy = context.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {
@@ -1668,7 +1769,9 @@ await suite('User unit tests', async () => {
       reqOptions: { params: { userId: randomString() } },
     });
 
-    const validateDeleteUserSpy = context.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {

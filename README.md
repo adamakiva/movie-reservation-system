@@ -78,3 +78,17 @@ If you have permission errors when running the postgres image, try the following
    (follow step 2 in the prerequisites)
 5. Run `yes | ./scripts/start.sh` and hope for the best
 6. If the problem persists, contact a maintainer/contributor in any way you see fit
+
+---
+
+## Development notes
+
+### CORS & Helmet
+
+**Helmet** (or rather the security headers added by it) are handled at the NGINX
+(reverse proxy) level.  
+The reason is that they are static and there is more sense to block access
+at the reverse proxy level rather than the server level.
+
+**CORS** on the other hand is handled on the server level.  
+The reason for that is the ability to be able to handle dynamic values.

@@ -28,7 +28,7 @@ async function getMovie(req: Request, res: ResponseWithContext) {
 async function getMoviePoster(req: Request, res: ResponseWithContext) {
   const movieId = movieValidator.validateGetMoviePoster(req);
 
-  // The response is handled in a lower level
+  // The response is handled in the lower level
   await movieService.getMoviePoster(res, movieId);
 }
 

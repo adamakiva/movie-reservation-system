@@ -137,7 +137,7 @@ const createMovieSchema = Zod.object({
       mimeType: Zod.string({
         invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
-      }),
+      }).nonempty(MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE),
       size: Zod.number({
         invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
@@ -207,7 +207,7 @@ const updateMovieBodySchema = Zod.object({
       mimeType: Zod.string({
         invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
-      }),
+      }).nonempty(MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE),
       size: Zod.number({
         invalid_type_error: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
@@ -332,9 +332,12 @@ function validateCreateMovie(req: Request) {
 
 function validateUpdateMovie(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const { body, params } = req;
+  const { body, params, file } = req;
 
-  const validatedBodyResult = updateMovieBodySchema.safeParse(body);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const updates = file ? { ...body, poster: file } : body;
+
+  const validatedBodyResult = updateMovieBodySchema.safeParse(updates);
   const movieToUpdate = parseValidationResult(
     validatedBodyResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,

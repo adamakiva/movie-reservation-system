@@ -6,7 +6,6 @@ import {
   createServer,
   ERROR_CODES,
   express,
-  isProductionMode,
   isTestMode,
   type AddressInfo,
   type CorsOptions,
@@ -63,7 +62,13 @@ class HttpServer {
     const fileManager = new FileManager(fileManagerParams);
     const database = new Database({ ...databaseParams, logger });
 
-    const app = express().disable('x-powered-by');
+    const app = express()
+      .disable('x-powered-by')
+      .use(
+        Middlewares.checkMethod(allowedMethods),
+        cors(corsOptions),
+        compress(),
+      );
     // Express type chain include extending IRouter which returns void | Promise<void>,
     // however, this is irrelevant for this use case
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -82,11 +87,6 @@ class HttpServer {
     // The order matters
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
-    await self.#attachConfigurationMiddlewares({
-      app,
-      allowedMethods,
-      corsOptions,
-    });
     self.#attachRoutesMiddlewares(app, logMiddleware);
 
     return self;
@@ -231,43 +231,6 @@ class HttpServer {
     }
 
     process.exitCode = 0;
-  }
-
-  async #attachConfigurationMiddlewares(params: {
-    app: Express;
-    allowedMethods: Set<string>;
-    corsOptions: CorsOptions;
-  }) {
-    const { app, allowedMethods, corsOptions } = params;
-
-    app.use(
-      Middlewares.checkMethod(allowedMethods),
-      cors(corsOptions),
-      compress(),
-    );
-    if (isProductionMode(this.#mode)) {
-      app.use(
-        (await import('helmet')).default({
-          contentSecurityPolicy: true /* require-corp */,
-          crossOriginEmbedderPolicy: { policy: 'require-corp' },
-          crossOriginOpenerPolicy: { policy: 'same-origin' },
-          crossOriginResourcePolicy: { policy: 'same-origin' },
-          originAgentCluster: true,
-          referrerPolicy: { policy: 'no-referrer' },
-          strictTransportSecurity: {
-            maxAge: 31_536_000, // 365 days in seconds
-            includeSubDomains: true,
-          },
-          xContentTypeOptions: true,
-          xDnsPrefetchControl: false,
-          xDownloadOptions: true,
-          xFrameOptions: { action: 'deny' },
-          xPermittedCrossDomainPolicies: { permittedPolicies: 'none' },
-          xXssProtection: true,
-          xPoweredBy: false,
-        }),
-      );
-    }
   }
 
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {

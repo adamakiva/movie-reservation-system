@@ -1,6 +1,8 @@
 import { inArray } from 'drizzle-orm';
 
+import * as serviceFunctions from '../../src/entities/role/service/index.js';
 import type { Role } from '../../src/entities/role/service/utils.js';
+import * as validationFunctions from '../../src/entities/role/validator.js';
 
 import { randomString, type ServerParams } from '../utils.js';
 
@@ -61,6 +63,8 @@ export {
   generateRolesData,
   seedRole,
   seedRoles,
+  serviceFunctions,
+  validationFunctions,
   type CreateRole,
   type Role,
 };

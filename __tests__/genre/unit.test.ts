@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/genre/service/index.js';
-import * as validator from '../../src/entities/genre/validator.js';
-
 import {
   after,
   assert,
@@ -21,7 +18,13 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { deleteGenres, seedGenre, seedGenres } from './utils.js';
+import {
+  deleteGenres,
+  seedGenre,
+  seedGenres,
+  serviceFunctions,
+  validationFunctions,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -46,7 +49,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateCreateGenreSpy = context.mock.fn(
-      validator.validateCreateGenre,
+      validationFunctions.validateCreateGenre,
     );
 
     assert.throws(
@@ -75,7 +78,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateCreateGenreSpy = context.mock.fn(
-      validator.validateCreateGenre,
+      validationFunctions.validateCreateGenre,
     );
 
     assert.throws(
@@ -104,7 +107,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateCreateGenreSpy = context.mock.fn(
-      validator.validateCreateGenre,
+      validationFunctions.validateCreateGenre,
     );
 
     assert.throws(
@@ -133,7 +136,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateCreateGenreSpy = context.mock.fn(
-      validator.validateCreateGenre,
+      validationFunctions.validateCreateGenre,
     );
 
     assert.throws(
@@ -163,7 +166,7 @@ await suite('Genre unit tests', async () => {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const duplicateGenre = await service.createGenre(
+          const duplicateGenre = await serviceFunctions.createGenre(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -199,7 +202,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -228,7 +231,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -260,7 +263,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -292,7 +295,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -324,7 +327,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -356,7 +359,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -388,7 +391,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateUpdateGenreSpy = context.mock.fn(
-      validator.validateUpdateGenre,
+      validationFunctions.validateUpdateGenre,
     );
 
     assert.throws(
@@ -423,7 +426,7 @@ await suite('Genre unit tests', async () => {
     try {
       await assert.rejects(
         async () => {
-          await service.updateGenre(
+          await serviceFunctions.updateGenre(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -453,7 +456,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateDeleteGenreSpy = context.mock.fn(
-      validator.validateDeleteGenre,
+      validationFunctions.validateDeleteGenre,
     );
 
     assert.throws(
@@ -482,7 +485,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateDeleteGenreSpy = context.mock.fn(
-      validator.validateDeleteGenre,
+      validationFunctions.validateDeleteGenre,
     );
 
     assert.throws(
@@ -511,7 +514,7 @@ await suite('Genre unit tests', async () => {
     });
 
     const validateDeleteGenreSpy = context.mock.fn(
-      validator.validateDeleteGenre,
+      validationFunctions.validateDeleteGenre,
     );
 
     assert.throws(
