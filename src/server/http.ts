@@ -6,7 +6,6 @@ import {
   createServer,
   ERROR_CODES,
   express,
-  isProductionMode,
   isTestMode,
   type AddressInfo,
   type CorsOptions,
@@ -17,8 +16,11 @@ import {
   type Server,
 } from '../utils/index.js';
 
-import AuthenticationManager from './services/authentication.js';
-import * as Middlewares from './services/middlewares.js';
+import {
+  AuthenticationManager,
+  FileManager,
+  Middlewares,
+} from './services/index.js';
 
 /**********************************************************************************/
 
@@ -26,6 +28,7 @@ class HttpServer {
   readonly #mode;
   readonly #database;
   readonly #authentication;
+  readonly #fileManager;
   readonly #server;
   readonly #routes;
   readonly #requestContext;
@@ -34,6 +37,7 @@ class HttpServer {
   public static async create(params: {
     mode: Mode;
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    fileManagerParams: ConstructorParameters<typeof FileManager>[0];
     corsOptions: CorsOptions;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
@@ -44,6 +48,7 @@ class HttpServer {
     const {
       mode,
       authenticationParams,
+      fileManagerParams,
       corsOptions,
       databaseParams,
       allowedMethods,
@@ -54,9 +59,16 @@ class HttpServer {
 
     const authentication =
       await AuthenticationManager.create(authenticationParams);
+    const fileManager = new FileManager(fileManagerParams);
     const database = new Database({ ...databaseParams, logger });
 
-    const app = express().disable('x-powered-by');
+    const app = express()
+      .disable('x-powered-by')
+      .use(
+        Middlewares.checkMethod(allowedMethods),
+        cors(corsOptions),
+        compress(),
+      );
     // Express type chain include extending IRouter which returns void | Promise<void>,
     // however, this is irrelevant for this use case
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -65,6 +77,7 @@ class HttpServer {
     const self = new HttpServer({
       mode,
       authentication,
+      fileManager,
       database,
       server,
       routes,
@@ -74,11 +87,6 @@ class HttpServer {
     // The order matters
     self.#attachServerConfigurations();
     self.#attachServerEventHandlers();
-    await self.#attachConfigurationMiddlewares({
-      app,
-      allowedMethods,
-      corsOptions,
-    });
     self.#attachRoutesMiddlewares(app, logMiddleware);
 
     return self;
@@ -116,6 +124,10 @@ class HttpServer {
     return this.#authentication;
   }
 
+  public getFileManager() {
+    return this.#fileManager;
+  }
+
   public getDatabase() {
     return this.#database;
   }
@@ -125,15 +137,25 @@ class HttpServer {
   private constructor(params: {
     mode: Mode;
     authentication: AuthenticationManager;
+    fileManager: FileManager;
     database: Database;
     server: Server;
     routes: { http: string };
     logger: LoggerHandler;
   }) {
-    const { mode, authentication, database, server, routes, logger } = params;
+    const {
+      mode,
+      authentication,
+      fileManager,
+      database,
+      server,
+      routes,
+      logger,
+    } = params;
 
     this.#mode = mode;
     this.#authentication = authentication;
+    this.#fileManager = fileManager;
     this.#database = database;
     this.#server = server;
     this.#routes = routes;
@@ -141,6 +163,7 @@ class HttpServer {
 
     this.#requestContext = {
       authentication,
+      fileManager,
       database,
       logger,
     };
@@ -210,43 +233,6 @@ class HttpServer {
     process.exitCode = 0;
   }
 
-  async #attachConfigurationMiddlewares(params: {
-    app: Express;
-    allowedMethods: Set<string>;
-    corsOptions: CorsOptions;
-  }) {
-    const { app, allowedMethods, corsOptions } = params;
-
-    app.use(
-      Middlewares.checkMethod(allowedMethods),
-      cors(corsOptions),
-      compress(),
-    );
-    if (isProductionMode(this.#mode)) {
-      app.use(
-        (await import('helmet')).default({
-          contentSecurityPolicy: true /* require-corp */,
-          crossOriginEmbedderPolicy: { policy: 'require-corp' },
-          crossOriginOpenerPolicy: { policy: 'same-origin' },
-          crossOriginResourcePolicy: { policy: 'same-origin' },
-          originAgentCluster: true,
-          referrerPolicy: { policy: 'no-referrer' },
-          strictTransportSecurity: {
-            maxAge: 31_536_000, // 365 days in seconds
-            includeSubDomains: true,
-          },
-          xContentTypeOptions: true,
-          xDnsPrefetchControl: false,
-          xDownloadOptions: true,
-          xFrameOptions: { action: 'deny' },
-          xPermittedCrossDomainPolicies: { permittedPolicies: 'none' },
-          xXssProtection: true,
-          xPoweredBy: false,
-        }),
-      );
-    }
-  }
-
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
     // The order matters
     app
@@ -259,6 +245,7 @@ class HttpServer {
         routers.roleRouter(this.#authentication),
         routers.userRouter(this.#authentication),
         routers.genreRouter(this.#authentication),
+        routers.movieRouter(this.#authentication, this.#fileManager),
       )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }

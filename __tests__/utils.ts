@@ -18,6 +18,7 @@ process.on('warning', (warn) => {
 
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
@@ -38,14 +39,15 @@ import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/services/middlewares.js';
 import {
   CONFIGURATIONS,
+  emptyFunction,
   EnvironmentManager,
   ERROR_CODES,
   HTTP_STATUS_CODES,
   Logger,
   MRSError,
   type LoggerHandler,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
 } from '../src/utils/index.js';
 
 const { PostgresError } = pg;
@@ -106,6 +108,15 @@ async function createServer() {
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
     },
+    fileManagerParams: {
+      generatedNameLength: 16,
+      saveDir: tmpdir(),
+      logger: logger,
+      limits: {
+        fileSize: 4_194_304, // 4mb
+        files: 1, // Currently only 1 file is expected, change if needed
+      },
+    },
     corsOptions: {
       methods: Array.from(serverEnvironment.allowedMethods),
       origin:
@@ -118,7 +129,7 @@ async function createServer() {
     databaseParams: {
       url: databaseUrl,
       options: {
-        max: 1, // On purpose to check issues with only a single database connection
+        max: 10, // On purpose to check issues with only a single database connection
         connection: {
           application_name: 'movie_reservation_system_pg_test',
           statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
@@ -150,6 +161,7 @@ async function createServer() {
   return {
     server: server,
     authentication: server.getAuthentication(),
+    fileManager: server.getFileManager(),
     database: server.getDatabase(),
     environmentManager,
     routes: {
@@ -208,6 +220,20 @@ function randomUUID<T extends number = 1>(
   return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
+function shuffleArray<T>(array: T[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    // Generate a random index between 0 and i (inclusive)
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+
+    // Swap elements at i and randomIndex
+    const tmp = array[i];
+    array[i] = array[randomIndex]!;
+    array[randomIndex] = tmp!;
+  }
+
+  return array;
+}
+
 /******************************* API calls ****************************************/
 /**********************************************************************************/
 
@@ -221,7 +247,7 @@ function sendHttpRequest<
 }) {
   const { route, method, payload, headers } = params;
 
-  const fetchResponse = fetch(route, {
+  let fetchOptions: RequestInit = {
     method,
     cache: 'no-store',
     mode: 'same-origin',
@@ -232,7 +258,15 @@ function sendHttpRequest<
       Accept: 'application/json',
     },
     redirect: 'follow',
-  });
+  };
+  if (payload instanceof FormData) {
+    fetchOptions = {
+      ...fetchOptions,
+      body: payload,
+      headers: { ...headers },
+    };
+  }
+  const fetchResponse = fetch(route, fetchOptions);
 
   return fetchResponse;
 }
@@ -275,11 +309,11 @@ function mockLogger() {
   const mockLogger = {
     logger: {
       ...loggerHandler,
-      debug: disableLogFn,
-      info: disableLogFn,
-      log: disableLogFn,
-      warn: disableLogFn,
-      error: disableLogFn,
+      debug: emptyFunction,
+      info: emptyFunction,
+      log: emptyFunction,
+      warn: emptyFunction,
+      error: emptyFunction,
     },
     logMiddleware: (_req: Request, _res: Response, next: NextFunction) => {
       // Disable logging middleware
@@ -288,10 +322,6 @@ function mockLogger() {
   } as const;
 
   return mockLogger;
-}
-
-function disableLogFn() {
-  // Disable logs
 }
 
 function createHttpMocks<T extends Response = Response>(params: {
@@ -336,6 +366,7 @@ export {
   randomString,
   randomUUID,
   sendHttpRequest,
+  shuffleArray,
   suite,
   terminateServer,
   test,
@@ -347,7 +378,7 @@ export {
   type MockResponse,
   type NextFunction,
   type Request,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
   type ServerParams,
 };

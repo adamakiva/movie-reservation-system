@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/genre/service/index.js';
-import * as validator from '../../src/entities/genre/validator.js';
-
 import {
   after,
   assert,
@@ -17,11 +14,17 @@ import {
   test,
   VALIDATION,
   type LoggerHandler,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
 } from '../utils.js';
 
-import { seedGenre, seedGenres } from './utils.js';
+import {
+  deleteGenres,
+  seedGenre,
+  seedGenres,
+  serviceFunctions,
+  validationFunctions,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -40,12 +43,14 @@ await suite('Genre unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Invalid - Create validation: Missing name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateCreateGenreSpy = ctx.mock.fn(validator.validateCreateGenre);
+    const validateCreateGenreSpy = context.mock.fn(
+      validationFunctions.validateCreateGenre,
+    );
 
     assert.throws(
       () => {
@@ -62,8 +67,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -72,7 +77,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateCreateGenreSpy = ctx.mock.fn(validator.validateCreateGenre);
+    const validateCreateGenreSpy = context.mock.fn(
+      validationFunctions.validateCreateGenre,
+    );
 
     assert.throws(
       () => {
@@ -89,8 +96,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -99,7 +106,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateCreateGenreSpy = ctx.mock.fn(validator.validateCreateGenre);
+    const validateCreateGenreSpy = context.mock.fn(
+      validationFunctions.validateCreateGenre,
+    );
 
     assert.throws(
       () => {
@@ -116,8 +125,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -126,7 +135,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateCreateGenreSpy = ctx.mock.fn(validator.validateCreateGenre);
+    const validateCreateGenreSpy = context.mock.fn(
+      validationFunctions.validateCreateGenre,
+    );
 
     assert.throws(
       () => {
@@ -144,17 +155,27 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedGenre(serverParams, async (genre) => {
-      const context = {
-        authentication: serverParams.authentication,
-        database: serverParams.database,
-        logger,
-      };
-      const genreToCreate = { name: genre.name };
+    const genreIds: string[] = [];
 
+    const genre = await seedGenre(serverParams);
+    genreIds.push(genre.id);
+
+    const genreToCreate = { name: genre.name };
+
+    try {
       await assert.rejects(
         async () => {
-          await service.createGenre(context, genreToCreate);
+          // In case the function does not throw, we want to clean the created entry
+          const duplicateGenre = await serviceFunctions.createGenre(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            genreToCreate,
+          );
+          genreIds.push(duplicateGenre.id);
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -166,10 +187,12 @@ await suite('Genre unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
-  await test('Invalid - Update validation: Without updates', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Without updates', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -178,7 +201,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -195,8 +220,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -205,7 +230,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -222,8 +249,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -235,7 +262,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -252,8 +281,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -265,7 +294,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -282,8 +313,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -295,7 +326,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -312,8 +345,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -325,7 +358,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -342,8 +377,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -355,7 +390,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateUpdateGenreSpy = ctx.mock.fn(validator.validateUpdateGenre);
+    const validateUpdateGenreSpy = context.mock.fn(
+      validationFunctions.validateUpdateGenre,
+    );
 
     assert.throws(
       () => {
@@ -373,20 +410,31 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedGenres(serverParams, 2, async (genres) => {
-      const context = {
-        authentication: serverParams.authentication,
-        database: serverParams.database,
-        logger,
-      };
-      const genreToUpdate = {
-        genreId: genres[0]!.id,
-        name: genres[1]!.name,
-      };
+    const genreIds: string[] = [];
+    const genres = await seedGenres(serverParams, 2);
+    genreIds.push(
+      ...genres.map(({ id }) => {
+        return id;
+      }),
+    );
 
+    const genreToUpdate = {
+      genreId: genres[0]!.id,
+      name: genres[1]!.name,
+    };
+
+    try {
       await assert.rejects(
         async () => {
-          await service.updateGenre(context, genreToUpdate);
+          await serviceFunctions.updateGenre(
+            {
+              authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
+              database: serverParams.database,
+              logger,
+            },
+            genreToUpdate,
+          );
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -398,14 +446,18 @@ await suite('Genre unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteGenres(serverParams, ...genreIds);
+    }
   });
-  await test('Invalid - Delete validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateDeleteGenreSpy = ctx.mock.fn(validator.validateDeleteGenre);
+    const validateDeleteGenreSpy = context.mock.fn(
+      validationFunctions.validateDeleteGenre,
+    );
 
     assert.throws(
       () => {
@@ -422,8 +474,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -432,7 +484,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateDeleteGenreSpy = ctx.mock.fn(validator.validateDeleteGenre);
+    const validateDeleteGenreSpy = context.mock.fn(
+      validationFunctions.validateDeleteGenre,
+    );
 
     assert.throws(
       () => {
@@ -449,8 +503,8 @@ await suite('Genre unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -459,7 +513,9 @@ await suite('Genre unit tests', async () => {
       },
     });
 
-    const validateDeleteGenreSpy = ctx.mock.fn(validator.validateDeleteGenre);
+    const validateDeleteGenreSpy = context.mock.fn(
+      validationFunctions.validateDeleteGenre,
+    );
 
     assert.throws(
       () => {

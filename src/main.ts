@@ -28,6 +28,7 @@ import {
   CONFIGURATIONS,
   EnvironmentManager,
   ERROR_CODES,
+  join,
   Logger,
   resolve,
   type LoggerHandler,
@@ -64,6 +65,15 @@ async function startServer() {
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret,
+    },
+    fileManagerParams: {
+      generatedNameLength: 32,
+      saveDir: join(import.meta.dirname, '..', 'posters'),
+      logger: logger,
+      limits: {
+        fileSize: 4_194_304, // 4mb
+        files: 1, // Currently only 1 file is expected, change if needed
+      },
     },
     corsOptions: {
       methods: Array.from(serverEnvironment.allowedMethods),

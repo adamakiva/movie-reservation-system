@@ -2,25 +2,25 @@ services:
   mrs-pg:
     hostname: mrs-pg
     container_name: mrs-pg
-    # Restart is disabled to allow for reading the correct status code from the container
+    # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
-    image: postgres:17.1-alpine
+    image: postgres:17.2-alpine
     user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
-      # Used by a script to create multiple empty database with the given names
-      - POSTGRES_DATABASES=mrs, mrs_test
+      # Used by a script to create multiple empty database with the given names (without space(s) after the comma(s))
+      - POSTGRES_DATABASES=mrs,mrs_test
       - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
-      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:rw
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
       - /etc/passwd:/etc/passwd:ro
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      # Config options instead of passing it using the CLI
+      # PostgresQL config options instead of passing it via the CLI
       - ./scripts/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
@@ -32,14 +32,14 @@ services:
   mrs:
     hostname: mrs
     container_name: mrs
-    # Restart is disabled to allow for reading the correct status code from the container
+    # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
     build:
       context: ./
       dockerfile: Dockerfile
       target: dev
     user: ${UID}:${GID}
-    # Environment is hard-coded due to it being development environment
+    # Environment variables are hard-coded due to it being a local development environment
     environment:
       # Server options
       - SERVER_PORT=4334

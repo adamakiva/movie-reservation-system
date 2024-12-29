@@ -1,109 +1,44 @@
 import { inArray } from 'drizzle-orm';
 
+import * as serviceFunctions from '../../src/entities/role/service/index.js';
 import type { Role } from '../../src/entities/role/service/utils.js';
+import * as validationFunctions from '../../src/entities/role/validator.js';
 
-import { randomString, randomUUID, type ServerParams } from '../utils.js';
-
-/**********************************************************************************/
-
-type CreateRole = { name: string };
+import { randomString, type ServerParams } from '../utils.js';
 
 /**********************************************************************************/
 
-async function seedRole(
-  serverParams: ServerParams,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    createdRole: Role,
-  ) => Promise<unknown>,
-) {
+type CreateRole = Omit<Role, 'id'>;
+
+/**********************************************************************************/
+
+async function seedRole(serverParams: ServerParams) {
+  return (await seedRoles(serverParams, 1))[0]!;
+}
+
+async function seedRoles(serverParams: ServerParams, amount: number) {
   const { database } = serverParams;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 
-  const rolesToCreate = generateRolesSeedData(1);
+  const rolesToCreate = generateRolesData(amount);
 
-  await handler.insert(roleModel).values(rolesToCreate);
+  const createdRoles = await handler
+    .insert(roleModel)
+    .values(rolesToCreate)
+    .returning({ id: roleModel.id, name: roleModel.name });
 
-  try {
-    const callbackResponse = await fn(rolesToCreate[0]!);
-
-    return callbackResponse;
-  } finally {
-    await cleanupCreatedRoles(database, rolesToCreate);
-  }
+  return createdRoles;
 }
 
-async function seedRoles(
-  serverParams: ServerParams,
-  amount: number,
-  fn: (
-    // eslint-disable-next-line no-unused-vars
-    createdRoles: Role[],
-  ) => Promise<unknown>,
-) {
-  const { database } = serverParams;
-  const handler = database.getHandler();
-  const { role: roleModel } = database.getModels();
-
-  const rolesToCreate = generateRolesSeedData(amount);
-
-  await handler.insert(roleModel).values(rolesToCreate);
-
-  try {
-    const callbackResponse = await fn(rolesToCreate);
-
-    return callbackResponse;
-  } finally {
-    await cleanupCreatedRoles(database, rolesToCreate);
-  }
-}
-
-function generateRolesData<T extends number = 1>(
-  amount = 1 as T,
-): T extends 1 ? CreateRole : CreateRole[] {
+function generateRolesData(amount = 1) {
   const roles = [...Array(amount)].map(() => {
     return {
       name: randomString(8),
     } as CreateRole;
   });
 
-  return (amount === 1 ? roles[0]! : roles) as T extends 1
-    ? CreateRole
-    : CreateRole[];
-}
-
-function generateRolesSeedData(amount: number) {
-  let rolesData = generateRolesData(amount) as CreateRole | CreateRole[];
-  if (!Array.isArray(rolesData)) {
-    rolesData = [rolesData];
-  }
-
-  const rolesToCreate = rolesData.map((roleData) => {
-    return {
-      id: randomUUID(),
-      ...roleData,
-    };
-  });
-
-  return rolesToCreate;
-}
-
-async function cleanupCreatedRoles(
-  database: ServerParams['database'],
-  createdRoles: Awaited<ReturnType<typeof generateRolesSeedData>>,
-) {
-  const handler = database.getHandler();
-  const { role: roleModel } = database.getModels();
-
-  await handler.delete(roleModel).where(
-    inArray(
-      roleModel.id,
-      createdRoles.map((roleToCreate) => {
-        return roleToCreate.id;
-      }),
-    ),
-  );
+  return roles;
 }
 
 async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
@@ -114,8 +49,9 @@ async function deleteRoles(serverParams: ServerParams, ...roleIds: string[]) {
     return;
   }
 
-  const databaseHandler = serverParams.database.getHandler();
-  const { role: roleModel } = serverParams.database.getModels();
+  const { database } = serverParams;
+  const databaseHandler = database.getHandler();
+  const { role: roleModel } = database.getModels();
 
   await databaseHandler.delete(roleModel).where(inArray(roleModel.id, roleIds));
 }
@@ -127,6 +63,8 @@ export {
   generateRolesData,
   seedRole,
   seedRoles,
+  serviceFunctions,
+  validationFunctions,
   type CreateRole,
   type Role,
 };

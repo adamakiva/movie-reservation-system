@@ -14,8 +14,8 @@ import {
   terminateServer,
   test,
   type LoggerHandler,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
   type ServerParams,
 } from './utils.js';
 
@@ -32,7 +32,7 @@ await suite('Middleware tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Valid - Methods middleware', (ctx) => {
+  await test('Valid - Methods middleware', (context) => {
     const methods = [
       'HEAD',
       'GET',
@@ -45,11 +45,11 @@ await suite('Middleware tests', async () => {
 
     const checkMethodMiddleware = Middlewares.checkMethod(new Set(methods));
 
-    const nextMock = ctx.mock.fn();
-    const checkMethodMiddlewareSpy = ctx.mock.fn(checkMethodMiddleware);
+    const nextMock = context.mock.fn();
+    const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);
 
     methods.forEach((allowedMethod, index) => {
-      const { request, response } = createHttpMocks<ResponseWithoutCtx>({
+      const { request, response } = createHttpMocks<ResponseWithoutContext>({
         logger: logger,
         reqOptions: {
           method: allowedMethod,
@@ -63,7 +63,7 @@ await suite('Middleware tests', async () => {
       assert.strictEqual(nextMock.mock.calls[index]?.arguments.length, 0);
     });
   });
-  await test('Invalid - Methods middleware', (ctx) => {
+  await test('Invalid - Methods middleware', (context) => {
     const methods = ['CONNECT', 'TRACE'] as const;
     const allowedMethods = [
       'HEAD',
@@ -80,11 +80,11 @@ await suite('Middleware tests', async () => {
       new Set(allowedMethods),
     );
 
-    const nextMock = ctx.mock.fn();
-    const checkMethodMiddlewareSpy = ctx.mock.fn(checkMethodMiddleware);
+    const nextMock = context.mock.fn();
+    const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);
 
     methods.forEach((disallowedMethod, index) => {
-      const { request, response } = createHttpMocks<ResponseWithoutCtx>({
+      const { request, response } = createHttpMocks<ResponseWithoutContext>({
         logger: logger,
         reqOptions: {
           method: disallowedMethod,
@@ -99,24 +99,24 @@ await suite('Middleware tests', async () => {
       assert.deepStrictEqual(response._getHeaders(), expectedAllowHeader);
     });
   });
-  await test('Valid - Non-existent route middleware', (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Valid - Non-existent route middleware', (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
-    const handleNonExistentRouteSpy = ctx.mock.fn(
+    const handleNonExistentRouteSpy = context.mock.fn(
       Middlewares.handleNonExistentRoute,
     );
     handleNonExistentRouteSpy(request, response);
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.NOT_FOUND);
   });
-  await test('Invalid - Authentication middleware: Missing authorization header', async (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Authentication middleware: Missing authorization header', async (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
-    const httpAuthenticationMiddlewareSpy = ctx.mock
+    const httpAuthenticationMiddlewareSpy = context.mock
       .fn(serverParams.authentication.httpAuthenticationMiddleware)
       .bind(serverParams.authentication);
 
@@ -125,7 +125,7 @@ await suite('Middleware tests', async () => {
         await httpAuthenticationMiddlewareSpy()(
           request,
           response,
-          ctx.mock.fn(),
+          context.mock.fn(),
         );
       },
       (err) => {
@@ -139,15 +139,15 @@ await suite('Middleware tests', async () => {
       },
     );
   });
-  await test('Invalid - Authentication middleware: Invalid token', async (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Authentication middleware: Invalid token', async (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
       reqOptions: {
         headers: { authorization: 'Bearer bla' },
       },
     });
 
-    const httpAuthenticationMiddlewareSpy = ctx.mock
+    const httpAuthenticationMiddlewareSpy = context.mock
       .fn(serverParams.authentication.httpAuthenticationMiddleware)
       .bind(serverParams.authentication);
 
@@ -156,7 +156,7 @@ await suite('Middleware tests', async () => {
         await httpAuthenticationMiddlewareSpy()(
           request,
           response,
-          ctx.mock.fn(),
+          context.mock.fn(),
         );
       },
       (err) => {
@@ -170,45 +170,45 @@ await suite('Middleware tests', async () => {
       },
     );
   });
-  await test('Invalid - Error handler middleware: Headers sent', (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Error handler middleware: Headers sent', (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
-    const nextMock = ctx.mock.fn();
+    const nextMock = context.mock.fn();
 
     response.headersSent = true;
     const error = new Error('Expected error');
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
     errorHandlerSpy(error, request, response, nextMock);
 
     assert.strictEqual(nextMock.mock.callCount(), 1);
     assert.deepStrictEqual(nextMock.mock.calls[0]?.arguments[0], error);
   });
-  await test('Invalid - Error handler middleware: MRS error instance', (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Error handler middleware: MRS error instance', (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
-    const nextMock = ctx.mock.fn();
+    const nextMock = context.mock.fn();
 
     const error = new MRSError(999, 'Expected error');
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
     errorHandlerSpy(error, request, response, nextMock);
 
     assert.strictEqual(response.statusCode, error.getClientError().code);
     assert.strictEqual(response._getJSONData(), error.getClientError().message);
   });
-  await test('Invalid - Error handler middleware: Payload error', (ctx) => {
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Error handler middleware: Payload error', (context) => {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
-    const nextMock = ctx.mock.fn();
+    const nextMock = context.mock.fn();
 
     const error: Error & { type?: string } = new Error('Expected error');
     error.type = 'entity.too.large';
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
     errorHandlerSpy(error, request, response, nextMock);
 
     assert.strictEqual(
@@ -216,84 +216,84 @@ await suite('Middleware tests', async () => {
       HTTP_STATUS_CODES.CONTENT_TOO_LARGE,
     );
   });
-  await test('Invalid - Error handler middleware: Foreign key violation', (ctx) => {
-    ctx.mock.method(logger, 'fatal', () => {
+  await test('Invalid - Error handler middleware: Foreign key violation', (context) => {
+    context.mock.method(logger, 'fatal', () => {
       // Since this method log a fatal error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
     const err = new PostgresError('Expected error');
     err.code = ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION;
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, ctx.mock.fn());
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
+    errorHandlerSpy(err, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
-  await test('Invalid - Error handler middleware: Unique violation', (ctx) => {
-    ctx.mock.method(logger, 'fatal', () => {
+  await test('Invalid - Error handler middleware: Unique violation', (context) => {
+    context.mock.method(logger, 'fatal', () => {
       // Since this method log a fatal error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
     const err = new PostgresError('Expected error');
     err.code = ERROR_CODES.POSTGRES.UNIQUE_VIOLATION;
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, ctx.mock.fn());
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
+    errorHandlerSpy(err, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
-  await test('Invalid - Error handler middleware: Too many connections', (ctx) => {
-    ctx.mock.method(logger, 'fatal', () => {
+  await test('Invalid - Error handler middleware: Too many connections', (context) => {
+    context.mock.method(logger, 'fatal', () => {
       // Since this method log a fatal error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
     const err = new PostgresError('Expected error');
     err.code = ERROR_CODES.POSTGRES.TOO_MANY_CONNECTIONS;
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, ctx.mock.fn());
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
+    errorHandlerSpy(err, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
-  await test('Invalid - Error handler middleware: Unexpected error object', (ctx) => {
-    ctx.mock.method(logger, 'fatal', () => {
+  await test('Invalid - Error handler middleware: Unexpected error object', (context) => {
+    context.mock.method(logger, 'fatal', () => {
       // Since this method log a fatal error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
     const err = new Error('Expected error');
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, ctx.mock.fn());
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
+    errorHandlerSpy(err, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
-  await test('Invalid - Error handler middleware: Unexpected non-error object', (ctx) => {
-    ctx.mock.method(logger, 'fatal', () => {
+  await test('Invalid - Error handler middleware: Unexpected non-error object', (context) => {
+    context.mock.method(logger, 'fatal', () => {
       // Since this method log a fatal error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithCtx>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger: logger,
     });
 
-    const errorHandlerSpy = ctx.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(5, request, response, ctx.mock.fn());
+    const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
+    errorHandlerSpy(5, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });

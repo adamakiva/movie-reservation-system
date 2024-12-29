@@ -3,6 +3,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  integer,
   pgTable,
   point,
   real,
@@ -42,7 +43,9 @@ const roleModel = pgTable(
     ...timestamps,
   },
   (table) => {
-    return [uniqueIndex('role_name_unique_index').using('btree', table.name)];
+    return [
+      uniqueIndex('role_name_unique_index').using('btree', table.name.asc()),
+    ];
   },
 );
 
@@ -59,6 +62,8 @@ const userModel = pgTable(
         () => {
           return roleModel.id;
         },
+        // Enforced on the code level, you may not delete a role which has users
+        // attached to it
         { onDelete: 'no action', onUpdate: 'cascade' },
       )
       .notNull(),
@@ -67,7 +72,7 @@ const userModel = pgTable(
   (table) => {
     return [
       uniqueIndex('user_email_unique_index').using('btree', table.email.asc()),
-      index('user_role_id_index').using('btree', table.roleId),
+      index('user_role_id_index').using('btree', table.roleId.asc()),
       uniqueIndex('user_cursor_unique_index').using(
         'btree',
         table.id.asc(),
@@ -79,32 +84,57 @@ const userModel = pgTable(
 
 /**********************************************************************************/
 
-const genreModel = pgTable(
-  'genre',
+const genreModel = pgTable('genre', {
+  id: uuid('id').primaryKey().defaultRandom().notNull(),
+  name: varchar('name').unique().notNull(),
+  ...timestamps,
+});
+
+const movieModel = pgTable(
+  'movie',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    name: varchar('name').unique().notNull(),
+    title: varchar('title').notNull(),
+    description: varchar('description').notNull(),
+    price: real('price').notNull(),
+    genreId: uuid('genre_id')
+      .references(
+        () => {
+          return genreModel.id;
+        },
+        { onDelete: 'no action', onUpdate: 'cascade' },
+      )
+      .notNull(),
     ...timestamps,
   },
   (table) => {
-    return [uniqueIndex('genre_name_unique_index').using('btree', table.name)];
+    return [
+      index('movie_genre_id_index').using('btree', table.genreId.asc()),
+      uniqueIndex('movie_cursor_unique_index').using(
+        'btree',
+        table.id.asc(),
+        table.createdAt.asc(),
+      ),
+    ];
   },
 );
 
-const movieModel = pgTable('movie', {
-  id: uuid('id').primaryKey().defaultRandom().notNull(),
-  title: varchar('title').unique().notNull(),
-  description: varchar('description').notNull(),
-  relativeImagePath: varchar('relative_image_path').notNull(),
-  price: real('price').notNull(),
-  genreId: uuid('genre_id')
+const moviePosterModel = pgTable('movie_poster', {
+  movieId: uuid('movie_id')
+    .primaryKey()
     .references(
       () => {
-        return genreModel.id;
+        return movieModel.id;
       },
+      // On delete is 'no action' instead of 'cascade' since we need to delete
+      // the actual file as well. As a result it is done manually
       { onDelete: 'no action', onUpdate: 'cascade' },
-    )
-    .notNull(),
+    ),
+  // Absolute route which includes file name and extension
+  path: varchar('path').notNull(),
+  mimeType: varchar('mime_type').notNull(),
+  // In bytes
+  size: integer('size').notNull(),
   ...timestamps,
 });
 
@@ -148,8 +178,8 @@ const showtimeModel = pgTable(
   },
   (table) => {
     return [
-      index('showtime_movie_index').using('btree', table.movieId),
-      index('showtime_hall_index').using('btree', table.hallId),
+      index('showtime_movie_index').using('btree', table.movieId.asc()),
+      index('showtime_hall_index').using('btree', table.hallId.asc()),
     ];
   },
 );
@@ -175,6 +205,7 @@ export {
   genreModel,
   hallModel,
   movieModel,
+  moviePosterModel,
   roleModel,
   showtimeModel,
   showtimeSummaryModel,

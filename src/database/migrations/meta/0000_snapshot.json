@@ -1,5 +1,5 @@
 {
-  "id": "421222b7-1e2a-4c9a-8545-f0febafe752d",
+  "id": "366c7f39-e649-4eac-b3b5-dfc450feaa18",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -36,23 +36,7 @@
           "default": "now()"
         }
       },
-      "indexes": {
-        "genre_name_unique_index": {
-          "name": "genre_name_unique_index",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -151,12 +135,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "relative_image_path": {
-          "name": "relative_image_path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
         "price": {
           "name": "price",
           "type": "real",
@@ -184,7 +162,44 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "movie_genre_id_index": {
+          "name": "movie_genre_id_index",
+          "columns": [
+            {
+              "expression": "genre_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "movie_cursor_unique_index": {
+          "name": "movie_cursor_unique_index",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "movie_genre_id_genre_id_fk": {
           "name": "movie_genre_id_genre_id_fk",
@@ -201,15 +216,72 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "movie_title_unique": {
-          "name": "movie_title_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "title"
-          ]
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.movie_poster": {
+      "name": "movie_poster",
+      "schema": "",
+      "columns": {
+        "movie_id": {
+          "name": "movie_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "path": {
+          "name": "path",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size": {
+          "name": "size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
+      "indexes": {},
+      "foreignKeys": {
+        "movie_poster_movie_id_movie_id_fk": {
+          "name": "movie_poster_movie_id_movie_id_fk",
+          "tableFrom": "movie_poster",
+          "tableTo": "movie",
+          "columnsFrom": [
+            "movie_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

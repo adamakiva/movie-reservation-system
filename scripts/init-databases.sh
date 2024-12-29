@@ -25,7 +25,7 @@ main() {
     if [ -n "$POSTGRES_DATABASES" ]; then
         printf "Creating multiple database...\n";
 
-        for database in $(printf "%s", "$POSTGRES_DATABASES" | tr ',' ' ', "$"); do
+        for database in $(printf "%s", "$POSTGRES_DATABASES" | tr ',' ' '); do
                 create_database_grant_privilege "$database";
         done
 

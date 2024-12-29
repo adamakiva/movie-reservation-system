@@ -1,6 +1,3 @@
-import * as service from '../../src/entities/user/service/index.js';
-import * as validator from '../../src/entities/user/validator.js';
-
 import {
   after,
   assert,
@@ -13,7 +10,7 @@ import {
   MRSError,
   randomString,
   randomUUID,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
   suite,
   terminateServer,
@@ -21,7 +18,15 @@ import {
   VALIDATION,
 } from '../utils.js';
 
-import { generateUsersData, seedUser, seedUsers } from './utils.js';
+import {
+  deleteRoles,
+  deleteUsers,
+  generateRandomUserData,
+  seedUser,
+  seedUsers,
+  serviceFunctions,
+  validationFunctions,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -40,12 +45,14 @@ await suite('User unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Invalid - Read single validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateGetUserSpy = ctx.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -62,15 +69,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: '' },
       },
     });
 
-    const validateGetUserSpy = ctx.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -87,15 +96,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read single validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomString() },
       },
     });
 
-    const validateGetUserSpy = ctx.mock.fn(validator.validateGetUser);
+    const validateGetUserSpy = context.mock.fn(
+      validationFunctions.validateGetUser,
+    );
 
     assert.throws(
       () => {
@@ -112,9 +123,9 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read single service: Non-existent entry', async (ctx) => {
-    const { authentication, database } = serverParams;
-    ctx.mock.method(database, 'getHandler', () => {
+  await test('Invalid - Read single service: Non-existent entry', async (context) => {
+    const { authentication, fileManager, database } = serverParams;
+    context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
           return {
@@ -133,13 +144,14 @@ await suite('User unit tests', async () => {
         },
       } as const;
     });
-    const getUserSpy = ctx.mock.fn(service.getUser);
+    const getUserSpy = context.mock.fn(serviceFunctions.getUser);
 
     await assert.rejects(
       async () => {
         await getUserSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -156,15 +168,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Empty cursor', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Empty cursor', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: '' },
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -181,8 +195,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Cursor too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Cursor too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -193,7 +207,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -210,8 +226,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Cursor too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Cursor too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -222,7 +238,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -239,15 +257,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Invalid cursor', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -264,8 +284,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Page size too low', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Page size too low', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -274,7 +294,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -291,8 +313,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Page size too high', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Page size too high', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -301,7 +323,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -318,15 +342,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Read multiple validation: Invalid page size', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Read multiple validation: Invalid page size', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { pageSize: randomString(8) },
       },
     });
 
-    const validateGetUsersSpy = ctx.mock.fn(validator.validateGetUsers);
+    const validateGetUsersSpy = context.mock.fn(
+      validationFunctions.validateGetUsers,
+    );
 
     assert.throws(
       () => {
@@ -343,18 +369,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing first name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing first name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: undefined,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -371,18 +399,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty first name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty first name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: '',
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -399,18 +429,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: First name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: First name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: 'a'.repeat(USER.FIRST_NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -427,18 +459,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: First name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: First name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           firstName: 'a'.repeat(USER.FIRST_NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -455,18 +489,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing last name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing last name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: undefined,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -483,18 +519,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty last name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty last name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: '',
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -511,18 +549,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Last name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Last name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: 'a'.repeat(USER.LAST_NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -539,18 +579,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Last name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Last name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           lastName: 'a'.repeat(USER.LAST_NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -567,18 +609,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: undefined,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -595,18 +639,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: '',
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -623,18 +669,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Email too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Email too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: 'a'.repeat(USER.EMAIL.MIN_LENGTH.VALUE - 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -651,18 +699,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Email too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Email too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: `${'a'.repeat(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -679,18 +729,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Invalid email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Invalid email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           email: randomString(),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -707,18 +759,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing password', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing password', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: undefined,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -735,18 +789,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty password', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty password', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: '',
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -763,18 +819,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Password too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Password too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: 'a'.repeat(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -791,18 +849,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Password too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Password too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           password: 'a'.repeat(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -819,18 +879,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Missing role id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Missing role id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: undefined,
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -847,18 +909,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Empty role id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Empty role id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: '',
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -875,18 +939,20 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Create validation: Invalid role id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Create validation: Invalid role id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
-          ...generateUsersData([randomUUID()], 1),
+          ...generateRandomUserData(),
           roleId: randomString(),
         },
       },
     });
 
-    const validateCreateUserSpy = ctx.mock.fn(validator.validateCreateUser);
+    const validateCreateUserSpy = context.mock.fn(
+      validationFunctions.validateCreateUser,
+    );
 
     assert.throws(
       () => {
@@ -904,20 +970,33 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    await seedUser(serverParams, true, async (user, role) => {
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
+
+    const { createdUser: user, createdRole: role } = await seedUser(
+      serverParams,
+      true,
+    );
+    userIds.push(user.id);
+    roleIds.push(role.id);
+
+    try {
       await assert.rejects(
         async () => {
-          await service.createUser(
+          // In case the function does not throw, we want to clean the created entry
+          const createdUser = await serviceFunctions.createUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },
             {
-              ...generateUsersData([role.id], 1),
+              ...generateRandomUserData(role.id),
               email: user.email,
             },
           );
+          userIds.push(createdUser.id);
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
@@ -929,20 +1008,24 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
     const roleId = randomUUID();
 
     await assert.rejects(
       async () => {
-        await service.createUser(
+        await serviceFunctions.createUser(
           {
             authentication: serverParams.authentication,
+            fileManager: serverParams.fileManager,
             database: serverParams.database,
             logger,
           },
-          generateUsersData([roleId], 1),
+          generateRandomUserData(roleId),
         );
       },
       (err) => {
@@ -956,15 +1039,17 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation - Without updates', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Without updates', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -981,13 +1066,15 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { body: { roleId: randomUUID() } },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1004,8 +1091,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: '' },
@@ -1013,7 +1100,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1030,8 +1119,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomString() },
@@ -1039,7 +1128,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1056,8 +1147,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty first name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty first name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1065,7 +1156,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1082,8 +1175,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: First name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: First name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1094,7 +1187,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1111,8 +1206,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: First name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: First name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1123,7 +1218,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1140,8 +1237,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty last name', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty last name', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1149,7 +1246,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1166,8 +1265,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Last name too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Last name too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1178,7 +1277,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1195,8 +1296,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Last name too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Last name too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1207,7 +1308,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1224,8 +1327,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1233,7 +1336,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1250,8 +1355,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Email too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Email too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1262,7 +1367,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1279,8 +1386,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Email too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Email too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1291,7 +1398,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1308,8 +1417,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1317,7 +1426,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1334,8 +1445,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty password', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty password', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1343,7 +1454,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1360,8 +1473,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Password too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Password too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1372,7 +1485,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1389,8 +1504,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Password too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Password too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1401,7 +1516,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1418,8 +1535,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Empty role id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Empty role id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1427,7 +1544,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1444,8 +1563,8 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Update validation: Invalid role id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Update validation: Invalid role id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { userId: randomUUID() },
@@ -1453,7 +1572,9 @@ await suite('User unit tests', async () => {
       },
     });
 
-    const validateUpdateUserSpy = ctx.mock.fn(validator.validateUpdateUser);
+    const validateUpdateUserSpy = context.mock.fn(
+      validationFunctions.validateUpdateUser,
+    );
 
     assert.throws(
       () => {
@@ -1475,9 +1596,10 @@ await suite('User unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await service.updateUser(
+        await serviceFunctions.updateUser(
           {
             authentication: serverParams.authentication,
+            fileManager: serverParams.fileManager,
             database: serverParams.database,
             logger,
           },
@@ -1499,12 +1621,32 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    await seedUsers(serverParams, 2, false, async (users) => {
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
+
+    const { createdUsers: users, createdRoles: roles } = await seedUsers(
+      serverParams,
+      2,
+      false,
+    );
+    userIds.push(
+      ...users.map(({ id }) => {
+        return id;
+      }),
+    );
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       await assert.rejects(
         async () => {
-          await service.updateUser(
+          await serviceFunctions.updateUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },
@@ -1524,17 +1666,30 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
 
-    await seedUser(serverParams, true, async (user) => {
+    const { createdUser: user, createdRole: role } = await seedUser(
+      serverParams,
+      true,
+    );
+    userIds.push(user.id);
+    roleIds.push(role.id);
+
+    try {
       await assert.rejects(
         async () => {
-          await service.updateUser(
+          await serviceFunctions.updateUser(
             {
               authentication: serverParams.authentication,
+              fileManager: serverParams.fileManager,
               database: serverParams.database,
               logger,
             },
@@ -1554,14 +1709,19 @@ await suite('User unit tests', async () => {
           return true;
         },
       );
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
-  await test('Invalid - Delete validation: Missing id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Missing id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateDeleteUserSpy = ctx.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {
@@ -1578,13 +1738,15 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Empty id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Empty id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { userId: '' } },
     });
 
-    const validateDeleteUserSpy = ctx.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {
@@ -1601,13 +1763,15 @@ await suite('User unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Delete validation: Invalid id', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Delete validation: Invalid id', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { userId: randomString() } },
     });
 
-    const validateDeleteUserSpy = ctx.mock.fn(validator.validateDeleteUser);
+    const validateDeleteUserSpy = context.mock.fn(
+      validationFunctions.validateDeleteUser,
+    );
 
     assert.throws(
       () => {

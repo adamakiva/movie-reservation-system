@@ -6,14 +6,14 @@ import {
   type NextFunction,
   type Request,
   type RequestContext,
-  type ResponseWithCtx,
-  type ResponseWithoutCtx,
+  type ResponseWithContext,
+  type ResponseWithoutContext,
 } from '../../utils/index.js';
 
 /**********************************************************************************/
 
 function checkMethod(allowedMethods: Set<string>) {
-  return (req: Request, res: ResponseWithoutCtx, next: NextFunction) => {
+  return (req: Request, res: ResponseWithoutContext, next: NextFunction) => {
     if (!allowedMethods.has(req.method.toUpperCase())) {
       // Reason for explicitly adding the header:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
@@ -29,14 +29,14 @@ function checkMethod(allowedMethods: Set<string>) {
 }
 
 function attachContext(requestContext: RequestContext) {
-  return (_: Request, res: ResponseWithCtx, next: NextFunction) => {
+  return (_: Request, res: ResponseWithContext, next: NextFunction) => {
     res.locals.context = requestContext;
 
     next();
   };
 }
 
-function handleNonExistentRoute(req: Request, res: ResponseWithoutCtx) {
+function handleNonExistentRoute(req: Request, res: ResponseWithoutContext) {
   res
     .status(HTTP_STATUS_CODES.NOT_FOUND)
     .json(`The route '${req.url}' does not exist`);
@@ -45,7 +45,7 @@ function handleNonExistentRoute(req: Request, res: ResponseWithoutCtx) {
 function errorHandler(
   err: unknown,
   _: Request,
-  res: ResponseWithCtx,
+  res: ResponseWithContext,
   next: NextFunction,
 ) {
   if (res.headersSent) {
@@ -83,7 +83,7 @@ function errorHandler(
 
 /**********************************************************************************/
 
-function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
+function handlePostgresError(err: pg.PostgresError, res: ResponseWithContext) {
   const { FOREIGN_KEY_VIOLATION, UNIQUE_VIOLATION, TOO_MANY_CONNECTIONS } =
     ERROR_CODES.POSTGRES;
   const { logger } = res.locals.context;
@@ -92,20 +92,20 @@ function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
     case FOREIGN_KEY_VIOLATION:
     case UNIQUE_VIOLATION:
       logger.fatal(
-        err,
         'Should have been handled by the code and never get here. Check the' +
-          ' code implementation',
+          ' code implementation:\n',
+        err,
       );
       break;
     case TOO_MANY_CONNECTIONS:
       logger.fatal(
-        err,
         'Exceeded database maximum connections.\nThis Should never happen,' +
-          ' check the server and database logs to understand why it happened',
+          ' check the server and database logs to understand why it happened:\n',
+        err,
       );
       break;
     default:
-      logger.fatal(err, 'Unexpected database error');
+      logger.fatal('Unexpected database error:\n', err);
       break;
   }
 
@@ -114,13 +114,13 @@ function handlePostgresError(err: pg.PostgresError, res: ResponseWithCtx) {
     .json('Unexpected error, please try again');
 }
 
-function handleUnexpectedError(err: unknown, res: ResponseWithCtx) {
+function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
   const { logger } = res.locals.context;
 
   if (err instanceof Error) {
-    logger.fatal(err, 'Unhandled exception');
+    logger.fatal('Unhandled exception:\n', err);
   } else {
-    logger.fatal(err, 'Caught a non-error object.\nThis should never happen');
+    logger.fatal('Caught a non-error object.\nThis should never happen', err);
   }
 
   res

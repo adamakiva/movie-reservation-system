@@ -5,6 +5,7 @@ import tslint from 'typescript-eslint';
 
 /**********************************************************************************/
 
+// Options shared by both the source code and the tests
 const sharedOptions = {
   plugins: {
     '@typescript-eslint': tslint.plugin,
@@ -31,6 +32,7 @@ const sharedOptions = {
 
 /**********************************************************************************/
 
+// Rules for the source code and tests
 const rules = {
   source: {
     // JavaScript
@@ -619,6 +621,7 @@ const rules = {
 
 /**********************************************************************************/
 
+// Export the relevant rules for the relevant folders
 export default tslint.config(
   {
     ...sharedOptions,

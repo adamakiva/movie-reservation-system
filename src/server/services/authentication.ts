@@ -6,7 +6,7 @@ import {
   readFile,
   type NextFunction,
   type Request,
-  type ResponseWithCtx,
+  type ResponseWithContext,
 } from '../../utils/index.js';
 
 /**********************************************************************************/
@@ -208,7 +208,7 @@ class AuthenticationManager {
 
   async #httpAuthenticationMiddleware(
     req: Request,
-    _res: ResponseWithCtx,
+    _res: ResponseWithContext,
     next: NextFunction,
   ) {
     await this.#checkAuthenticationToken(req.headers.authorization);
@@ -245,6 +245,7 @@ class AuthenticationManager {
         throw new MRSError(
           HTTP_STATUS_CODES.UNAUTHORIZED,
           'Malformed JWT token',
+          err.cause,
         );
       }
     }

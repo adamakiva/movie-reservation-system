@@ -17,8 +17,9 @@ import {
 
 import {
   checkUserPassword,
+  deleteRoles,
   deleteUsers,
-  generateUsersData,
+  generateRandomUserData,
   seedUser,
   seedUsers,
   type User,
@@ -36,9 +37,31 @@ await suite('User integration tests', async () => {
   });
 
   await test('Valid - Read a single page', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
 
-    await seedUsers(serverParams, 32, false, async (users) => {
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdUsers: users, createdRoles: roles } = await seedUsers(
+      serverParams,
+      32,
+      false,
+    );
+    userIds.push(
+      ...users.map(({ id }) => {
+        return id;
+      }),
+    );
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/users?${new URLSearchParams({ pageSize: '64' })}`,
         method: 'GET',
@@ -64,12 +87,37 @@ await suite('User integration tests', async () => {
       assert.strictEqual(!!responseBody.page, true);
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Valid - Read many pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
 
-    await seedUsers(serverParams, 128, false, async (users) => {
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdUsers: users, createdRoles: roles } = await seedUsers(
+      serverParams,
+      128,
+      false,
+    );
+    userIds.push(
+      ...users.map(({ id }) => {
+        return id;
+      }),
+    );
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       let pagination = {
         hasNext: true,
         cursor: 'null',
@@ -103,12 +151,37 @@ await suite('User integration tests', async () => {
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(users.length, 0);
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Valid - Read a lot pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const userIds: string[] = [];
+    const roleIds: string[] = [];
 
-    await seedUsers(serverParams, 8_192, false, async (users) => {
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdUsers: users, createdRoles: roles } = await seedUsers(
+      serverParams,
+      8_192,
+      false,
+    );
+    userIds.push(
+      ...users.map(({ id }) => {
+        return id;
+      }),
+    );
+    roleIds.push(
+      ...roles.map(({ id }) => {
+        return id;
+      }),
+    );
+
+    try {
       let pagination = {
         hasNext: true,
         cursor: 'null',
@@ -142,7 +215,10 @@ await suite('User integration tests', async () => {
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(users.length, 0);
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Invalid - Create request with excess size', async () => {
     const { status } = await sendHttpRequest({
@@ -203,9 +279,22 @@ await suite('User integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const roleIds: string[] = [];
+    const userIds: string[] = [];
 
-    await seedUser(serverParams, true, async (user, role) => {
+    // Not concurrent on purpose, allows for easier error handling and speed is
+    // irrelevant for the tests. Reason being if the creation is finished before
+    // the failure of the tokens fetch we will need to clean them up. This way
+    // we don't have to
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdUser: user, createdRole: role } = await seedUser(
+      serverParams,
+      true,
+    );
+    roleIds.push(role.id);
+    userIds.push(user.id);
+
+    try {
       const updatedUserData = {
         firstName: randomString(),
         lastName: randomString(),
@@ -236,7 +325,10 @@ await suite('User integration tests', async () => {
         email: updatedUserData.email,
         password: updatedUserData.password,
       });
-    });
+    } finally {
+      await deleteUsers(serverParams, ...userIds);
+      await deleteRoles(serverParams, ...roleIds);
+    }
   });
   await test('Valid - Delete existent user', async () => {
     let userId = '';
@@ -248,7 +340,7 @@ await suite('User integration tests', async () => {
         route: `${serverParams.routes.http}/users`,
         method: 'POST',
         headers: { Authorization: accessToken },
-        payload: generateUsersData([roleId], 1),
+        payload: generateRandomUserData(roleId),
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 

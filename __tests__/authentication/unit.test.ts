@@ -1,5 +1,5 @@
-import * as service from '../../src/entities/authentication/service/index.js';
-import * as validator from '../../src/entities/authentication/validator.js';
+import * as serviceFunctions from '../../src/entities/authentication/service/index.js';
+import * as validationFunctions from '../../src/entities/authentication/validator.js';
 
 import {
   after,
@@ -17,7 +17,7 @@ import {
   test,
   VALIDATION,
   type LoggerHandler,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   type ServerParams,
 } from '../utils.js';
 
@@ -38,8 +38,8 @@ await suite('Authentication unit tests', async () => {
     terminateServer(serverParams);
   });
 
-  await test('Invalid - Login validation: Missing email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Missing email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -48,7 +48,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -65,8 +65,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login validation: Invalid email', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Invalid email', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -76,7 +76,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -93,8 +93,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login validation: Email too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Email too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -104,7 +104,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -121,8 +121,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login validation: Missing password', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Missing password', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -131,7 +131,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -148,8 +148,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login validation: Password too short', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Password too short', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -159,7 +159,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -176,8 +176,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login validation: Password too long', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Login validation: Password too long', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -187,7 +187,7 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateLoginSpy = ctx.mock.fn(validator.validateLogin);
+    const validateLoginSpy = context.mock.fn(validationFunctions.validateLogin);
 
     assert.throws(
       () => {
@@ -204,16 +204,17 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login service: Non-existent user', async (ctx) => {
-    const { authentication, database } = serverParams;
+  await test('Invalid - Login service: Non-existent user', async (context) => {
+    const { authentication, fileManager, database } = serverParams;
 
-    const loginSpy = ctx.mock.fn(service.login);
+    const loginSpy = context.mock.fn(serviceFunctions.login);
 
     await assert.rejects(
       async () => {
         await loginSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -233,10 +234,10 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Login service: Incorrect password', async (ctx) => {
-    const { authentication, database } = serverParams;
+  await test('Invalid - Login service: Incorrect password', async (context) => {
+    const { authentication, fileManager, database } = serverParams;
 
-    ctx.mock.method(database, 'getHandler', () => {
+    context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
           return {
@@ -255,13 +256,14 @@ await suite('Authentication unit tests', async () => {
         },
       } as const;
     });
-    const loginSpy = ctx.mock.fn(service.login);
+    const loginSpy = context.mock.fn(serviceFunctions.login);
 
     await assert.rejects(
       async () => {
         await loginSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -281,13 +283,13 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Refresh validation: Missing refresh token', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Refresh validation: Missing refresh token', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
-    const validateRefreshAccessTokenSpy = ctx.mock.fn(
-      validator.validateRefreshAccessToken,
+    const validateRefreshAccessTokenSpy = context.mock.fn(
+      validationFunctions.validateRefreshAccessToken,
     );
 
     assert.throws(
@@ -305,8 +307,8 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Refresh validation: Invalid refresh token', (ctx) => {
-    const { request } = createHttpMocks<ResponseWithCtx>({
+  await test('Invalid - Refresh validation: Invalid refresh token', (context) => {
+    const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -315,8 +317,8 @@ await suite('Authentication unit tests', async () => {
       },
     });
 
-    const validateRefreshAccessTokenSpy = ctx.mock.fn(
-      validator.validateRefreshAccessToken,
+    const validateRefreshAccessTokenSpy = context.mock.fn(
+      validationFunctions.validateRefreshAccessToken,
     );
 
     assert.throws(
@@ -334,16 +336,19 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Refresh service: Malformed JWT', async (ctx) => {
-    const { authentication, database } = serverParams;
+  await test('Invalid - Refresh service: Malformed JWT', async (context) => {
+    const { authentication, fileManager, database } = serverParams;
 
-    const refreshAccessTokenSpy = ctx.mock.fn(service.refreshAccessToken);
+    const refreshAccessTokenSpy = context.mock.fn(
+      serviceFunctions.refreshAccessToken,
+    );
 
     await assert.rejects(
       async () => {
         await refreshAccessTokenSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },
@@ -360,21 +365,24 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Refresh service: Missing JWT subject', async (ctx) => {
-    const { authentication, database } = serverParams;
+  await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
+    const { authentication, fileManager, database } = serverParams;
 
-    ctx.mock.method(authentication, 'validateToken', async () => {
+    context.mock.method(authentication, 'validateToken', async () => {
       return await Promise.resolve({
         payload: { sub: undefined },
       });
     });
-    const refreshAccessTokenSpy = ctx.mock.fn(service.refreshAccessToken);
+    const refreshAccessTokenSpy = context.mock.fn(
+      serviceFunctions.refreshAccessToken,
+    );
 
     await assert.rejects(
       async () => {
         await refreshAccessTokenSpy(
           {
             authentication,
+            fileManager,
             database,
             logger,
           },

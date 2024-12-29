@@ -1,7 +1,7 @@
 import {
   type Request,
   type RequestContext,
-  type ResponseWithCtx,
+  type ResponseWithContext,
   HTTP_STATUS_CODES,
 } from '../../utils/index.js';
 
@@ -9,13 +9,13 @@ import * as healthCheckValidator from './validator.js';
 
 /**********************************************************************************/
 
-function livenessHealthCheck(req: Request, res: ResponseWithCtx) {
+function livenessHealthCheck(req: Request, res: ResponseWithContext) {
   healthCheckValidator.validateHealthCheck(req, res);
 
   res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
-async function readinessHealthCheck(req: Request, res: ResponseWithCtx) {
+async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
   healthCheckValidator.validateHealthCheck(req, res);
 
   const notReadyMsg = await isReady(res.locals.context);

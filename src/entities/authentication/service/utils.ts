@@ -74,6 +74,7 @@ async function validatePassword(params: {
     throw new MRSError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Email and/or password are incorrect',
+      (err as Error).cause,
     );
   }
 }
@@ -121,7 +122,11 @@ async function refreshAccessToken(
       throw err;
     }
 
-    throw new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized');
+    throw new MRSError(
+      HTTP_STATUS_CODES.UNAUTHORIZED,
+      'Unauthorized',
+      (err as Error).cause,
+    );
   }
 }
 
