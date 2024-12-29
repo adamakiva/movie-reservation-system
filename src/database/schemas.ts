@@ -62,6 +62,8 @@ const userModel = pgTable(
         () => {
           return roleModel.id;
         },
+        // Enforced on the code level, you may not delete a role which has users
+        // attached to it
         { onDelete: 'no action', onUpdate: 'cascade' },
       )
       .notNull(),
@@ -82,25 +84,17 @@ const userModel = pgTable(
 
 /**********************************************************************************/
 
-const genreModel = pgTable(
-  'genre',
-  {
-    id: uuid('id').primaryKey().defaultRandom().notNull(),
-    name: varchar('name').unique().notNull(),
-    ...timestamps,
-  },
-  (table) => {
-    return [
-      uniqueIndex('genre_name_unique_index').using('btree', table.name.asc()),
-    ];
-  },
-);
+const genreModel = pgTable('genre', {
+  id: uuid('id').primaryKey().defaultRandom().notNull(),
+  name: varchar('name').unique().notNull(),
+  ...timestamps,
+});
 
 const movieModel = pgTable(
   'movie',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    title: varchar('title').unique().notNull(),
+    title: varchar('title').notNull(),
     description: varchar('description').notNull(),
     price: real('price').notNull(),
     genreId: uuid('genre_id')
@@ -136,7 +130,7 @@ const moviePosterModel = pgTable('movie_poster', {
       // the actual file as well. As a result it is done manually
       { onDelete: 'no action', onUpdate: 'cascade' },
     ),
-  // Includes file name and extension
+  // Absolute route which includes file name and extension
   path: varchar('path').notNull(),
   mimeType: varchar('mime_type').notNull(),
   // In bytes

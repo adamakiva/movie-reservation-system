@@ -1,6 +1,7 @@
-FROM node:22.11.0-alpine AS dev
+FROM node:22.12.0-alpine AS dev
 
-# Install dependencies without cache
+# Install dependencies without cache (Not set versions since it is used for the
+# local development environment)
 RUN apk add --no-cache curl tini
 
 # Set the workdir

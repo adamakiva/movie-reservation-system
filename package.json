@@ -21,7 +21,7 @@
     "argon2": "~0.41.1",
     "compression": "~1.7.5",
     "cors": "~2.8.5",
-    "drizzle-orm": "~0.38.2",
+    "drizzle-orm": "~0.38.3",
     "express": "~5.0.1",
     "file-type": "~19.6.0",
     "helmet": "~8.0.0",
@@ -46,11 +46,11 @@
     "globals": "~15.14.0",
     "nlf": "~2.1.1",
     "node-mocks-http": "~1.16.2",
-    "npm-check-updates": "~17.1.11",
+    "npm-check-updates": "~17.1.12",
     "prettier": "~3.4.2",
     "tsx": "~4.19.2",
     "typescript": "~5.7.2",
-    "typescript-eslint": "~8.18.1"
+    "typescript-eslint": "~8.18.2"
   },
   "engines": {
     "node": ">=22"

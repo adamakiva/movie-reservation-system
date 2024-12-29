@@ -14,23 +14,25 @@ For any questions/suggestions, contact details are in my github profile
 ## Libraries
 
 - **Express.js** - Http routing
-- **Drizzle ORM** - SQL integration
-- **postgres** - Native handler for postgreSQL
+- **Drizzle ORM** - SQL ORM
+- **postgres** - Native handler for postgreSQL (used by the ORM)
 - **jose** - JWT generation & validation
 - **zod** - Validation library
 - **ESLint & Prettier** - Code linter & formatter
 - **tsx** - Typescript execute to run typescript in Node.js
+- **argon2** - [Argon2](https://github.com/ranisalt/node-argon2) encryption and decryption library
+- **multer** - `multipart/form-data` request handler
 
 ---
 
-# Development mode run instructions
+# Development mode prerequisites
 
 ## Prerequisites
 
 1. Linux-based system with POSIX compliant shell (required for the scripts to work)
 2. [Docker engine & docker-compose plugin](https://github.com/AdamAkiva/tutorials/blob/main/tools/docker/docker.md)
    preferably the latest version, otherwise you may encounter errors
-3. Make sure the scripts have execute permissions, e.g: (Assuming root dir)
+3. Make sure the scripts have execute permissions, e.g: (Assuming project root dir)
 
 ```bash
 chmod +x ./scripts/*.sh
@@ -38,32 +40,23 @@ chmod +x ./scripts/*.sh
 
 ---
 
-## Recommended (Will work without them):
+## Recommended (Will work without them, but may require manual work):
 
 1. [NVM - Node Version Manager](https://github.com/nvm-sh/nvm#installing-and-updating)
 2. [Node LTS version](https://github.com/nvm-sh/nvm#long-term-support)
 3. [Debugger](https://github.com/AdamAkiva/tutorials/blob/main/web/node/debugger/typescript/README.md)
 
-**Notes:**
-
-- **ONLY** run the application using the start/remove scripts, not directly via
-  the docker. (Unless you are sure you know what you're doing)
-- For any issue(s), contact a maintainer/contributor in any way you see fit
-
 ---
 
-## Run locally
+## Run locally instructions
 
-1. Make sure you have a .env file with needed values (see `.template.env`) in the
-   root folder of the application.
-   In order to generate these values see [this](./be/README.md)
-2. Use this to start the local environment:
+1. Use this to start the local environment:
 
 ```bash
 ./scripts/start.sh
 ```
 
-3. Use this to stop the local environment:
+2. Use this to stop the local environment:
 
 ```bash
 ./scripts/remove.sh

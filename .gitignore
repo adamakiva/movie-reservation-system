@@ -12,18 +12,19 @@
 **/npm-cache/
 
 # Exclude source files
-!*.js
 !*.ts
+!*.cts
+!*.mts
 
 # Etc
-!*.sql
+!src/database/migrations/*.sql
 !*.json
-!*.sh
-!*.md
-!*.yml
+!scripts/*.sh
+!README.md
+!docker-compose.yml
 !Dockerfile
 !.gitignore
 !LICENSE
 !.npmrc
-!**/*/postgresql.conf
-!*.jpg
+!scripts/postgresql.conf
+!__tests__/**/*.jpg

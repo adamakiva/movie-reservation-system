@@ -5,11 +5,13 @@
     "moduleResolution": "nodenext",
     "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true,
+
     // Emit
     "inlineSourceMap": true,
     "inlineSources": true,
     "removeComments": false,
     "noEmitOnError": true,
+
     // Type checking
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -30,15 +32,19 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true,
+
     // Interop constraints
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
+
     // Language and Environment
     "target": "ESNext",
+
     // Output formatting
     "noErrorTruncation": true,
+
     // Completeness
     "skipLibCheck": true
   },
