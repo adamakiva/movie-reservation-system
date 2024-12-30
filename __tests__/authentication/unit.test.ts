@@ -98,7 +98,7 @@ await suite('Authentication unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          email: `${'a'.repeat(256)}@ph.com`,
+          email: `${randomString(256)}@ph.com`,
           password: 'bla123',
         },
       },
@@ -154,7 +154,7 @@ await suite('Authentication unit tests', async () => {
       reqOptions: {
         body: {
           email: 'ph@ph.com',
-          password: 'a'.repeat(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
+          password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -182,7 +182,7 @@ await suite('Authentication unit tests', async () => {
       reqOptions: {
         body: {
           email: 'ph@ph.com',
-          password: 'a'.repeat(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
+          password: randomString(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -312,7 +312,7 @@ await suite('Authentication unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          refreshToken: 'a'.repeat(64),
+          refreshToken: randomString(64),
         },
       },
     });

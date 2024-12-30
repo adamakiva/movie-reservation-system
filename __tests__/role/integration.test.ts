@@ -96,7 +96,7 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles`,
       method: 'POST',
-      payload: { name: 'a'.repeat(65_536) },
+      payload: { name: randomString(65_536) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -132,7 +132,7 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: 'a'.repeat(65_536) },
+      payload: { name: randomString(65_536) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

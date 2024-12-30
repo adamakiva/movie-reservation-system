@@ -65,7 +65,7 @@ await suite('Movie integration tests', async () => {
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/movies?${new URLSearchParams({ pageSize: '64' })}`,
+        route: `${serverParams.routes.http}/movies?${new URLSearchParams({ 'page-size': '64' })}`,
         method: 'GET',
         headers: { Authorization: accessToken },
       });
@@ -127,7 +127,7 @@ await suite('Movie integration tests', async () => {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -193,7 +193,7 @@ await suite('Movie integration tests', async () => {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -259,7 +259,7 @@ await suite('Movie integration tests', async () => {
       route: `${serverParams.routes.http}/movies`,
       method: 'POST',
       payload: {
-        firstName: 'a'.repeat(8_388_608),
+        firstName: randomString(8_388_608),
         lastName: randomString(),
         email: `${randomString(8)}@ph.com`,
         password: '12345678',
@@ -314,7 +314,7 @@ await suite('Movie integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: 'a'.repeat(8_388_608) },
+      payload: { firstName: randomString(8_388_608) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

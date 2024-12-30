@@ -20,13 +20,13 @@ function router(authentication: AuthenticationManager) {
       roleController.createRole,
     )
     .put(
-      '/roles/:roleId',
+      '/roles/:role_id',
       json({ limit: '4kb' }),
       authentication.httpAuthenticationMiddleware(),
       roleController.updateRole,
     )
     .delete(
-      '/roles/:roleId',
+      '/roles/:role_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       roleController.deleteRole,

@@ -20,13 +20,13 @@ function router(
       movieController.getMovies,
     )
     .get(
-      '/movies/:movieId',
+      '/movies/:movie_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       movieController.getMovie,
     )
     .get(
-      '/movies/poster/:movieId',
+      '/movies/poster/:movie_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       movieController.getMoviePoster,
@@ -39,14 +39,14 @@ function router(
       movieController.createMovie,
     )
     .put(
-      '/movies/:movieId',
+      '/movies/:movie_id',
       json({ limit: '4mb' }),
       authentication.httpAuthenticationMiddleware(),
       fileManager.single('poster'),
       movieController.updateMovie,
     )
     .delete(
-      '/movies/:movieId',
+      '/movies/:movie_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       movieController.deleteMovie,

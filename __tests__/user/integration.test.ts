@@ -63,7 +63,7 @@ await suite('User integration tests', async () => {
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/users?${new URLSearchParams({ pageSize: '64' })}`,
+        route: `${serverParams.routes.http}/users?${new URLSearchParams({ 'page-size': '64' })}`,
         method: 'GET',
         headers: { Authorization: accessToken },
       });
@@ -126,7 +126,7 @@ await suite('User integration tests', async () => {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -190,7 +190,7 @@ await suite('User integration tests', async () => {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, pageSize: '16' })}`,
+          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -225,7 +225,7 @@ await suite('User integration tests', async () => {
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       payload: {
-        firstName: 'a'.repeat(65_536),
+        firstName: randomString(65_536),
         lastName: randomString(),
         email: `${randomString(8)}@ph.com`,
         password: '12345678',
@@ -273,7 +273,7 @@ await suite('User integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: 'a'.repeat(65_536) },
+      payload: { firstName: randomString(65_536) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

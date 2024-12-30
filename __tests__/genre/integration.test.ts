@@ -99,7 +99,7 @@ await suite('Genre integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres`,
       method: 'POST',
-      payload: { name: 'a'.repeat(65_536) },
+      payload: { name: randomString(65_536) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -135,7 +135,7 @@ await suite('Genre integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: 'a'.repeat(65_536) },
+      payload: { name: randomString(65_536) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

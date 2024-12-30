@@ -101,7 +101,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -130,7 +130,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -194,7 +194,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomUUID(),
+          movie_id: randomUUID(),
         },
       },
     });
@@ -252,7 +252,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: '',
+          role_id: '',
         },
         body: {
           name: randomString(),
@@ -284,7 +284,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomString(),
+          role_id: randomString(),
         },
         body: {
           name: randomString(),
@@ -316,7 +316,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomUUID(),
+          role_id: randomUUID(),
         },
         body: {
           name: '',
@@ -348,10 +348,10 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomUUID(),
+          role_id: randomUUID(),
         },
         body: {
-          name: 'a'.repeat(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -380,10 +380,10 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomUUID(),
+          role_id: randomUUID(),
         },
         body: {
-          name: 'a'.repeat(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -475,7 +475,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: '',
+          role_id: '',
         },
       },
     });
@@ -504,7 +504,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          roleId: randomString(),
+          role_id: randomString(),
         },
       },
     });

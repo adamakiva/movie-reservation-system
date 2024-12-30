@@ -3,8 +3,8 @@ import { createReadStream, createWriteStream, type PathLike } from 'node:fs';
 import { readFile, unlink } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { extname, join, resolve } from 'node:path';
-import type { Readable, Writable } from 'node:stream';
+import { join, resolve } from 'node:path';
+import type { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { promisify } from 'node:util';
 
@@ -47,7 +47,6 @@ import { CONFIGURATIONS, ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
 import MRSError from './error.js';
 import {
   decodeCursor,
-  emptyFunction,
   encodeCursor,
   isDevelopmentMode,
   isProductionMode,
@@ -59,12 +58,6 @@ import Logger, { type LogMiddleware, type LoggerHandler } from './logger.js';
 /**********************************************************************************/
 
 const randomBytes = promisify(randomBytesSync);
-
-/********************************* General ****************************************/
-
-type RemoveUndefinedFields<T, K extends keyof T> = {
-  [P in keyof T]: P extends K ? Exclude<T[P], undefined> : T[P];
-};
 
 /********************************** Http ******************************************/
 
@@ -123,11 +116,9 @@ export {
   createWriteStream,
   decodeCursor,
   drizzle,
-  emptyFunction,
   encodeCursor,
   eq,
   express,
-  extname,
   fileType,
   gt,
   isDevelopmentMode,
@@ -158,8 +149,6 @@ export {
   type NextFunction,
   type PaginatedResult,
   type PathLike,
-  type Readable,
-  type RemoveUndefinedFields,
   type Request,
   type RequestContext,
   type Response,
