@@ -62,13 +62,11 @@ class HttpServer {
     const fileManager = new FileManager(fileManagerParams);
     const database = new Database({ ...databaseParams, logger });
 
-    const app = express()
-      .disable('x-powered-by')
-      .use(
-        Middlewares.checkMethod(allowedMethods),
-        cors(corsOptions),
-        compress(),
-      );
+    const app = express().use(
+      Middlewares.checkMethod(allowedMethods),
+      cors(corsOptions),
+      compress(),
+    );
     // Express type chain include extending IRouter which returns void | Promise<void>,
     // however, this is irrelevant for this use case
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -103,7 +101,7 @@ class HttpServer {
         if (!isTestMode(this.#mode)) {
           this.#logger.info(
             `Server is running in '${this.#mode}' mode on: ` +
-              `'${address.endsWith(':') ? address : address.concat(':')}${port}${this.#routes.http}'`,
+              `'${address.endsWith(':') ? address : address.concat(':')}${port}'`,
           );
         }
 

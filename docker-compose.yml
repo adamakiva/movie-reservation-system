@@ -37,7 +37,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      target: dev
+      target: backend-dev
     user: ${UID}:${GID}
     # Environment variables are hard-coded due to it being a local development environment
     environment:
@@ -77,7 +77,7 @@ services:
     # Disallow going crazy with memory usage without being aware of it
     mem_limit: 2048m
     ports:
-      - 4334:4334
+      # The backend is proxied by nginx so it is not directly exposed
       - 4335:4335
     healthcheck:
       test:
@@ -92,4 +92,25 @@ services:
       start_period: 30s
     depends_on:
       mrs-pg:
+        condition: service_healthy
+
+  mrs-nginx:
+    hostname: mrs-nginx
+    container_name: mrs-nginx
+    # Restart is disabled to allow reading the correct status code from the container
+    restart: "no"
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: nginx
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    # Disallow going crazy with memory usage without being aware of it
+    mem_limit: 256m
+    ports:
+      # Map localhost:8080 to nginx:80
+      - 8080:80
+    depends_on:
+      mrs:
         condition: service_healthy
