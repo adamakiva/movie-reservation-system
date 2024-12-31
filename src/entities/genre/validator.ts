@@ -55,7 +55,7 @@ const updateGenreBodySchema = Zod.object(
 
 const updateGenreParamsSchema = Zod.object(
   {
-    genreId: Zod.string({
+    genre_id: Zod.string({
       invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(GENRE.ID.ERROR_MESSAGE),
@@ -68,7 +68,7 @@ const updateGenreParamsSchema = Zod.object(
 
 const deleteGenreSchema = Zod.object(
   {
-    genreId: Zod.string({
+    genre_id: Zod.string({
       invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(GENRE.ID.ERROR_MESSAGE),
@@ -105,7 +105,7 @@ function validateUpdateGenre(req: Request) {
   );
 
   const validatedParamsResult = updateGenreParamsSchema.safeParse(params);
-  const { genreId } = parseValidationResult(
+  const { genre_id: genreId } = parseValidationResult(
     validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -120,7 +120,7 @@ function validateDeleteGenre(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteGenreSchema.safeParse(params);
-  const { genreId } = parseValidationResult(
+  const { genre_id: genreId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );

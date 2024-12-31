@@ -14,7 +14,7 @@ function router(authentication: AuthenticationManager) {
       userController.getUsers,
     )
     .get(
-      '/users/:userId',
+      '/users/:user_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       userController.getUser,
@@ -26,13 +26,13 @@ function router(authentication: AuthenticationManager) {
       userController.createUser,
     )
     .put(
-      '/users/:userId',
+      '/users/:user_id',
       json({ limit: '8kb' }),
       authentication.httpAuthenticationMiddleware(),
       userController.updateUser,
     )
     .delete(
-      '/users/:userId',
+      '/users/:user_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       userController.deleteUser,

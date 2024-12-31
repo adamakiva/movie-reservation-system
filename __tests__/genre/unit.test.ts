@@ -101,7 +101,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: 'a'.repeat(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -130,7 +130,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: 'a'.repeat(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -196,7 +196,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomUUID(),
+          genre_id: randomUUID(),
         },
       },
     });
@@ -254,7 +254,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: '',
+          genre_id: '',
         },
         body: {
           name: randomString(),
@@ -286,7 +286,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomString(),
+          genre_id: randomString(),
         },
         body: {
           name: randomString(),
@@ -318,7 +318,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomUUID(),
+          genre_id: randomUUID(),
         },
         body: {
           name: '',
@@ -350,10 +350,10 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomUUID(),
+          genre_id: randomUUID(),
         },
         body: {
-          name: 'a'.repeat(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -382,10 +382,10 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomUUID(),
+          genre_id: randomUUID(),
         },
         body: {
-          name: 'a'.repeat(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -479,7 +479,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: '',
+          genre_id: '',
         },
       },
     });
@@ -508,7 +508,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genreId: randomString(),
+          genre_id: randomString(),
         },
       },
     });

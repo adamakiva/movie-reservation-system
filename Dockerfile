@@ -1,4 +1,4 @@
-FROM node:22.12.0-alpine AS dev
+FROM node:22.12.0-alpine AS backend-dev
 
 # Install dependencies without cache (Not set versions since it is used for the
 # local development environment)
@@ -15,3 +15,12 @@ ENTRYPOINT ["/sbin/tini", "-s", "--"]
 
 # Run the script as PID 1
 CMD ["/home/node/entrypoint.sh"]
+
+####################################################################################
+
+FROM nginxinc/nginx-unprivileged:1.27.3-alpine-slim AS nginx
+USER nginx
+
+COPY --chown=nginx:nginx ./nginx.conf /etc/nginx/nginx.conf
+
+CMD ["nginx", "-g", "daemon off;"]

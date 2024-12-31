@@ -32,7 +32,7 @@ const getMoviesSchema = Zod.object(
       )
       .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
       .optional(),
-    pageSize: Zod.coerce
+    'page-size': Zod.coerce
       .number({
         invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
       })
@@ -50,19 +50,21 @@ const getMoviesSchema = Zod.object(
     invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: QUERY.REQUIRED_ERROR_MESSAGE,
   },
-).transform(({ cursor, pageSize }, context) => {
-  if (!cursor || cursor === 'undefined' || cursor === 'null') {
+).transform((val, context) => {
+  if (!val.cursor || val.cursor === 'undefined' || val.cursor === 'null') {
     return {
-      pageSize,
+      pageSize: val['page-size'],
     } as const;
   }
 
   try {
-    const { id: movieId, createdAt } = cursorSchema.parse(decodeCursor(cursor));
+    const { id: movieId, createdAt } = cursorSchema.parse(
+      decodeCursor(val.cursor),
+    );
 
     return {
       cursor: { movieId, createdAt },
-      pageSize,
+      pageSize: val['page-size'],
     } as const;
   } catch {
     context.addIssue({
@@ -77,7 +79,7 @@ const getMoviesSchema = Zod.object(
 
 const getMovieSchema = Zod.object(
   {
-    movieId: Zod.string({
+    movie_id: Zod.string({
       invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(MOVIE.ID.ERROR_MESSAGE),
@@ -90,7 +92,7 @@ const getMovieSchema = Zod.object(
 
 const getMoviePosterSchema = Zod.object(
   {
-    movieId: Zod.string({
+    movie_id: Zod.string({
       invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(MOVIE.ID.ERROR_MESSAGE),
@@ -252,7 +254,7 @@ const updateMovieBodySchema = Zod.object({
 
 const updateMovieParamsSchema = Zod.object(
   {
-    movieId: Zod.string({
+    movie_id: Zod.string({
       invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(MOVIE.ID.ERROR_MESSAGE),
@@ -265,7 +267,7 @@ const updateMovieParamsSchema = Zod.object(
 
 const deleteMovieSchema = Zod.object(
   {
-    movieId: Zod.string({
+    movie_id: Zod.string({
       invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(MOVIE.ID.ERROR_MESSAGE),
@@ -294,7 +296,7 @@ function validateGetMovie(req: Request) {
   const { params } = req;
 
   const validatedResult = getMovieSchema.safeParse(params);
-  const { movieId } = parseValidationResult(
+  const { movie_id: movieId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -306,7 +308,7 @@ function validateGetMoviePoster(req: Request) {
   const { params } = req;
 
   const validatedResult = getMoviePosterSchema.safeParse(params);
-  const { movieId } = parseValidationResult(
+  const { movie_id: movieId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -344,7 +346,7 @@ function validateUpdateMovie(req: Request) {
   );
 
   const validatedParamsResult = updateMovieParamsSchema.safeParse(params);
-  const { movieId } = parseValidationResult(
+  const { movie_id: movieId } = parseValidationResult(
     validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -359,7 +361,7 @@ function validateDeleteMovie(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteMovieSchema.safeParse(params);
-  const { movieId } = parseValidationResult(
+  const { movie_id: movieId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );

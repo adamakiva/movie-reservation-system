@@ -55,7 +55,7 @@ const updateRoleBodySchema = Zod.object(
 
 const updateRoleParamsSchema = Zod.object(
   {
-    roleId: Zod.string({
+    role_id: Zod.string({
       invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(ROLE.ID.ERROR_MESSAGE),
@@ -68,7 +68,7 @@ const updateRoleParamsSchema = Zod.object(
 
 const deleteRoleSchema = Zod.object(
   {
-    roleId: Zod.string({
+    role_id: Zod.string({
       invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(ROLE.ID.ERROR_MESSAGE),
@@ -105,7 +105,7 @@ function validateUpdateRole(req: Request) {
   );
 
   const validatedParamsResult = updateRoleParamsSchema.safeParse(params);
-  const { roleId } = parseValidationResult(
+  const { role_id: roleId } = parseValidationResult(
     validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -120,7 +120,7 @@ function validateDeleteRole(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteRoleSchema.safeParse(params);
-  const { roleId } = parseValidationResult(
+  const { role_id: roleId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );

@@ -20,13 +20,13 @@ function router(authentication: AuthenticationManager) {
       genreController.createGenre,
     )
     .put(
-      '/genres/:genreId',
+      '/genres/:genre_id',
       json({ limit: '4kb' }),
       authentication.httpAuthenticationMiddleware(),
       genreController.updateGenre,
     )
     .delete(
-      '/genres/:genreId',
+      '/genres/:genre_id',
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       genreController.deleteGenre,

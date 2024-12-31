@@ -32,7 +32,7 @@ const getUsersSchema = Zod.object(
       )
       .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
       .optional(),
-    pageSize: Zod.coerce
+    'page-size': Zod.coerce
       .number({
         invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
       })
@@ -50,19 +50,21 @@ const getUsersSchema = Zod.object(
     invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
     required_error: QUERY.REQUIRED_ERROR_MESSAGE,
   },
-).transform(({ cursor, pageSize }, context) => {
-  if (!cursor || cursor === 'undefined' || cursor === 'null') {
+).transform((val, context) => {
+  if (!val.cursor || val.cursor === 'undefined' || val.cursor === 'null') {
     return {
-      pageSize,
+      pageSize: val['page-size'],
     } as const;
   }
 
   try {
-    const { id: userId, createdAt } = cursorSchema.parse(decodeCursor(cursor));
+    const { id: userId, createdAt } = cursorSchema.parse(
+      decodeCursor(val.cursor),
+    );
 
     return {
       cursor: { userId, createdAt },
-      pageSize,
+      pageSize: val['page-size'],
     } as const;
   } catch {
     context.addIssue({
@@ -77,7 +79,7 @@ const getUsersSchema = Zod.object(
 
 const getUserSchema = Zod.object(
   {
-    userId: Zod.string({
+    user_id: Zod.string({
       invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(USER.ID.ERROR_MESSAGE),
@@ -195,7 +197,7 @@ const updateUserBodySchema = Zod.object({
 
 const updateUserParamsSchema = Zod.object(
   {
-    userId: Zod.string({
+    user_id: Zod.string({
       invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(USER.ID.ERROR_MESSAGE),
@@ -208,7 +210,7 @@ const updateUserParamsSchema = Zod.object(
 
 const deleteUserSchema = Zod.object(
   {
-    userId: Zod.string({
+    user_id: Zod.string({
       invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
       required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
     }).uuid(USER.ID.ERROR_MESSAGE),
@@ -237,7 +239,7 @@ function validateGetUser(req: Request) {
   const { params } = req;
 
   const validatedResult = getUserSchema.safeParse(params);
-  const { userId } = parseValidationResult(
+  const { user_id: userId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -269,7 +271,7 @@ function validateUpdateUser(req: Request) {
   );
 
   const validatedParamsResult = updateUserParamsSchema.safeParse(params);
-  const { userId } = parseValidationResult(
+  const { user_id: userId } = parseValidationResult(
     validatedParamsResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );
@@ -284,7 +286,7 @@ function validateDeleteUser(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteUserSchema.safeParse(params);
-  const { userId } = parseValidationResult(
+  const { user_id: userId } = parseValidationResult(
     validatedResult,
     HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
   );

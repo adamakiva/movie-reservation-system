@@ -39,7 +39,6 @@ import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/services/middlewares.js';
 import {
   CONFIGURATIONS,
-  emptyFunction,
   EnvironmentManager,
   ERROR_CODES,
   HTTP_STATUS_CODES,
@@ -301,6 +300,10 @@ async function getAdminTokens(serverParams: ServerParams) {
 
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
+
+function emptyFunction() {
+  // On purpose
+}
 
 function mockLogger() {
   const logger = new Logger();
