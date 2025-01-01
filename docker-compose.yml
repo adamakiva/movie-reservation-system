@@ -107,10 +107,10 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     # Disallow going crazy with memory usage without being aware of it
-    mem_limit: 256m
+    mem_limit: 128m
     ports:
-      # Map localhost:8080 to nginx:80
-      - 8080:80
+      # Map localhost:5445 to nginx:80
+      - 5445:80
     depends_on:
       mrs:
         condition: service_healthy

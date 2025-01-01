@@ -20,7 +20,7 @@
 !src/database/migrations/*.sql
 !*.json
 !scripts/*.sh
-!nginx.conf
+!*.conf
 !README.md
 !docker-compose.yml
 !Dockerfile

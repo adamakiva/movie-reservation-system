@@ -21,6 +21,6 @@ CMD ["/home/node/entrypoint.sh"]
 FROM nginxinc/nginx-unprivileged:1.27.3-alpine-slim AS nginx
 USER nginx
 
-COPY --chown=nginx:nginx ./nginx.conf /etc/nginx/nginx.conf
+COPY --chown=nginx:nginx ./nginx /etc/nginx
 
 CMD ["nginx", "-g", "daemon off;"]
