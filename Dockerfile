@@ -8,7 +8,7 @@ RUN apk add --no-cache curl tini
 WORKDIR /home/node/mrs
 
 # Copy the entrypoint script to a non-volumed folder
-COPY ./scripts/entrypoint.sh /home/node/entrypoint.sh
+COPY ./entrypoint.sh /home/node/entrypoint.sh
 
 # Make tini the entry point of the image
 ENTRYPOINT ["/sbin/tini", "-s", "--"]

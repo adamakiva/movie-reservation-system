@@ -19,7 +19,7 @@
 # Etc
 !src/database/migrations/*.sql
 !*.json
-!scripts/*.sh
+!*.sh
 !*.conf
 !README.md
 !docker-compose.yml

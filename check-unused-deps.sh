@@ -2,9 +2,8 @@
 
 # Base was taken from: https://stackoverflow.com/a/69708249 and modified a bit by me
 
-# Assumes the script is one level above the package.json file.
-# If the assumption is incorrect, add/remove `/..` as needed
-ROOT_DIR=$(realpath "$(dirname "$0")/..");
+# Assumes the script is on the same level as the package.json file.
+ROOT_DIR=$(realpath "$(dirname "$0")");
 
 # Temporary files for the script
 FILES=$(mktemp);
