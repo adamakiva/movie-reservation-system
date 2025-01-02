@@ -92,3 +92,11 @@ at the reverse proxy level rather than the server level.
 
 **CORS** on the other hand is handled on the server level.  
 The reason for that is the ability to be able to handle dynamic values.
+
+### Express `.send` vs `.json`
+
+**`.json`** forces the response to be of type json, no matter what is it called on.  
+**`.send`** checks the options is receives and returns the matching type.  
+For example, string type will be returned as text/html and not application/json.  
+A downside may be that you be unsure what is the type which is returned.  
+However, since I'll implement everything, I don't really care

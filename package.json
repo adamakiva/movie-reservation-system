@@ -6,7 +6,7 @@
   "main": "./src/main.ts",
   "scripts": {
     "test": "NODE_ENV=test node --import tsx --test __tests__/**/*.test.ts",
-    "test-only": "NODE_ENV=test node --import tsx --test --test-only",
+    "test-only": "NODE_ENV=test node --inspect-wait=0.0.0.0:$DEBUG_PORT --import tsx --test --test-only",
     "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "commit-migrations": "tsx ./src/database/migrations/index.ts",

@@ -115,12 +115,12 @@ await suite('Authentication integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
-      const refreshedAccessToken = await res.json();
+      const refreshedAccessToken = await res.text();
 
       assert.strictEqual(typeof refreshedAccessToken === 'string', true);
       await assert.doesNotReject(async () => {
         await serverParams.authentication.validateToken(
-          refreshedAccessToken as string,
+          refreshedAccessToken,
           'access',
         );
       });

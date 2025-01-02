@@ -103,7 +103,7 @@ class EnvironmentManager {
       'HASH_SECRET',
     ];
     if (this.#mode !== 'production') {
-      environmentVariables.push('DATABASE_TEST_URL', 'SERVER_DEBUG_PORT');
+      environmentVariables.push('DATABASE_TEST_URL', 'DEBUG_PORT');
     }
 
     return environmentVariables;

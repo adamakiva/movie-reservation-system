@@ -22,7 +22,7 @@ async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
   if (notReadyMsg.length) {
     res
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
-      .json(`Application is not available: ${notReadyMsg}`);
+      .send(`Application is not available: ${notReadyMsg}`);
     return;
   }
 

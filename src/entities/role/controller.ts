@@ -12,7 +12,7 @@ import * as roleValidator from './validator.js';
 async function getRoles(_req: Request, res: ResponseWithContext) {
   const roles = await roleService.getRoles(res.locals.context);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(roles);
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(roles);
 }
 
 async function createRole(req: Request, res: ResponseWithContext) {
@@ -23,7 +23,7 @@ async function createRole(req: Request, res: ResponseWithContext) {
     roleToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createRole);
+  res.status(HTTP_STATUS_CODES.CREATED).send(createRole);
 }
 
 async function updateRole(req: Request, res: ResponseWithContext) {
@@ -34,7 +34,7 @@ async function updateRole(req: Request, res: ResponseWithContext) {
     roleToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedRole);
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(updatedRole);
 }
 
 async function deleteRole(req: Request, res: ResponseWithContext) {

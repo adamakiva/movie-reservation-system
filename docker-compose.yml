@@ -43,7 +43,7 @@ services:
     environment:
       # Server options
       - SERVER_PORT=4334
-      - SERVER_DEBUG_PORT=4335
+      - DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
       - HTTP_ROUTE=api/v0
       - ALLOWED_HOSTS=::,127.0.0.1,localhost
@@ -78,6 +78,7 @@ services:
     mem_limit: 2048m
     ports:
       # The backend is proxied by nginx so it is not directly exposed
+      # Only the debugger port is exposed
       - 4335:4335
     healthcheck:
       test:
@@ -109,8 +110,8 @@ services:
     # Disallow going crazy with memory usage without being aware of it
     mem_limit: 128m
     ports:
-      # Map localhost:5445 to nginx:80
-      - 5445:80
+      # Map localhost:4336 to nginx:80
+      - 4336:80
     depends_on:
       mrs:
         condition: service_healthy

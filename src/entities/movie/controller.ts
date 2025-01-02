@@ -14,7 +14,7 @@ async function getMovies(req: Request, res: ResponseWithContext) {
 
   const movies = await movieService.getMovies(res.locals.context, pagination);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(movies);
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(movies);
 }
 
 async function getMovie(req: Request, res: ResponseWithContext) {
@@ -22,7 +22,7 @@ async function getMovie(req: Request, res: ResponseWithContext) {
 
   const movie = await movieService.getMovie(res.locals.context, movieId);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(movie);
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(movie);
 }
 
 async function getMoviePoster(req: Request, res: ResponseWithContext) {
@@ -40,7 +40,7 @@ async function createMovie(req: Request, res: ResponseWithContext) {
     movieToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdMovie);
+  res.status(HTTP_STATUS_CODES.CREATED).send(createdMovie);
 }
 
 async function updateMovie(req: Request, res: ResponseWithContext) {
@@ -51,7 +51,7 @@ async function updateMovie(req: Request, res: ResponseWithContext) {
     movieToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedMovie);
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(updatedMovie);
 }
 
 async function deleteMovie(req: Request, res: ResponseWithContext) {
