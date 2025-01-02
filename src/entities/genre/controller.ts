@@ -18,12 +18,12 @@ async function getGenres(_req: Request, res: ResponseWithContext) {
 async function createGenre(req: Request, res: ResponseWithContext) {
   const genreToCreate = genreValidator.validateCreateGenre(req);
 
-  const createGenre = await genreService.createGenre(
+  const createdGenre = await genreService.createGenre(
     res.locals.context,
     genreToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createGenre);
+  res.status(HTTP_STATUS_CODES.CREATED).send(createdGenre);
 }
 
 async function updateGenre(req: Request, res: ResponseWithContext) {

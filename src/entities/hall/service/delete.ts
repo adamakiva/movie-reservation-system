@@ -6,46 +6,46 @@ import {
   MRSError,
 } from '../../../utils/index.js';
 
-import type { DeleteGenreValidatedData } from './utils.js';
+import type { DeleteHallValidatedData } from './utils.js';
 
 /**********************************************************************************/
 
-async function deleteGenre(
+async function deleteHall(
   context: RequestContext,
-  genreId: DeleteGenreValidatedData,
+  hallId: DeleteHallValidatedData,
 ): Promise<void> {
-  await deleteGenreFromDatabase(context.database, genreId);
+  await deleteHallFromDatabase(context.database, hallId);
 }
 
 /**********************************************************************************/
 
-async function deleteGenreFromDatabase(
+async function deleteHallFromDatabase(
   database: RequestContext['database'],
-  genreId: DeleteGenreValidatedData,
+  hallId: DeleteHallValidatedData,
 ) {
   const handler = database.getHandler();
-  const { genre: genreModel, movie: movieModel } = database.getModels();
+  const { hall: hallModel, showtime: showtimeModel } = database.getModels();
 
-  // Only genres without attached movies are allowed to be deleted
-  const moviesWithDeletedGenre = (
+  // Only halls without attached showtimes are allowed to be deleted
+  const showtimesWithDeletedHall = (
     await handler
       .select({ count: count() })
-      .from(movieModel)
-      .where(eq(movieModel.genreId, genreId))
+      .from(showtimeModel)
+      .where(eq(showtimeModel.hallId, hallId))
   )[0]!.count;
-  if (moviesWithDeletedGenre) {
+  if (showtimesWithDeletedHall) {
     throw new MRSError(
       HTTP_STATUS_CODES.BAD_REQUEST,
-      'Genre has one or more attached movies',
+      'Hall has one or more attached showtime',
     );
   }
 
   // I've decided that if nothing was deleted because it didn't exist in the
   // first place, it is still considered as a success since the end result
   // is the same
-  await handler.delete(genreModel).where(eq(genreModel.id, genreId));
+  await handler.delete(hallModel).where(eq(hallModel.id, hallId));
 }
 
 /*********************************************************************************/
 
-export { deleteGenre };
+export { deleteHall };

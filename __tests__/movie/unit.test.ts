@@ -345,7 +345,7 @@ await suite('Movie unit tests', async () => {
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        query: { 'page-size': randomString(8) },
+        query: { 'page-size': randomString() },
       },
     });
 
@@ -1017,7 +1017,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
+          message: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
@@ -1050,7 +1050,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
+          message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
 
         return true;
@@ -1609,7 +1609,7 @@ await suite('Movie unit tests', async () => {
         file: {
           path: randomString(MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE - 1),
           mimeType: 'application/json',
-          size: 2_048,
+          size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE + 1,
         },
       },
     });
@@ -1641,7 +1641,7 @@ await suite('Movie unit tests', async () => {
         file: {
           path: randomString(MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE + 1),
           mimeType: 'application/json',
-          size: 2_048,
+          size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE + 1,
         },
       },
     });
@@ -1878,7 +1878,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
+          message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
 
         return true;
@@ -2017,7 +2017,7 @@ await suite('Movie unit tests', async () => {
           },
           {
             movieId,
-            title: randomString(16),
+            title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
           },
         );
       },

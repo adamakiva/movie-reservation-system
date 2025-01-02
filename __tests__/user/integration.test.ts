@@ -6,12 +6,14 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
+  randomNumber,
   randomString,
   randomUUID,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
+  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
@@ -24,6 +26,8 @@ import {
   seedUsers,
   type User,
 } from './utils.js';
+
+const { USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -225,10 +229,10 @@ await suite('User integration tests', async () => {
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       payload: {
-        firstName: randomString(65_536),
-        lastName: randomString(),
-        email: `${randomString(8)}@ph.com`,
-        password: '12345678',
+        firstName: randomString(1_000_000),
+        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: randomUUID(),
       },
     });
@@ -242,10 +246,10 @@ await suite('User integration tests', async () => {
 
     try {
       const userData = {
-        firstName: randomString(),
-        lastName: randomString(),
-        email: `${randomString(8)}@ph.com`,
-        password: '12345678',
+        firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId,
       } as const;
 
@@ -273,7 +277,7 @@ await suite('User integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: randomString(65_536) },
+      payload: { firstName: randomString(1_000_000) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -296,10 +300,10 @@ await suite('User integration tests', async () => {
 
     try {
       const updatedUserData = {
-        firstName: randomString(),
-        lastName: randomString(),
-        email: `${randomString(8)}@ph.com`,
-        password: '87654321',
+        firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: role.id,
       } as const;
 

@@ -98,7 +98,7 @@ await suite('Authentication unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          email: `${randomString(256)}@ph.com`,
+          email: `${randomString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
           password: 'bla123',
         },
       },

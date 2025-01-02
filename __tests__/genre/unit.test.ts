@@ -225,7 +225,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(),
+          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -257,7 +257,7 @@ await suite('Genre unit tests', async () => {
           genre_id: '',
         },
         body: {
-          name: randomString(),
+          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -289,7 +289,7 @@ await suite('Genre unit tests', async () => {
           genre_id: randomString(),
         },
         body: {
-          name: randomString(),
+          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });

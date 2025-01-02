@@ -18,12 +18,12 @@ async function getRoles(_req: Request, res: ResponseWithContext) {
 async function createRole(req: Request, res: ResponseWithContext) {
   const roleToCreate = roleValidator.validateCreateRole(req);
 
-  const createRole = await roleService.createRole(
+  const createdRole = await roleService.createRole(
     res.locals.context,
     roleToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createRole);
+  res.status(HTTP_STATUS_CODES.CREATED).send(createdRole);
 }
 
 async function updateRole(req: Request, res: ResponseWithContext) {

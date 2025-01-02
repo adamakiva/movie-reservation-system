@@ -6,6 +6,7 @@ import {
 } from '../../utils/index.js';
 
 import {
+  coerceNumber,
   cursorSchema,
   parseValidationResult,
   VALIDATION,
@@ -32,19 +33,18 @@ const getMoviesSchema = Zod.object(
       )
       .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
       .optional(),
-    'page-size': Zod.coerce
-      .number({
-        invalid_type_error: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-      })
-      .min(
-        PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
-        PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
-      )
-      .max(
-        PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
-        PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
-      )
-      .default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
+    'page-size': Zod.preprocess(
+      coerceNumber(PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE),
+      Zod.number()
+        .min(
+          PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
+          PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
+        )
+        .max(
+          PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
+          PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
+        ),
+    ).default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
   },
   {
     invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
@@ -158,13 +158,15 @@ const createMovieSchema = Zod.object({
       required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
     },
   ),
-  price: Zod.coerce
-    .number({
-      invalid_type_error: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
-    })
-    .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
-    .max(MOVIE.PRICE.MAX_VALUE.VALUE, MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE),
+  price: Zod.preprocess(
+    coerceNumber(
+      MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
+      MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
+    ),
+    Zod.number()
+      .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
+      .max(MOVIE.PRICE.MAX_VALUE.VALUE, MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE),
+  ),
   genreId: Zod.string({
     invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
     required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
@@ -228,14 +230,12 @@ const updateMovieBodySchema = Zod.object({
       required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
     },
   ).optional(),
-  price: Zod.coerce
-    .number({
-      invalid_type_error: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
-    })
-    .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
-    .max(MOVIE.PRICE.MAX_VALUE.VALUE, MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE)
-    .optional(),
+  price: Zod.preprocess(
+    coerceNumber(MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE),
+    Zod.number()
+      .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
+      .max(MOVIE.PRICE.MAX_VALUE.VALUE, MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE),
+  ).optional(),
   genreId: Zod.string({
     invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
     required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
