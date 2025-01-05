@@ -12,8 +12,11 @@ import {
   randomNumber,
   randomString,
   randomUUID,
+  VALIDATION,
   type ServerParams,
 } from '../utils.js';
+
+const { USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -112,10 +115,10 @@ async function seedUsers(
 function generateUsersData(amount = 1) {
   const users = [...Array(amount)].map(() => {
     return {
-      firstName: randomString(16),
-      lastName: randomString(16),
-      email: `${randomString(8)}@ph.com`,
-      password: randomString(16),
+      firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+      lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+      email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+      password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
     };
   });
 

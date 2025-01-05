@@ -223,7 +223,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(),
+          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -255,7 +255,7 @@ await suite('Role unit tests', async () => {
           role_id: '',
         },
         body: {
-          name: randomString(),
+          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -287,7 +287,7 @@ await suite('Role unit tests', async () => {
           role_id: randomString(),
         },
         body: {
-          name: randomString(),
+          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });

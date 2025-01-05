@@ -13,7 +13,7 @@
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
-    "check-code-deps": "./scripts/check-unused-deps.sh",
+    "check-code-deps": "./check-unused-deps.sh",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
     "check-licenses": "nlf -d -r 1"
   },
@@ -35,7 +35,7 @@
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
     "@types/express": "~5.0.0",
-    "@types/node": "~22.10.3",
+    "@types/node": "~22.10.5",
     "@types/multer": "~1.4.12",
     "dpdm": "~3.14.0",
     "drizzle-kit": "~0.30.1",

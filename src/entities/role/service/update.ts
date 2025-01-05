@@ -38,7 +38,7 @@ async function updateRoleInDatabase(
   try {
     const updatedRoles = await handler
       .update(roleModel)
-      .set(fieldsToUpdate)
+      .set({ ...fieldsToUpdate, updatedAt: new Date() })
       .where(eq(roleModel.id, roleId))
       .returning({ id: roleModel.id, name: roleModel.name });
     if (!updatedRoles.length) {

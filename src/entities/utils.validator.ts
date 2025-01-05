@@ -263,6 +263,50 @@ const VALIDATION = {
       ERROR_MESSAGE: 'Genre id must be a valid UUIDV4',
     },
   },
+  HALL: {
+    NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Hall id is required',
+      ERROR_MESSAGE: 'Hall id must be a valid UUIDV4',
+    },
+    NAME: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall name must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Hall name is required',
+      MIN_LENGTH: {
+        VALUE: 2,
+        ERROR_MESSAGE: 'Hall name must be at least 2 character long',
+      },
+      MAX_LENGTH: {
+        VALUE: 32,
+        ERROR_MESSAGE: 'Hall name must be at most 32 characters long',
+      },
+    },
+    ROWS: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall rows must be a number',
+      REQUIRED_ERROR_MESSAGE: 'Hall rows is required',
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Hall rows must be at least 1',
+      },
+      MAX_LENGTH: {
+        VALUE: 128,
+        ERROR_MESSAGE: 'Hall rows must be at most 128',
+      },
+    },
+    COLUMNS: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall columns must be a number',
+      REQUIRED_ERROR_MESSAGE: 'Hall columns is required',
+      MIN_LENGTH: {
+        VALUE: 1,
+        ERROR_MESSAGE: 'Hall columns must be at least 1',
+      },
+      MAX_LENGTH: {
+        VALUE: 64,
+        ERROR_MESSAGE: 'Hall columns must be at most 64',
+      },
+    },
+  },
 } as const;
 
 const { PAGINATION } = VALIDATION;
@@ -297,6 +341,34 @@ const cursorSchema = Zod.object({
   }),
 });
 
+function coerceNumber(
+  invalidTypeErrorMessage: string,
+  missingErrorMessage?: string,
+) {
+  return (arg: unknown, context: Zod.RefinementCtx) => {
+    const number = Number(arg);
+    if (missingErrorMessage && (arg === undefined || arg === null)) {
+      context.addIssue({
+        code: Zod.ZodIssueCode.custom,
+        message: missingErrorMessage,
+        fatal: true,
+      });
+
+      return Zod.NEVER;
+    } else if (arg === '' || isNaN(number)) {
+      context.addIssue({
+        code: Zod.ZodIssueCode.custom,
+        message: invalidTypeErrorMessage,
+        fatal: true,
+      });
+
+      return Zod.NEVER;
+    }
+
+    return number;
+  };
+}
+
 /**********************************************************************************/
 
-export { cursorSchema, parseValidationResult, VALIDATION };
+export { coerceNumber, cursorSchema, parseValidationResult, VALIDATION };

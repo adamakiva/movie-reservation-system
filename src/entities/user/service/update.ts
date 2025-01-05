@@ -52,7 +52,7 @@ async function updateUserInDatabase(
   try {
     const updatedUsers = await handler
       .update(userModel)
-      .set(fieldsToUpdate)
+      .set({ ...fieldsToUpdate, updatedAt: new Date() })
       .where(eq(userModel.id, userId))
       .returning({
         id: userModel.id,

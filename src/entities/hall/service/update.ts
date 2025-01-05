@@ -6,49 +6,54 @@ import {
 } from '../../../utils/index.js';
 
 import {
-  type Genre,
-  type UpdateGenreValidatedData,
+  type Hall,
+  type UpdateHallValidatedData,
   handlePossibleDuplicationError,
 } from './utils.js';
 
 /**********************************************************************************/
 
-async function updateGenre(
+async function updateHall(
   context: RequestContext,
-  genreToUpdate: UpdateGenreValidatedData,
-): Promise<Genre> {
-  const updatedGenre = await updateGenreInDatabase(
+  hallToUpdate: UpdateHallValidatedData,
+): Promise<Hall> {
+  const updatedHall = await updateHallInDatabase(
     context.database,
-    genreToUpdate,
+    hallToUpdate,
   );
 
-  return updatedGenre;
+  return updatedHall;
 }
 
 /**********************************************************************************/
 
-async function updateGenreInDatabase(
+async function updateHallInDatabase(
   database: RequestContext['database'],
-  genreToUpdate: UpdateGenreValidatedData,
+  hallToUpdate: UpdateHallValidatedData,
 ) {
   const handler = database.getHandler();
-  const { genre: genreModel } = database.getModels();
-  const { genreId, ...fieldsToUpdate } = genreToUpdate;
+  const { hall: hallModel } = database.getModels();
+  const { hallId, ...fieldsToUpdate } = hallToUpdate;
 
   try {
-    const updatedGenre = await handler
-      .update(genreModel)
+    const updatedHall = await handler
+      .update(hallModel)
       .set({ ...fieldsToUpdate, updatedAt: new Date() })
-      .where(eq(genreModel.id, genreId))
-      .returning({ id: genreModel.id, name: genreModel.name });
-    if (!updatedGenre.length) {
+      .where(eq(hallModel.id, hallId))
+      .returning({
+        id: hallModel.id,
+        name: hallModel.name,
+        rows: hallModel.rows,
+        columns: hallModel.columns,
+      });
+    if (!updatedHall.length) {
       throw new MRSError(
         HTTP_STATUS_CODES.NOT_FOUND,
-        `Genre '${genreId}' does not exist`,
+        `Hall '${hallId}' does not exist`,
       );
     }
 
-    return updatedGenre[0]!;
+    return updatedHall[0]!;
   } catch (err) {
     // If there is a conflict it is due to the name update, hence, the name
     // field must exist
@@ -58,4 +63,4 @@ async function updateGenreInDatabase(
 
 /*********************************************************************************/
 
-export { updateGenre };
+export { updateHall };

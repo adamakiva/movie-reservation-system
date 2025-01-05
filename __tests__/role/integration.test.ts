@@ -11,10 +11,13 @@ import {
   suite,
   terminateServer,
   test,
+  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
 import { deleteRoles, seedRole, seedRoles, type Role } from './utils.js';
+
+const { ROLE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -96,7 +99,7 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles`,
       method: 'POST',
-      payload: { name: randomString(65_536) },
+      payload: { name: randomString(1_000_000) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -106,7 +109,9 @@ await suite('Role integration tests', async () => {
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const roleData = { name: randomString(16) } as const;
+    const roleData = {
+      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
+    } as const;
 
     try {
       const res = await sendHttpRequest({
@@ -132,7 +137,7 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: randomString(65_536) },
+      payload: { name: randomString(1_000_000) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -148,7 +153,9 @@ await suite('Role integration tests', async () => {
     const role = await seedRole(serverParams);
     roleIds.push(role.id);
 
-    const updatedRoleData = { name: randomString(16) } as const;
+    const updatedRoleData = {
+      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
+    } as const;
 
     try {
       const res = await sendHttpRequest({
@@ -179,7 +186,9 @@ await suite('Role integration tests', async () => {
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const roleData = { name: randomString() } as const;
+    const roleData = {
+      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
+    } as const;
 
     try {
       let res = await sendHttpRequest({

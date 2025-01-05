@@ -12,6 +12,7 @@ import {
   suite,
   terminateServer,
   test,
+  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
@@ -27,6 +28,8 @@ import {
   seedMovies,
   type Movie,
 } from './utils.js';
+
+const { MOVIE, USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -259,10 +262,10 @@ await suite('Movie integration tests', async () => {
       route: `${serverParams.routes.http}/movies`,
       method: 'POST',
       payload: {
-        firstName: randomString(8_388_608),
-        lastName: randomString(),
-        email: `${randomString(8)}@ph.com`,
-        password: '12345678',
+        firstName: randomString(8_000_000),
+        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: randomUUID(),
       },
     });
@@ -287,7 +290,11 @@ await suite('Movie integration tests', async () => {
       Object.entries(movieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append('poster', file, `${randomString()}.jpg`);
+      formData.append(
+        'poster',
+        file,
+        `${randomString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
+      );
 
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies`,
@@ -314,7 +321,7 @@ await suite('Movie integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: randomString(8_388_608) },
+      payload: { firstName: randomString(8_000_000) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -338,9 +345,12 @@ await suite('Movie integration tests', async () => {
       genreIds.push(updatedGenre.id);
 
       const updatedMovieData = {
-        title: randomString(16),
-        description: randomString(256),
-        price: randomNumber(0, 99),
+        title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
+        description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE + 1),
+        price: randomNumber(
+          MOVIE.PRICE.MIN_VALUE.VALUE + 1,
+          MOVIE.PRICE.MAX_VALUE.VALUE - 1,
+        ),
         genreId: updatedGenre.id,
       } as const;
 
@@ -351,7 +361,11 @@ await suite('Movie integration tests', async () => {
       Object.entries(updatedMovieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append('poster', file, `${randomString()}.jpg`);
+      formData.append(
+        'poster',
+        file,
+        `${randomString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
+      );
 
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies/${movie.id}`,
@@ -397,7 +411,11 @@ await suite('Movie integration tests', async () => {
       Object.entries(movieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append('poster', file, `${randomString()}.jpg`);
+      formData.append(
+        'poster',
+        file,
+        `${randomString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE - 1)}.jpg`,
+      );
 
       let res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies`,

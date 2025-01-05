@@ -346,7 +346,7 @@ await suite('User unit tests', async () => {
     const { request } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        query: { 'page-size': randomString(8) },
+        query: { 'page-size': randomString() },
       },
     });
 
@@ -1568,7 +1568,10 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
-        body: { firstName: randomString(), roleId: randomString() },
+        body: {
+          firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+          roleId: randomString(),
+        },
       },
     });
 
@@ -1605,7 +1608,7 @@ await suite('User unit tests', async () => {
           },
           {
             userId,
-            firstName: randomString(16),
+            firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
           },
         );
       },

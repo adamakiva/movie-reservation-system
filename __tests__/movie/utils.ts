@@ -16,7 +16,10 @@ import {
   randomString,
   randomUUID,
   type ServerParams,
+  VALIDATION,
 } from '../utils.js';
+
+const { MOVIE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -133,9 +136,12 @@ async function seedMovies(serverParams: ServerParams, amount: number) {
 function generateMoviesData(amount = 1) {
   const movies = [...Array(amount)].map(() => {
     return {
-      title: randomString(16),
-      description: randomString(256),
-      price: randomNumber(0, 99) + 1,
+      title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
+      description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE + 1),
+      price: randomNumber(
+        MOVIE.PRICE.MIN_VALUE.VALUE + 1,
+        MOVIE.PRICE.MAX_VALUE.VALUE - 1,
+      ),
     } as CreateMovie;
   });
 
