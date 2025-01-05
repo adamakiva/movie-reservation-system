@@ -307,6 +307,34 @@ const VALIDATION = {
       },
     },
   },
+  SHOWTIME: {
+    NO_QUERY_PARAMS: 'Showtimes must be filtered by movie, hall or both',
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Showtime id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Showtime id is required',
+      ERROR_MESSAGE: 'Showtime id must be a valid UUIDV4',
+    },
+    AT: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Showtime must be a date',
+      REQUIRED_ERROR_MESSAGE: 'Showtime is required',
+      MIN_VALUE: {
+        VALUE: () => {
+          return Date.now() + 60_000;
+        },
+        ERROR_MESSAGE: 'Showtime must be a future date',
+      },
+    },
+    MOVIE_ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Movie id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Movie id is required',
+      ERROR_MESSAGE: 'Movie id must be a valid UUIDV4',
+    },
+    HALL_ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Hall id is required',
+      ERROR_MESSAGE: 'Hall id must be a valid UUIDV4',
+    },
+  },
 } as const;
 
 const { PAGINATION } = VALIDATION;
