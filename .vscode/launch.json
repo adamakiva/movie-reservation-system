@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug",
+      "type": "node",
+      "request": "attach",
+      "port": 4335,
+      "restart": {
+        "delay": 2000,
+        "maxAttempts": 8
+      },
+      "address": "localhost",
+      "remoteRoot": "/home/node/mrs",
+      "localRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "smartStep": true
+    }
+  ]
+}

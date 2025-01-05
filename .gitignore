@@ -1,0 +1,31 @@
+# Ignore everything
+*
+
+# Exclude folders from above rule
+!**/
+
+# Block previously allowed folders
+**/build/
+**/coverage/
+**/node_modules/
+**/dev-data/
+**/npm-cache/
+
+# Exclude source files
+!*.ts
+!*.cts
+!*.mts
+
+# Etc
+!src/database/migrations/*.sql
+!*.json
+!*.sh
+!*.conf
+!README.md
+!docker-compose.yml
+!Dockerfile
+!.gitignore
+!LICENSE
+!.npmrc
+!scripts/postgresql.conf
+!__tests__/**/*.jpg

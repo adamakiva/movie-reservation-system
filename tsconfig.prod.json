@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./build",
+    "removeComments": true,
+    "noEmitOnError": true
+  },
+  // Does not support glob pattern
+  "include": ["src/**/*.ts"]
+}
