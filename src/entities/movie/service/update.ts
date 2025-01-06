@@ -106,7 +106,7 @@ async function updateMoviePoster(params: {
   }
 
   const moviePoster = await transaction
-    .select({ path: moviePosterModel.path })
+    .select({ absolutePath: moviePosterModel.absolutePath })
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
   if (!moviePoster.length) {
@@ -119,14 +119,17 @@ async function updateMoviePoster(params: {
   await transaction
     .update(moviePosterModel)
     .set({
-      path: poster.path,
-      size: poster.size,
+      absolutePath: poster.absolutePath,
+      sizeInBytes: poster.sizeInBytes,
       updatedAt,
     })
     .where(eq(moviePosterModel.movieId, movieId));
 
-  fileManager.deleteFile(moviePoster[0]!.path).catch((err: unknown) => {
-    logger.warn(`Failure to delete old file: ${moviePoster[0]!.path}`, err);
+  fileManager.deleteFile(moviePoster[0]!.absolutePath).catch((err: unknown) => {
+    logger.warn(
+      `Failure to delete old file: ${moviePoster[0]!.absolutePath}`,
+      err,
+    );
   });
 }
 

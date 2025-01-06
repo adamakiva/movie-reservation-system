@@ -462,13 +462,10 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const hallIds: string[] = [];
-
-    const hall = await seedHall(serverParams);
-    hallIds.push(hall.id);
+    const { createdHall, hallIds } = await seedHall(serverParams);
 
     const hallToCreate = {
-      name: hall.name,
+      name: createdHall.name,
       rows: randomNumber(
         HALL.ROWS.MIN_LENGTH.VALUE + 1,
         HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -498,7 +495,7 @@ await suite('Hall unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Hall '${hall.name}' already exists`,
+            message: `Hall '${createdHall.name}' already exists`,
           });
 
           return true;
@@ -919,17 +916,11 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const hallIds: string[] = [];
-    const halls = await seedHalls(serverParams, 2);
-    hallIds.push(
-      ...halls.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdHalls, hallIds } = await seedHalls(serverParams, 2);
 
     const hallToUpdate = {
-      hallId: halls[0]!.id,
-      name: halls[1]!.name,
+      hallId: createdHalls[0]!.id,
+      name: createdHalls[1]!.name,
     };
 
     try {
@@ -949,7 +940,7 @@ await suite('Hall unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Hall '${halls[1]!.name}' already exists`,
+            message: `Hall '${createdHalls[1]!.name}' already exists`,
           });
 
           return true;

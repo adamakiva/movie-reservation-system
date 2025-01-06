@@ -63,15 +63,6 @@ const getShowtimesSchema = Zod.object(
     required_error: QUERY.REQUIRED_ERROR_MESSAGE,
   },
 ).transform((val, context) => {
-  if (!val['movie-id'] && !val['hall-id']) {
-    context.addIssue({
-      code: Zod.ZodIssueCode.custom,
-      message: SHOWTIME.NO_QUERY_PARAMS,
-      fatal: true,
-    });
-
-    return Zod.NEVER;
-  }
   if (!val.cursor || val.cursor === 'undefined' || val.cursor === 'null') {
     return {
       pageSize: val['page-size'],

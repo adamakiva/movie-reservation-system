@@ -1,10 +1,5 @@
-import { seedRole } from '../role/utils.js';
-import {
-  deleteRoles,
-  deleteUsers,
-  generateUsersData,
-  type User,
-} from '../user/utils.js';
+import { deleteRoles, seedRole } from '../role/utils.js';
+import { deleteUsers, generateUsersData, type User } from '../user/utils.js';
 import {
   after,
   assert,
@@ -32,25 +27,22 @@ await suite('Authentication integration tests', async () => {
   });
 
   await test('Valid - Login', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
+    let userId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { id: roleId } = await seedRole(serverParams);
-    roleIds.push(roleId);
+    const { roleIds } = await seedRole(serverParams);
     const userData = generateUsersData(1)[0]!;
 
     const res = await sendHttpRequest({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
-      payload: { ...userData, roleId },
+      payload: { ...userData, roleId: roleIds[0] },
     });
     assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-    const createdUser = (await res.json()) as User;
-    userIds.push(createdUser.id);
+    ({ id: userId } = (await res.json()) as User);
 
     try {
       const tokens = await generateTokens({
@@ -76,30 +68,27 @@ await suite('Authentication integration tests', async () => {
         );
       });
     } finally {
-      await deleteUsers(serverParams, ...userIds);
+      await deleteUsers(serverParams, userId);
       await deleteRoles(serverParams, ...roleIds);
     }
   });
   await test('Valid - Refresh', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
+    let userId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { id: roleId } = await seedRole(serverParams);
-    roleIds.push(roleId);
+    const { roleIds } = await seedRole(serverParams);
     const userData = generateUsersData(1)[0]!;
 
     const res = await sendHttpRequest({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
-      payload: { ...userData, roleId },
+      payload: { ...userData, roleId: roleIds[0] },
     });
     assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-    const createdUser = (await res.json()) as User;
-    userIds.push(createdUser.id);
+    ({ id: userId } = (await res.json()) as User);
 
     try {
       const { refreshToken } = await generateTokens({
@@ -125,7 +114,7 @@ await suite('Authentication integration tests', async () => {
         );
       });
     } finally {
-      await deleteUsers(serverParams, ...userIds);
+      await deleteUsers(serverParams, userId);
       await deleteRoles(serverParams, ...roleIds);
     }
   });

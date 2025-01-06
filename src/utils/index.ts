@@ -20,6 +20,7 @@ import {
   or,
   sql,
   type Logger as DrizzleLogger,
+  type SQL,
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import express, {
@@ -154,6 +155,7 @@ export {
   type Response,
   type ResponseWithContext,
   type ResponseWithoutContext,
+  type SQL,
   type Server,
   type Writable,
 };

@@ -214,18 +214,19 @@ const VALIDATION = {
           ERROR_MESSAGE: 'Poster file name must be at most 256 characters long',
         },
       },
-      FILE_PATH: {
-        INVALID_TYPE_ERROR_MESSAGE: 'Poster file path must be a valid image',
-        REQUIRED_ERROR_MESSAGE: 'Poster file path is required',
+      ABSOLUTE_FILE_PATH: {
+        INVALID_TYPE_ERROR_MESSAGE:
+          'Poster file absolute path must be a valid image',
+        REQUIRED_ERROR_MESSAGE: 'Poster file absolute path is required',
         MIN_LENGTH: {
           VALUE: 1,
           ERROR_MESSAGE:
-            'Poster file path name must be at least 1 character long',
+            'Poster file absolute path name must be at least 1 character long',
         },
         MAX_LENGTH: {
           VALUE: 512,
           ERROR_MESSAGE:
-            'Poster file path name must be at most 512 characters long',
+            'Poster file absolute path name must be at most 512 characters long',
         },
       },
       MIME_TYPE: {
@@ -308,7 +309,6 @@ const VALIDATION = {
     },
   },
   SHOWTIME: {
-    NO_QUERY_PARAMS: 'Showtimes must be filtered by movie, hall or both',
     ID: {
       INVALID_TYPE_ERROR_MESSAGE: 'Showtime id must be a string',
       REQUIRED_ERROR_MESSAGE: 'Showtime id is required',

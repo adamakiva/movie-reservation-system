@@ -155,13 +155,10 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const roleIds: string[] = [];
-
-    const role = await seedRole(serverParams);
-    roleIds.push(role.id);
+    const { createdRole, roleIds } = await seedRole(serverParams);
 
     try {
-      const roleToCreate = { name: role.name };
+      const roleToCreate = { name: createdRole.name };
 
       await assert.rejects(
         async () => {
@@ -179,7 +176,7 @@ await suite('Role unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Role '${role.name}' already exists`,
+            message: `Role '${createdRole.name}' already exists`,
           });
 
           return true;
@@ -408,17 +405,13 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const roleIds: string[] = [];
-
-    const roles = await seedRoles(serverParams, 2);
-    roleIds.push(
-      ...roles.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdRoles, roleIds } = await seedRoles(serverParams, 2);
 
     try {
-      const roleToUpdate = { roleId: roles[0]!.id, name: roles[1]!.name };
+      const roleToUpdate = {
+        roleId: createdRoles[0]!.id,
+        name: createdRoles[1]!.name,
+      };
 
       await assert.rejects(
         async () => {
@@ -436,7 +429,7 @@ await suite('Role unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Role '${roles[1]!.name}' already exists`,
+            message: `Role '${createdRoles[1]!.name}' already exists`,
           });
 
           return true;

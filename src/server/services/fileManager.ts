@@ -45,12 +45,12 @@ class fileManager implements multer.StorageEngine {
     return this.#upload.array(...params);
   }
 
-  public async streamFile(dest: Writable, path: PathLike) {
-    await pipeline(createReadStream(path), dest);
+  public async streamFile(dest: Writable, absolutePath: PathLike) {
+    await pipeline(createReadStream(absolutePath), dest);
   }
 
-  public async deleteFile(path: PathLike) {
-    await unlink(path);
+  public async deleteFile(absolutePath: PathLike) {
+    await unlink(absolutePath);
   }
 
   /********************************************************************************/

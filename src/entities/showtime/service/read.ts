@@ -1,4 +1,14 @@
-import { asc, type RequestContext } from '../../../utils/index.js';
+import {
+  and,
+  asc,
+  encodeCursor,
+  eq,
+  gt,
+  or,
+  type PaginatedResult,
+  type RequestContext,
+  type SQL,
+} from '../../../utils/index.js';
 
 import type { GetShowtimeValidatedData, Showtime } from './utils.js';
 
@@ -7,7 +17,7 @@ import type { GetShowtimeValidatedData, Showtime } from './utils.js';
 async function getShowtimes(
   context: RequestContext,
   pagination: GetShowtimeValidatedData,
-): Promise<Showtime[]> {
+): Promise<PaginatedResult<{ showtimes: Showtime[] }>> {
   const showtimes = await getPaginatedShowtimesFromDatabase(
     context.database,
     pagination,
@@ -23,40 +33,71 @@ async function getPaginatedShowtimesFromDatabase(
   pagination: GetShowtimeValidatedData,
 ) {
   const handler = database.getHandler();
-  const { showtime: showtimeModel, genre: genreModel } = database.getModels();
-  const { cursor, pageSize } = pagination;
+  const {
+    showtime: showtimeModel,
+    movie: movieModel,
+    hall: hallModel,
+  } = database.getModels();
+  const { cursor, pageSize, movieId, hallId } = pagination;
 
-  // There may be a case to optimize this when searching. The number of joins may
-  // be reduced by sending a fetch to get the movie title/hall name or both.
-  // If the performance here is an issue, think about it
+  const filters = buildFilters({ movieId, hallId }, showtimeModel);
 
   const showtimesPage = await handler
     .select({
       id: showtimeModel.id,
       at: showtimeModel.at,
       reservations: showtimeModel.reservations,
-      // TODO Continue here, add movie and hall id
+      movieTitle: movieModel.title,
+      hallName: hallModel.name,
       createdAt: showtimeModel.createdAt,
     })
     .from(showtimeModel)
     .where(
       cursor
-        ? or(
-            gt(showtimeModel.createdAt, cursor.createdAt),
-            and(
-              eq(showtimeModel.createdAt, cursor.createdAt),
-              gt(showtimeModel.id, cursor.showtimeId),
+        ? and(
+            filters,
+            or(
+              gt(showtimeModel.createdAt, cursor.createdAt),
+              and(
+                eq(showtimeModel.createdAt, cursor.createdAt),
+                gt(showtimeModel.id, cursor.showtimeId),
+              ),
             ),
           )
-        : undefined,
+        : filters,
     )
-    .innerJoin(genreModel, eq(genreModel.id, showtimeModel.genreId))
+    .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
+    .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
     // +1 Will allow us to check if there is an additional page after the current
     // one
     .limit(pageSize + 1)
     .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
 
   return showtimesPage;
+}
+
+function buildFilters(
+  filters: Pick<GetShowtimeValidatedData, 'movieId' | 'hallId'>,
+  model: ReturnType<RequestContext['database']['getModels']>['showtime'],
+) {
+  const { movieId, hallId } = filters;
+
+  const filterQueries: SQL[] = [];
+  if (movieId) {
+    filterQueries.push(eq(model.movieId, movieId));
+  }
+  if (hallId) {
+    filterQueries.push(eq(model.hallId, hallId));
+  }
+
+  if (!filterQueries.length) {
+    return undefined;
+  }
+  if (filterQueries.length === 1) {
+    return filterQueries[0];
+  }
+
+  return and(...filterQueries);
 }
 
 function sanitizePaginatedShowtimes(

@@ -1,7 +1,9 @@
+import { deleteRoles } from '../role/utils.js';
 import {
   after,
   assert,
   before,
+  CONSTANTS,
   getAdminRole,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -19,13 +21,14 @@ import {
 
 import {
   checkUserPassword,
-  deleteRoles,
   deleteUsers,
   generateRandomUserData,
   seedUser,
   seedUsers,
   type User,
 } from './utils.js';
+
+/**********************************************************************************/
 
 const { USER } = VALIDATION;
 
@@ -41,29 +44,8 @@ await suite('User integration tests', async () => {
   });
 
   await test('Valid - Read a single page', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers: users, createdRoles: roles } = await seedUsers(
-      serverParams,
-      32,
-      false,
-    );
-    userIds.push(
-      ...users.map(({ id }) => {
-        return id;
-      }),
-    );
-    roleIds.push(
-      ...roles.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdUsers, ids } = await seedUsers(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -77,49 +59,31 @@ await suite('User integration tests', async () => {
       assert.strictEqual(Array.isArray(responseBody.users), true);
 
       const fetchedUsers = responseBody.users as User[];
-      for (let i = users.length - 1; i >= 0; --i) {
+      for (let i = createdUsers.length - 1; i >= 0; --i) {
         const matchingUserIndex = fetchedUsers.findIndex((u) => {
-          return u.id === users[i]!.id;
+          return u.id === createdUsers[i]!.id;
         });
         if (matchingUserIndex !== -1) {
-          assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
-          users.splice(i, 1);
+          assert.deepStrictEqual(
+            createdUsers[i],
+            fetchedUsers[matchingUserIndex],
+          );
+          createdUsers.splice(i, 1);
         }
       }
-      assert.strictEqual(users.length, 0);
+      assert.strictEqual(createdUsers.length, 0);
 
       assert.strictEqual(!!responseBody.page, true);
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Valid - Read many pages', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers: users, createdRoles: roles } = await seedUsers(
-      serverParams,
-      128,
-      false,
-    );
-    userIds.push(
-      ...users.map(({ id }) => {
-        return id;
-      }),
-    );
-    roleIds.push(
-      ...roles.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdUsers, ids } = await seedUsers(serverParams, 128);
 
     try {
       let pagination = {
@@ -140,13 +104,16 @@ await suite('User integration tests', async () => {
         assert.strictEqual(Array.isArray(responseBody.users), true);
 
         const fetchedUsers = responseBody.users as User[];
-        for (let i = users.length - 1; i >= 0; --i) {
+        for (let i = createdUsers.length - 1; i >= 0; --i) {
           const matchingUserIndex = fetchedUsers.findIndex((u) => {
-            return u.id === users[i]!.id;
+            return u.id === createdUsers[i]!.id;
           });
           if (matchingUserIndex !== -1) {
-            assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
-            users.splice(i, 1);
+            assert.deepStrictEqual(
+              createdUsers[i],
+              fetchedUsers[matchingUserIndex],
+            );
+            createdUsers.splice(i, 1);
           }
         }
 
@@ -154,36 +121,15 @@ await suite('User integration tests', async () => {
         pagination = responseBody.page;
       }
       /* eslint-enable no-await-in-loop */
-      assert.strictEqual(users.length, 0);
+      assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Valid - Read a lot pages', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers: users, createdRoles: roles } = await seedUsers(
-      serverParams,
-      8_192,
-      false,
-    );
-    userIds.push(
-      ...users.map(({ id }) => {
-        return id;
-      }),
-    );
-    roleIds.push(
-      ...roles.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdUsers, ids } = await seedUsers(serverParams, 8_192);
 
     try {
       let pagination = {
@@ -204,13 +150,16 @@ await suite('User integration tests', async () => {
         assert.strictEqual(Array.isArray(responseBody.users), true);
 
         const fetchedUsers = responseBody.users as User[];
-        for (let i = users.length - 1; i >= 0; --i) {
+        for (let i = createdUsers.length - 1; i >= 0; --i) {
           const matchingUserIndex = fetchedUsers.findIndex((u) => {
-            return u.id === users[i]!.id;
+            return u.id === createdUsers[i]!.id;
           });
           if (matchingUserIndex !== -1) {
-            assert.deepStrictEqual(users[i], fetchedUsers[matchingUserIndex]);
-            users.splice(i, 1);
+            assert.deepStrictEqual(
+              createdUsers[i],
+              fetchedUsers[matchingUserIndex],
+            );
+            createdUsers.splice(i, 1);
           }
         }
 
@@ -218,10 +167,10 @@ await suite('User integration tests', async () => {
         pagination = responseBody.page;
       }
       /* eslint-enable no-await-in-loop */
-      assert.strictEqual(users.length, 0);
+      assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -229,7 +178,7 @@ await suite('User integration tests', async () => {
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       payload: {
-        firstName: randomString(1_000_000),
+        firstName: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
         lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
         email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
         password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
@@ -262,8 +211,8 @@ await suite('User integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...createdUser } = (await res.json()) as User;
-      const { roleId: _1, password: _2, ...expectedUser } = userData;
       userId = id;
+      const { roleId: _1, password: _2, ...expectedUser } = userData;
 
       assert.deepStrictEqual(createdUser, {
         ...expectedUser,
@@ -277,26 +226,17 @@ await suite('User integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: randomString(1_000_000) },
+      payload: { firstName: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const roleIds: string[] = [];
-    const userIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUser: user, createdRole: role } = await seedUser(
+    const { createdUser, createdRole, ids } = await seedUser(
       serverParams,
       true,
     );
-    roleIds.push(role.id);
-    userIds.push(user.id);
 
     try {
       const updatedUserData = {
@@ -304,11 +244,11 @@ await suite('User integration tests', async () => {
         lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
         email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
         password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-        roleId: role.id,
+        roleId: createdRole.id,
       } as const;
 
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/users/${user.id}`,
+        route: `${serverParams.routes.http}/users/${createdUser.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedUserData,
@@ -319,9 +259,9 @@ await suite('User integration tests', async () => {
       const { password, roleId, ...updatedUserFields } = updatedUserData;
       assert.deepStrictEqual(
         {
-          ...user,
+          ...createdUser,
           ...updatedUserFields,
-          role: role.name,
+          role: createdRole.name,
         },
         updatedUser,
       );
@@ -330,8 +270,8 @@ await suite('User integration tests', async () => {
         password: updatedUserData.password,
       });
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Valid - Delete existent user', async () => {
@@ -348,11 +288,10 @@ await suite('User integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      const { id } = (await res.json()) as User;
-      userId = id;
+      ({ id: userId } = (await res.json()) as User);
 
       res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/users/${id}`,
+        route: `${serverParams.routes.http}/users/${userId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
       });

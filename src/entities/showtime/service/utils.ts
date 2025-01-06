@@ -21,8 +21,8 @@ type Showtime = {
   id: string;
   at: Date;
   reservations: [number, number][];
-  movie: string;
-  hall: string;
+  movieTitle: string;
+  hallName: string;
 };
 
 /**********************************************************************************/

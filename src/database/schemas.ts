@@ -181,6 +181,11 @@ const showtimeModel = pgTable(
       unique('showtime_at').on(table.at, table.hallId),
       index('showtime_movie_index').using('btree', table.movieId.asc()),
       index('showtime_hall_index').using('btree', table.hallId.asc()),
+      uniqueIndex('showtime_cursor_unique_index').using(
+        'btree',
+        table.id.asc(),
+        table.createdAt.asc(),
+      ),
     ];
   },
 );

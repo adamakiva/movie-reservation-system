@@ -7,7 +7,7 @@ import type { User } from '../../src/entities/user/service/utils.js';
 import * as validationFunctions from '../../src/entities/user/validator.js';
 import type { Credentials } from '../../src/utils/index.js';
 
-import { deleteRoles, generateRolesData } from '../role/utils.js';
+import { deleteRoles, seedRoles } from '../role/utils.js';
 import {
   randomNumber,
   randomString,
@@ -16,8 +16,6 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-const { USER } = VALIDATION;
-
 /**********************************************************************************/
 
 type CreateUser = Omit<User, 'id' | 'role'> & {
@@ -25,10 +23,12 @@ type CreateUser = Omit<User, 'id' | 'role'> & {
   roleId: string;
 };
 
+const { USER } = VALIDATION;
+
 /**********************************************************************************/
 
 async function seedUser(serverParams: ServerParams, withHashing = false) {
-  const { createdUsers, createdRoles } = await seedUsers(
+  const { createdUsers, createdRoles, ids } = await seedUsers(
     serverParams,
     1,
     withHashing,
@@ -37,6 +37,7 @@ async function seedUser(serverParams: ServerParams, withHashing = false) {
   return {
     createdUser: createdUsers[0]!,
     createdRole: createdRoles[0]!,
+    ids,
   };
 }
 
@@ -47,69 +48,72 @@ async function seedUsers(
 ) {
   const { authentication, database } = serverParams;
   const handler = database.getHandler();
-  const { user: userModel, role: roleModel } = database.getModels();
+  const { user: userModel } = database.getModels();
 
   const usersToCreate = generateUsersData(amount);
-  // Pay attention that this only generate a single role for a single user for
-  // a proper cleanup of the 'seedUser' function
-  const rolesToCreate = generateRolesData(Math.ceil(amount / 3));
 
-  const createdEntities = await handler.transaction(async (transaction) => {
-    const createdRoles = await transaction
-      .insert(roleModel)
-      .values(rolesToCreate)
-      .returning({ id: roleModel.id, name: roleModel.name });
-    const createdUsers = await transaction
-      .insert(userModel)
-      .values(
-        await Promise.all(
-          usersToCreate.map(async (userToCreate) => {
-            const { password, ...fields } = userToCreate;
+  const { createdRoles, roleIds } = await seedRoles(
+    serverParams,
+    Math.ceil(amount / 3),
+  );
 
-            let hash = password;
-            if (withHashing) {
-              hash = await authentication.hashPassword(hash);
-            }
+  try {
+    const createdUsers = (
+      await handler
+        .insert(userModel)
+        .values(
+          await Promise.all(
+            usersToCreate.map(async (userToCreate) => {
+              const { password, ...fields } = userToCreate;
 
-            return {
-              ...fields,
-              roleId:
-                createdRoles[randomNumber(0, createdRoles.length - 1)]!.id,
-              hash,
-            };
-          }),
-        ),
-      )
-      .returning({
-        id: userModel.id,
-        firstName: userModel.firstName,
-        lastName: userModel.lastName,
-        email: userModel.email,
-        roleId: userModel.roleId,
-      });
+              let hash = password;
+              if (withHashing) {
+                hash = await authentication.hashPassword(hash);
+              }
+
+              return {
+                ...fields,
+                roleId: roleIds[randomNumber(0, roleIds.length - 1)]!,
+                hash,
+              };
+            }),
+          ),
+        )
+        .returning({
+          id: userModel.id,
+          firstName: userModel.firstName,
+          lastName: userModel.lastName,
+          email: userModel.email,
+          roleId: userModel.roleId,
+        })
+    ).map((createdUser) => {
+      const { roleId, ...fields } = createdUser;
+
+      const roleName = createdRoles.find((role) => {
+        return role.id === roleId;
+      })!.name;
+
+      return {
+        ...fields,
+        role: roleName,
+      };
+    });
 
     return {
-      createdRoles,
       createdUsers,
+      createdRoles,
+      ids: {
+        user: createdUsers.map(({ id }) => {
+          return id;
+        }),
+        role: roleIds,
+      },
     };
-  });
+  } catch (err) {
+    await deleteRoles(serverParams, ...roleIds);
 
-  const createdUsers = createdEntities.createdUsers.map((createdUser) => {
-    const { roleId, ...fields } = createdUser;
-    const roleName = createdEntities.createdRoles.find((role) => {
-      return role.id === roleId;
-    })!.name;
-
-    return {
-      ...fields,
-      role: roleName,
-    };
-  });
-
-  return {
-    createdUsers,
-    createdRoles: createdEntities.createdRoles,
-  };
+    throw err;
+  }
 }
 
 function generateUsersData(amount = 1) {
@@ -119,7 +123,7 @@ function generateUsersData(amount = 1) {
       lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
       email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
       password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-    };
+    } as CreateUser;
   });
 
   return users;
@@ -168,7 +172,6 @@ async function checkUserPassword(
 
 export {
   checkUserPassword,
-  deleteRoles,
   deleteUsers,
   generateRandomUserData,
   generateUsersData,
@@ -176,6 +179,5 @@ export {
   seedUsers,
   serviceFunctions,
   validationFunctions,
-  type CreateUser,
   type User,
 };

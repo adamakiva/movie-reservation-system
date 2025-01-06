@@ -39,7 +39,7 @@ async function insertShowtimeToDatabase(
     hall: hallModel,
   } = database.getModels();
 
-  const [movieName, hallName] = await Promise.all([
+  const [movieTitle, hallName] = await Promise.all([
     getMovieTitle({
       handler,
       model: movieModel,
@@ -61,7 +61,7 @@ async function insertShowtimeToDatabase(
       })
     )[0]!;
 
-    return { ...createdShowtime, movie: movieName, hall: hallName };
+    return { ...createdShowtime, movieTitle, hallName };
   } catch (err) {
     throw handlePossibleDuplicationError({
       err,
