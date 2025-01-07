@@ -315,8 +315,7 @@ const VALIDATION = {
       ERROR_MESSAGE: 'Showtime id must be a valid UUIDV4',
     },
     AT: {
-      INVALID_TYPE_ERROR_MESSAGE: 'Showtime must be a date',
-      REQUIRED_ERROR_MESSAGE: 'Showtime is required',
+      INVALID_TYPE_ERROR_MESSAGE: 'Invalid showtime',
       MIN_VALUE: {
         VALUE: () => {
           return Date.now() + 60_000;

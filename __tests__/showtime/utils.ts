@@ -1,8 +1,8 @@
 import { inArray } from 'drizzle-orm';
 
+import * as serviceFunctions from '../../src/entities/showtime/service/index.js';
 import type { Showtime } from '../../src/entities/showtime/service/utils.js';
-import * as serviceFunctions from '../../src/entities/user/service/index.js';
-import * as validationFunctions from '../../src/entities/user/validator.js';
+import * as validationFunctions from '../../src/entities/showtime/validator.js';
 
 import { deleteGenres } from '../genre/utils.js';
 import { deleteHalls, seedHalls } from '../hall/utils.js';

@@ -47,13 +47,11 @@ const getShowtimesSchema = Zod.object(
     ).default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
     'movie-id': Zod.string({
       invalid_type_error: SHOWTIME.MOVIE_ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: SHOWTIME.MOVIE_ID.REQUIRED_ERROR_MESSAGE,
     })
       .uuid(SHOWTIME.MOVIE_ID.ERROR_MESSAGE)
       .optional(),
     'hall-id': Zod.string({
       invalid_type_error: SHOWTIME.HALL_ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: SHOWTIME.HALL_ID.REQUIRED_ERROR_MESSAGE,
     })
       .uuid(SHOWTIME.HALL_ID.ERROR_MESSAGE)
       .optional(),
@@ -102,8 +100,14 @@ const createShowtimeSchema = Zod.object(
       .optional(),
     at: Zod.coerce
       .date({
-        invalid_type_error: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: SHOWTIME.AT.REQUIRED_ERROR_MESSAGE,
+        errorMap: ({ code }, { defaultError }) => {
+          switch (code) {
+            case 'invalid_date':
+              return { message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE };
+            default:
+              return { message: defaultError };
+          }
+        },
       })
       .min(
         new Date(SHOWTIME.AT.MIN_VALUE.VALUE()),
