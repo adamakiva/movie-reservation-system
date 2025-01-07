@@ -57,10 +57,10 @@ await suite('Healthcheck unit tests', async () => {
           () => {
             livenessHealthCheckMock(request, response);
           },
-          (err) => {
+          (err: MRSError) => {
             assert.strictEqual(err instanceof MRSError, true);
             assert.strictEqual(
-              (err as MRSError).getClientError().code,
+              err.getClientError().code,
               HTTP_STATUS_CODES.NOT_ALLOWED,
             );
 
@@ -100,10 +100,10 @@ await suite('Healthcheck unit tests', async () => {
             async () => {
               await readinessHealthCheckMock(request, response);
             },
-            (err) => {
+            (err: MRSError) => {
               assert.strictEqual(err instanceof MRSError, true);
               assert.strictEqual(
-                (err as MRSError).getClientError().code,
+                err.getClientError().code,
                 HTTP_STATUS_CODES.NOT_ALLOWED,
               );
 

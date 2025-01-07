@@ -128,9 +128,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Missing authorization header',
         });
@@ -159,9 +159,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Malformed JWT token',
         });

@@ -47,7 +47,7 @@ function generateRolesData(amount = 1) {
   const roles = [...Array(amount)].map(() => {
     return {
       name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
-    } as CreateRole;
+    } satisfies CreateRole;
   });
 
   return roles;

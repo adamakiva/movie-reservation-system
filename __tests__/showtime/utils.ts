@@ -108,7 +108,7 @@ function generateShowtimesData(amount = 1) {
           SHOWTIME.AT.MIN_VALUE.VALUE() + 2_629_746_000, // One month in milliseconds
         ),
       ),
-    } as CreateShowtime;
+    } satisfies CreateShowtime;
   });
 
   return showtimes;

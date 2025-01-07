@@ -13,15 +13,17 @@ For any questions/suggestions, contact details are in my github profile
 
 ## Libraries
 
-- **Express.js** - Http routing
-- **Drizzle ORM** - SQL ORM
-- **postgres** - Native handler for postgreSQL (used by the ORM)
-- **jose** - JWT generation & validation
-- **zod** - Validation library
-- **ESLint & Prettier** - Code linter & formatter
-- **tsx** - Typescript execute to run typescript in Node.js
-- **argon2** - [Argon2](https://github.com/ranisalt/node-argon2) encryption and decryption library
-- **multer** - `multipart/form-data` request handler
+- **[Express.js](<(https://github.com/expressjs/express)>)** - Http routing
+- **[Drizzle ORM](<(https://github.com/drizzle-team/drizzle-orm)>)** - SQL ORM
+- **[Postgres](<(https://github.com/porsager/postgres)>)** - Native handler for postgreSQL (used by the ORM)
+- **[jose](<(https://github.com/panva/jose)>)** - JWT generation & validation
+- **[zod](<(https://github.com/colinhacks/zod)>)** - Validation library
+- **[ESLint](<(https://github.com/eslint/eslint)>)** - Code linter
+- **[Prettier](<(https://github.com/prettier/prettier)>)** - Code prettifier
+- **[tsx](<(https://github.com/privatenumber/tsx)>)** - Typescript execute to run typescript in Node.js
+- **[argon2](<(https://github.com/ranisalt/node-argon2)>)** - encryption and decryption library
+- **[multer](<(https://github.com/expressjs/multer)>)** - `multipart/form-data` request handler
+- **[Typescript](https://github.com/microsoft/TypeScript)** - Because someone needs to fix the mistake which was javascript (to some extent at the very least)
 
 ---
 

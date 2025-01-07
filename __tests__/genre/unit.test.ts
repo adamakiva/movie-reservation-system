@@ -56,9 +56,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -85,9 +85,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -114,9 +114,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -143,9 +143,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -174,9 +174,9 @@ await suite('Genre unit tests', async () => {
           );
           genreIds.push(duplicateGenre.id);
         },
-        (err) => {
+        (err: MRSError) => {
           assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
+          assert.deepStrictEqual(err.getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${createdGenre.name}' already exists`,
           });
@@ -206,9 +206,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -235,9 +235,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -267,9 +267,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -299,9 +299,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -331,9 +331,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -363,9 +363,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -395,9 +395,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -427,9 +427,9 @@ await suite('Genre unit tests', async () => {
             genreToUpdate,
           );
         },
-        (err) => {
+        (err: MRSError) => {
           assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
+          assert.deepStrictEqual(err.getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${createdGenres[1]!.name}' already exists`,
           });
@@ -454,9 +454,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -483,9 +483,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -512,9 +512,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });

@@ -12,7 +12,6 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
@@ -23,10 +22,6 @@ import {
   seedGenres,
   type Genre,
 } from './utils.js';
-
-/**********************************************************************************/
-
-const { GENRE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -136,9 +131,7 @@ await suite('Genre integration tests', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
     const { createdGenre, genreIds } = await seedGenre(serverParams);
 
-    const updatedGenreData = {
-      name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const updatedGenreData = generateGenresData()[0]!;
 
     try {
       const res = await sendHttpRequest({

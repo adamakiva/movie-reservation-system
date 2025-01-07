@@ -6,14 +6,12 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
-  randomNumber,
   randomString,
   randomUUID,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
@@ -24,10 +22,6 @@ import {
   seedHalls,
   type Hall,
 } from './utils.js';
-
-/**********************************************************************************/
-
-const { HALL } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -137,17 +131,7 @@ await suite('Hall integration tests', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
     const { createdHall, hallIds } = await seedHall(serverParams);
 
-    const updatedHallData = {
-      name: randomString(HALL.NAME.MAX_LENGTH.VALUE - 1),
-      rows: randomNumber(
-        HALL.ROWS.MIN_LENGTH.VALUE + 1,
-        HALL.ROWS.MAX_LENGTH.VALUE - 1,
-      ),
-      columns: randomNumber(
-        HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
-        HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
-      ),
-    } as const;
+    const updatedHallData = generateHallsData()[0]!;
 
     try {
       const res = await sendHttpRequest({

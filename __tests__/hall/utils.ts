@@ -65,7 +65,7 @@ function generateHallsData(amount = 1) {
         HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
         HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
       ),
-    } as CreateHall;
+    } satisfies CreateHall;
   });
 
   return halls;

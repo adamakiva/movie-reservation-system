@@ -47,7 +47,7 @@ function generateGenresData(amount = 1) {
   const genres = [...Array(amount)].map(() => {
     return {
       name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
-    } as CreateGenre;
+    } satisfies CreateGenre;
   });
 
   return genres;

@@ -204,13 +204,7 @@ await suite('User integration tests', async () => {
     const { id: roleId, name: roleName } = getAdminRole();
 
     try {
-      const userData = {
-        firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
-        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
-        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
-        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-        roleId,
-      } as const;
+      const userData = generateRandomUserData(roleId);
 
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/users`,
@@ -249,13 +243,7 @@ await suite('User integration tests', async () => {
     );
 
     try {
-      const updatedUserData = {
-        firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
-        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
-        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
-        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-        roleId: createdRole.id,
-      } as const;
+      const updatedUserData = generateRandomUserData(createdRole.id);
 
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/users/${createdUser.id}`,
