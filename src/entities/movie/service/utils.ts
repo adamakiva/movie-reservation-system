@@ -30,12 +30,6 @@ type Movie = {
   price: number;
   genre: string;
 };
-type MoviePoster = {
-  movieId: string;
-  path: string;
-  mimeType: string;
-  size: number;
-};
 
 /**********************************************************************************/
 
@@ -85,6 +79,5 @@ export {
   type GetMoviesValidatedData,
   type GetMovieValidatedData,
   type Movie,
-  type MoviePoster,
   type UpdateMovieValidatedData,
 };

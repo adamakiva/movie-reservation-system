@@ -5,6 +5,7 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
+DATABASE_FOLDER="$ROOT_DIR"/dev-data;
 TESTS_COVERAGE_FOLDER="$ROOT_DIR"/__tests__/coverage;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
@@ -34,7 +35,7 @@ remove() {
         exit 1;
     fi
 
-    rm -rf "$TESTS_COVERAGE_FOLDER"
+    rm -rf "$TESTS_COVERAGE_FOLDER" "$DATABASE_FOLDER";
 }
 
 main() {

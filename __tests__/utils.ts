@@ -14,6 +14,11 @@ process.on('warning', (warn) => {
   process.exit(1);
 });
 
+const CONSTANTS = {
+  ONE_MEGABYTE_IN_BYTES: 1_000_000,
+  EIGHT_MEGABYTES_IN_BYTES: 8_000_000,
+};
+
 /**********************************************************************************/
 
 import assert from 'node:assert/strict';
@@ -112,7 +117,7 @@ async function createServer() {
       saveDir: tmpdir(),
       logger: logger,
       limits: {
-        fileSize: 4_194_304, // 4mb
+        fileSize: 4_194_304, // 4mb in bytes
         files: 1, // Currently only 1 file is expected, change if needed
       },
     },
@@ -128,7 +133,7 @@ async function createServer() {
     databaseParams: {
       url: databaseUrl,
       options: {
-        max: 10, // On purpose to check issues with only a single database connection
+        max: 1, // On purpose to check issues with only a single database connection
         connection: {
           application_name: 'movie_reservation_system_pg_test',
           statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
@@ -353,6 +358,7 @@ export {
   after,
   assert,
   before,
+  CONSTANTS,
   createHttpMocks,
   ERROR_CODES,
   generateTokens,

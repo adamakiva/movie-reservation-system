@@ -125,16 +125,17 @@ const createMovieSchema = Zod.object({
   poster: Zod.object(
     {
       path: Zod.string({
-        invalid_type_error: MOVIE.POSTER.FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+        invalid_type_error:
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
       })
         .min(
-          MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         )
         .max(
-          MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         ),
       mimeType: Zod.string({
         invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
@@ -157,7 +158,15 @@ const createMovieSchema = Zod.object({
       invalid_type_error: MOVIE.POSTER.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
     },
-  ),
+  ).transform((val) => {
+    const { path, size, ...fields } = val;
+
+    return {
+      ...fields,
+      absolutePath: path,
+      sizeInBytes: size,
+    };
+  }),
   price: Zod.preprocess(
     coerceNumber(
       MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
@@ -197,16 +206,17 @@ const updateMovieBodySchema = Zod.object({
   poster: Zod.object(
     {
       path: Zod.string({
-        invalid_type_error: MOVIE.POSTER.FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+        invalid_type_error:
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
       })
         .min(
-          MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         )
         .max(
-          MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE,
-          MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE,
+          MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         ),
       mimeType: Zod.string({
         invalid_type_error: MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
@@ -229,7 +239,17 @@ const updateMovieBodySchema = Zod.object({
       invalid_type_error: MOVIE.POSTER.INVALID_TYPE_ERROR_MESSAGE,
       required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
     },
-  ).optional(),
+  )
+    .transform((val) => {
+      const { path, size, ...fields } = val;
+
+      return {
+        ...fields,
+        absolutePath: path,
+        sizeInBytes: size,
+      };
+    })
+    .optional(),
   price: Zod.preprocess(
     coerceNumber(MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE),
     Zod.number()

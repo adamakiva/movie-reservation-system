@@ -9,6 +9,7 @@ import {
   real,
   smallint,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -130,11 +131,9 @@ const moviePosterModel = pgTable('movie_poster', {
       // the actual file as well. As a result it is done manually
       { onDelete: 'no action', onUpdate: 'cascade' },
     ),
-  // Absolute route which includes file name and extension
-  path: varchar('path').notNull(),
+  absolutePath: varchar('absolute_path').notNull(),
   mimeType: varchar('mime_type').notNull(),
-  // In bytes
-  size: integer('size').notNull(),
+  sizeInBytes: integer('size_in_bytes').notNull(),
   ...timestamps,
 });
 
@@ -151,13 +150,14 @@ const showtimeModel = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
     at: timestamp('at', {
-      mode: 'string',
+      mode: 'date',
       precision: 3,
       withTimezone: true,
     }).notNull(),
     reservations: point('reservations')
       .array()
-      .default(sql`ARRAY[]::point[]`),
+      .default(sql`ARRAY[]::point[]`)
+      .notNull(),
     movieId: uuid('movie_id')
       .references(
         () => {
@@ -178,8 +178,14 @@ const showtimeModel = pgTable(
   },
   (table) => {
     return [
+      unique('showtime_at').on(table.at, table.hallId),
       index('showtime_movie_index').using('btree', table.movieId.asc()),
       index('showtime_hall_index').using('btree', table.hallId.asc()),
+      uniqueIndex('showtime_cursor_unique_index').using(
+        'btree',
+        table.id.asc(),
+        table.createdAt.asc(),
+      ),
     ];
   },
 );

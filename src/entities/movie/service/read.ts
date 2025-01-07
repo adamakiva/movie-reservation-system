@@ -169,9 +169,9 @@ async function getMoviePosterMetadataFromDatabase(
 
   const moviePosters = await handler
     .select({
-      path: moviePosterModel.path,
+      absolutePath: moviePosterModel.absolutePath,
       mimeType: moviePosterModel.mimeType,
-      size: moviePosterModel.size,
+      sizeInBytes: moviePosterModel.sizeInBytes,
     })
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
@@ -181,11 +181,11 @@ async function getMoviePosterMetadataFromDatabase(
       `Movie '${movieId}' does not exist`,
     );
   }
-  const { path, mimeType, size } = moviePosters[0]!;
+  const { absolutePath, mimeType, sizeInBytes } = moviePosters[0]!;
 
   return {
-    path,
-    size,
+    absolutePath,
+    sizeInBytes,
     // Pay attention if the mime type needs the addition of charset, and if so
     // make sure it is handled
     contentType: mimeType,
@@ -196,14 +196,14 @@ async function streamMoviePosterResponse(
   res: ResponseWithContext,
   movieMetadata: Awaited<ReturnType<typeof getMoviePosterMetadataFromDatabase>>,
 ) {
-  const { path, contentType, size } = movieMetadata;
+  const { absolutePath, contentType, sizeInBytes } = movieMetadata;
 
   res.status(HTTP_STATUS_CODES.SUCCESS).writeHead(HTTP_STATUS_CODES.SUCCESS, {
     'content-type': contentType,
-    'content-length': size,
+    'content-length': sizeInBytes,
   });
 
-  await res.locals.context.fileManager.streamFile(res, path);
+  await res.locals.context.fileManager.streamFile(res, absolutePath);
 }
 
 /**********************************************************************************/

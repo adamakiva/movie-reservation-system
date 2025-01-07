@@ -6,16 +6,21 @@ import * as validationFunctions from '../../src/entities/role/validator.js';
 
 import { randomString, VALIDATION, type ServerParams } from '../utils.js';
 
-const { ROLE } = VALIDATION;
-
 /**********************************************************************************/
 
 type CreateRole = Omit<Role, 'id'>;
 
+const { ROLE } = VALIDATION;
+
 /**********************************************************************************/
 
 async function seedRole(serverParams: ServerParams) {
-  return (await seedRoles(serverParams, 1))[0]!;
+  const { createdRoles, roleIds } = await seedRoles(serverParams, 1);
+
+  return {
+    createdRole: createdRoles[0]!,
+    roleIds,
+  };
 }
 
 async function seedRoles(serverParams: ServerParams, amount: number) {
@@ -30,7 +35,12 @@ async function seedRoles(serverParams: ServerParams, amount: number) {
     .values(rolesToCreate)
     .returning({ id: roleModel.id, name: roleModel.name });
 
-  return createdRoles;
+  return {
+    createdRoles,
+    roleIds: createdRoles.map(({ id }) => {
+      return id;
+    }),
+  };
 }
 
 function generateRolesData(amount = 1) {

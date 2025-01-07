@@ -20,7 +20,12 @@ type CreateHall = Omit<Hall, 'id'>;
 /**********************************************************************************/
 
 async function seedHall(serverParams: ServerParams) {
-  return (await seedHalls(serverParams, 1))[0]!;
+  const { createdHalls, hallIds } = await seedHalls(serverParams, 1);
+
+  return {
+    createdHall: createdHalls[0]!,
+    hallIds,
+  };
 }
 
 async function seedHalls(serverParams: ServerParams, amount: number) {
@@ -40,7 +45,12 @@ async function seedHalls(serverParams: ServerParams, amount: number) {
       columns: hallModel.columns,
     });
 
-  return createdHalls;
+  return {
+    createdHalls,
+    hallIds: createdHalls.map(({ id }) => {
+      return id;
+    }),
+  };
 }
 
 function generateHallsData(amount = 1) {
@@ -85,6 +95,5 @@ export {
   seedHalls,
   serviceFunctions,
   validationFunctions,
-  type CreateHall,
   type Hall,
 };
