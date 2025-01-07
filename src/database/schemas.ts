@@ -190,21 +190,6 @@ const showtimeModel = pgTable(
   },
 );
 
-const showtimeSummaryModel = pgTable('showtime_summary', {
-  id: uuid('id').primaryKey().defaultRandom().notNull(),
-  at: timestamp('at', {
-    mode: 'string',
-    precision: 3,
-    withTimezone: true,
-  }).notNull(),
-  reservations: point('reservations')
-    .array()
-    .default(sql`ARRAY[]::point[]`),
-  movieName: varchar('movie_name').notNull(),
-  revenue: real('revenue').notNull(),
-  ...timestamps,
-});
-
 /**********************************************************************************/
 
 export {
@@ -214,6 +199,5 @@ export {
   moviePosterModel,
   roleModel,
   showtimeModel,
-  showtimeSummaryModel,
   userModel,
 };

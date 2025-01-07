@@ -69,9 +69,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -106,9 +106,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -143,9 +143,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -180,9 +180,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -213,9 +213,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.REQUIRED_ERROR_MESSAGE,
         });
@@ -247,9 +247,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -281,9 +281,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -315,9 +315,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -348,9 +348,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.REQUIRED_ERROR_MESSAGE,
         });
@@ -382,9 +382,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -416,9 +416,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -450,9 +450,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -491,9 +491,9 @@ await suite('Hall unit tests', async () => {
           );
           hallIds.push(duplicateHall.id);
         },
-        (err) => {
+        (err: MRSError) => {
           assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
+          assert.deepStrictEqual(err.getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${createdHall.name}' already exists`,
           });
@@ -523,9 +523,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -552,9 +552,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -584,9 +584,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -616,9 +616,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -648,9 +648,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -680,9 +680,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -712,9 +712,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -744,9 +744,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -776,9 +776,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -808,9 +808,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -840,9 +840,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -872,9 +872,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -904,9 +904,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -936,9 +936,9 @@ await suite('Hall unit tests', async () => {
             hallToUpdate,
           );
         },
-        (err) => {
+        (err: MRSError) => {
           assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual((err as MRSError).getClientError(), {
+          assert.deepStrictEqual(err.getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${createdHalls[1]!.name}' already exists`,
           });
@@ -963,9 +963,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -992,9 +992,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -1021,9 +1021,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err) => {
+      (err: MRSError) => {
         assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual((err as MRSError).getClientError(), {
+        assert.deepStrictEqual(err.getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });

@@ -12,15 +12,16 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.js';
 
-import { deleteRoles, seedRole, seedRoles, type Role } from './utils.js';
-
-/**********************************************************************************/
-
-const { ROLE } = VALIDATION;
+import {
+  deleteRoles,
+  generateRolesData,
+  seedRole,
+  seedRoles,
+  type Role,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -95,9 +96,7 @@ await suite('Role integration tests', async () => {
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const roleData = {
-      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const roleData = generateRolesData()[0]!;
 
     try {
       const res = await sendHttpRequest({
@@ -132,9 +131,7 @@ await suite('Role integration tests', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
     const { createdRole, roleIds } = await seedRole(serverParams);
 
-    const updatedRoleData = {
-      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const updatedRoleData = generateRolesData()[0]!;
 
     try {
       const res = await sendHttpRequest({
@@ -165,9 +162,7 @@ await suite('Role integration tests', async () => {
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const roleData = {
-      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const roleData = generateRolesData()[0]!;
 
     try {
       let res = await sendHttpRequest({

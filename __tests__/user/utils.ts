@@ -124,7 +124,7 @@ function generateUsersData(amount = 1) {
       lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
       email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
       password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-    } as CreateUser;
+    } satisfies Omit<CreateUser, 'roleId'>;
   });
 
   return users;

@@ -23,6 +23,7 @@ import {
   deleteMovies,
   generateMovieDataIncludingPoster,
   generateMoviePostersData,
+  generateMoviesData,
   readFile,
   seedGenre,
   seedMovie,
@@ -279,12 +280,7 @@ await suite('Movie integration tests', async () => {
       ids.genre.push(newGenre.id);
 
       const updatedMovieData = {
-        title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
-        description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE + 1),
-        price: randomNumber(
-          MOVIE.PRICE.MIN_VALUE.VALUE + 1,
-          MOVIE.PRICE.MAX_VALUE.VALUE - 1,
-        ),
+        ...generateMoviesData()[0]!,
         genreId: newGenre.id,
       } as const;
 

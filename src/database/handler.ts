@@ -58,7 +58,6 @@ class Database {
       moviePoster: schemas.moviePosterModel,
       hall: schemas.hallModel,
       showtime: schemas.showtimeModel,
-      showtimeSummary: schemas.showtimeSummaryModel,
     } as const;
   }
 

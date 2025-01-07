@@ -154,7 +154,7 @@ function generateMoviesData(amount = 1) {
         MOVIE.PRICE.MIN_VALUE.VALUE + 1,
         MOVIE.PRICE.MAX_VALUE.VALUE - 1,
       ),
-    } as CreateMovie;
+    } satisfies Omit<CreateMovie, 'poster' | 'genreId'>;
   });
 
   return movies;
