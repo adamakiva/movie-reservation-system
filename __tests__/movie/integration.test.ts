@@ -50,8 +50,9 @@ await suite('Movie integration tests', async () => {
     const { createdMovies, ids } = await seedMovies(serverParams, 32);
 
     try {
+      const query = new URLSearchParams({ 'page-size': String(32) });
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/movies?${new URLSearchParams({ 'page-size': '64' })}`,
+        route: `${serverParams.routes.http}/movies?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
       });
@@ -85,7 +86,7 @@ await suite('Movie integration tests', async () => {
   });
   await test('Valid - Read many pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, ids } = await seedMovies(serverParams, 128);
+    const { createdMovies, ids } = await seedMovies(serverParams, 1_024);
 
     let pagination = {
       hasNext: true,
@@ -95,8 +96,12 @@ await suite('Movie integration tests', async () => {
     try {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -141,8 +146,12 @@ await suite('Movie integration tests', async () => {
     try {
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/movies?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });

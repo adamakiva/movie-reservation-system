@@ -37,18 +37,22 @@ async function seedShowtime(serverParams: ServerParams) {
   };
 }
 
-async function seedShowtimes(serverParams: ServerParams, amount: number) {
+async function seedShowtimes(
+  serverParams: ServerParams,
+  amount: number,
+  ratio = amount / 6,
+) {
   const { database } = serverParams;
   const handler = database.getHandler();
   const { showtime: showtimeModel } = database.getModels();
 
   const showtimesToCreate = generateShowtimesData(amount);
   const { createdMovies, createdMoviePosters, createdGenres, ids } =
-    await seedMovies(serverParams, Math.ceil(amount / 3));
+    await seedMovies(serverParams, Math.ceil(amount / ratio));
 
   const { createdHalls, hallIds } = await seedHalls(
     serverParams,
-    Math.ceil(amount / 3),
+    Math.ceil(amount / ratio),
   );
 
   try {
@@ -100,8 +104,8 @@ function generateShowtimesData(amount = 1) {
     return {
       at: new Date(
         randomNumber(
-          SHOWTIME.AT.MIN_VALUE.VALUE() + 1_800_000, // Half an hour in milliseconds
-          SHOWTIME.AT.MIN_VALUE.VALUE() + 3_600_000, // One hour in milliseconds
+          SHOWTIME.AT.MIN_VALUE.VALUE() + 600_000, // Ten minutes in milliseconds
+          SHOWTIME.AT.MIN_VALUE.VALUE() + 2_629_746_000, // One month in milliseconds
         ),
       ),
     } as CreateShowtime;

@@ -84,7 +84,7 @@ function compareShowtimes(params: {
 
 /**********************************************************************************/
 
-await suite.only('Showtime integration tests', async () => {
+await suite('Showtime integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -99,8 +99,9 @@ await suite.only('Showtime integration tests', async () => {
       await seedShowtimes(serverParams, 32);
 
     try {
+      const query = new URLSearchParams({ 'page-size': String(32) });
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/showtimes?${new URLSearchParams({ 'page-size': '64' })}`,
+        route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
       });
@@ -140,7 +141,7 @@ await suite.only('Showtime integration tests', async () => {
   await test('Valid - Read many pages without filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
     const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 128);
+      await seedShowtimes(serverParams, 1_024);
 
     try {
       let pagination = {
@@ -150,8 +151,12 @@ await suite.only('Showtime integration tests', async () => {
 
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/showtimes?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -202,8 +207,12 @@ await suite.only('Showtime integration tests', async () => {
 
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/showtimes?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -234,6 +243,561 @@ await suite.only('Showtime integration tests', async () => {
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a single page with movie filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 32, 16);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+
+    try {
+      const query = new URLSearchParams({
+        'movie-id': movieIdToFilterBy,
+        'page-size': String(32),
+      });
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/showtimes?${query}`,
+        method: 'GET',
+        headers: { Authorization: accessToken },
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+      const responseBody = await res.json();
+      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+      const fetchedShowtimes = responseBody.showtimes as Showtime[];
+      for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+        const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+          return u.id === createdShowtimes[i]!.id;
+        });
+        if (matchingShowtimeIndex !== -1) {
+          compareShowtimes({
+            movies: createdMovies,
+            halls: createdHalls,
+            created: createdShowtimes[i]!,
+            fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+          });
+
+          createdShowtimes.splice(i, 1);
+        }
+      }
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.movieId === movieIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+
+      assert.strictEqual(!!responseBody.page, true);
+      assert.strictEqual(responseBody.page.hasNext, false);
+      assert.strictEqual(responseBody.page.cursor, null);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read many pages with movie filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 1_024, 512);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'movie-id': movieIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.movieId === movieIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a lot pages with movie filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 8_192, 4_096);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'movie-id': movieIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.movieId === movieIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a single page with hall filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 32, 16);
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      const query = new URLSearchParams({
+        'hall-id': hallIdToFilterBy,
+        'page-size': String(32),
+      });
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/showtimes?${query}`,
+        method: 'GET',
+        headers: { Authorization: accessToken },
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+      const responseBody = await res.json();
+      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+      const fetchedShowtimes = responseBody.showtimes as Showtime[];
+      for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+        const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+          return u.id === createdShowtimes[i]!.id;
+        });
+        if (matchingShowtimeIndex !== -1) {
+          compareShowtimes({
+            movies: createdMovies,
+            halls: createdHalls,
+            created: createdShowtimes[i]!,
+            fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+          });
+
+          createdShowtimes.splice(i, 1);
+        }
+      }
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.hallId === hallIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+
+      assert.strictEqual(!!responseBody.page, true);
+      assert.strictEqual(responseBody.page.hasNext, false);
+      assert.strictEqual(responseBody.page.cursor, null);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read many pages with hall filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 1_024, 512);
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'hall-id': hallIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.hallId === hallIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a lot pages with hall filter', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 8_192, 4_096);
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'hall-id': hallIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return createdShowtime.hallId === hallIdToFilterBy;
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a single page with all filters', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 32, 16);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      const query = new URLSearchParams({
+        'movie-id': movieIdToFilterBy,
+        'hall-id': hallIdToFilterBy,
+        'page-size': String(32),
+      });
+      const res = await sendHttpRequest({
+        route: `${serverParams.routes.http}/showtimes?${query}`,
+        method: 'GET',
+        headers: { Authorization: accessToken },
+      });
+      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+      const responseBody = await res.json();
+      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+      const fetchedShowtimes = responseBody.showtimes as Showtime[];
+      for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+        const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+          return u.id === createdShowtimes[i]!.id;
+        });
+        if (matchingShowtimeIndex !== -1) {
+          compareShowtimes({
+            movies: createdMovies,
+            halls: createdHalls,
+            created: createdShowtimes[i]!,
+            fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+          });
+
+          createdShowtimes.splice(i, 1);
+        }
+      }
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return (
+            createdShowtime.movieId === movieIdToFilterBy &&
+            createdShowtime.hallId === hallIdToFilterBy
+          );
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+
+      assert.strictEqual(!!responseBody.page, true);
+      assert.strictEqual(responseBody.page.hasNext, false);
+      assert.strictEqual(responseBody.page.cursor, null);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read many pages with all filters', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 1_024, 512);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'movie-id': movieIdToFilterBy,
+          'hall-id': hallIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return (
+            createdShowtime.movieId === movieIdToFilterBy &&
+            createdShowtime.hallId === hallIdToFilterBy
+          );
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
+    } finally {
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
+      await deleteHalls(serverParams, ...ids.hall);
+      await deleteShowtimes(serverParams, ...ids.showtime);
+    }
+  });
+  await test('Valid - Read a lot pages with all filters', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+    const { createdMovies, createdHalls, createdShowtimes, ids } =
+      await seedShowtimes(serverParams, 8_192, 4_096);
+    const movieIdToFilterBy = createdMovies[0]!.id;
+    const hallIdToFilterBy = createdHalls[0]!.id;
+
+    try {
+      let pagination = {
+        hasNext: true,
+        cursor: 'null',
+      };
+
+      /* eslint-disable no-await-in-loop */
+      while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          'movie-id': movieIdToFilterBy,
+          'hall-id': hallIdToFilterBy,
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
+        const res = await sendHttpRequest({
+          route: `${serverParams.routes.http}/showtimes?${query}`,
+          method: 'GET',
+          headers: { Authorization: accessToken },
+        });
+        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+
+        const responseBody = await res.json();
+        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
+
+        const fetchedShowtimes = responseBody.showtimes as Showtime[];
+        for (let i = createdShowtimes.length - 1; i >= 0; --i) {
+          const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
+            return u.id === createdShowtimes[i]!.id;
+          });
+          if (matchingShowtimeIndex !== -1) {
+            compareShowtimes({
+              movies: createdMovies,
+              halls: createdHalls,
+              created: createdShowtimes[i]!,
+              fetched: fetchedShowtimes[matchingShowtimeIndex]!,
+            });
+
+            createdShowtimes.splice(i, 1);
+          }
+        }
+
+        assert.strictEqual(!!responseBody.page, true);
+        pagination = responseBody.page;
+      }
+      /* eslint-enable no-await-in-loop */
+      const removedAllRelevantShowtimes = !createdShowtimes.filter(
+        (createdShowtime) => {
+          return (
+            createdShowtime.movieId === movieIdToFilterBy &&
+            createdShowtime.hallId === hallIdToFilterBy
+          );
+        },
+      ).length;
+      assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
       await deleteMovies(serverParams, ...ids.movie);
       await deleteGenres(serverParams, ...ids.genre);

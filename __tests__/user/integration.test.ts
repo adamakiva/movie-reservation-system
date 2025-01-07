@@ -48,8 +48,10 @@ await suite('User integration tests', async () => {
     const { createdUsers, ids } = await seedUsers(serverParams, 32);
 
     try {
+      // 33 instead of 32 to include the admin as well
+      const query = new URLSearchParams({ 'page-size': String(33) });
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/users?${new URLSearchParams({ 'page-size': '64' })}`,
+        route: `${serverParams.routes.http}/users?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
       });
@@ -83,7 +85,7 @@ await suite('User integration tests', async () => {
   });
   await test('Valid - Read many pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers, ids } = await seedUsers(serverParams, 128);
+    const { createdUsers, ids } = await seedUsers(serverParams, 1_024);
 
     try {
       let pagination = {
@@ -93,8 +95,12 @@ await suite('User integration tests', async () => {
 
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });
@@ -139,8 +145,12 @@ await suite('User integration tests', async () => {
 
       /* eslint-disable no-await-in-loop */
       while (pagination.hasNext) {
+        const query = new URLSearchParams({
+          cursor: pagination.cursor,
+          'page-size': String(8),
+        });
         const res = await sendHttpRequest({
-          route: `${serverParams.routes.http}/users?${new URLSearchParams({ cursor: pagination.cursor, 'page-size': '16' })}`,
+          route: `${serverParams.routes.http}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
         });

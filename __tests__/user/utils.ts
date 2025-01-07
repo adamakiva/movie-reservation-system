@@ -45,6 +45,7 @@ async function seedUsers(
   serverParams: ServerParams,
   amount: number,
   withHashing = false,
+  ratio = amount / 6,
 ) {
   const { authentication, database } = serverParams;
   const handler = database.getHandler();
@@ -54,7 +55,7 @@ async function seedUsers(
 
   const { createdRoles, roleIds } = await seedRoles(
     serverParams,
-    Math.ceil(amount / 3),
+    Math.ceil(amount / ratio),
   );
 
   try {

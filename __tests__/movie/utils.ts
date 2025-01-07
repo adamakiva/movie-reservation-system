@@ -50,7 +50,11 @@ async function seedMovie(serverParams: ServerParams) {
   };
 }
 
-async function seedMovies(serverParams: ServerParams, amount: number) {
+async function seedMovies(
+  serverParams: ServerParams,
+  amount: number,
+  ratio = amount / 6,
+) {
   const { database } = serverParams;
   const handler = database.getHandler();
   const { movie: movieModel, moviePoster: moviePosterModel } =
@@ -61,7 +65,7 @@ async function seedMovies(serverParams: ServerParams, amount: number) {
   // a proper cleanup of the 'seedUser' function
   const { createdGenres, genreIds } = await seedGenres(
     serverParams,
-    Math.ceil(amount / 3),
+    Math.ceil(amount / ratio),
   );
 
   try {
