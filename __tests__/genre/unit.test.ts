@@ -155,12 +155,9 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const genreIds: string[] = [];
+    const { createdGenre, genreIds } = await seedGenre(serverParams);
 
-    const genre = await seedGenre(serverParams);
-    genreIds.push(genre.id);
-
-    const genreToCreate = { name: genre.name };
+    const genreToCreate = { name: createdGenre.name };
 
     try {
       await assert.rejects(
@@ -181,7 +178,7 @@ await suite('Genre unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Genre '${genre.name}' already exists`,
+            message: `Genre '${createdGenre.name}' already exists`,
           });
 
           return true;
@@ -410,17 +407,11 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const genreIds: string[] = [];
-    const genres = await seedGenres(serverParams, 2);
-    genreIds.push(
-      ...genres.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdGenres, genreIds } = await seedGenres(serverParams, 2);
 
     const genreToUpdate = {
-      genreId: genres[0]!.id,
-      name: genres[1]!.name,
+      genreId: createdGenres[0]!.id,
+      name: createdGenres[1]!.name,
     };
 
     try {
@@ -440,7 +431,7 @@ await suite('Genre unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Genre '${genres[1]!.name}' already exists`,
+            message: `Genre '${createdGenres[1]!.name}' already exists`,
           });
 
           return true;

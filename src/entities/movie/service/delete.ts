@@ -22,27 +22,27 @@ async function deleteMovieFromDatabase(
   const { movie: movieModel, moviePoster: moviePosterModel } =
     database.getModels();
 
-  const path = await handler.transaction(async (transaction) => {
+  const absolutePath = await handler.transaction(async (transaction) => {
     // I've decided that if nothing was deleted because it didn't exist in the
     // first place, it is still considered as a success since the end result
     // is the same
     const deletedMoviePoster = await transaction
       .delete(moviePosterModel)
       .where(eq(moviePosterModel.movieId, movieId))
-      .returning({ path: moviePosterModel.path });
+      .returning({ absolutePath: moviePosterModel.absolutePath });
     if (!deletedMoviePoster.length) {
       return '';
     }
     await transaction.delete(movieModel).where(eq(movieModel.id, movieId));
 
-    return deletedMoviePoster[0]!.path;
+    return deletedMoviePoster[0]!.absolutePath;
   });
-  if (!path) {
+  if (!absolutePath) {
     return;
   }
 
-  fileManager.deleteFile(path).catch((err: unknown) => {
-    logger.warn(`Failure to delete file: ${path}`, err);
+  fileManager.deleteFile(absolutePath).catch((err: unknown) => {
+    logger.warn(`Failure to delete file: ${absolutePath}`, err);
   });
 }
 

@@ -28,9 +28,9 @@ CREATE TABLE "movie" (
 --> statement-breakpoint
 CREATE TABLE "movie_poster" (
 	"movie_id" uuid PRIMARY KEY NOT NULL,
-	"path" varchar NOT NULL,
+	"absolute_path" varchar NOT NULL,
 	"mime_type" varchar NOT NULL,
-	"size" integer NOT NULL,
+	"size_in_bytes" integer NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
 );
@@ -45,12 +45,13 @@ CREATE TABLE "role" (
 --> statement-breakpoint
 CREATE TABLE "showtime" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"at" timestamp(3) with time zone NOT NULL,
-	"reservations" "point"[] DEFAULT ARRAY[]::point[],
+	"at" timestamp (3) with time zone NOT NULL,
+	"reservations" "point"[] DEFAULT ARRAY[]::point[] NOT NULL,
 	"movie_id" uuid NOT NULL,
 	"hall_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "showtime_at" UNIQUE("at","hall_id")
 );
 --> statement-breakpoint
 CREATE TABLE "showtime_summary" (
@@ -85,6 +86,7 @@ CREATE UNIQUE INDEX "movie_cursor_unique_index" ON "movie" USING btree ("id","cr
 CREATE UNIQUE INDEX "role_name_unique_index" ON "role" USING btree ("name");--> statement-breakpoint
 CREATE INDEX "showtime_movie_index" ON "showtime" USING btree ("movie_id");--> statement-breakpoint
 CREATE INDEX "showtime_hall_index" ON "showtime" USING btree ("hall_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "showtime_cursor_unique_index" ON "showtime" USING btree ("id","created_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "user_email_unique_index" ON "user" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "user_role_id_index" ON "user" USING btree ("role_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "user_cursor_unique_index" ON "user" USING btree ("id","created_at");

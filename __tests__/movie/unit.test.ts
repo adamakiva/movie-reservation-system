@@ -1,3 +1,4 @@
+import { deleteGenres } from '../genre/utils.js';
 import {
   after,
   assert,
@@ -19,7 +20,6 @@ import {
 } from '../utils.js';
 
 import {
-  deleteGenres,
   deleteMovies,
   generateMovieDataIncludingPoster,
   seedMovie,
@@ -687,7 +687,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
@@ -720,7 +720,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -736,7 +736,9 @@ await suite('Movie unit tests', async () => {
         body: movieData,
         file: {
           ...poster,
-          path: randomString(MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE - 1),
+          path: randomString(
+            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE - 1,
+          ),
         },
       },
     });
@@ -753,7 +755,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -769,7 +771,9 @@ await suite('Movie unit tests', async () => {
         body: movieData,
         file: {
           ...poster,
-          path: randomString(MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE + 1),
+          path: randomString(
+            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE + 1,
+          ),
         },
       },
     });
@@ -786,7 +790,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -1235,7 +1239,14 @@ await suite('Movie unit tests', async () => {
             fileManager: serverParams.fileManager,
             logger,
           },
-          movieData,
+          {
+            ...movieData,
+            poster: {
+              absolutePath: movieData.poster.path,
+              mimeType: movieData.poster.mimeType,
+              sizeInBytes: movieData.poster.size,
+            },
+          },
         );
       },
       (err) => {
@@ -1562,7 +1573,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.REQUIRED_ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
 
         return true;
@@ -1594,7 +1605,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -1607,7 +1618,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         file: {
-          path: randomString(MOVIE.POSTER.FILE_PATH.MIN_LENGTH.VALUE - 1),
+          path: randomString(
+            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE - 1,
+          ),
           mimeType: 'application/json',
           size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE + 1,
         },
@@ -1626,7 +1639,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -1639,7 +1652,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         file: {
-          path: randomString(MOVIE.POSTER.FILE_PATH.MAX_LENGTH.VALUE + 1),
+          path: randomString(
+            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE + 1,
+          ),
           mimeType: 'application/json',
           size: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE + 1,
         },
@@ -1658,7 +1673,7 @@ await suite('Movie unit tests', async () => {
         assert.strictEqual(err instanceof MRSError, true);
         assert.deepStrictEqual((err as MRSError).getClientError(), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-          message: MOVIE.POSTER.FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
+          message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
 
         return true;
@@ -2033,14 +2048,9 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Non-existent genre id', async () => {
-    const genreIds: string[] = [];
-    const movieIds: string[] = [];
     const updatedGenreId = randomUUID();
 
-    const { createdGenre: genre, createdMovie: movie } =
-      await seedMovie(serverParams);
-    genreIds.push(genre.id);
-    movieIds.push(movie.id);
+    const { createdMovie, ids } = await seedMovie(serverParams);
 
     try {
       await assert.rejects(
@@ -2053,7 +2063,7 @@ await suite('Movie unit tests', async () => {
               logger,
             },
             {
-              movieId: movie.id,
+              movieId: createdMovie.id,
               genreId: updatedGenreId,
             },
           );
@@ -2069,8 +2079,8 @@ await suite('Movie unit tests', async () => {
         },
       );
     } finally {
-      await deleteMovies(serverParams, ...movieIds);
-      await deleteGenres(serverParams, ...genreIds);
+      await deleteMovies(serverParams, ...ids.movie);
+      await deleteGenres(serverParams, ...ids.genre);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

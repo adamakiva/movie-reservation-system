@@ -1,5 +1,5 @@
 {
-  "id": "366c7f39-e649-4eac-b3b5-dfc450feaa18",
+  "id": "eb390288-24cc-4a32-b021-1ddb896d5821",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -231,8 +231,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "path": {
-          "name": "path",
+        "absolute_path": {
+          "name": "absolute_path",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -243,8 +243,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "size": {
-          "name": "size",
+        "size_in_bytes": {
+          "name": "size_in_bytes",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -363,7 +363,7 @@
         },
         "at": {
           "name": "at",
-          "type": "timestamp(3) with time zone",
+          "type": "timestamp (3) with time zone",
           "primaryKey": false,
           "notNull": true
         },
@@ -371,7 +371,7 @@
           "name": "reservations",
           "type": "point[]",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": "ARRAY[]::point[]"
         },
         "movie_id": {
@@ -431,6 +431,27 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "showtime_cursor_unique_index": {
+          "name": "showtime_cursor_unique_index",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -462,7 +483,16 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "showtime_at": {
+          "name": "showtime_at",
+          "nullsNotDistinct": false,
+          "columns": [
+            "at",
+            "hall_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -6,16 +6,21 @@ import * as validationFunctions from '../../src/entities/genre/validator.js';
 
 import { randomString, VALIDATION, type ServerParams } from '../utils.js';
 
-const { GENRE } = VALIDATION;
-
 /**********************************************************************************/
 
 type CreateGenre = Omit<Genre, 'id'>;
 
+const { GENRE } = VALIDATION;
+
 /**********************************************************************************/
 
 async function seedGenre(serverParams: ServerParams) {
-  return (await seedGenres(serverParams, 1))[0]!;
+  const { createdGenres, genreIds } = await seedGenres(serverParams, 1);
+
+  return {
+    createdGenre: createdGenres[0]!,
+    genreIds,
+  };
 }
 
 async function seedGenres(serverParams: ServerParams, amount: number) {
@@ -30,7 +35,12 @@ async function seedGenres(serverParams: ServerParams, amount: number) {
     .values(genresToCreate)
     .returning({ id: genreModel.id, name: genreModel.name });
 
-  return createdGenres;
+  return {
+    createdGenres,
+    genreIds: createdGenres.map(({ id }) => {
+      return id;
+    }),
+  };
 }
 
 function generateGenresData(amount = 1) {
@@ -67,6 +77,5 @@ export {
   seedGenres,
   serviceFunctions,
   validationFunctions,
-  type CreateGenre,
   type Genre,
 };

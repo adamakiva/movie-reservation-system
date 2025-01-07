@@ -1,3 +1,4 @@
+import { deleteRoles } from '../role/utils.js';
 import {
   after,
   assert,
@@ -19,7 +20,6 @@ import {
 } from '../utils.js';
 
 import {
-  deleteRoles,
   deleteUsers,
   generateRandomUserData,
   seedUser,
@@ -970,21 +970,16 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
-
-    const { createdUser: user, createdRole: role } = await seedUser(
+    const { createdUser, createdRole, ids } = await seedUser(
       serverParams,
       true,
     );
-    userIds.push(user.id);
-    roleIds.push(role.id);
 
     try {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const createdUser = await serviceFunctions.createUser(
+          const shouldNotOccur = await serviceFunctions.createUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -992,25 +987,25 @@ await suite('User unit tests', async () => {
               logger,
             },
             {
-              ...generateRandomUserData(role.id),
-              email: user.email,
+              ...generateRandomUserData(createdRole.id),
+              email: createdUser.email,
             },
           );
-          userIds.push(createdUser.id);
+          ids.user.push(shouldNotOccur.id);
         },
         (err) => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `User '${user.email}' already exists`,
+            message: `User '${createdUser.email}' already exists`,
           });
 
           return true;
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
@@ -1624,24 +1619,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
-
-    const { createdUsers: users, createdRoles: roles } = await seedUsers(
-      serverParams,
-      2,
-      false,
-    );
-    userIds.push(
-      ...users.map(({ id }) => {
-        return id;
-      }),
-    );
-    roleIds.push(
-      ...roles.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdUsers, ids } = await seedUsers(serverParams, 2);
 
     try {
       await assert.rejects(
@@ -1654,8 +1632,8 @@ await suite('User unit tests', async () => {
               logger,
             },
             {
-              userId: users[0]!.id,
-              email: users[1]!.email,
+              userId: createdUsers[0]!.id,
+              email: createdUsers[1]!.email,
             },
           );
         },
@@ -1663,28 +1641,21 @@ await suite('User unit tests', async () => {
           assert.strictEqual(err instanceof MRSError, true);
           assert.deepStrictEqual((err as MRSError).getClientError(), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `User '${users[1]!.email}' already exists`,
+            message: `User '${createdUsers[1]!.email}' already exists`,
           });
 
           return true;
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
-    const userIds: string[] = [];
-    const roleIds: string[] = [];
 
-    const { createdUser: user, createdRole: role } = await seedUser(
-      serverParams,
-      true,
-    );
-    userIds.push(user.id);
-    roleIds.push(role.id);
+    const { createdUser, ids } = await seedUser(serverParams, true);
 
     try {
       await assert.rejects(
@@ -1697,7 +1668,7 @@ await suite('User unit tests', async () => {
               logger,
             },
             {
-              userId: user.id,
+              userId: createdUser.id,
               roleId: updatedRoleId,
             },
           );
@@ -1713,8 +1684,8 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...userIds);
-      await deleteRoles(serverParams, ...roleIds);
+      await deleteUsers(serverParams, ...ids.user);
+      await deleteRoles(serverParams, ...ids.role);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

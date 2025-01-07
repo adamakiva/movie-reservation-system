@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -15,7 +16,15 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { deleteGenres, seedGenre, seedGenres, type Genre } from './utils.js';
+import {
+  deleteGenres,
+  generateGenresData,
+  seedGenre,
+  seedGenres,
+  type Genre,
+} from './utils.js';
+
+/**********************************************************************************/
 
 const { GENRE } = VALIDATION;
 
@@ -31,18 +40,8 @@ await suite('Genre integration tests', async () => {
   });
 
   await test('Valid - Read many', async () => {
-    const genreIds: string[] = [];
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const genres = await seedGenres(serverParams, 32);
-    genreIds.push(
-      ...genres.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdGenres, genreIds } = await seedGenres(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -53,7 +52,7 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
       const fetchedGenres = (await res.json()) as Genre[];
-      genres.forEach((genre) => {
+      createdGenres.forEach((genre) => {
         const matchingGenre = fetchedGenres.find((fetchedGenre) => {
           return fetchedGenre.id === genre.id;
         });
@@ -65,18 +64,8 @@ await suite('Genre integration tests', async () => {
     }
   });
   await test('Valid - Read a lot', async () => {
-    const genreIds: string[] = [];
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const genres = await seedGenres(serverParams, 8_192);
-    genreIds.push(
-      ...genres.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdGenres, genreIds } = await seedGenres(serverParams, 8_192);
 
     try {
       const res = await sendHttpRequest({
@@ -87,7 +76,7 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
       const fetchedGenres = (await res.json()) as Genre[];
-      genres.forEach((genre) => {
+      createdGenres.forEach((genre) => {
         const matchingGenre = fetchedGenres.find((fetchedGenre) => {
           return fetchedGenre.id === genre.id;
         });
@@ -102,19 +91,17 @@ await suite('Genre integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres`,
       method: 'POST',
-      payload: { name: randomString(1_000_000) },
+      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const genreIds: string[] = [];
+    let genreId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const genreData = {
-      name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const genreData = generateGenresData()[0]!;
 
     try {
       const res = await sendHttpRequest({
@@ -126,35 +113,28 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Genre;
-      genreIds.push(id);
+      genreId = id;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...genreData, name: genreData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await deleteGenres(serverParams, genreId);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: randomString(1_000_000) },
+      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const genreIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const genre = await seedGenre(serverParams);
-    genreIds.push(genre.id);
+    const { createdGenre, genreIds } = await seedGenre(serverParams);
 
     const updatedGenreData = {
       name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
@@ -162,7 +142,7 @@ await suite('Genre integration tests', async () => {
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/genres/${genre.id}`,
+        route: `${serverParams.routes.http}/genres/${genreIds[0]}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedGenreData,
@@ -172,7 +152,7 @@ await suite('Genre integration tests', async () => {
       const updatedGenre = await res.json();
       assert.deepStrictEqual(
         {
-          ...genre,
+          ...createdGenre,
           ...{
             ...updatedGenreData,
             name: updatedGenreData.name.toLowerCase(),
@@ -185,13 +165,11 @@ await suite('Genre integration tests', async () => {
     }
   });
   await test('Valid - Delete existent genre', async () => {
-    const genreIds: string[] = [];
+    let genreId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const genreData = {
-      name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
-    } as const;
+    const genreData = generateGenresData()[0]!;
 
     try {
       let res = await sendHttpRequest({
@@ -202,11 +180,10 @@ await suite('Genre integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      const { id } = (await res.json()) as Genre;
-      genreIds.push(id);
+      ({ id: genreId } = (await res.json()) as Genre);
 
       res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/genres/${id}`,
+        route: `${serverParams.routes.http}/genres/${genreId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
       });
@@ -216,7 +193,7 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await deleteGenres(serverParams, genreId);
     }
   });
   await test('Valid - Delete non-existent genre', async () => {

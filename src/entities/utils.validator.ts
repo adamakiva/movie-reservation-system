@@ -214,18 +214,19 @@ const VALIDATION = {
           ERROR_MESSAGE: 'Poster file name must be at most 256 characters long',
         },
       },
-      FILE_PATH: {
-        INVALID_TYPE_ERROR_MESSAGE: 'Poster file path must be a valid image',
-        REQUIRED_ERROR_MESSAGE: 'Poster file path is required',
+      ABSOLUTE_FILE_PATH: {
+        INVALID_TYPE_ERROR_MESSAGE:
+          'Poster file absolute path must be a valid image',
+        REQUIRED_ERROR_MESSAGE: 'Poster file absolute path is required',
         MIN_LENGTH: {
           VALUE: 1,
           ERROR_MESSAGE:
-            'Poster file path name must be at least 1 character long',
+            'Poster file absolute path name must be at least 1 character long',
         },
         MAX_LENGTH: {
           VALUE: 512,
           ERROR_MESSAGE:
-            'Poster file path name must be at most 512 characters long',
+            'Poster file absolute path name must be at most 512 characters long',
         },
       },
       MIME_TYPE: {
@@ -305,6 +306,32 @@ const VALIDATION = {
         VALUE: 64,
         ERROR_MESSAGE: 'Hall columns must be at most 64',
       },
+    },
+  },
+  SHOWTIME: {
+    ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Showtime id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Showtime id is required',
+      ERROR_MESSAGE: 'Showtime id must be a valid UUIDV4',
+    },
+    AT: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Invalid showtime',
+      MIN_VALUE: {
+        VALUE: () => {
+          return Date.now() + 60_000;
+        },
+        ERROR_MESSAGE: 'Showtime must be a future date',
+      },
+    },
+    MOVIE_ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Movie id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Movie id is required',
+      ERROR_MESSAGE: 'Movie id must be a valid UUIDV4',
+    },
+    HALL_ID: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Hall id must be a string',
+      REQUIRED_ERROR_MESSAGE: 'Hall id is required',
+      ERROR_MESSAGE: 'Hall id must be a valid UUIDV4',
     },
   },
 } as const;

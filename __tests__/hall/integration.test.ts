@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -16,7 +17,15 @@ import {
   type ServerParams,
 } from '../utils.js';
 
-import { deleteHalls, seedHall, seedHalls, type Hall } from './utils.js';
+import {
+  deleteHalls,
+  generateHallsData,
+  seedHall,
+  seedHalls,
+  type Hall,
+} from './utils.js';
+
+/**********************************************************************************/
 
 const { HALL } = VALIDATION;
 
@@ -32,18 +41,8 @@ await suite('Hall integration tests', async () => {
   });
 
   await test('Valid - Read many', async () => {
-    const hallIds: string[] = [];
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const halls = await seedHalls(serverParams, 32);
-    hallIds.push(
-      ...halls.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdHalls, hallIds } = await seedHalls(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -54,7 +53,7 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
       const fetchedHalls = (await res.json()) as Hall[];
-      halls.forEach((hall) => {
+      createdHalls.forEach((hall) => {
         const matchingHall = fetchedHalls.find((fetchedHall) => {
           return fetchedHall.id === hall.id;
         });
@@ -66,18 +65,8 @@ await suite('Hall integration tests', async () => {
     }
   });
   await test('Valid - Read a lot', async () => {
-    const hallIds: string[] = [];
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const halls = await seedHalls(serverParams, 8_192);
-    hallIds.push(
-      ...halls.map(({ id }) => {
-        return id;
-      }),
-    );
+    const { createdHalls, hallIds } = await seedHalls(serverParams, 8_192);
 
     try {
       const res = await sendHttpRequest({
@@ -88,7 +77,7 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
 
       const fetchedHalls = (await res.json()) as Hall[];
-      halls.forEach((hall) => {
+      createdHalls.forEach((hall) => {
         const matchingHall = fetchedHalls.find((fetchedHall) => {
           return fetchedHall.id === hall.id;
         });
@@ -103,27 +92,17 @@ await suite('Hall integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/halls`,
       method: 'POST',
-      payload: { name: randomString(1_000_000) },
+      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const hallIds: string[] = [];
+    let hallId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const hallData = {
-      name: randomString(HALL.NAME.MAX_LENGTH.VALUE - 1),
-      rows: randomNumber(
-        HALL.ROWS.MIN_LENGTH.VALUE + 1,
-        HALL.ROWS.MAX_LENGTH.VALUE - 1,
-      ),
-      columns: randomNumber(
-        HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
-        HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
-      ),
-    } as const;
+    const hallData = generateHallsData()[0]!;
 
     try {
       const res = await sendHttpRequest({
@@ -135,35 +114,28 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Hall;
-      hallIds.push(id);
+      hallId = id;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...hallData, name: hallData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await deleteHalls(serverParams, hallId);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/halls/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: randomString(1_000_000) },
+      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const hallIds: string[] = [];
-
-    // Not concurrent on purpose, allows for easier error handling and speed is
-    // irrelevant for the tests. Reason being if the creation is finished before
-    // the failure of the tokens fetch we will need to clean them up. This way
-    // we don't have to
     const { accessToken } = await getAdminTokens(serverParams);
-    const hall = await seedHall(serverParams);
-    hallIds.push(hall.id);
+    const { createdHall, hallIds } = await seedHall(serverParams);
 
     const updatedHallData = {
       name: randomString(HALL.NAME.MAX_LENGTH.VALUE - 1),
@@ -179,7 +151,7 @@ await suite('Hall integration tests', async () => {
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/halls/${hall.id}`,
+        route: `${serverParams.routes.http}/halls/${hallIds[0]}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedHallData,
@@ -189,7 +161,7 @@ await suite('Hall integration tests', async () => {
       const updatedHall = await res.json();
       assert.deepStrictEqual(
         {
-          ...hall,
+          ...createdHall,
           ...{
             ...updatedHallData,
             name: updatedHallData.name.toLowerCase(),
@@ -202,21 +174,11 @@ await suite('Hall integration tests', async () => {
     }
   });
   await test('Valid - Delete existent hall', async () => {
-    const hallIds: string[] = [];
+    let hallId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const hallData = {
-      name: randomString(HALL.NAME.MAX_LENGTH.VALUE - 1),
-      rows: randomNumber(
-        HALL.ROWS.MIN_LENGTH.VALUE + 1,
-        HALL.ROWS.MAX_LENGTH.VALUE - 1,
-      ),
-      columns: randomNumber(
-        HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
-        HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
-      ),
-    } as const;
+    const hallData = generateHallsData()[0]!;
 
     try {
       let res = await sendHttpRequest({
@@ -227,11 +189,10 @@ await suite('Hall integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      const { id } = (await res.json()) as Hall;
-      hallIds.push(id);
+      ({ id: hallId } = (await res.json()) as Hall);
 
       res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/halls/${id}`,
+        route: `${serverParams.routes.http}/halls/${hallId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
       });
@@ -241,7 +202,7 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await deleteHalls(serverParams, hallId);
     }
   });
   await test('Valid - Delete non-existent hall', async () => {

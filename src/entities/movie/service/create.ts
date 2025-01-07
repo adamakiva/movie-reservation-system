@@ -52,11 +52,11 @@ async function insertMovieToDatabase(
       )[0]!;
       await transaction.insert(moviePosterModel).values({
         movieId: createdMovie.id,
-        // Get the extension from the path. Since the program built the path
-        // we can assume it is valid
+        // Get the extension from the absolute path. Since the program built
+        // the absolute path we can assume it is valid
         mimeType: poster.mimeType,
-        path: poster.path,
-        size: poster.size,
+        absolutePath: poster.absolutePath,
+        sizeInBytes: poster.sizeInBytes,
         createdAt: now,
         updatedAt: now,
       });

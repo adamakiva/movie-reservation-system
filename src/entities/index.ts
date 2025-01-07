@@ -4,6 +4,7 @@ import { router as hallRouter } from './hall/router.js';
 import { router as healthcheckRouter } from './healthcheck/router.js';
 import { router as movieRouter } from './movie/router.js';
 import { router as roleRouter } from './role/router.js';
+import { router as showtimeRouter } from './showtime/router.js';
 import { router as userRouter } from './user/router.js';
 
 /**********************************************************************************/
@@ -15,5 +16,6 @@ export {
   healthcheckRouter,
   movieRouter,
   roleRouter,
+  showtimeRouter,
   userRouter,
 };
