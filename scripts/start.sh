@@ -7,7 +7,7 @@ ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
 DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
 NPM_CACHE_FOLDER="$ROOT_DIR"/npm-cache;
-KEYS_FOLDER="$ROOT_DIR"/keys;
+KEYS_FOLDER="$ROOT_DIR"/server/keys;
 ERR_LOG_FILE=err_logs.txt;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
@@ -30,7 +30,9 @@ check_prerequisites() {
 install_dependencies() {
     # Installing node dependencies
     printf "\nInstalling dependencies...\n";
-    if ! npm install -d; then
+
+    cd "$ROOT_DIR"/server;
+    if ! npm install --include=dev -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
     fi
@@ -60,7 +62,8 @@ check_services_health() {
     error_occurred=false;
 
     for service in $(docker compose ps --all --services 2>/dev/null); do
-        health_status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$service");
+        # Check the health status of each container, ignoring failures
+        health_status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || continue)
         if [ "$health_status" = "unhealthy" ]; then
             docker logs "$service" >> "$ERR_LOG_FILE" 2>&1;
             error_occurred=true;
