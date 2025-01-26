@@ -101,7 +101,7 @@ const movieModel = pgTable(
         () => {
           return genreModel.id;
         },
-        { onDelete: 'no action', onUpdate: 'cascade' },
+        { onDelete: 'cascade', onUpdate: 'cascade' },
       )
       .notNull(),
     ...timestamps,
@@ -125,8 +125,8 @@ const moviePosterModel = pgTable('movie_poster', {
       () => {
         return movieModel.id;
       },
-      // On delete is 'no action' instead of 'cascade' since we need to delete
-      // the actual file as well. As a result it is done manually
+      // 'no action' is used instead of 'cascade' since we need to delete
+      // the actual file as well which is done manually
       { onDelete: 'no action', onUpdate: 'cascade' },
     ),
   absolutePath: varchar('absolute_path').notNull(),
@@ -190,6 +190,52 @@ const showtimeModel = pgTable(
 
 /**********************************************************************************/
 
+// This table should be dumped to a summary table to prevent too many irrelevant
+// entries
+const usersShowtimesModel = pgTable(
+  'user_showtime',
+  {
+    userId: uuid('user_id')
+      .references(
+        () => {
+          return userModel.id;
+        },
+        // We don' allow deleting a user with movie reservations. First you must
+        // cancel his reservations and only when they have no reservations they
+        // are allowed to be deleted (this logic is done on the code level)
+        { onDelete: 'no action', onUpdate: 'cascade' },
+      )
+      .notNull(),
+    showtimeId: uuid('showtime_id')
+      .references(
+        () => {
+          return showtimeModel.id;
+        },
+        // When a showtime is deleted the users should be notified/refunded
+        // before removing the entry for them (this logic is done on the code level)
+        { onDelete: 'no action', onUpdate: 'cascade' },
+      )
+      .notNull(),
+    ...timestamps,
+  },
+  (table) => {
+    return [
+      index('user_showtime_user_index').using('btree', table.userId.asc()),
+      index('user_showtime_showtime_index').using(
+        'btree',
+        table.showtimeId.asc(),
+      ),
+      uniqueIndex('user_showtime_unique_index').using(
+        'btree',
+        table.showtimeId.asc(),
+        table.userId.asc(),
+      ),
+    ];
+  },
+);
+
+/**********************************************************************************/
+
 export {
   genreModel,
   hallModel,
@@ -198,4 +244,5 @@ export {
   roleModel,
   showtimeModel,
   userModel,
+  usersShowtimesModel,
 };

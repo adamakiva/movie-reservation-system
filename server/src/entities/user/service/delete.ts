@@ -1,6 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 
-import type { RequestContext } from '../../../utils/index.js';
+import {
+  type RequestContext,
+  HTTP_STATUS_CODES,
+  MRSError,
+} from '../../../utils/index.js';
 
 import type { DeleteUserValidatedData } from './utils.js';
 
@@ -20,7 +24,22 @@ async function deleteUserFromDatabase(
   userId: DeleteUserValidatedData,
 ) {
   const handler = database.getHandler();
-  const { user: userModel } = database.getModels();
+  const { user: userModel, userShowtime: userShowtimeModel } =
+    database.getModels();
+
+  // Only users without attached showtimes are allowed to be deleted
+  const userShowtimes = (
+    await handler
+      .select({ count: count() })
+      .from(userShowtimeModel)
+      .where(eq(userShowtimeModel.userId, userId))
+  )[0]!.count;
+  if (userShowtimes) {
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'User has one or more attached showtime(s)',
+    );
+  }
 
   // I've decided that if nothing was deleted because it didn't exist in the
   // first place, it is still considered as a success since the end result

@@ -1,5 +1,5 @@
 {
-  "id": "eb390288-24cc-4a32-b021-1ddb896d5821",
+  "id": "0bf0d616-45ba-4f49-a64d-dc6e71c680b1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -211,7 +211,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
@@ -497,65 +497,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.showtime_summary": {
-      "name": "showtime_summary",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "at": {
-          "name": "at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "reservations": {
-          "name": "reservations",
-          "type": "point[]",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "ARRAY[]::point[]"
-        },
-        "movie_name": {
-          "name": "movie_name",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "revenue": {
-          "name": "revenue",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.user": {
       "name": "user",
       "schema": "",
@@ -690,6 +631,124 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_showtime": {
+      "name": "user_showtime",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "showtime_id": {
+          "name": "showtime_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "user_showtime_user_index": {
+          "name": "user_showtime_user_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_showtime_showtime_index": {
+          "name": "user_showtime_showtime_index",
+          "columns": [
+            {
+              "expression": "showtime_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_showtime_unique_index": {
+          "name": "user_showtime_unique_index",
+          "columns": [
+            {
+              "expression": "showtime_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_showtime_user_id_user_id_fk": {
+          "name": "user_showtime_user_id_user_id_fk",
+          "tableFrom": "user_showtime",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "cascade"
+        },
+        "user_showtime_showtime_id_showtime_id_fk": {
+          "name": "user_showtime_showtime_id_showtime_id_fk",
+          "tableFrom": "user_showtime",
+          "tableTo": "showtime",
+          "columnsFrom": [
+            "showtime_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

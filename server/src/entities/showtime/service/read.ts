@@ -2,6 +2,7 @@ import { and, asc, eq, gt, or, type SQL } from 'drizzle-orm';
 
 import {
   encodeCursor,
+  type DatabaseModel,
   type PaginatedResult,
   type RequestContext,
 } from '../../../utils/index.js';
@@ -74,16 +75,16 @@ async function getPaginatedShowtimesFromDatabase(
 
 function buildFilters(
   filters: Pick<GetShowtimeValidatedData, 'movieId' | 'hallId'>,
-  model: ReturnType<RequestContext['database']['getModels']>['showtime'],
+  showtimeModel: DatabaseModel<'showtime'>,
 ) {
   const { movieId, hallId } = filters;
 
   const filterQueries: SQL[] = [];
   if (movieId) {
-    filterQueries.push(eq(model.movieId, movieId));
+    filterQueries.push(eq(showtimeModel.movieId, movieId));
   }
   if (hallId) {
-    filterQueries.push(eq(model.hallId, hallId));
+    filterQueries.push(eq(showtimeModel.hallId, hallId));
   }
 
   if (!filterQueries.length) {

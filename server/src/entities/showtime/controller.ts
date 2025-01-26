@@ -40,6 +40,40 @@ async function deleteShowtime(req: Request, res: ResponseWithContext) {
   res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
+async function reserveShowtimeTicket(req: Request, res: ResponseWithContext) {
+  const showtimeTicket = showtimeValidator.validateReserveShowtimeTicket(req);
+
+  const createdShowtimeTicket = await showtimeService.reserveShowtimeTicket({
+    req,
+    context: res.locals.context,
+    showtimeTicket,
+  });
+
+  res.status(HTTP_STATUS_CODES.CREATED).send(createdShowtimeTicket);
+}
+
+async function cancelUserShowtimeReservation(
+  req: Request,
+  res: ResponseWithContext,
+) {
+  const showtimeId =
+    showtimeValidator.validateCancelUserShowtimeReservation(req);
+
+  await showtimeService.cancelUserShowtimeReservation({
+    req,
+    context: res.locals.context,
+    showtimeId,
+  });
+
+  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+}
+
 /**********************************************************************************/
 
-export { createShowtime, deleteShowtime, getShowtimes };
+export {
+  cancelUserShowtimeReservation,
+  createShowtime,
+  deleteShowtime,
+  getShowtimes,
+  reserveShowtimeTicket,
+};

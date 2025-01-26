@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import {
   type DatabaseHandler,
+  type DatabaseModel,
   HTTP_STATUS_CODES,
   MRSError,
   type RequestContext,
@@ -83,9 +84,7 @@ async function updateMovieAndPoster(
 
 async function updateMoviePoster(params: {
   transaction: DatabaseHandler;
-  moviePosterModel: ReturnType<
-    RequestContext['database']['getModels']
-  >['moviePoster'];
+  moviePosterModel: DatabaseModel<'moviePoster'>;
   fileManager: RequestContext['fileManager'];
   logger: RequestContext['logger'];
   movieId: string;
@@ -136,7 +135,7 @@ async function updateMoviePoster(params: {
 
 async function updateMovieInDatabase(params: {
   transaction: DatabaseHandler;
-  movieModel: ReturnType<RequestContext['database']['getModels']>['movie'];
+  movieModel: DatabaseModel<'movie'>;
   movieId: string;
   fieldsToUpdate: Omit<UpdateMovieValidatedData, 'movieId' | 'poster'>;
   updatedAt: Date;

@@ -1,6 +1,10 @@
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 
-import type { RequestContext } from '../../../utils/index.js';
+import {
+  type RequestContext,
+  HTTP_STATUS_CODES,
+  MRSError,
+} from '../../../utils/index.js';
 
 import type { DeleteMovieValidatedData } from './utils.js';
 
@@ -21,8 +25,25 @@ async function deleteMovieFromDatabase(
 ) {
   const { database, fileManager, logger } = context;
   const handler = database.getHandler();
-  const { movie: movieModel, moviePoster: moviePosterModel } =
-    database.getModels();
+  const {
+    movie: movieModel,
+    moviePoster: moviePosterModel,
+    showtime: showtimeModel,
+  } = database.getModels();
+
+  // Only movies without attached showtimes are allowed to be deleted
+  const showtimesWithDeletedMovie = (
+    await handler
+      .select({ count: count() })
+      .from(showtimeModel)
+      .where(eq(showtimeModel.movieId, movieId))
+  )[0]!.count;
+  if (showtimesWithDeletedMovie) {
+    throw new MRSError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Movie has one or more attached showtime',
+    );
+  }
 
   const absolutePath = await handler.transaction(async (transaction) => {
     // I've decided that if nothing was deleted because it didn't exist in the

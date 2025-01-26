@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
 import {
+  decodeJwt,
   importPKCS8,
   importSPKI,
   errors as joseErrors,
@@ -19,6 +20,10 @@ import {
 
 /**********************************************************************************/
 
+type TokenTypes = ['access', 'refresh'];
+
+/**********************************************************************************/
+
 class AuthenticationManager {
   readonly #audience;
   readonly #issuer;
@@ -26,12 +31,15 @@ class AuthenticationManager {
   readonly #access;
   readonly #refresh;
   readonly #hashSecret;
+  readonly #realm;
+
+  readonly #errors;
 
   public static async create(params: {
     audience: string;
     issuer: string;
-    typ: string;
-    alg: string;
+    type: string;
+    algorithm: string;
     access: {
       expiresAt: number;
     };
@@ -40,16 +48,19 @@ class AuthenticationManager {
     };
     keysPath: string;
     hashSecret: Buffer;
+    // See: https://datatracker.ietf.org/doc/html/rfc2617#section-2
+    realm: string;
   }) {
     const {
       audience,
       issuer,
-      typ,
-      alg,
+      type,
+      algorithm,
       access,
       refresh,
       keysPath,
       hashSecret,
+      realm,
     } = params;
 
     const encoding = { encoding: 'utf-8' } as const;
@@ -75,17 +86,17 @@ class AuthenticationManager {
       publicRefreshKey,
       privateRefreshKey,
     ] = await Promise.all([
-      importSPKI(accessPublicKey, alg),
-      importPKCS8(accessPrivateKey, alg),
-      importSPKI(refreshPublicKey, alg),
-      importPKCS8(refreshPrivateKey, alg),
+      importSPKI(accessPublicKey, algorithm),
+      importPKCS8(accessPrivateKey, algorithm),
+      importSPKI(refreshPublicKey, algorithm),
+      importPKCS8(refreshPrivateKey, algorithm),
     ]);
 
     const self = new AuthenticationManager({
       audience,
       issuer,
-      typ,
-      alg,
+      type,
+      algorithm,
       access: {
         publicKey: publicAccessKey,
         privateKey: privateAccessKey,
@@ -97,6 +108,7 @@ class AuthenticationManager {
         expiresAt: refresh.expiresAt,
       },
       hashSecret,
+      realm,
     });
 
     return self;
@@ -152,7 +164,7 @@ class AuthenticationManager {
     return jwt;
   }
 
-  public async validateToken(token: string, type: 'access' | 'refresh') {
+  public async validateToken(token: string, type: TokenTypes[number]) {
     let publicKey: KeyLike = null!;
     switch (type) {
       case 'access':
@@ -169,6 +181,14 @@ class AuthenticationManager {
     });
 
     return parsedJwt;
+  }
+
+  public getUserId(authorizationHeader: string) {
+    const token = authorizationHeader.replace('Bearer', '');
+
+    const decodedJwt = decodeJwt(token);
+
+    return decodedJwt.sub!;
   }
 
   public async hashPassword(password: string) {
@@ -193,8 +213,8 @@ class AuthenticationManager {
   private constructor(params: {
     audience: string;
     issuer: string;
-    typ: string;
-    alg: string;
+    type: string;
+    algorithm: string;
     access: {
       publicKey: KeyLike;
       privateKey: KeyLike;
@@ -206,63 +226,93 @@ class AuthenticationManager {
       expiresAt: number;
     };
     hashSecret: Buffer;
+    realm: string;
   }) {
-    const { audience, issuer, typ, alg, access, refresh, hashSecret } = params;
+    const {
+      audience,
+      issuer,
+      type,
+      algorithm,
+      access,
+      refresh,
+      hashSecret,
+      realm,
+    } = params;
 
     this.#audience = audience;
     this.#issuer = issuer;
-    this.#header = { typ, alg } as const;
+    this.#header = { typ: type, alg: algorithm } as const;
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
+    this.#realm = `Bearer realm="${realm}"`;
+
+    // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
+    this.#errors = {
+      missing: this.#realm,
+      malformed: `${this.#realm}, error="invalid_token", error_description="Malformed access token"`,
+      expired: `${this.#realm}, error="invalid_token", error_description="The access token expired"`,
+    } as const;
   }
 
   async #httpAuthenticationMiddleware(
     req: Request,
-    _res: ResponseWithContext,
+    res: ResponseWithContext,
     next: NextFunction,
   ) {
-    await this.#checkAuthenticationToken(req.headers.authorization);
+    await this.#checkAuthenticationToken(res, req.headers.authorization);
 
     next();
   }
 
-  async #checkAuthenticationToken(authorizationHeader?: string) {
+  async #checkAuthenticationToken(
+    res: ResponseWithContext,
+    authorizationHeader?: string,
+  ) {
     try {
       if (!authorizationHeader) {
-        throw new MRSError(
-          HTTP_STATUS_CODES.UNAUTHORIZED,
-          'Missing authorization header',
-        );
+        throw this.#buildUnauthenticatedResponse(res, this.#errors.missing);
       }
       const token = authorizationHeader.replace('Bearer', '');
 
       const {
-        payload: { sub },
+        payload: { sub, exp },
       } = await this.validateToken(token, 'access');
-      if (!sub) {
-        throw new MRSError(
-          HTTP_STATUS_CODES.UNAUTHORIZED,
-          'Invalid access token',
-        );
+      if (!sub || !exp) {
+        throw this.#buildUnauthenticatedResponse(res, this.#errors.malformed);
       }
     } catch (err) {
-      // TODO Check error thrown by exp passed and throw a specific error for it
-      if (err instanceof MRSError) {
-        throw err;
-      }
-
-      if (err instanceof joseErrors.JWSInvalid) {
-        throw new MRSError(
-          HTTP_STATUS_CODES.UNAUTHORIZED,
-          'Malformed JWT token',
+      if (err instanceof joseErrors.JWTExpired) {
+        throw this.#buildUnauthenticatedResponse(
+          res,
+          this.#errors.expired,
           err.cause,
         );
       }
+      if (err instanceof joseErrors.JWSInvalid) {
+        throw this.#buildUnauthenticatedResponse(
+          res,
+          this.#errors.malformed,
+          err.cause,
+        );
+      }
+
+      throw err;
     }
+  }
+
+  #buildUnauthenticatedResponse(
+    res: ResponseWithContext,
+    wwwAuthenticateHeaderValue: string,
+    cause?: unknown,
+  ) {
+    res.setHeader('WWW-Authenticate', wwwAuthenticateHeaderValue);
+
+    return new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized', cause);
   }
 }
 
 /**********************************************************************************/
 
 export default AuthenticationManager;
+export type { TokenTypes };

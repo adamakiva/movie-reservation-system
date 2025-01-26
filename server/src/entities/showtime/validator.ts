@@ -20,7 +20,7 @@ import {
 
 /**********************************************************************************/
 
-const { SHOWTIME, PAGINATION, QUERY, PARAMS, BODY } = VALIDATION;
+const { SHOWTIME, HALL, PAGINATION, QUERY, PARAMS, BODY } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -145,6 +145,62 @@ const deleteShowtimeSchema = ZodObject(
   },
 );
 
+const reserveShowtimeTicketSchema = ZodObject(
+  {
+    showtime_id: ZodString({
+      invalid_type_error: SHOWTIME.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: SHOWTIME.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(SHOWTIME.ID.ERROR_MESSAGE),
+    row: ZodPreprocessor(
+      coerceNumber(
+        SHOWTIME.ROWS.INVALID_TYPE_ERROR_MESSAGE,
+        SHOWTIME.ROWS.REQUIRED_ERROR_MESSAGE,
+      ),
+      ZodNumber()
+        .min(
+          HALL.ROWS.MIN_LENGTH.VALUE,
+          SHOWTIME.ROWS.MIN_LENGTH(HALL.ROWS.MIN_LENGTH.VALUE),
+        )
+        .max(
+          HALL.ROWS.MAX_LENGTH.VALUE,
+          SHOWTIME.ROWS.MAX_LENGTH(HALL.ROWS.MAX_LENGTH.VALUE),
+        ),
+    ),
+    column: ZodPreprocessor(
+      coerceNumber(
+        SHOWTIME.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
+        SHOWTIME.COLUMNS.REQUIRED_ERROR_MESSAGE,
+      ),
+      ZodNumber()
+        .min(
+          HALL.COLUMNS.MIN_LENGTH.VALUE,
+          SHOWTIME.COLUMNS.MIN_LENGTH(HALL.COLUMNS.MIN_LENGTH.VALUE),
+        )
+        .max(
+          HALL.COLUMNS.MAX_LENGTH.VALUE,
+          SHOWTIME.COLUMNS.MAX_LENGTH(HALL.COLUMNS.MAX_LENGTH.VALUE),
+        ),
+    ),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
+const cancelUserShowtimeReservationSchema = ZodObject(
+  {
+    showtime_id: ZodString({
+      invalid_type_error: SHOWTIME.ID.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: SHOWTIME.ID.REQUIRED_ERROR_MESSAGE,
+    }).uuid(SHOWTIME.ID.ERROR_MESSAGE),
+  },
+  {
+    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: BODY.REQUIRED_ERROR_MESSAGE,
+  },
+);
+
 /**********************************************************************************/
 
 function validateGetShowtimes(req: Request) {
@@ -184,6 +240,45 @@ function validateDeleteShowtime(req: Request) {
   return showtimeId;
 }
 
+function validateReserveShowtimeTicket(req: Request) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const { body } = req;
+
+  const validatedResult = reserveShowtimeTicketSchema.safeParse(body);
+  const {
+    showtime_id: showtimeId,
+    row,
+    column,
+  } = parseValidationResult(
+    validatedResult,
+    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+  );
+
+  return {
+    showtimeId,
+    row,
+    column,
+  };
+}
+
+function validateCancelUserShowtimeReservation(req: Request) {
+  const { params } = req;
+
+  const validatedResult = cancelUserShowtimeReservationSchema.safeParse(params);
+  const { showtime_id: showtimeId } = parseValidationResult(
+    validatedResult,
+    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
+  );
+
+  return showtimeId;
+}
+
 /**********************************************************************************/
 
-export { validateCreateShowtime, validateDeleteShowtime, validateGetShowtimes };
+export {
+  validateCancelUserShowtimeReservation,
+  validateCreateShowtime,
+  validateDeleteShowtime,
+  validateGetShowtimes,
+  validateReserveShowtimeTicket,
+};

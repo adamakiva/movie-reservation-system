@@ -1,7 +1,13 @@
-import { createShowtime } from './create.js';
-import { deleteShowtime } from './delete.js';
+import { createShowtime, reserveShowtimeTicket } from './create.js';
+import { cancelUserShowtimeReservation, deleteShowtime } from './delete.js';
 import { getShowtimes } from './read.js';
 
 /**********************************************************************************/
 
-export { createShowtime, deleteShowtime, getShowtimes };
+export {
+  cancelUserShowtimeReservation,
+  createShowtime,
+  deleteShowtime,
+  getShowtimes,
+  reserveShowtimeTicket,
+};

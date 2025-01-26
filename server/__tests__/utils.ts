@@ -21,7 +21,6 @@ import { VALIDATION } from '../src/entities/utils.validator.js';
 import { HttpServer } from '../src/server/index.js';
 import * as Middlewares from '../src/server/services/middlewares.js';
 import {
-  CONFIGURATIONS,
   EnvironmentManager,
   ERROR_CODES,
   HTTP_STATUS_CODES,
@@ -40,9 +39,6 @@ process.on('warning', (warn) => {
 
   process.exit(1);
 });
-
-// See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-EventEmitter.captureRejections = true;
 
 // In order to reuse the environment manager class, we swap the only different
 // value
@@ -82,71 +78,66 @@ async function createServer() {
 
   const environmentManager = new EnvironmentManager(logger);
   const {
-    server: serverEnvironment,
-    databaseUrl,
-    hashSecret,
+    jwt,
+    server: serverEnv,
+    database,
   } = environmentManager.getEnvVariables();
+
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
 
   const server = await HttpServer.create({
     authenticationParams: {
       audience: 'mrs-users',
       issuer: 'mrs-server',
-      typ: 'JWT',
-      alg: 'RS256',
+      type: 'JWT',
+      algorithm: 'RS256',
       access: {
-        expiresAt: 2, // 2 seconds
+        expiresAt: jwt.accessTokenExpiration,
       },
       refresh: {
-        expiresAt: 4, // 4 seconds
+        expiresAt: jwt.refreshTokenExpiration,
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
-      hashSecret,
+      hashSecret: jwt.hash,
+      realm: 'movie_reservation_system',
     },
     fileManagerParams: {
-      generatedNameLength: 16,
+      generatedNameLength: 32,
       saveDir: tmpdir(),
       logger: logger,
       limits: {
-        fileSize: 4_194_304, // 4mb in bytes
+        fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
       },
     },
     corsOptions: {
-      methods: Array.from(serverEnvironment.allowedMethods),
+      methods: Array.from(serverEnv.allowedMethods),
       origin:
-        serverEnvironment.allowedOrigins.size === 1
-          ? Array.from(serverEnvironment.allowedOrigins)[0]
-          : Array.from(serverEnvironment.allowedOrigins),
-      maxAge: 60, // 1 minute in seconds
+        serverEnv.allowedOrigins.size === 1
+          ? Array.from(serverEnv.allowedOrigins)[0]
+          : Array.from(serverEnv.allowedOrigins),
+      maxAge: 86_400, // 1 day in seconds
       optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
     },
     databaseParams: {
-      url: databaseUrl,
+      url: database.url,
       options: {
-        max: 1, // On purpose to check issues with only a single database connection
+        max: database.maxConnections,
         connection: {
-          application_name: 'movie_reservation_system_pg_test',
-          statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
-          idle_in_transaction_session_timeout:
-            CONFIGURATIONS.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
+          application_name: 'movie_reservation_system_pg',
+          statement_timeout: database.statementTimeout,
+          idle_in_transaction_session_timeout: database.transactionTimeout,
         },
       },
       healthCheckQuery: 'SELECT NOW()',
     },
-    allowedMethods: new Set([
-      'HEAD',
-      'GET',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ]),
+    allowedMethods: serverEnv.allowedMethods,
     routes: {
-      http: `/${serverEnvironment.httpRoute}`,
+      http: `/${serverEnv.httpRoute}`,
     },
-    logger: logger,
-    logMiddleware: logMiddleware,
+    logMiddleware,
+    logger,
   });
 
   const port = await server.listen();
@@ -160,7 +151,7 @@ async function createServer() {
     environmentManager,
     routes: {
       base: baseUrl,
-      http: `${baseUrl}/${serverEnvironment.httpRoute}`,
+      http: `${baseUrl}/${serverEnv.httpRoute}`,
     },
   } as const;
 }
@@ -323,7 +314,7 @@ function mockLogger() {
 }
 
 function createHttpMocks<T extends Response = Response>(params: {
-  logger: ReturnType<Logger['getHandler']>;
+  logger: LoggerHandler;
   reqOptions?: RequestOptions;
   resOptions?: ResponseOptions;
 }) {

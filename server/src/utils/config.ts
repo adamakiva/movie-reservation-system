@@ -3,32 +3,42 @@ import type { LoggerHandler } from './logger.js';
 
 /**********************************************************************************/
 
-type EnvironmentVariables = {
-  server: {
-    port: number;
-    baseUrl: string;
-    httpRoute: string;
-    allowedHosts: Set<string>;
-    allowedOrigins: Set<string>;
-    allowedMethods: Set<string>;
-  };
-  databaseUrl: string;
-  hashSecret: Buffer;
-};
-
-/**********************************************************************************/
-
 class EnvironmentManager {
   readonly #logger;
   readonly #environmentVariables;
+
+  readonly #allowedEnvironmentVariablesKeys = [
+    'SERVER_PORT',
+    'SERVER_BASE_URL',
+    'HTTP_ROUTE',
+    'ALLOWED_HOSTS',
+    'ALLOWED_ORIGINS',
+    'DATABASE_URL',
+    'HASH_SECRET',
+  ] as const;
 
   public constructor(logger: LoggerHandler) {
     this.#logger = logger;
     this.#checkForMissingEnvironmentVariables();
 
     this.#environmentVariables = {
+      node: {
+        maxSockets:
+          this.#toNumber('NODE_MAX_SOCKETS', process.env.NODE_MAX_SOCKETS) ??
+          Infinity,
+        maxTotalSockets:
+          this.#toNumber(
+            'NODE_MAX_TOTAL_SOCKETS',
+            process.env.NODE_MAX_TOTAL_SOCKETS,
+          ) ?? Infinity,
+        defaultHighWaterMark:
+          this.#toNumber(
+            'NODE_DEFAULT_HIGH_WATERMARK',
+            process.env.NODE_DEFAULT_HIGH_WATERMARK,
+          ) ?? 65_536,
+      },
       server: {
-        port: parseInt(process.env.SERVER_PORT!),
+        port: this.#toNumber('SERVER_PORT', process.env.SERVER_PORT)!,
         baseUrl: process.env.SERVER_BASE_URL!,
         httpRoute: process.env.HTTP_ROUTE!,
         allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),
@@ -43,9 +53,38 @@ class EnvironmentManager {
           'OPTIONS',
         ]),
       },
-      databaseUrl: process.env.DATABASE_URL!,
-      hashSecret: Buffer.from(process.env.HASH_SECRET!),
-    } as const satisfies EnvironmentVariables;
+      database: {
+        url: process.env.DATABASE_URL!,
+        maxConnections:
+          this.#toNumber(
+            'DATABASE_MAX_CONNECTIONS',
+            process.env.DATABASE_MAX_CONNECTIONS,
+          ) ?? 32,
+        statementTimeout:
+          this.#toNumber(
+            'DATABASE_STATEMENT_TIMEOUT',
+            process.env.DATABASE_STATEMENT_TIMEOUT,
+          ) ?? 30_000,
+        transactionTimeout:
+          this.#toNumber(
+            'DATABASE_TRANSACTION_TIMEOUT',
+            process.env.DATABASE_TRANSACTION_TIMEOUT,
+          ) ?? 60_000,
+      },
+      jwt: {
+        accessTokenExpiration:
+          this.#toNumber(
+            'ACCESS_TOKEN_EXPIRATION',
+            process.env.ACCESS_TOKEN_EXPIRATION,
+          ) ?? 900, // 15 Minutes
+        refreshTokenExpiration:
+          this.#toNumber(
+            'REFRESH_TOKEN_EXPIRATION',
+            process.env.REFRESH_TOKEN_EXPIRATION,
+          ) ?? 2_629_746, // 1 Month
+        hash: Buffer.from(process.env.HASH_SECRET!),
+      },
+    } as const;
   }
 
   public getEnvVariables() {
@@ -56,7 +95,7 @@ class EnvironmentManager {
 
   #checkForMissingEnvironmentVariables() {
     const errorMessages: string[] = [];
-    this.#mapEnvironmentVariables().forEach((key) => {
+    this.#allowedEnvironmentVariablesKeys.forEach((key) => {
       if (!process.env[key]) {
         errorMessages.push(`* Missing ${key} environment variable`);
       }
@@ -68,18 +107,20 @@ class EnvironmentManager {
     }
   }
 
-  #mapEnvironmentVariables() {
-    const environmentVariables = [
-      'SERVER_PORT',
-      'SERVER_BASE_URL',
-      'HTTP_ROUTE',
-      'ALLOWED_HOSTS',
-      'ALLOWED_ORIGINS',
-      'DATABASE_URL',
-      'HASH_SECRET',
-    ];
+  #toNumber(key: string, value: string | undefined) {
+    if (!value) {
+      return undefined;
+    }
 
-    return environmentVariables;
+    const valueAsNumber = Number(value);
+
+    if (isNaN(valueAsNumber)) {
+      this.#logger.fatal(`Invalid value for '${key}' environment variable`);
+
+      process.exit(ERROR_CODES.EXIT_NO_RESTART);
+    }
+
+    return valueAsNumber;
   }
 }
 

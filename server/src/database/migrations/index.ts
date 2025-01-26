@@ -14,6 +14,11 @@ type User = typeof schemas.userModel.$inferInsert;
 
 /**********************************************************************************/
 
+const DEFAULT_ADMIN_FIRST_NAME = 'admin';
+const DEFAULT_ADMIN_LAST_NAME = 'admin';
+
+/**********************************************************************************/
+
 async function seedInitialData(params: {
   databaseHandler: PostgresJsDatabase<typeof schemas>;
   role: Role;
@@ -45,8 +50,8 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
         name: process.env.ADMIN_ROLE_NAME!,
       },
       user: {
-        firstName: 'admin',
-        lastName: 'admin',
+        firstName: DEFAULT_ADMIN_FIRST_NAME,
+        lastName: DEFAULT_ADMIN_LAST_NAME,
         email: process.env.ADMIN_EMAIL!,
         hash: await hash(process.env.ADMIN_PASSWORD!, {
           type: 1,

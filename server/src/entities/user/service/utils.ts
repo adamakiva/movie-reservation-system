@@ -3,7 +3,8 @@ import { eq } from 'drizzle-orm';
 import {
   HTTP_STATUS_CODES,
   MRSError,
-  type RequestContext,
+  type DatabaseHandler,
+  type DatabaseModel,
 } from '../../../utils/index.js';
 
 import type {
@@ -33,8 +34,8 @@ type User = {
 /**********************************************************************************/
 
 async function findRoleNameById(params: {
-  handler: ReturnType<RequestContext['database']['getHandler']>;
-  roleModel: ReturnType<RequestContext['database']['getModels']>['role'];
+  handler: DatabaseHandler;
+  roleModel: DatabaseModel<'role'>;
   roleId: string;
 }) {
   const { handler, roleModel, roleId } = params;

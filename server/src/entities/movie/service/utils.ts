@@ -5,7 +5,8 @@ import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
   MRSError,
-  type RequestContext,
+  type DatabaseHandler,
+  type DatabaseModel,
 } from '../../../utils/index.js';
 
 import type {
@@ -35,8 +36,8 @@ type Movie = {
 /**********************************************************************************/
 
 async function findGenreNameById(params: {
-  handler: ReturnType<RequestContext['database']['getHandler']>;
-  genreModel: ReturnType<RequestContext['database']['getModels']>['genre'];
+  handler: DatabaseHandler;
+  genreModel: DatabaseModel<'genre'>;
   genreId: string;
 }) {
   const { handler, genreModel, genreId } = params;

@@ -62,7 +62,7 @@ class HttpServer {
       compress(),
     );
     // Express type chain include extending IRouter which returns void | Promise<void>,
-    // however, this is irrelevant for this use case
+    // however, this is irrelevant for this use case (`app` type)
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const server = createServer(app);
 
@@ -215,7 +215,12 @@ class HttpServer {
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
     // The order matters
     app
-      .use(Middlewares.attachContext(this.#requestContext))
+      // Attach context to every request
+      .use((_req, res, next) => {
+        res.locals.context = this.#requestContext;
+
+        next();
+      })
       .use(routers.healthcheckRouter)
       .use(logMiddleware)
       .use(

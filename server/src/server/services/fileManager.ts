@@ -85,7 +85,8 @@ class fileManager implements multer.StorageEngine {
           .then(() => {
             callback(null, {
               filename,
-              // @ts-expect-error Figure out a nice way to do this
+              // @ts-expect-error Figure out a nice way to do this (changing
+              // mime type key name)
               mimeType: mimetype,
               path: file.path,
               size: outStream.bytesWritten,

@@ -1,14 +1,7 @@
-const CONFIGURATIONS = {
-  POSTGRES: {
-    POOL_MAX_CONNECTIONS: 64,
-    STATEMENT_TIMEOUT: 30_000,
-    IDLE_IN_TRANSACTION_SESSION_TIMEOUT: 60_000,
-  },
-} as const;
-
 const HTTP_STATUS_CODES = {
   SUCCESS: 200,
   CREATED: 201,
+  ACCEPTED: 202,
   NO_CONTENT: 204,
   MOVED_PERMANENTLY: 301,
   REDIRECT: 304,
@@ -64,10 +57,4 @@ const SIGNALS = [
 
 /**********************************************************************************/
 
-export {
-  ALPHA_NUMERIC,
-  CONFIGURATIONS,
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-  SIGNALS,
-};
+export { ALPHA_NUMERIC, ERROR_CODES, HTTP_STATUS_CODES, SIGNALS };

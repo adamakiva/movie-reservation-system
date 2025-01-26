@@ -343,6 +343,26 @@ const VALIDATION = {
       REQUIRED_ERROR_MESSAGE: 'Hall id is required',
       ERROR_MESSAGE: 'Hall id must be a valid UUIDV4',
     },
+    ROWS: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Row must be a number',
+      REQUIRED_ERROR_MESSAGE: 'Row is required',
+      MIN_LENGTH: (value: number) => {
+        return `Row must be at least ${value}`;
+      },
+      MAX_LENGTH: (value: number) => {
+        return `Row must be at most ${value}`;
+      },
+    },
+    COLUMNS: {
+      INVALID_TYPE_ERROR_MESSAGE: 'Column must be a number',
+      REQUIRED_ERROR_MESSAGE: 'Column is required',
+      MIN_LENGTH: (value: number) => {
+        return `Column must be at least ${value}`;
+      },
+      MAX_LENGTH: (value: number) => {
+        return `Column must be at most ${value}`;
+      },
+    },
   },
 } as const;
 

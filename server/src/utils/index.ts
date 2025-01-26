@@ -1,4 +1,5 @@
 import type { Response } from 'express';
+
 import type { Database } from '../database/index.js';
 import type {
   AuthenticationManager,
@@ -8,7 +9,6 @@ import type {
 import EnvironmentManager from './config.js';
 import {
   ALPHA_NUMERIC,
-  CONFIGURATIONS,
   ERROR_CODES,
   HTTP_STATUS_CODES,
   SIGNALS,
@@ -45,6 +45,9 @@ type DatabaseHandler = Omit<
   ReturnType<RequestContext['database']['getHandler']>,
   '$client'
 >;
+type DatabaseModel<
+  T extends keyof ReturnType<RequestContext['database']['getModels']>,
+> = ReturnType<RequestContext['database']['getModels']>[T];
 
 /********************************** Service ***************************************/
 
@@ -64,7 +67,6 @@ type Credentials = {
 
 export {
   ALPHA_NUMERIC,
-  CONFIGURATIONS,
   ERROR_CODES,
   EnvironmentManager,
   HTTP_STATUS_CODES,
@@ -77,6 +79,7 @@ export {
   strcasecmp,
   type Credentials,
   type DatabaseHandler,
+  type DatabaseModel,
   type LogMiddleware,
   type LoggerHandler,
   type PaginatedResult,

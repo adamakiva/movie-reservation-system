@@ -5,7 +5,6 @@ import { Stream } from 'node:stream';
 
 import { HttpServer } from './server/index.js';
 import {
-  CONFIGURATIONS,
   EnvironmentManager,
   ERROR_CODES,
   Logger,
@@ -15,16 +14,6 @@ import {
 
 /**********************************************************************************/
 
-// See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-EventEmitter.captureRejections = true;
-
-// To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
-globalAgent.maxSockets = 256;
-globalAgent.maxTotalSockets = 2048;
-
-// Limit the stream internal buffer to 256kb (default is 64kb)
-Stream.setDefaultHighWaterMark(false, 262_144);
-
 /**********************************************************************************/
 
 async function startServer() {
@@ -32,25 +21,36 @@ async function startServer() {
 
   const environmentManager = new EnvironmentManager(logger);
   const {
-    server: serverEnvironment,
-    databaseUrl,
-    hashSecret,
+    node,
+    jwt,
+    server: serverEnv,
+    database,
   } = environmentManager.getEnvVariables();
+
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
+
+  // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
+  globalAgent.maxSockets = node.maxSockets;
+  globalAgent.maxTotalSockets = node.maxTotalSockets;
+
+  Stream.setDefaultHighWaterMark(false, node.defaultHighWaterMark);
 
   const server = await HttpServer.create({
     authenticationParams: {
       audience: 'mrs-users',
       issuer: 'mrs-server',
-      typ: 'JWT',
-      alg: 'RS256',
+      type: 'JWT',
+      algorithm: 'RS256',
       access: {
-        expiresAt: 900, // 15 minutes
+        expiresAt: jwt.accessTokenExpiration,
       },
       refresh: {
-        expiresAt: 2_629_746, // A month
+        expiresAt: jwt.refreshTokenExpiration,
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
-      hashSecret,
+      hashSecret: jwt.hash,
+      realm: 'movie_reservation_system',
     },
     fileManagerParams: {
       generatedNameLength: 32,
@@ -62,36 +62,35 @@ async function startServer() {
       },
     },
     corsOptions: {
-      methods: Array.from(serverEnvironment.allowedMethods),
+      methods: Array.from(serverEnv.allowedMethods),
       origin:
-        serverEnvironment.allowedOrigins.size === 1
-          ? Array.from(serverEnvironment.allowedOrigins)[0]
-          : Array.from(serverEnvironment.allowedOrigins),
+        serverEnv.allowedOrigins.size === 1
+          ? Array.from(serverEnv.allowedOrigins)[0]
+          : Array.from(serverEnv.allowedOrigins),
       maxAge: 86_400, // 1 day in seconds
       optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
     },
     databaseParams: {
-      url: databaseUrl,
+      url: database.url,
       options: {
-        max: CONFIGURATIONS.POSTGRES.POOL_MAX_CONNECTIONS,
+        max: database.maxConnections,
         connection: {
           application_name: 'movie_reservation_system_pg',
-          statement_timeout: CONFIGURATIONS.POSTGRES.STATEMENT_TIMEOUT,
-          idle_in_transaction_session_timeout:
-            CONFIGURATIONS.POSTGRES.IDLE_IN_TRANSACTION_SESSION_TIMEOUT,
+          statement_timeout: database.statementTimeout,
+          idle_in_transaction_session_timeout: database.transactionTimeout,
         },
       },
       healthCheckQuery: 'SELECT NOW()',
     },
-    allowedMethods: serverEnvironment.allowedMethods,
+    allowedMethods: serverEnv.allowedMethods,
     routes: {
-      http: `/${serverEnvironment.httpRoute}`,
+      http: `/${serverEnv.httpRoute}`,
     },
     logMiddleware,
     logger,
   });
 
-  await server.listen(serverEnvironment.port);
+  await server.listen(serverEnv.port);
 
   attachProcessHandlers(server, logger);
 }

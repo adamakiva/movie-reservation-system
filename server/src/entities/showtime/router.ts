@@ -25,6 +25,18 @@ function router(authentication: AuthenticationManager) {
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       showtimeController.deleteShowtime,
+    )
+    .post(
+      '/showtimes/reserve-ticket',
+      json({ limit: '4kb' }),
+      authentication.httpAuthenticationMiddleware(),
+      showtimeController.reserveShowtimeTicket,
+    )
+    .delete(
+      '/showtimes/cancel-reservation/:showtime_id',
+      json({ limit: 0 }),
+      authentication.httpAuthenticationMiddleware(),
+      showtimeController.cancelUserShowtimeReservation,
     );
 
   return router;

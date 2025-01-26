@@ -5,7 +5,6 @@ import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
   MRSError,
-  type RequestContext,
   type ResponseWithContext,
   type ResponseWithoutContext,
 } from '../../utils/index.js';
@@ -23,14 +22,6 @@ function checkMethod(allowedMethods: Set<string>) {
         .end();
       return;
     }
-
-    next();
-  };
-}
-
-function attachContext(requestContext: RequestContext) {
-  return (_: Request, res: ResponseWithContext, next: NextFunction) => {
-    res.locals.context = requestContext;
 
     next();
   };
@@ -130,4 +121,4 @@ function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
 
 /**********************************************************************************/
 
-export { attachContext, checkMethod, errorHandler, handleNonExistentRoute };
+export { checkMethod, errorHandler, handleNonExistentRoute };

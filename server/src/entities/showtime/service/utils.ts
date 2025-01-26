@@ -7,9 +7,11 @@ import {
 } from '../../../utils/index.js';
 
 import type {
+  validateCancelUserShowtimeReservation,
   validateCreateShowtime,
   validateDeleteShowtime,
   validateGetShowtimes,
+  validateReserveShowtimeTicket,
 } from '../validator.js';
 
 /**********************************************************************************/
@@ -17,6 +19,12 @@ import type {
 type GetShowtimeValidatedData = ReturnType<typeof validateGetShowtimes>;
 type CreateShowtimeValidatedData = ReturnType<typeof validateCreateShowtime>;
 type DeleteShowtimeValidatedData = ReturnType<typeof validateDeleteShowtime>;
+type ReserveShowtimeTicketValidatedData = ReturnType<
+  typeof validateReserveShowtimeTicket
+>;
+type CancelUserShowtimeValidatedData = ReturnType<
+  typeof validateCancelUserShowtimeReservation
+>;
 
 type Showtime = {
   id: string;
@@ -24,6 +32,14 @@ type Showtime = {
   reservations: [number, number][];
   movieTitle: string;
   hallName: string;
+};
+
+type ShowtimeTicket = {
+  hallName: string;
+  movieTitle: string;
+  at: Date;
+  row: number;
+  column: number;
 };
 
 /**********************************************************************************/
@@ -53,8 +69,11 @@ function handlePossibleDuplicationError(params: {
 
 export {
   handlePossibleDuplicationError,
+  type CancelUserShowtimeValidatedData,
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,
   type GetShowtimeValidatedData,
+  type ReserveShowtimeTicketValidatedData,
   type Showtime,
+  type ShowtimeTicket,
 };
