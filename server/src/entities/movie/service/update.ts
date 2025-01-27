@@ -3,8 +3,8 @@ import { eq } from 'drizzle-orm';
 import {
   type DatabaseHandler,
   type DatabaseModel,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -110,7 +110,7 @@ async function updateMoviePoster(params: {
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
   if (!moviePoster.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Movie '${movieId}' does not exist`,
     );
@@ -156,7 +156,7 @@ async function updateMovieInDatabase(params: {
         id: movieModel.id,
       });
     if (!updatedMovie.length) {
-      throw new MRSError(
+      throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Movie '${movieId}' does not exist`,
       );

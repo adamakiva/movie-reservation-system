@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -43,7 +43,7 @@ async function updateGenreInDatabase(
       .where(eq(genreModel.id, genreId))
       .returning({ id: genreModel.id, name: genreModel.name });
     if (!updatedGenre.length) {
-      throw new MRSError(
+      throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Genre '${genreId}' does not exist`,
       );

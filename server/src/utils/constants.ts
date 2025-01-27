@@ -35,26 +35,6 @@ const ERROR_CODES = {
   EXIT_NO_RESTART: 180,
 } as const;
 
-const ALPHA_NUMERIC = {
-  CHARACTERS:
-    'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-  LENGTH: 67,
-} as const;
-
-const SIGNALS = [
-  'SIGHUP',
-  'SIGINT',
-  'SIGQUIT',
-  'SIGILL',
-  'SIGTRAP',
-  'SIGABRT',
-  'SIGBUS',
-  'SIGFPE',
-  'SIGSEGV',
-  'SIGUSR2',
-  'SIGTERM',
-] as const;
-
 /**********************************************************************************/
 
-export { ALPHA_NUMERIC, ERROR_CODES, HTTP_STATUS_CODES, SIGNALS };
+export { ERROR_CODES, HTTP_STATUS_CODES };

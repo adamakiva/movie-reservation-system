@@ -2,8 +2,8 @@ import { and, asc, eq, gt, or } from 'drizzle-orm';
 
 import {
   encodeCursor,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type PaginatedResult,
   type RequestContext,
   type ResponseWithContext,
@@ -148,7 +148,7 @@ async function getMovieFromDatabase(
     .where(eq(movieModel.id, movieId))
     .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId));
   if (!movies.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Movie '${movieId}' does not exist`,
     );
@@ -173,7 +173,7 @@ async function getMoviePosterMetadataFromDatabase(
     .from(moviePosterModel)
     .where(eq(moviePosterModel.movieId, movieId));
   if (!moviePosters.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Movie '${movieId}' does not exist`,
     );

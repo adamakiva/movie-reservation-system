@@ -13,8 +13,7 @@ import {
 } from 'jose';
 
 import {
-  HTTP_STATUS_CODES,
-  MRSError,
+  UnauthorizedError,
   type ResponseWithContext,
 } from '../../utils/index.js';
 
@@ -31,9 +30,6 @@ class AuthenticationManager {
   readonly #access;
   readonly #refresh;
   readonly #hashSecret;
-  readonly #realm;
-
-  readonly #errors;
 
   public static async create(params: {
     audience: string;
@@ -49,7 +45,6 @@ class AuthenticationManager {
     keysPath: string;
     hashSecret: Buffer;
     // See: https://datatracker.ietf.org/doc/html/rfc2617#section-2
-    realm: string;
   }) {
     const {
       audience,
@@ -60,7 +55,6 @@ class AuthenticationManager {
       refresh,
       keysPath,
       hashSecret,
-      realm,
     } = params;
 
     const encoding = { encoding: 'utf-8' } as const;
@@ -108,7 +102,6 @@ class AuthenticationManager {
         expiresAt: refresh.expiresAt,
       },
       hashSecret,
-      realm,
     });
 
     return self;
@@ -226,18 +219,9 @@ class AuthenticationManager {
       expiresAt: number;
     };
     hashSecret: Buffer;
-    realm: string;
   }) {
-    const {
-      audience,
-      issuer,
-      type,
-      algorithm,
-      access,
-      refresh,
-      hashSecret,
-      realm,
-    } = params;
+    const { audience, issuer, type, algorithm, access, refresh, hashSecret } =
+      params;
 
     this.#audience = audience;
     this.#issuer = issuer;
@@ -245,33 +229,22 @@ class AuthenticationManager {
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
-    this.#realm = `Bearer realm="${realm}"`;
-
-    // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
-    this.#errors = {
-      missing: this.#realm,
-      malformed: `${this.#realm}, error="invalid_token", error_description="Malformed access token"`,
-      expired: `${this.#realm}, error="invalid_token", error_description="The access token expired"`,
-    } as const;
   }
 
   async #httpAuthenticationMiddleware(
     req: Request,
-    res: ResponseWithContext,
+    _res: ResponseWithContext,
     next: NextFunction,
   ) {
-    await this.#checkAuthenticationToken(res, req.headers.authorization);
+    await this.#checkAuthenticationToken(req.headers.authorization);
 
     next();
   }
 
-  async #checkAuthenticationToken(
-    res: ResponseWithContext,
-    authorizationHeader?: string,
-  ) {
+  async #checkAuthenticationToken(authorizationHeader?: string) {
     try {
       if (!authorizationHeader) {
-        throw this.#buildUnauthenticatedResponse(res, this.#errors.missing);
+        throw new UnauthorizedError('missing');
       }
       const token = authorizationHeader.replace('Bearer', '');
 
@@ -279,36 +252,18 @@ class AuthenticationManager {
         payload: { sub, exp },
       } = await this.validateToken(token, 'access');
       if (!sub || !exp) {
-        throw this.#buildUnauthenticatedResponse(res, this.#errors.malformed);
+        throw new UnauthorizedError('malformed');
       }
     } catch (err) {
       if (err instanceof joseErrors.JWTExpired) {
-        throw this.#buildUnauthenticatedResponse(
-          res,
-          this.#errors.expired,
-          err.cause,
-        );
+        throw new UnauthorizedError('expired', err.cause);
       }
       if (err instanceof joseErrors.JWSInvalid) {
-        throw this.#buildUnauthenticatedResponse(
-          res,
-          this.#errors.malformed,
-          err.cause,
-        );
+        throw new UnauthorizedError('malformed', err.cause);
       }
 
       throw err;
     }
-  }
-
-  #buildUnauthenticatedResponse(
-    res: ResponseWithContext,
-    wwwAuthenticateHeaderValue: string,
-    cause?: unknown,
-  ) {
-    res.setHeader('WWW-Authenticate', wwwAuthenticateHeaderValue);
-
-    return new MRSError(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized', cause);
   }
 }
 

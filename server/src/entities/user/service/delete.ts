@@ -2,8 +2,8 @@ import { count, eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
 } from '../../../utils/index.js';
 
 import type { DeleteUserValidatedData } from './utils.js';
@@ -35,7 +35,7 @@ async function deleteUserFromDatabase(
       .where(eq(userShowtimeModel.userId, userId))
   )[0]!.count;
   if (userShowtimes) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'User has one or more attached showtime(s)',
     );

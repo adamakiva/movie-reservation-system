@@ -1,8 +1,8 @@
 import { and, asc, eq, gt, or } from 'drizzle-orm';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type PaginatedResult,
   type RequestContext,
   encodeCursor,
@@ -135,7 +135,7 @@ async function getUserFromDatabase(
     .where(eq(userModel.id, userId))
     .innerJoin(roleModel, eq(roleModel.id, userModel.roleId));
   if (!users.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `User '${userId}' does not exist`,
     );

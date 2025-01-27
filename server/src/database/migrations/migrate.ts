@@ -55,7 +55,7 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
         email: process.env.ADMIN_EMAIL!,
         hash: await hash(process.env.ADMIN_PASSWORD!, {
           type: 1,
-          secret: Buffer.from(process.env.HASH_SECRET!),
+          secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
         }),
         roleId: process.env.ADMIN_ROLE_ID!,
       },
@@ -91,7 +91,7 @@ function run() {
     ['ADMIN_ROLE_NAME', process.env.ADMIN_ROLE_NAME],
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
     ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
-    ['HASH_SECRET', process.env.HASH_SECRET],
+    ['AUTHENTICATION_HASH_SECRET', process.env.AUTHENTICATION_HASH_SECRET],
   ] as const);
   const databaseUrls = new Map([['DATABASE_URL', process.env.DATABASE_URL]]);
   if (process.env.DATABASE_TEST_URL) {

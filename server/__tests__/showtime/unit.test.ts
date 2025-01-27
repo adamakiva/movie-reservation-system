@@ -3,11 +3,11 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   type LoggerHandler,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   type ResponseWithContext,
@@ -38,7 +38,7 @@ await suite('Showtime unit tests', async () => {
   });
 
   await test('Invalid - Read multiple validation: Empty movie id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -55,9 +55,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -67,7 +67,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid movie id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -84,9 +84,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -96,7 +96,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty hall id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -113,9 +113,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -125,7 +125,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid hall id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -142,9 +142,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -154,7 +154,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: '' },
@@ -169,9 +169,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -181,7 +181,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -200,9 +200,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -212,7 +212,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -231,9 +231,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -243,7 +243,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
@@ -258,9 +258,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -270,7 +270,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -287,9 +287,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -299,7 +299,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -316,9 +316,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -328,7 +328,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid page size', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { 'page-size': randomString() },
@@ -343,9 +343,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -355,7 +355,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing at', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -373,9 +373,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -385,7 +385,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty at', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -404,9 +404,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -416,7 +416,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: At in the past', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -435,9 +435,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -447,7 +447,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid at', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -466,9 +466,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -478,7 +478,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing movie id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -496,9 +496,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -508,7 +508,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty movie id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -527,9 +527,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -539,7 +539,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid movie id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -558,9 +558,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -570,7 +570,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing hall id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -588,9 +588,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -600,7 +600,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty hall id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -619,9 +619,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -631,7 +631,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid hall id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -650,9 +650,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -662,7 +662,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -674,9 +674,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -686,7 +686,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { showtime_id: '' } },
     });
@@ -699,9 +699,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.ERROR_MESSAGE,
         });
@@ -711,7 +711,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { showtime_id: randomString() } },
     });
@@ -724,9 +724,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.ERROR_MESSAGE,
         });

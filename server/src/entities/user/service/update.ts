@@ -3,8 +3,8 @@ import pg from 'postgres';
 
 import {
   ERROR_CODES,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -63,7 +63,7 @@ async function updateUserInDatabase(
         roleId: userModel.roleId,
       });
     if (!updatedUsers.length) {
-      throw new MRSError(
+      throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `User '${userId}' does not exist`,
       );
@@ -73,13 +73,13 @@ async function updateUserInDatabase(
     if (err instanceof pg.PostgresError) {
       switch (err.code) {
         case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
-          throw new MRSError(
+          throw new GeneralError(
             HTTP_STATUS_CODES.CONFLICT,
             `User '${userToUpdate.email!}' already exists`,
             err.cause,
           );
         case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-          throw new MRSError(
+          throw new GeneralError(
             HTTP_STATUS_CODES.NOT_FOUND,
             `Role '${userToUpdate.roleId!}' does not exist`,
             err.cause,

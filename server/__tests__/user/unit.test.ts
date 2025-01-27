@@ -4,11 +4,11 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   type LoggerHandler,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   type ResponseWithContext,
@@ -46,7 +46,7 @@ await suite('User unit tests', async () => {
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -58,9 +58,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -70,7 +70,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: '' },
@@ -85,9 +85,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -97,7 +97,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomString() },
@@ -112,9 +112,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -125,6 +125,8 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+
     context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
@@ -158,10 +160,10 @@ await suite('User unit tests', async () => {
           randomUUID(),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.NOT_FOUND,
         );
         return true;
@@ -169,7 +171,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: '' },
@@ -184,9 +186,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -196,7 +198,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -215,9 +217,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -227,7 +229,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -246,9 +248,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -258,7 +260,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
@@ -273,9 +275,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -285,7 +287,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -302,9 +304,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -314,7 +316,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -331,9 +333,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -343,7 +345,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid page size', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { 'page-size': randomString() },
@@ -358,9 +360,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -370,7 +372,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing first name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -388,9 +390,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -400,7 +402,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty first name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -418,9 +420,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -430,7 +432,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: First name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -448,9 +450,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -460,7 +462,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: First name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -478,9 +480,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -490,7 +492,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing last name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -508,9 +510,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -520,7 +522,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty last name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -538,9 +540,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -550,7 +552,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Last name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -568,9 +570,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -580,7 +582,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Last name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -598,9 +600,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -610,7 +612,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -628,9 +630,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
         });
@@ -640,7 +642,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -658,9 +660,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -670,7 +672,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Email too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -688,9 +690,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -700,7 +702,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Email too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -718,9 +720,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -730,7 +732,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -748,9 +750,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -760,7 +762,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing password', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -778,9 +780,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
         });
@@ -790,7 +792,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty password', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -808,9 +810,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -820,7 +822,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Password too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -838,9 +840,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -850,7 +852,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Password too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -868,9 +870,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -880,7 +882,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing role id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -898,9 +900,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -910,7 +912,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty role id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -928,9 +930,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -940,7 +942,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid role id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -958,9 +960,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -970,6 +972,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdUser, createdRole, ids } = await seedUser(
       serverParams,
       true,
@@ -993,9 +996,9 @@ await suite('User unit tests', async () => {
           );
           ids.user.push(shouldNotOccur.id);
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `User '${createdUser.email}' already exists`,
           });
@@ -1010,6 +1013,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
     const roleId = randomUUID();
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     await assert.rejects(
       async () => {
@@ -1023,9 +1027,9 @@ await suite('User unit tests', async () => {
           generateRandomUserData(roleId),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Role '${roleId}' does not exist`,
         });
@@ -1035,7 +1039,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1050,9 +1054,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -1062,7 +1066,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { body: { roleId: randomUUID() } },
     });
@@ -1075,9 +1079,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1087,7 +1091,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: '' },
@@ -1103,9 +1107,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1115,7 +1119,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomString() },
@@ -1131,9 +1135,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1143,7 +1147,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty first name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1159,9 +1163,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1171,7 +1175,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: First name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1190,9 +1194,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1202,7 +1206,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: First name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1221,9 +1225,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1233,7 +1237,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty last name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1249,9 +1253,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1261,7 +1265,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Last name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1280,9 +1284,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1292,7 +1296,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Last name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1311,9 +1315,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1323,7 +1327,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1339,9 +1343,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -1351,7 +1355,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Email too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1370,9 +1374,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -1382,7 +1386,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Email too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1401,9 +1405,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1413,7 +1417,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1429,9 +1433,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -1441,7 +1445,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty password', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1457,9 +1461,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1469,7 +1473,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Password too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1488,9 +1492,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1500,7 +1504,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Password too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1519,9 +1523,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1531,7 +1535,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty role id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1547,9 +1551,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -1559,7 +1563,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid role id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1578,9 +1582,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -1591,6 +1595,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Non-existent user', async () => {
     const userId = randomUUID();
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     await assert.rejects(
       async () => {
@@ -1607,9 +1612,9 @@ await suite('User unit tests', async () => {
           },
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `User '${userId}' does not exist`,
         });
@@ -1619,6 +1624,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdUsers, ids } = await seedUsers(serverParams, 2);
 
     try {
@@ -1637,9 +1643,9 @@ await suite('User unit tests', async () => {
             },
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `User '${createdUsers[1]!.email}' already exists`,
           });
@@ -1654,6 +1660,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     const { createdUser, ids } = await seedUser(serverParams, true);
 
@@ -1673,9 +1680,9 @@ await suite('User unit tests', async () => {
             },
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.NOT_FOUND,
             message: `Role '${updatedRoleId}' does not exist`,
           });
@@ -1689,7 +1696,7 @@ await suite('User unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -1701,9 +1708,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1713,7 +1720,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { user_id: '' } },
     });
@@ -1726,9 +1733,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1738,7 +1745,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { user_id: randomString() } },
     });
@@ -1751,9 +1758,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });

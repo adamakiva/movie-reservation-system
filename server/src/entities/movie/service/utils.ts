@@ -3,8 +3,8 @@ import pg from 'postgres';
 
 import {
   ERROR_CODES,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type DatabaseHandler,
   type DatabaseModel,
 } from '../../../utils/index.js';
@@ -47,7 +47,7 @@ async function findGenreNameById(params: {
     .from(genreModel)
     .where(eq(genreModel.id, genreId));
   if (!genres.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Genre ${genreId} does not exist`,
     );
@@ -61,7 +61,7 @@ function handlePossibleMissingGenreError(err: unknown, conflictField: string) {
     err instanceof pg.PostgresError &&
     err.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
-    return new MRSError(
+    return new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Genre '${conflictField}' does not exist`,
       err.cause,

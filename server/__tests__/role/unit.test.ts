@@ -3,10 +3,10 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   suite,
@@ -44,7 +44,7 @@ await suite('Role unit tests', async () => {
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -56,9 +56,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -68,7 +68,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -85,9 +85,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -97,7 +97,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -114,9 +114,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -126,7 +126,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -143,9 +143,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -155,6 +155,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdRole, roleIds } = await seedRole(serverParams);
 
     try {
@@ -172,9 +173,9 @@ await suite('Role unit tests', async () => {
             roleToCreate,
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Role '${createdRole.name}' already exists`,
           });
@@ -187,7 +188,7 @@ await suite('Role unit tests', async () => {
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -204,9 +205,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -216,7 +217,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -233,9 +234,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -245,7 +246,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -265,9 +266,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -277,7 +278,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -297,9 +298,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -309,7 +310,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -329,9 +330,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -341,7 +342,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -361,9 +362,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -373,7 +374,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -393,9 +394,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -405,6 +406,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdRoles, roleIds } = await seedRoles(serverParams, 2);
 
     try {
@@ -425,9 +427,9 @@ await suite('Role unit tests', async () => {
             roleToUpdate,
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Role '${createdRoles[1]!.name}' already exists`,
           });
@@ -440,7 +442,7 @@ await suite('Role unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -452,9 +454,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -464,7 +466,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -481,9 +483,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -493,7 +495,7 @@ await suite('Role unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -510,9 +512,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });

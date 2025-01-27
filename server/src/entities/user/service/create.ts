@@ -2,8 +2,8 @@ import pg from 'postgres';
 
 import {
   ERROR_CODES,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -56,13 +56,13 @@ async function insertUserToDatabase(
     if (err instanceof pg.PostgresError) {
       switch (err.code) {
         case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
-          throw new MRSError(
+          throw new GeneralError(
             HTTP_STATUS_CODES.CONFLICT,
             `User '${userToCreate.email}' already exists`,
             err.cause,
           );
         case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-          throw new MRSError(
+          throw new GeneralError(
             HTTP_STATUS_CODES.NOT_FOUND,
             `Role '${userToCreate.roleId}' does not exist`,
             err.cause,

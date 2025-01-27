@@ -1,19 +1,27 @@
-import type { Credentials, RequestContext } from '../../../utils/index.js';
+import { eq } from 'drizzle-orm';
+import { errors as joseErrors } from 'jose';
 
-import * as utils from './utils.js';
+import {
+  GeneralError,
+  HTTP_STATUS_CODES,
+  type RequestContext,
+  UnauthorizedError,
+} from '../../../utils/index.js';
+
+import type { Credentials } from './utils.js';
 
 /**********************************************************************************/
 
 async function login(context: RequestContext, credentials: Credentials) {
   const { authentication, database } = context;
 
-  const userId = await utils.validateCredentials({
+  const userId = await validateCredentials({
     authentication,
     database,
     credentials,
   });
 
-  const tokens = await utils.generateTokens(authentication, userId);
+  const tokens = await generateTokens(authentication, userId);
 
   return tokens;
 }
@@ -23,13 +31,126 @@ async function refreshAccessToken(
   refreshToken: string,
 ) {
   const { authentication } = context;
+  const { accessTokenExpirationTime } = authentication.getExpirationTime();
 
-  const refreshedToken = await utils.refreshAccessToken(
+  try {
+    const {
+      payload: { sub: userId, exp },
+    } = await authentication.validateToken(refreshToken, 'refresh');
+    if (!userId || !exp) {
+      throw new UnauthorizedError('malformed');
+    }
+
+    const refreshedToken = await authentication.generateAccessToken(
+      userId,
+      accessTokenExpirationTime,
+    );
+
+    return refreshedToken;
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      throw err;
+    }
+    if (err instanceof joseErrors.JWTExpired) {
+      throw new UnauthorizedError('expired', err.cause);
+    }
+    if (err instanceof joseErrors.JWSInvalid) {
+      throw new UnauthorizedError('malformed', err.cause);
+    }
+
+    throw err;
+  }
+}
+
+/**********************************************************************************/
+
+async function validateCredentials(params: {
+  authentication: RequestContext['authentication'];
+  database: RequestContext['database'];
+  credentials: Credentials;
+}) {
+  const {
     authentication,
-    refreshToken,
-  );
+    database,
+    credentials: { email, password },
+  } = params;
 
-  return refreshedToken;
+  const { userId, hash } = await readUserFromDatabase(database, email);
+  await validatePassword({ authentication, hash, password });
+
+  return userId;
+}
+
+async function readUserFromDatabase(
+  database: RequestContext['database'],
+  email: string,
+) {
+  const handler = database.getHandler();
+  const { user: userModel } = database.getModels();
+
+  const users = await handler
+    .select({ id: userModel.id, hash: userModel.hash })
+    .from(userModel)
+    .where(eq(userModel.email, email))
+    .limit(1);
+  if (!users.length) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Email and/or password are incorrect',
+    );
+  }
+  const { id: userId, hash } = users[0]!;
+
+  return {
+    userId,
+    hash,
+  } as const;
+}
+
+async function validatePassword(params: {
+  authentication: RequestContext['authentication'];
+  hash: string;
+  password: string;
+}) {
+  try {
+    const { authentication, hash, password } = params;
+
+    const validPassword = await authentication.verifyPassword(hash, password);
+    if (!validPassword) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        'Email and/or password are incorrect',
+      );
+    }
+  } catch (err) {
+    if (err instanceof GeneralError) {
+      throw err;
+    }
+
+    throw new GeneralError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Email and/or password are incorrect',
+      (err as { cause?: unknown }).cause,
+    );
+  }
+}
+
+async function generateTokens(
+  authentication: RequestContext['authentication'],
+  userId: string,
+) {
+  const { accessTokenExpirationTime, refreshTokenExpirationTime } =
+    authentication.getExpirationTime();
+
+  const [accessToken, refreshToken] = await Promise.all([
+    authentication.generateAccessToken(userId, accessTokenExpirationTime),
+    authentication.generateRefreshToken(userId, refreshTokenExpirationTime),
+  ]);
+
+  return {
+    accessToken,
+    refreshToken,
+  } as const;
 }
 
 /**********************************************************************************/

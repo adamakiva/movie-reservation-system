@@ -2,8 +2,8 @@ import { count, eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
 } from '../../../utils/index.js';
 
 import type { DeleteHallValidatedData } from './utils.js';
@@ -34,7 +34,7 @@ async function deleteHallFromDatabase(
       .where(eq(showtimeModel.hallId, hallId))
   )[0]!.count;
   if (showtimesWithDeletedHall) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Hall has one or more attached showtime',
     );

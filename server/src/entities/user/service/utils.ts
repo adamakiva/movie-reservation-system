@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type DatabaseHandler,
   type DatabaseModel,
 } from '../../../utils/index.js';
@@ -45,7 +45,7 @@ async function findRoleNameById(params: {
     .from(roleModel)
     .where(eq(roleModel.id, roleId));
   if (!roles.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Role ${roleId} does not exist`,
     );

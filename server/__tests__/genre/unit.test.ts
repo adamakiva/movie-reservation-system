@@ -3,10 +3,10 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   suite,
@@ -44,7 +44,7 @@ await suite('Genre unit tests', async () => {
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -56,9 +56,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -68,7 +68,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -85,9 +85,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -97,7 +97,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -114,9 +114,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -126,7 +126,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -143,9 +143,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -155,6 +155,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdGenre, genreIds } = await seedGenre(serverParams);
 
     const genreToCreate = { name: createdGenre.name };
@@ -174,9 +175,9 @@ await suite('Genre unit tests', async () => {
           );
           genreIds.push(duplicateGenre.id);
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${createdGenre.name}' already exists`,
           });
@@ -189,7 +190,7 @@ await suite('Genre unit tests', async () => {
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -206,9 +207,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -218,7 +219,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -235,9 +236,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -247,7 +248,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -267,9 +268,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -279,7 +280,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -299,9 +300,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -311,7 +312,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -331,9 +332,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -343,7 +344,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -363,9 +364,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -375,7 +376,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -395,9 +396,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -407,6 +408,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdGenres, genreIds } = await seedGenres(serverParams, 2);
 
     const genreToUpdate = {
@@ -427,9 +429,9 @@ await suite('Genre unit tests', async () => {
             genreToUpdate,
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${createdGenres[1]!.name}' already exists`,
           });
@@ -442,7 +444,7 @@ await suite('Genre unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -454,9 +456,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -466,7 +468,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -483,9 +485,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -495,7 +497,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -512,9 +514,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });

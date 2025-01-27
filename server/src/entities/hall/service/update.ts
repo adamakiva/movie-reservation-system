@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -48,7 +48,7 @@ async function updateHallInDatabase(
         columns: hallModel.columns,
       });
     if (!updatedHall.length) {
-      throw new MRSError(
+      throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Hall '${hallId}' does not exist`,
       );

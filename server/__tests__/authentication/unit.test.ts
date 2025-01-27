@@ -6,10 +6,10 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   suite,
@@ -39,7 +39,7 @@ await suite('Authentication unit tests', async () => {
   });
 
   await test('Invalid - Login validation: Missing email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -54,9 +54,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
         });
@@ -66,7 +66,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Invalid email', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -82,9 +82,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -94,7 +94,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Email too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -110,9 +110,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -122,7 +122,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Missing password', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -137,9 +137,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
         });
@@ -149,7 +149,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Password too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -165,9 +165,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -177,7 +177,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Password too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -193,9 +193,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -206,6 +206,7 @@ await suite('Authentication unit tests', async () => {
   });
   await test('Invalid - Login service: Non-existent user', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     const loginSpy = context.mock.fn(serviceFunctions.login);
 
@@ -224,10 +225,10 @@ await suite('Authentication unit tests', async () => {
           },
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.BAD_REQUEST,
         );
         return true;
@@ -236,6 +237,7 @@ await suite('Authentication unit tests', async () => {
   });
   await test('Invalid - Login service: Incorrect password', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
       return {
@@ -273,10 +275,10 @@ await suite('Authentication unit tests', async () => {
           },
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.BAD_REQUEST,
         );
         return true;
@@ -284,7 +286,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh validation: Missing refresh token', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -296,9 +298,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateRefreshAccessTokenSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: AUTHENTICATION.REFRESH.TOKEN.REQUIRED_ERROR_MESSAGE,
         });
@@ -308,7 +310,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh validation: Invalid refresh token', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -325,9 +327,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateRefreshAccessTokenSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: AUTHENTICATION.REFRESH.TOKEN.ERROR_MESSAGE,
         });
@@ -338,6 +340,7 @@ await suite('Authentication unit tests', async () => {
   });
   await test('Invalid - Refresh service: Malformed JWT', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     const refreshAccessTokenSpy = context.mock.fn(
       serviceFunctions.refreshAccessToken,
@@ -355,10 +358,10 @@ await suite('Authentication unit tests', async () => {
           'Bearer ph',
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.UNAUTHORIZED,
         );
         return true;
@@ -367,6 +370,7 @@ await suite('Authentication unit tests', async () => {
   });
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(authentication, 'validateToken', async () => {
       return await Promise.resolve({
@@ -392,10 +396,10 @@ await suite('Authentication unit tests', async () => {
           ),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.UNAUTHORIZED,
         );
         return true;

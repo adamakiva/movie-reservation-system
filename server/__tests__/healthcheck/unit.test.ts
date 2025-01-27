@@ -5,10 +5,10 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  MRSError,
   PostgresError,
   suite,
   terminateServer,
@@ -57,10 +57,10 @@ await suite('Healthcheck unit tests', async () => {
           () => {
             livenessHealthCheckMock(request, response);
           },
-          (err: MRSError) => {
-            assert.strictEqual(err instanceof MRSError, true);
+          (err: GeneralError) => {
+            assert.strictEqual(err instanceof GeneralError, true);
             assert.strictEqual(
-              err.getClientError().code,
+              err.getClientError(response).code,
               HTTP_STATUS_CODES.NOT_ALLOWED,
             );
 
@@ -100,10 +100,10 @@ await suite('Healthcheck unit tests', async () => {
             async () => {
               await readinessHealthCheckMock(request, response);
             },
-            (err: MRSError) => {
-              assert.strictEqual(err instanceof MRSError, true);
+            (err: GeneralError) => {
+              assert.strictEqual(err instanceof GeneralError, true);
               assert.strictEqual(
-                err.getClientError().code,
+                err.getClientError(response).code,
                 HTTP_STATUS_CODES.NOT_ALLOWED,
               );
 

@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 
 import { eq, inArray } from 'drizzle-orm';
 
+import type { Credentials } from '../../src/entities/authentication/service/utils.js';
 import * as serviceFunctions from '../../src/entities/user/service/index.js';
 import type { User } from '../../src/entities/user/service/utils.js';
 import * as validationFunctions from '../../src/entities/user/validator.js';
-import type { Credentials } from '../../src/utils/index.js';
 
 import { deleteRoles, seedRoles } from '../role/utils.js';
 import {

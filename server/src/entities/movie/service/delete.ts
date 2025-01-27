@@ -2,8 +2,8 @@ import { count, eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
 } from '../../../utils/index.js';
 
 import type { DeleteMovieValidatedData } from './utils.js';
@@ -39,7 +39,7 @@ async function deleteMovieFromDatabase(
       .where(eq(showtimeModel.movieId, movieId))
   )[0]!.count;
   if (showtimesWithDeletedMovie) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Movie has one or more attached showtime',
     );

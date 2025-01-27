@@ -7,14 +7,14 @@ class EnvironmentManager {
   readonly #logger;
   readonly #environmentVariables;
 
-  readonly #allowedEnvironmentVariablesKeys = [
+  static readonly #REQUIRED_ENVIRONMENT_VARIABLES = [
     'SERVER_PORT',
     'SERVER_BASE_URL',
-    'HTTP_ROUTE',
-    'ALLOWED_HOSTS',
-    'ALLOWED_ORIGINS',
+    'SERVER_HTTP_ROUTE',
+    'SERVER_ALLOWED_HOSTS',
+    'SERVER_ALLOWED_ORIGINS',
     'DATABASE_URL',
-    'HASH_SECRET',
+    'AUTHENTICATION_HASH_SECRET',
   ] as const;
 
   public constructor(logger: LoggerHandler) {
@@ -40,9 +40,9 @@ class EnvironmentManager {
       server: {
         port: this.#toNumber('SERVER_PORT', process.env.SERVER_PORT)!,
         baseUrl: process.env.SERVER_BASE_URL!,
-        httpRoute: process.env.HTTP_ROUTE!,
-        allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),
-        allowedOrigins: new Set(process.env.ALLOWED_ORIGINS!.split(',')),
+        httpRoute: process.env.SERVER_HTTP_ROUTE!,
+        allowedHosts: new Set(process.env.SERVER_ALLOWED_HOSTS!.split(',')),
+        allowedOrigins: new Set(process.env.SERVER_ALLOWED_ORIGINS!.split(',')),
         allowedMethods: new Set([
           'HEAD',
           'GET',
@@ -74,15 +74,15 @@ class EnvironmentManager {
       jwt: {
         accessTokenExpiration:
           this.#toNumber(
-            'ACCESS_TOKEN_EXPIRATION',
-            process.env.ACCESS_TOKEN_EXPIRATION,
+            'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
+            process.env.AUTHENTICATION_ACCESS_TOKEN_EXPIRATION,
           ) ?? 900, // 15 Minutes
         refreshTokenExpiration:
           this.#toNumber(
-            'REFRESH_TOKEN_EXPIRATION',
-            process.env.REFRESH_TOKEN_EXPIRATION,
+            'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
+            process.env.AUTHENTICATION_REFRESH_TOKEN_EXPIRATION,
           ) ?? 2_629_746, // 1 Month
-        hash: Buffer.from(process.env.HASH_SECRET!),
+        hash: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
       },
     } as const;
   }
@@ -95,7 +95,7 @@ class EnvironmentManager {
 
   #checkForMissingEnvironmentVariables() {
     const errorMessages: string[] = [];
-    this.#allowedEnvironmentVariablesKeys.forEach((key) => {
+    EnvironmentManager.#REQUIRED_ENVIRONMENT_VARIABLES.forEach((key) => {
       if (!process.env[key]) {
         errorMessages.push(`* Missing ${key} environment variable`);
       }

@@ -8,11 +8,24 @@ import {
   EnvironmentManager,
   ERROR_CODES,
   Logger,
-  SIGNALS,
   type LoggerHandler,
 } from './utils/index.js';
 
 /**********************************************************************************/
+
+const SIGNALS = [
+  'SIGHUP',
+  'SIGINT',
+  'SIGQUIT',
+  'SIGILL',
+  'SIGTRAP',
+  'SIGABRT',
+  'SIGBUS',
+  'SIGFPE',
+  'SIGSEGV',
+  'SIGUSR2',
+  'SIGTERM',
+] as const;
 
 /**********************************************************************************/
 
@@ -50,7 +63,6 @@ async function startServer() {
       },
       keysPath: resolve(import.meta.dirname, '..', 'keys'),
       hashSecret: jwt.hash,
-      realm: 'movie_reservation_system',
     },
     fileManagerParams: {
       generatedNameLength: 32,

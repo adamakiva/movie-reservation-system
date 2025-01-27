@@ -4,11 +4,11 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   type LoggerHandler,
   mockLogger,
-  MRSError,
   randomString,
   randomUUID,
   type ResponseWithContext,
@@ -45,7 +45,7 @@ await suite('Movie unit tests', async () => {
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -57,9 +57,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -69,7 +69,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: '' },
@@ -84,9 +84,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -96,7 +96,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomString() },
@@ -111,9 +111,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -124,6 +124,8 @@ await suite('Movie unit tests', async () => {
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
     const { authentication, fileManager, database } = serverParams;
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+
     context.mock.method(database, 'getHandler', () => {
       return {
         select: () => {
@@ -157,10 +159,10 @@ await suite('Movie unit tests', async () => {
           randomUUID(),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError().code,
+          err.getClientError(response).code,
           HTTP_STATUS_CODES.NOT_FOUND,
         );
         return true;
@@ -168,7 +170,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: '' },
@@ -183,9 +185,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -195,7 +197,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -214,9 +216,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -226,7 +228,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -245,9 +247,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -257,7 +259,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
@@ -272,9 +274,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -284,7 +286,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -301,9 +303,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -313,7 +315,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: {
@@ -330,9 +332,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -342,7 +344,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid page size', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         query: { 'page-size': randomString() },
@@ -357,9 +359,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -371,7 +373,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing title', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -390,9 +392,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.REQUIRED_ERROR_MESSAGE,
         });
@@ -404,7 +406,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty title', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -423,9 +425,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -437,7 +439,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Title too short', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -456,9 +458,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -470,7 +472,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Title too long', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -489,9 +491,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -503,7 +505,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing description', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -522,9 +524,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.REQUIRED_ERROR_MESSAGE,
         });
@@ -536,7 +538,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty description', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -555,9 +557,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -569,7 +571,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Description too short', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -588,9 +590,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -602,7 +604,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Description too long', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -621,9 +623,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -635,7 +637,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing poster', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -650,9 +652,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
         });
@@ -664,7 +666,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing poster path', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -683,9 +685,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
@@ -697,7 +699,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty poster path', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -716,9 +718,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -730,7 +732,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Poster path too short', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -751,9 +753,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -765,7 +767,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Poster path too long', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -786,9 +788,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -800,7 +802,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing mime type', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -819,9 +821,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -833,7 +835,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty mime path', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -852,9 +854,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -866,7 +868,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing poster size', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -885,9 +887,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
         });
@@ -899,7 +901,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty poster size', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -918,9 +920,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -932,7 +934,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Poster size too small', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -951,9 +953,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -965,7 +967,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Poster size too large', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: movieData,
@@ -984,9 +986,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -998,7 +1000,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing price', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1017,9 +1019,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1031,7 +1033,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty price', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1050,9 +1052,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1064,7 +1066,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Price too low', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1083,9 +1085,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1097,7 +1099,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Price too high', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1116,9 +1118,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1130,7 +1132,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Missing genre id', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1149,9 +1151,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1163,7 +1165,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Empty genre id', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1182,9 +1184,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -1196,7 +1198,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Create validation: Invalid genre id', async (context) => {
     const { poster, ...movieData } =
       await generateMovieDataIncludingPoster(randomUUID());
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -1215,9 +1217,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -1227,6 +1229,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Non-existent genre id', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const genreId = randomUUID();
     const movieData = await generateMovieDataIncludingPoster(genreId);
 
@@ -1249,9 +1252,9 @@ await suite('Movie unit tests', async () => {
           },
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Genre '${genreId}' does not exist`,
         });
@@ -1261,7 +1264,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1276,9 +1279,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -1288,7 +1291,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { body: { genreId: randomUUID() } },
     });
@@ -1301,9 +1304,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1313,7 +1316,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: '' },
@@ -1329,9 +1332,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -1341,7 +1344,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomString() },
@@ -1357,9 +1360,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -1369,7 +1372,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty title', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1385,9 +1388,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1397,7 +1400,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Title too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1416,9 +1419,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1428,7 +1431,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Title too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1447,9 +1450,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1459,7 +1462,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty description', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1475,9 +1478,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1487,7 +1490,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Description too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1506,9 +1509,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1518,7 +1521,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Description too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1537,9 +1540,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1549,7 +1552,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing poster path', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1569,9 +1572,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
@@ -1581,7 +1584,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty poster path', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1601,9 +1604,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1613,7 +1616,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Poster path too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1635,9 +1638,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1647,7 +1650,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Poster path too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1669,9 +1672,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1681,7 +1684,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing mime type', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1701,9 +1704,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1713,7 +1716,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty mime path', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1733,9 +1736,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1745,7 +1748,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing poster size', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1765,9 +1768,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1777,7 +1780,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty poster size', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1797,9 +1800,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1809,7 +1812,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Poster size too small', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1829,9 +1832,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1841,7 +1844,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Poster size too large', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1861,9 +1864,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1873,7 +1876,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty price', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1889,9 +1892,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1901,7 +1904,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Price too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1920,9 +1923,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1932,7 +1935,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Price too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1951,9 +1954,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1963,7 +1966,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty genre id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -1979,9 +1982,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -1991,7 +1994,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid genre id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
@@ -2007,9 +2010,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -2019,6 +2022,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Non-existent movie', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const movieId = randomUUID();
 
     await assert.rejects(
@@ -2036,9 +2040,9 @@ await suite('Movie unit tests', async () => {
           },
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Movie '${movieId}' does not exist`,
         });
@@ -2048,6 +2052,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Non-existent genre id', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const updatedGenreId = randomUUID();
 
     const { createdMovie, ids } = await seedMovie(serverParams);
@@ -2068,9 +2073,9 @@ await suite('Movie unit tests', async () => {
             },
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.NOT_FOUND,
             message: `Genre '${updatedGenreId}' does not exist`,
           });
@@ -2084,7 +2089,7 @@ await suite('Movie unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -2096,9 +2101,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -2108,7 +2113,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { movie_id: '' } },
     });
@@ -2121,9 +2126,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -2133,7 +2138,7 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: { params: { movie_id: randomString() } },
     });
@@ -2146,9 +2151,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });

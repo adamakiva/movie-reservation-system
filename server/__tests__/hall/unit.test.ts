@@ -3,10 +3,10 @@ import {
   assert,
   before,
   createHttpMocks,
+  GeneralError,
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  MRSError,
   randomNumber,
   randomString,
   randomUUID,
@@ -45,7 +45,7 @@ await suite('Hall unit tests', async () => {
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -69,9 +69,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -81,7 +81,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -106,9 +106,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -118,7 +118,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -143,9 +143,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -155,7 +155,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -180,9 +180,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -192,7 +192,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing rows', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -213,9 +213,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.REQUIRED_ERROR_MESSAGE,
         });
@@ -225,7 +225,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty rows', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -247,9 +247,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -259,7 +259,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Rows number too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -281,9 +281,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -293,7 +293,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Rows number too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -315,9 +315,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -327,7 +327,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing columns', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -348,9 +348,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.REQUIRED_ERROR_MESSAGE,
         });
@@ -360,7 +360,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty columns', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -382,9 +382,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -394,7 +394,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Columns number too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -416,9 +416,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -428,7 +428,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Columns number too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -450,9 +450,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -462,6 +462,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdHall, hallIds } = await seedHall(serverParams);
 
     const hallToCreate = {
@@ -491,9 +492,9 @@ await suite('Hall unit tests', async () => {
           );
           hallIds.push(duplicateHall.id);
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${createdHall.name}' already exists`,
           });
@@ -506,7 +507,7 @@ await suite('Hall unit tests', async () => {
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -523,9 +524,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -535,7 +536,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         body: {
@@ -552,9 +553,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -564,7 +565,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -584,9 +585,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -596,7 +597,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -616,9 +617,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -628,7 +629,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty name', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -648,9 +649,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -660,7 +661,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too short', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -680,9 +681,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -692,7 +693,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too long', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -712,9 +713,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -724,7 +725,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty rows', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -744,9 +745,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -756,7 +757,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Rows number too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -776,9 +777,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -788,7 +789,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Rows number too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -808,9 +809,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -820,7 +821,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty columns', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -840,9 +841,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -852,7 +853,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Columns number too low', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -872,9 +873,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -884,7 +885,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Columns number too high', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -904,9 +905,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -916,6 +917,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
+    const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const { createdHalls, hallIds } = await seedHalls(serverParams, 2);
 
     const hallToUpdate = {
@@ -936,9 +938,9 @@ await suite('Hall unit tests', async () => {
             hallToUpdate,
           );
         },
-        (err: MRSError) => {
-          assert.strictEqual(err instanceof MRSError, true);
-          assert.deepStrictEqual(err.getClientError(), {
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${createdHalls[1]!.name}' already exists`,
           });
@@ -951,7 +953,7 @@ await suite('Hall unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
     });
 
@@ -963,9 +965,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -975,7 +977,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -992,9 +994,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -1004,7 +1006,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
         params: {
@@ -1021,9 +1023,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });

@@ -8,7 +8,7 @@ import {
   type SafeParseReturnType,
 } from 'zod';
 
-import { MRSError } from '../utils/index.js';
+import { GeneralError } from '../utils/index.js';
 
 /**********************************************************************************/
 
@@ -381,7 +381,7 @@ function parseValidationResult<I, O>(
       })
       .join(', ');
 
-    throw new MRSError(statusCode, errorMessages, res.error.cause);
+    throw new GeneralError(statusCode, errorMessages, res.error.cause);
   }
 
   return res.data;

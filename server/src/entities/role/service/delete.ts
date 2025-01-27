@@ -1,8 +1,8 @@
 import { count, eq } from 'drizzle-orm';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -34,7 +34,7 @@ async function deleteRoleFromDatabase(
       .where(eq(userModel.roleId, roleId))
   )[0]!.count;
   if (usersWithDeletedRole) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Role has attached users',
     );

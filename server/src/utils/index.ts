@@ -7,13 +7,8 @@ import type {
 } from '../server/services/index.js';
 
 import EnvironmentManager from './config.js';
-import {
-  ALPHA_NUMERIC,
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-  SIGNALS,
-} from './constants.js';
-import MRSError from './error.js';
+import { ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
+import { GeneralError, UnauthorizedError } from './error.js';
 import {
   decodeCursor,
   encodeCursor,
@@ -58,26 +53,19 @@ type Pagination = {
 
 type PaginatedResult<T = unknown> = T & { page: Pagination };
 
-type Credentials = {
-  email: string;
-  password: string;
-};
-
 /**********************************************************************************/
 
 export {
-  ALPHA_NUMERIC,
   ERROR_CODES,
   EnvironmentManager,
+  GeneralError,
   HTTP_STATUS_CODES,
   Logger,
-  MRSError,
-  SIGNALS,
+  UnauthorizedError,
   decodeCursor,
   encodeCursor,
   randomAlphaNumericString,
   strcasecmp,
-  type Credentials,
   type DatabaseHandler,
   type DatabaseModel,
   type LogMiddleware,

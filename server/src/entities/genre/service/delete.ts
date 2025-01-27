@@ -2,8 +2,8 @@ import { count, eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
 } from '../../../utils/index.js';
 
 import type { DeleteGenreValidatedData } from './utils.js';
@@ -34,7 +34,7 @@ async function deleteGenreFromDatabase(
       .where(eq(movieModel.genreId, genreId))
   )[0]!.count;
   if (moviesWithDeletedGenre) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Genre has one or more attached movies',
     );

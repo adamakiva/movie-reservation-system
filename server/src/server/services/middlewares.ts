@@ -3,8 +3,8 @@ import pg from 'postgres';
 
 import {
   ERROR_CODES,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type ResponseWithContext,
   type ResponseWithoutContext,
 } from '../../utils/index.js';
@@ -44,11 +44,8 @@ function errorHandler(
     return;
   }
 
-  // The order is based on two things, type fallback and the chances of each error
-  // happening. For example, TGMS error should be the most common error reason,
-  // and it should be the first from that perspective
-  if (err instanceof MRSError) {
-    const { code, message } = err.getClientError();
+  if (err instanceof GeneralError) {
+    const { code, message } = err.getClientError(res);
 
     res.locals.context.logger.warn(err);
     res.status(code).send(message);

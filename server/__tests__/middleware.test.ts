@@ -1,7 +1,7 @@
 import {
   ERROR_CODES,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   Middlewares,
   PostgresError,
   after,
@@ -128,9 +128,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Missing authorization header',
         });
@@ -159,9 +159,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err: MRSError) => {
-        assert.strictEqual(err instanceof MRSError, true);
-        assert.deepStrictEqual(err.getClientError(), {
+      (err: GeneralError) => {
+        assert.strictEqual(err instanceof GeneralError, true);
+        assert.deepStrictEqual(err.getClientError(response), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Malformed JWT token',
         });
@@ -191,13 +191,19 @@ await suite('Middleware tests', async () => {
     });
     const nextMock = context.mock.fn();
 
-    const error = new MRSError(999, 'Expected error');
+    const error = new GeneralError(999, 'Expected error');
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
     errorHandlerSpy(error, request, response, nextMock);
 
-    assert.strictEqual(response.statusCode, error.getClientError().code);
-    assert.strictEqual(response._getJSONData(), error.getClientError().message);
+    assert.strictEqual(
+      response.statusCode,
+      error.getClientError(response).code,
+    );
+    assert.strictEqual(
+      response._getJSONData(),
+      error.getClientError(response).message,
+    );
   });
   await test('Invalid - Error handler middleware: Payload error', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({

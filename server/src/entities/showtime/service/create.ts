@@ -4,8 +4,8 @@ import type { Request } from 'express';
 import {
   type DatabaseHandler,
   type DatabaseModel,
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -158,7 +158,7 @@ async function getMovieTitle(params: {
     .from(movieModel)
     .where(eq(movieModel.id, movieId));
   if (!movies.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Movie ${movieId} does not exist`,
     );
@@ -179,7 +179,7 @@ async function getHallName(params: {
     .from(hallModel)
     .where(eq(hallModel.id, hallId));
   if (!halls.length) {
-    throw new MRSError(
+    throw new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Hall ${hallId} does not exist`,
     );
@@ -212,21 +212,24 @@ async function checkTicketValues(params: {
     .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
     .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
   if (!showTimesData.length) {
-    throw new MRSError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
+    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
   }
   const showTimeData = showTimesData[0]!;
 
   // Rows are 0 indexed for us, but 1 indexed for the end-user
   if (showTimeData.hallRows > showtimeTicket.row) {
-    throw new MRSError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
+    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
   }
   if (showTimeData.hallColumns > showtimeTicket.column) {
-    throw new MRSError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid column number');
+    throw new GeneralError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Invalid column number',
+    );
   }
 
   for (const [row, column] of showTimeData.reservations) {
     if (showtimeTicket.row === row && showtimeTicket.column === column) {
-      throw new MRSError(
+      throw new GeneralError(
         HTTP_STATUS_CODES.CONFLICT,
         `Ticket [${row}, ${column}] is already reserved`,
       );

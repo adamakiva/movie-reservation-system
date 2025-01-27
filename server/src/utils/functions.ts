@@ -1,4 +1,8 @@
-import { ALPHA_NUMERIC } from './constants.js';
+const ALPHA_NUMERIC = {
+  CHARACTERS:
+    'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  LENGTH: 67,
+} as const;
 
 /**********************************************************************************/
 

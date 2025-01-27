@@ -8,8 +8,8 @@ import { fileTypeStream } from 'file-type';
 import multer from 'multer';
 
 import {
+  GeneralError,
   HTTP_STATUS_CODES,
-  MRSError,
   randomAlphaNumericString,
   type LoggerHandler,
 } from '../../utils/index.js';
@@ -67,7 +67,7 @@ class fileManager implements multer.StorageEngine {
     fileTypeStream(file.stream)
       .then((fileStreamWithFileType) => {
         if (!fileStreamWithFileType.fileType) {
-          throw new MRSError(
+          throw new GeneralError(
             HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
             `File type is not recognized`,
           );
@@ -93,7 +93,7 @@ class fileManager implements multer.StorageEngine {
             });
           })
           .catch((err: unknown) => {
-            throw new MRSError(
+            throw new GeneralError(
               HTTP_STATUS_CODES.SERVER_ERROR,
               `Failure to stream user file to destination: '${file.path}'`,
               (err as Error).cause,
