@@ -1,8 +1,6 @@
 import type { Request } from 'express';
 import { ZodIssueCode, object as ZodObject, string as ZodString } from 'zod';
 
-import { HTTP_STATUS_CODES } from '../../utils/index.js';
-
 import { parseValidationResult, VALIDATION } from '../utils.validator.js';
 
 /**********************************************************************************/
@@ -89,10 +87,7 @@ function validateCreateGenre(req: Request) {
   const { body } = req;
 
   const validatedResult = createGenreSchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -102,16 +97,10 @@ function validateUpdateGenre(req: Request) {
   const { body, params } = req;
 
   const validatedBodyResult = updateGenreBodySchema.safeParse(body);
-  const { name } = parseValidationResult(
-    validatedBodyResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { name } = parseValidationResult(validatedBodyResult);
 
   const validatedParamsResult = updateGenreParamsSchema.safeParse(params);
-  const { genre_id: genreId } = parseValidationResult(
-    validatedParamsResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { genre_id: genreId } = parseValidationResult(validatedParamsResult);
 
   return {
     genreId,
@@ -123,10 +112,7 @@ function validateDeleteGenre(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteGenreSchema.safeParse(params);
-  const { genre_id: genreId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { genre_id: genreId } = parseValidationResult(validatedResult);
 
   return genreId;
 }

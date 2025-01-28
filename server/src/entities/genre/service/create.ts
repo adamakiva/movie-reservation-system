@@ -12,20 +12,7 @@ async function createGenre(
   context: RequestContext,
   genreToCreate: CreateGenreValidatedData,
 ): Promise<Genre> {
-  const createdGenre = await insertGenreToDatabase(
-    context.database,
-    genreToCreate,
-  );
-
-  return createdGenre;
-}
-
-/**********************************************************************************/
-
-async function insertGenreToDatabase(
-  database: RequestContext['database'],
-  genreToCreate: CreateGenreValidatedData,
-) {
+  const { database } = context;
   const handler = database.getHandler();
   const { genre: genreModel } = database.getModels();
 

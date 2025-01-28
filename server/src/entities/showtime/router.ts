@@ -37,6 +37,12 @@ function router(authentication: AuthenticationManager) {
       json({ limit: 0 }),
       authentication.httpAuthenticationMiddleware(),
       showtimeController.cancelUserShowtimeReservation,
+    )
+    .get(
+      '/showtimes/reservations/:user_id',
+      json({ limit: 0 }),
+      authentication.httpAuthenticationMiddleware(),
+      showtimeController.getUserShowtimes,
     );
 
   return router;

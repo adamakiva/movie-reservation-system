@@ -20,18 +20,6 @@ async function updateMovie(
   context: RequestContext,
   movieToUpdate: UpdateMovieValidatedData,
 ): Promise<Movie> {
-  const updatedMovie = await updateMovieAndPoster(context, movieToUpdate);
-
-  return updatedMovie;
-}
-
-/**********************************************************************************/
-
-// Track this issue for more optimized solution: https://github.com/drizzle-team/drizzle-orm/issues/2078
-async function updateMovieAndPoster(
-  context: RequestContext,
-  movieToUpdate: UpdateMovieValidatedData,
-) {
   const { database, fileManager, logger } = context;
   const handler = database.getHandler();
   const {
@@ -39,131 +27,185 @@ async function updateMovieAndPoster(
     moviePoster: moviePosterModel,
     genre: genreModel,
   } = database.getModels();
+
+  const subQueries = createMovieCTEs({
+    handler,
+    models: { movie: movieModel, moviePoster: moviePosterModel },
+    movieToUpdate,
+  });
+
+  if (subQueries.updateMoviePosterSubQuery) {
+    return await updateMovieAndMoviePosterInDatabase({
+      handler,
+      fileManager,
+      subQueries,
+      models: {
+        genre: genreModel,
+        moviePoster: moviePosterModel,
+      },
+      movieId: movieToUpdate.movieId,
+      genreId: movieToUpdate.genreId,
+      logger,
+    });
+  }
+
+  return await updateMovieInDatabase({
+    handler,
+    subQueries,
+    genreModel,
+    movieId: movieToUpdate.movieId,
+    genreId: movieToUpdate.genreId,
+  });
+}
+
+/**********************************************************************************/
+
+function createMovieCTEs(params: {
+  handler: DatabaseHandler;
+  models: {
+    movie: DatabaseModel<'movie'>;
+    moviePoster: DatabaseModel<'moviePoster'>;
+  };
+  movieToUpdate: UpdateMovieValidatedData;
+}) {
+  const {
+    handler,
+    models: { movie: movieModel, moviePoster: moviePosterModel },
+    movieToUpdate,
+  } = params;
   const { movieId, poster, ...fieldsToUpdate } = movieToUpdate;
   const now = new Date();
 
-  return await handler.transaction(async (transaction) => {
-    await Promise.all([
-      updateMoviePoster({
-        transaction,
-        moviePosterModel,
-        fileManager,
-        logger,
-        movieId,
-        poster,
-        updatedAt: now,
-      }),
-      updateMovieInDatabase({
-        transaction,
-        movieModel,
-        movieId,
-        fieldsToUpdate,
-        updatedAt: now,
-      }),
-    ]);
-
-    // The entry must exist since we are in the same transaction.
-    // If for some reason it is not, check the transaction isolation level
-    const updatedMovie = (
-      await transaction
-        .select({
-          id: movieModel.id,
-          title: movieModel.title,
-          description: movieModel.description,
-          price: movieModel.price,
-          genre: genreModel.name,
-        })
-        .from(movieModel)
-        .where(eq(movieModel.id, movieId))
-        .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId))
-    )[0]!;
-
-    return updatedMovie;
-  });
-}
-
-async function updateMoviePoster(params: {
-  transaction: DatabaseHandler;
-  moviePosterModel: DatabaseModel<'moviePoster'>;
-  fileManager: RequestContext['fileManager'];
-  logger: RequestContext['logger'];
-  movieId: string;
-  poster: UpdateMovieValidatedData['poster'];
-  updatedAt: Date;
-}) {
-  const {
-    transaction,
-    moviePosterModel,
-    fileManager,
-    logger,
-    movieId,
-    poster,
-    updatedAt,
-  } = params;
-
-  if (!poster) {
-    return;
-  }
-
-  const moviePoster = await transaction
-    .select({ absolutePath: moviePosterModel.absolutePath })
-    .from(moviePosterModel)
-    .where(eq(moviePosterModel.movieId, movieId));
-  if (!moviePoster.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie '${movieId}' does not exist`,
-    );
-  }
-
-  await transaction
-    .update(moviePosterModel)
-    .set({
-      absolutePath: poster.absolutePath,
-      sizeInBytes: poster.sizeInBytes,
-      updatedAt,
-    })
-    .where(eq(moviePosterModel.movieId, movieId));
-
-  fileManager.deleteFile(moviePoster[0]!.absolutePath).catch((err: unknown) => {
-    logger.warn(
-      `Failure to delete old file: ${moviePoster[0]!.absolutePath}`,
-      err,
-    );
-  });
-}
-
-async function updateMovieInDatabase(params: {
-  transaction: DatabaseHandler;
-  movieModel: DatabaseModel<'movie'>;
-  movieId: string;
-  fieldsToUpdate: Omit<UpdateMovieValidatedData, 'movieId' | 'poster'>;
-  updatedAt: Date;
-}) {
-  const { transaction, movieModel, movieId, fieldsToUpdate, updatedAt } =
-    params;
-
-  if (!Object.keys(fieldsToUpdate).length) {
-    return;
-  }
-
-  try {
-    const updatedMovie = await transaction
+  const updateMovieSubQuery = handler.$with('update_movie').as(
+    handler
       .update(movieModel)
-      .set({ ...fieldsToUpdate, updatedAt })
+      .set({ ...fieldsToUpdate, updatedAt: now })
       .where(eq(movieModel.id, movieId))
       .returning({
         id: movieModel.id,
-      });
+        title: movieModel.title,
+        description: movieModel.description,
+        price: movieModel.price,
+        genreId: movieModel.genreId,
+      }),
+  );
+
+  if (!poster) {
+    return {
+      updateMovieSubQuery,
+    } as const;
+  }
+
+  const updateMoviePosterSubQuery = handler.$with('update_movie_poster').as(
+    handler
+      .update(moviePosterModel)
+      .set({
+        absolutePath: poster.absolutePath,
+        sizeInBytes: poster.sizeInBytes,
+        updatedAt: now,
+      })
+      .where(eq(moviePosterModel.movieId, movieId)),
+  );
+
+  return {
+    updateMovieSubQuery,
+    updateMoviePosterSubQuery,
+  } as const;
+}
+
+async function updateMovieInDatabase(params: {
+  handler: DatabaseHandler;
+  subQueries: Awaited<ReturnType<typeof createMovieCTEs>>;
+  genreModel: DatabaseModel<'genre'>;
+  movieId: string;
+  genreId?: string | undefined;
+}) {
+  const { handler, subQueries, genreModel, movieId, genreId } = params;
+  const sanitizedSubQueries = Object.values(params.subQueries);
+
+  try {
+    const updatedMovie = await handler
+      .with(...sanitizedSubQueries)
+      .select({
+        id: subQueries.updateMovieSubQuery.id,
+        title: subQueries.updateMovieSubQuery.title,
+        description: subQueries.updateMovieSubQuery.description,
+        price: subQueries.updateMovieSubQuery.price,
+        genre: genreModel.name,
+      })
+      .from(subQueries.updateMovieSubQuery)
+      .innerJoin(
+        genreModel,
+        eq(genreModel.id, subQueries.updateMovieSubQuery.genreId),
+      );
     if (!updatedMovie.length) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Movie '${movieId}' does not exist`,
       );
     }
+
+    return updatedMovie[0]!;
   } catch (err) {
-    throw handlePossibleMissingGenreError(err, fieldsToUpdate.genreId!);
+    throw handlePossibleMissingGenreError(err, genreId!);
   }
+}
+
+async function updateMovieAndMoviePosterInDatabase(params: {
+  handler: DatabaseHandler;
+  fileManager: RequestContext['fileManager'];
+  subQueries: Awaited<ReturnType<typeof createMovieCTEs>>;
+  models: {
+    genre: DatabaseModel<'genre'>;
+    moviePoster: DatabaseModel<'moviePoster'>;
+  };
+  movieId: string;
+  genreId?: string | undefined;
+  logger: RequestContext['logger'];
+}) {
+  const {
+    handler,
+    fileManager,
+    subQueries,
+    models: { genre: genreModel, moviePoster: moviePosterModel },
+    movieId,
+    genreId,
+    logger,
+  } = params;
+
+  return await handler.transaction(async (transaction) => {
+    const moviePosters = await transaction
+      .select({
+        absolutePath: moviePosterModel.absolutePath,
+      })
+      .from(moviePosterModel)
+      .where(eq(moviePosterModel.movieId, movieId));
+    if (!moviePosters.length) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.NOT_FOUND,
+        `Movie '${movieId}' does not exist`,
+      );
+    }
+
+    const outdatedFileAbsolutePath = moviePosters[0]!.absolutePath;
+
+    const updatedMovie = await updateMovieInDatabase({
+      handler,
+      subQueries,
+      genreModel,
+      movieId,
+      genreId,
+    });
+
+    fileManager.deleteFile(outdatedFileAbsolutePath).catch((err: unknown) => {
+      logger.warn(
+        `Failure to delete old file: ${outdatedFileAbsolutePath}`,
+        err,
+      );
+    });
+
+    return updatedMovie;
+  });
 }
 
 /**********************************************************************************/

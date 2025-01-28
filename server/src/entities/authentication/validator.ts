@@ -1,8 +1,6 @@
 import type { Request } from 'express';
 import { object as ZodObject, string as ZodString } from 'zod';
 
-import { HTTP_STATUS_CODES } from '../../utils/index.js';
-
 import { parseValidationResult, VALIDATION } from '../utils.validator.js';
 
 /**********************************************************************************/
@@ -62,10 +60,7 @@ function validateLogin(req: Request) {
   const { body } = req;
 
   const validatedResult = loginSchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -75,10 +70,7 @@ function validateRefreshAccessToken(req: Request) {
   const { body } = req;
 
   const validatedResult = refreshTokenSchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }

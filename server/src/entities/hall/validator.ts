@@ -7,8 +7,6 @@ import {
   string as ZodString,
 } from 'zod';
 
-import { HTTP_STATUS_CODES } from '../../utils/index.js';
-
 import {
   coerceNumber,
   parseValidationResult,
@@ -142,10 +140,7 @@ function validateCreateHall(req: Request) {
   const { body } = req;
 
   const validatedResult = createHallSchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -155,16 +150,10 @@ function validateUpdateHall(req: Request) {
   const { body, params } = req;
 
   const validatedBodyResult = updateHallBodySchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedBodyResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedBodyResult);
 
   const validatedParamsResult = updateHallParamsSchema.safeParse(params);
-  const { hall_id: hallId } = parseValidationResult(
-    validatedParamsResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { hall_id: hallId } = parseValidationResult(validatedParamsResult);
 
   return {
     hallId,
@@ -176,10 +165,7 @@ function validateDeleteHall(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteHallSchema.safeParse(params);
-  const { hall_id: hallId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { hall_id: hallId } = parseValidationResult(validatedResult);
 
   return hallId;
 }

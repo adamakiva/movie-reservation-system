@@ -1,9 +1,14 @@
-import type { RequestContext } from '../../../utils/index.js';
+import { eq, sql } from 'drizzle-orm';
+
+import type {
+  DatabaseHandler,
+  DatabaseModel,
+  RequestContext,
+} from '../../../utils/index.js';
 
 import {
   type CreateMovieValidatedData,
   type Movie,
-  findGenreNameById,
   handlePossibleMissingGenreError,
 } from './utils.js';
 
@@ -22,58 +27,82 @@ async function createMovie(
 
 /**********************************************************************************/
 
-// Track this issue for more optimized solution: https://github.com/drizzle-team/drizzle-orm/issues/2078
 async function insertMovieToDatabase(
   database: RequestContext['database'],
   movieToCreate: CreateMovieValidatedData,
 ) {
   const handler = database.getHandler();
+  const { movie, moviePoster, genre: genreModel } = database.getModels();
+
+  try {
+    const { insertMovieSubQuery, insertMoviePosterSubQuery } = createMovieCTEs({
+      handler,
+      models: { movie, moviePoster },
+      movieToCreate,
+    });
+
+    const createdMovie = await handler
+      .with(insertMovieSubQuery, insertMoviePosterSubQuery)
+      .select({
+        id: insertMovieSubQuery.id,
+        title: insertMovieSubQuery.title,
+        description: insertMovieSubQuery.description,
+        price: insertMovieSubQuery.price,
+        genre: genreModel.name,
+      })
+      .from(insertMovieSubQuery)
+      .innerJoin(genreModel, eq(genreModel.id, insertMovieSubQuery.genreId));
+
+    return createdMovie[0]!;
+  } catch (err) {
+    throw handlePossibleMissingGenreError(err, movieToCreate.genreId);
+  }
+}
+
+/**********************************************************************************/
+
+function createMovieCTEs(params: {
+  handler: DatabaseHandler;
+  models: {
+    movie: DatabaseModel<'movie'>;
+    moviePoster: DatabaseModel<'moviePoster'>;
+  };
+  movieToCreate: CreateMovieValidatedData;
+}) {
   const {
-    movie: movieModel,
-    moviePoster: moviePosterModel,
-    genre: genreModel,
-  } = database.getModels();
-  const { poster, ...fields } = movieToCreate;
-
-  const createdMovie = await handler.transaction(async (transaction) => {
-    try {
-      const now = new Date();
-
-      const createdMovie = (
-        await transaction
-          .insert(movieModel)
-          .values({ ...fields, createdAt: now, updatedAt: now })
-          .returning({
-            id: movieModel.id,
-            title: movieModel.title,
-            description: movieModel.description,
-            price: movieModel.price,
-          })
-      )[0]!;
-      await transaction.insert(moviePosterModel).values({
-        movieId: createdMovie.id,
-        // Get the extension from the absolute path. Since the program built
-        // the absolute path we can assume it is valid
-        mimeType: poster.mimeType,
-        absolutePath: poster.absolutePath,
-        sizeInBytes: poster.sizeInBytes,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      return createdMovie;
-    } catch (err) {
-      throw handlePossibleMissingGenreError(err, movieToCreate.genreId);
-    }
-  });
-
-  const genre = await findGenreNameById({
     handler,
-    genreModel,
-    genreId: movieToCreate.genreId,
-  });
+    models: { movie: movieModel, moviePoster: moviePosterModel },
+    movieToCreate,
+  } = params;
+  const { poster, ...fields } = movieToCreate;
+  const now = new Date();
 
-  return { ...createdMovie, genre } as const;
+  const insertMovieSubQuery = handler.$with('insert_movie').as(
+    handler
+      .insert(movieModel)
+      .values({ ...fields, createdAt: now, updatedAt: now })
+      .returning({
+        id: movieModel.id,
+        title: movieModel.title,
+        description: movieModel.description,
+        price: movieModel.price,
+        genreId: movieModel.genreId,
+      }),
+  );
+  const insertMoviePosterSubQuery = handler
+    .$with('insert_movie_poster')
+    .as(
+      handler
+        .insert(moviePosterModel)
+        .select(
+          sql`SELECT "id", ${poster.absolutePath}, ${poster.mimeType}, ${poster.sizeInBytes}, ${now.toISOString()}, ${now.toISOString()} FROM ${insertMovieSubQuery}`,
+        ),
+    );
+
+  return {
+    insertMovieSubQuery,
+    insertMoviePosterSubQuery,
+  };
 }
 
 /**********************************************************************************/

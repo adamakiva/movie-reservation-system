@@ -1,12 +1,9 @@
-import { eq } from 'drizzle-orm';
 import pg from 'postgres';
 
 import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
-  type DatabaseHandler,
-  type DatabaseModel,
 } from '../../../utils/index.js';
 
 import type {
@@ -35,27 +32,6 @@ type Movie = {
 
 /**********************************************************************************/
 
-async function findGenreNameById(params: {
-  handler: DatabaseHandler;
-  genreModel: DatabaseModel<'genre'>;
-  genreId: string;
-}) {
-  const { handler, genreModel, genreId } = params;
-
-  const genres = await handler
-    .select({ name: genreModel.name })
-    .from(genreModel)
-    .where(eq(genreModel.id, genreId));
-  if (!genres.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Genre ${genreId} does not exist`,
-    );
-  }
-
-  return genres[0]!.name;
-}
-
 function handlePossibleMissingGenreError(err: unknown, conflictField: string) {
   if (
     err instanceof pg.PostgresError &&
@@ -74,7 +50,6 @@ function handlePossibleMissingGenreError(err: unknown, conflictField: string) {
 /**********************************************************************************/
 
 export {
-  findGenreNameById,
   handlePossibleMissingGenreError,
   type CreateMovieValidatedData,
   type DeleteMovieValidatedData,

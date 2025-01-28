@@ -195,6 +195,7 @@ const showtimeModel = pgTable(
 const usersShowtimesModel = pgTable(
   'user_showtime',
   {
+    id: uuid('id').primaryKey().defaultRandom().notNull(),
     userId: uuid('user_id')
       .references(
         () => {

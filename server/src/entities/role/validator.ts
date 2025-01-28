@@ -1,8 +1,6 @@
 import type { Request } from 'express';
 import { ZodIssueCode, object as ZodObject, string as ZodString } from 'zod';
 
-import { HTTP_STATUS_CODES } from '../../utils/index.js';
-
 import { parseValidationResult, VALIDATION } from '../utils.validator.js';
 
 /**********************************************************************************/
@@ -89,10 +87,7 @@ function validateCreateRole(req: Request) {
   const { body } = req;
 
   const validatedResult = createRoleSchema.safeParse(body);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -102,16 +97,10 @@ function validateUpdateRole(req: Request) {
   const { body, params } = req;
 
   const validatedBodyResult = updateRoleBodySchema.safeParse(body);
-  const { name } = parseValidationResult(
-    validatedBodyResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { name } = parseValidationResult(validatedBodyResult);
 
   const validatedParamsResult = updateRoleParamsSchema.safeParse(params);
-  const { role_id: roleId } = parseValidationResult(
-    validatedParamsResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { role_id: roleId } = parseValidationResult(validatedParamsResult);
 
   return {
     roleId,
@@ -123,10 +112,7 @@ function validateDeleteRole(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteRoleSchema.safeParse(params);
-  const { role_id: roleId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { role_id: roleId } = parseValidationResult(validatedResult);
 
   return roleId;
 }

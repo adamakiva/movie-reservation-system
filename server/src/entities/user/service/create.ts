@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import pg from 'postgres';
 
 import {
@@ -7,11 +8,7 @@ import {
   type RequestContext,
 } from '../../../utils/index.js';
 
-import {
-  type CreateUserValidatedData,
-  type User,
-  findRoleNameById,
-} from './utils.js';
+import type { CreateUserValidatedData, User } from './utils.js';
 
 /**********************************************************************************/
 
@@ -34,7 +31,6 @@ async function createUser(
 
 /**********************************************************************************/
 
-// Track this issue for more optimized solution: https://github.com/drizzle-team/drizzle-orm/issues/2078
 async function insertUserToDatabase(
   database: RequestContext['database'],
   userToCreate: Omit<CreateUserValidatedData, 'password'> & { hash: string },
@@ -42,16 +38,29 @@ async function insertUserToDatabase(
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
 
-  let userData: Omit<User, 'role'> = null!;
+  const insertSubQuery = handler.$with('insertSubQuery').as(
+    handler.insert(userModel).values(userToCreate).returning({
+      id: userModel.id,
+      firstName: userModel.firstName,
+      lastName: userModel.lastName,
+      email: userModel.email,
+    }),
+  );
+
   try {
-    userData = (
-      await handler.insert(userModel).values(userToCreate).returning({
-        id: userModel.id,
-        firstName: userModel.firstName,
-        lastName: userModel.lastName,
-        email: userModel.email,
+    const createdUser = await handler
+      .with(insertSubQuery)
+      .select({
+        id: insertSubQuery.id,
+        firstName: insertSubQuery.firstName,
+        lastName: insertSubQuery.lastName,
+        email: insertSubQuery.email,
+        role: roleModel.name,
       })
-    )[0]!;
+      .from(insertSubQuery)
+      .innerJoin(roleModel, eq(roleModel.id, userToCreate.roleId));
+
+    return createdUser[0]!;
   } catch (err) {
     if (err instanceof pg.PostgresError) {
       switch (err.code) {
@@ -72,14 +81,6 @@ async function insertUserToDatabase(
 
     throw err;
   }
-
-  const role = await findRoleNameById({
-    handler,
-    roleModel,
-    roleId: userToCreate.roleId,
-  });
-
-  return { ...userData, role } as const;
 }
 
 /**********************************************************************************/

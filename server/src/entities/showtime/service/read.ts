@@ -7,7 +7,11 @@ import {
   type RequestContext,
 } from '../../../utils/index.js';
 
-import type { GetShowtimeValidatedData, Showtime } from './utils.js';
+import type {
+  GetShowtimeValidatedData,
+  GetUserShowtimesValidatedData,
+  Showtime,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -21,6 +25,18 @@ async function getShowtimes(
   );
 
   return sanitizePaginatedShowtimes(showtimes, pagination.pageSize);
+}
+
+async function getUserShowtimes(
+  context: RequestContext,
+  pagination: GetUserShowtimesValidatedData,
+): Promise<PaginatedResult<{ userShowtimes: unknown }>> {
+  const userShowtimes = await getPaginatedUserShowtimesFromDatabase(
+    context.database,
+    pagination,
+  );
+
+  return sanitizePaginatedUserShowtimes(userShowtimes, pagination.pageSize);
 }
 
 /**********************************************************************************/
@@ -101,24 +117,24 @@ function sanitizePaginatedShowtimes(
   showtimes: Awaited<ReturnType<typeof getPaginatedShowtimesFromDatabase>>,
   pageSize: number,
 ) {
-  if (showtimes.length > pageSize) {
-    showtimes.pop();
-    const lastShowtime = showtimes[showtimes.length - 1]!;
-
+  if (showtimes.length <= pageSize) {
     return {
       showtimes: showtimes.map(sanitizeShowtime),
       page: {
-        hasNext: true,
-        cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
+        hasNext: false,
+        cursor: null,
       },
     } as const;
   }
 
+  showtimes.pop();
+  const lastShowtime = showtimes[showtimes.length - 1]!;
+
   return {
     showtimes: showtimes.map(sanitizeShowtime),
     page: {
-      hasNext: false,
-      cursor: null,
+      hasNext: true,
+      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
     },
   } as const;
 }
@@ -133,6 +149,91 @@ function sanitizeShowtime(
   return fields;
 }
 
+async function getPaginatedUserShowtimesFromDatabase(
+  database: RequestContext['database'],
+  pagination: GetUserShowtimesValidatedData,
+) {
+  const handler = database.getHandler();
+  const {
+    showtime: showtimeModel,
+    movie: movieModel,
+    hall: hallModel,
+    userShowtime,
+  } = database.getModels();
+  const { userId, cursor, pageSize } = pagination;
+
+  const userReservedShowtimesPage = await handler
+    .select({
+      id: userShowtime.id,
+      hallName: hallModel.name,
+      movieTitle: movieModel.title,
+      at: showtimeModel.at,
+      createdAt: userShowtime.createdAt,
+    })
+    .from(userShowtime)
+    .where(
+      and(
+        eq(userShowtime.userId, userId),
+        cursor
+          ? or(
+              gt(userShowtime.createdAt, cursor.createdAt),
+              and(
+                eq(userShowtime.createdAt, cursor.createdAt),
+                gt(userShowtime.id, cursor.id),
+              ),
+            )
+          : undefined,
+      ),
+    )
+    .innerJoin(showtimeModel, eq(showtimeModel.id, userShowtime.showtimeId))
+    .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
+    .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
+    // +1 Will allow us to check if there is an additional page after the current
+    // one
+    .limit(pageSize + 1)
+    .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
+
+  return userReservedShowtimesPage;
+}
+
+function sanitizePaginatedUserShowtimes(
+  userShowtimes: Awaited<
+    ReturnType<typeof getPaginatedUserShowtimesFromDatabase>
+  >,
+  pageSize: number,
+) {
+  if (userShowtimes.length <= pageSize) {
+    return {
+      userShowtimes: userShowtimes.map(sanitizeUserShowtimesPage),
+      page: {
+        hasNext: false,
+        cursor: null,
+      },
+    } as const;
+  }
+
+  userShowtimes.pop();
+  const lastShowtime = userShowtimes[userShowtimes.length - 1]!;
+
+  return {
+    userShowtimes: userShowtimes.map(sanitizeUserShowtimesPage),
+    page: {
+      hasNext: true,
+      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
+    },
+  } as const;
+}
+
+function sanitizeUserShowtimesPage(
+  userReservedShowtimes: Awaited<
+    ReturnType<typeof getPaginatedUserShowtimesFromDatabase>
+  >[number],
+) {
+  const { createdAt, ...fields } = userReservedShowtimes;
+
+  return fields;
+}
+
 /**********************************************************************************/
 
-export { getShowtimes };
+export { getShowtimes, getUserShowtimes };

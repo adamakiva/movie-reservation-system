@@ -92,7 +92,7 @@ async function insertShowtimeToDatabase(
       })
     )[0]!;
 
-    return { ...createdShowtime, movieTitle, hallName };
+    return { ...createdShowtime, movieTitle, hallName } as const;
   } catch (err) {
     throw handlePossibleDuplicationError({
       err,
@@ -134,7 +134,7 @@ async function insertShowtimeTicketToDatabase(params: {
         });
 
       return await getUserTicketInformation({
-        handler,
+        handler: transaction,
         models: { showtimeModel, hallModel, movieModel },
         showtimeTicket,
       });
@@ -263,7 +263,7 @@ async function getUserTicketInformation(params: {
       .where(eq(showtimeModel, showtimeTicket.showtimeId))
       .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
       .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
-  )[0]!; // We just created the showtime entry so it must exist
+  )[0]!; // Under the same transaction as the creation, so it must exist
 
   return {
     ...ticketInformation,

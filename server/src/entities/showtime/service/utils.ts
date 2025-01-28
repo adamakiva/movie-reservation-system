@@ -11,6 +11,7 @@ import type {
   validateCreateShowtime,
   validateDeleteShowtime,
   validateGetShowtimes,
+  validateGetUserShowtimes,
   validateReserveShowtimeTicket,
 } from '../validator.js';
 
@@ -24,6 +25,9 @@ type ReserveShowtimeTicketValidatedData = ReturnType<
 >;
 type CancelUserShowtimeValidatedData = ReturnType<
   typeof validateCancelUserShowtimeReservation
+>;
+type GetUserShowtimesValidatedData = ReturnType<
+  typeof validateGetUserShowtimes
 >;
 
 type Showtime = {
@@ -73,6 +77,7 @@ export {
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,
   type GetShowtimeValidatedData,
+  type GetUserShowtimesValidatedData,
   type ReserveShowtimeTicketValidatedData,
   type Showtime,
   type ShowtimeTicket,

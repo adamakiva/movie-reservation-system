@@ -76,7 +76,7 @@ async function getPaginatedMoviesFromDatabase(
             gt(movieModel.createdAt, cursor.createdAt),
             and(
               eq(movieModel.createdAt, cursor.createdAt),
-              gt(movieModel.id, cursor.movieId),
+              gt(movieModel.id, cursor.id),
             ),
           )
         : undefined,
@@ -94,24 +94,24 @@ function sanitizePaginatedMovies(
   movies: Awaited<ReturnType<typeof getPaginatedMoviesFromDatabase>>,
   pageSize: number,
 ) {
-  if (movies.length > pageSize) {
-    movies.pop();
-    const lastMovie = movies[movies.length - 1]!;
-
+  if (movies.length <= pageSize) {
     return {
       movies: movies.map(sanitizeMovie),
       page: {
-        hasNext: true,
-        cursor: encodeCursor(lastMovie.id, lastMovie.createdAt),
+        hasNext: false,
+        cursor: null,
       },
     } as const;
   }
 
+  movies.pop();
+  const lastMovie = movies[movies.length - 1]!;
+
   return {
     movies: movies.map(sanitizeMovie),
     page: {
-      hasNext: false,
-      cursor: null,
+      hasNext: true,
+      cursor: encodeCursor(lastMovie.id, lastMovie.createdAt),
     },
   } as const;
 }

@@ -8,11 +8,7 @@ import {
   type RequestContext,
 } from '../../../utils/index.js';
 
-import {
-  type UpdateUserValidatedData,
-  type User,
-  findRoleNameById,
-} from './utils.js';
+import type { UpdateUserValidatedData, User } from './utils.js';
 
 /**********************************************************************************/
 
@@ -37,7 +33,6 @@ async function updateUser(
 
 /**********************************************************************************/
 
-// Track this issue for more optimized solution: https://github.com/drizzle-team/drizzle-orm/issues/2078
 async function updateUserInDatabase(
   database: RequestContext['database'],
   userToUpdate: Omit<UpdateUserValidatedData, 'password'> & {
@@ -48,27 +43,39 @@ async function updateUserInDatabase(
   const { user: userModel, role: roleModel } = database.getModels();
   const { userId, ...fieldsToUpdate } = userToUpdate;
 
-  let roleId: string = null!;
-  let userData: Omit<User, 'role'> = null!;
-  try {
-    const updatedUsers = await handler
+  const updateSubQuery = handler.$with('updateSubQuery').as(
+    handler
       .update(userModel)
       .set({ ...fieldsToUpdate, updatedAt: new Date() })
-      .where(eq(userModel.id, userId))
       .returning({
         id: userModel.id,
         firstName: userModel.firstName,
         lastName: userModel.lastName,
         email: userModel.email,
         roleId: userModel.roleId,
-      });
-    if (!updatedUsers.length) {
+      }),
+  );
+
+  try {
+    const updatedUser = await handler
+      .with(updateSubQuery)
+      .select({
+        id: updateSubQuery.id,
+        firstName: updateSubQuery.firstName,
+        lastName: updateSubQuery.lastName,
+        email: updateSubQuery.email,
+        role: roleModel.name,
+      })
+      .from(updateSubQuery)
+      .innerJoin(roleModel, eq(roleModel.id, updateSubQuery.roleId));
+    if (!updatedUser.length) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `User '${userId}' does not exist`,
       );
     }
-    ({ roleId, ...userData } = updatedUsers[0]!);
+
+    return updatedUser[0]!;
   } catch (err) {
     if (err instanceof pg.PostgresError) {
       switch (err.code) {
@@ -89,11 +96,6 @@ async function updateUserInDatabase(
 
     throw err;
   }
-
-  // If the first query did not throw, a role with the given id must exist
-  const role = await findRoleNameById({ handler, roleModel, roleId });
-
-  return { ...userData, role } as const;
 }
 
 /**********************************************************************************/

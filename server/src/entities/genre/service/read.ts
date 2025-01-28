@@ -7,14 +7,7 @@ import type { Genre } from './utils.js';
 /**********************************************************************************/
 
 async function getGenres(context: RequestContext): Promise<Genre[]> {
-  const genres = await readGenresFromDatabase(context.database);
-
-  return genres;
-}
-
-/**********************************************************************************/
-
-async function readGenresFromDatabase(database: RequestContext['database']) {
+  const { database } = context;
   const handler = database.getHandler();
   const { genre: genreModel } = database.getModels();
 

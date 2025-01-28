@@ -1,12 +1,3 @@
-import { eq } from 'drizzle-orm';
-
-import {
-  GeneralError,
-  HTTP_STATUS_CODES,
-  type DatabaseHandler,
-  type DatabaseModel,
-} from '../../../utils/index.js';
-
 import type {
   validateCreateUser,
   validateDeleteUser,
@@ -33,31 +24,7 @@ type User = {
 
 /**********************************************************************************/
 
-async function findRoleNameById(params: {
-  handler: DatabaseHandler;
-  roleModel: DatabaseModel<'role'>;
-  roleId: string;
-}) {
-  const { handler, roleModel, roleId } = params;
-
-  const roles = await handler
-    .select({ name: roleModel.name })
-    .from(roleModel)
-    .where(eq(roleModel.id, roleId));
-  if (!roles.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Role ${roleId} does not exist`,
-    );
-  }
-
-  return roles[0]!.name;
-}
-
-/**********************************************************************************/
-
 export {
-  findRoleNameById,
   type CreateUserValidatedData,
   type DeleteUserValidatedData,
   type GetUsersValidatedData,

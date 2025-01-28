@@ -8,7 +8,7 @@ import {
   type SafeParseReturnType,
 } from 'zod';
 
-import { GeneralError } from '../utils/index.js';
+import { GeneralError, HTTP_STATUS_CODES } from '../utils/index.js';
 
 /**********************************************************************************/
 
@@ -372,7 +372,7 @@ const { PAGINATION } = VALIDATION;
 
 function parseValidationResult<I, O>(
   res: SafeParseReturnType<I, O>,
-  statusCode: number,
+  statusCode: number = HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
 ) {
   if (!res.success) {
     const errorMessages = res.error.errors

@@ -31,21 +31,23 @@ async function deleteMovieFromDatabase(
     showtime: showtimeModel,
   } = database.getModels();
 
-  // Only movies without attached showtimes are allowed to be deleted
-  const showtimesWithDeletedMovie = (
-    await handler
-      .select({ count: count() })
-      .from(showtimeModel)
-      .where(eq(showtimeModel.movieId, movieId))
-  )[0]!.count;
-  if (showtimesWithDeletedMovie) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.BAD_REQUEST,
-      'Movie has one or more attached showtime',
-    );
-  }
-
+  // Not using a CTE because we won't be to tell whether nothing was deleted due
+  // to having an attached showtime or because it does not exist
   const absolutePath = await handler.transaction(async (transaction) => {
+    // Only movies without attached showtimes are allowed to be deleted
+    const showtimesWithDeletedMovie = (
+      await handler
+        .select({ count: count() })
+        .from(showtimeModel)
+        .where(eq(showtimeModel.movieId, movieId))
+    )[0]!.count;
+    if (showtimesWithDeletedMovie) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        'Movie has one or more attached showtime',
+      );
+    }
+
     // I've decided that if nothing was deleted because it didn't exist in the
     // first place, it is still considered as a success since the end result
     // is the same

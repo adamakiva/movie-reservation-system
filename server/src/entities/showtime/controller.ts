@@ -68,6 +68,17 @@ async function cancelUserShowtimeReservation(
   res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
+async function getUserShowtimes(req: Request, res: ResponseWithContext) {
+  const pagination = showtimeValidator.validateGetUserShowtimes(req);
+
+  const userShowtimes = await showtimeService.getUserShowtimes(
+    res.locals.context,
+    pagination,
+  );
+
+  res.status(HTTP_STATUS_CODES.SUCCESS).send(userShowtimes);
+}
+
 /**********************************************************************************/
 
 export {
@@ -75,5 +86,6 @@ export {
   createShowtime,
   deleteShowtime,
   getShowtimes,
+  getUserShowtimes,
   reserveShowtimeTicket,
 };

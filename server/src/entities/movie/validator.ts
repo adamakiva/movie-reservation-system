@@ -8,7 +8,7 @@ import {
   string as ZodString,
 } from 'zod';
 
-import { decodeCursor, HTTP_STATUS_CODES } from '../../utils/index.js';
+import { decodeCursor } from '../../utils/index.js';
 
 import {
   coerceNumber,
@@ -63,12 +63,10 @@ const getMoviesSchema = ZodObject(
   }
 
   try {
-    const { id: movieId, createdAt } = cursorSchema.parse(
-      decodeCursor(val.cursor),
-    );
+    const { id, createdAt } = cursorSchema.parse(decodeCursor(val.cursor));
 
     return {
-      cursor: { movieId, createdAt },
+      cursor: { id, createdAt },
       pageSize: val['page-size'],
     } as const;
   } catch {
@@ -309,10 +307,7 @@ function validateGetMovies(req: Request) {
   const { query } = req;
 
   const validatedResult = getMoviesSchema.safeParse(query);
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -321,10 +316,7 @@ function validateGetMovie(req: Request) {
   const { params } = req;
 
   const validatedResult = getMovieSchema.safeParse(params);
-  const { movie_id: movieId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;
 }
@@ -333,10 +325,7 @@ function validateGetMoviePoster(req: Request) {
   const { params } = req;
 
   const validatedResult = getMoviePosterSchema.safeParse(params);
-  const { movie_id: movieId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;
 }
@@ -349,10 +338,7 @@ function validateCreateMovie(req: Request) {
     ...body,
     poster: file,
   });
-  const parsedValidatedResult = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
 }
@@ -365,16 +351,10 @@ function validateUpdateMovie(req: Request) {
   const updates = file ? { ...body, poster: file } : body;
 
   const validatedBodyResult = updateMovieBodySchema.safeParse(updates);
-  const movieToUpdate = parseValidationResult(
-    validatedBodyResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const movieToUpdate = parseValidationResult(validatedBodyResult);
 
   const validatedParamsResult = updateMovieParamsSchema.safeParse(params);
-  const { movie_id: movieId } = parseValidationResult(
-    validatedParamsResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { movie_id: movieId } = parseValidationResult(validatedParamsResult);
 
   return {
     ...movieToUpdate,
@@ -386,10 +366,7 @@ function validateDeleteMovie(req: Request) {
   const { params } = req;
 
   const validatedResult = deleteMovieSchema.safeParse(params);
-  const { movie_id: movieId } = parseValidationResult(
-    validatedResult,
-    HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
-  );
+  const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;
 }
