@@ -1,9 +1,7 @@
-import { sql } from 'drizzle-orm';
 import {
   index,
   integer,
   pgTable,
-  point,
   real,
   smallint,
   timestamp,
@@ -152,10 +150,6 @@ const showtimeModel = pgTable(
       precision: 3,
       withTimezone: true,
     }).notNull(),
-    reservations: point('reservations')
-      .array()
-      .default(sql`ARRAY[]::point[]`)
-      .notNull(),
     movieId: uuid('movie_id')
       .references(
         () => {
@@ -190,12 +184,13 @@ const showtimeModel = pgTable(
 
 /**********************************************************************************/
 
-// This table should be dumped to a summary table to prevent too many irrelevant
-// entries
+// This table should be dumped to a summary table after the showtime has passed
 const usersShowtimesModel = pgTable(
   'user_showtime',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
+    row: smallint('row').notNull(),
+    column: smallint('column').notNull(),
     userId: uuid('user_id')
       .references(
         () => {
@@ -226,10 +221,16 @@ const usersShowtimesModel = pgTable(
         'btree',
         table.showtimeId.asc(),
       ),
-      uniqueIndex('user_showtime_unique_index').using(
+      uniqueIndex('user_showtime_user_showtime_unique_index').using(
         'btree',
         table.showtimeId.asc(),
         table.userId.asc(),
+      ),
+      uniqueIndex('user_showtime_check_reservation_unique_index').using(
+        'btree',
+        table.showtimeId.asc(),
+        table.row.asc(),
+        table.column.asc(),
       ),
     ];
   },

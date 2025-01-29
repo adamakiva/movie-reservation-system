@@ -70,7 +70,6 @@ async function seedShowtimes(
       .returning({
         id: showtimeModel.id,
         at: showtimeModel.at,
-        reservations: showtimeModel.reservations,
         movieId: showtimeModel.movieId,
         hallId: showtimeModel.hallId,
       });

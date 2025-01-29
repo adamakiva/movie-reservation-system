@@ -28,7 +28,7 @@ async function updateMovie(
     genre: genreModel,
   } = database.getModels();
 
-  const subQueries = createMovieCTEs({
+  const subQueries = buildUpdateMovieCTEs({
     handler,
     models: { movie: movieModel, moviePoster: moviePosterModel },
     movieToUpdate,
@@ -60,7 +60,7 @@ async function updateMovie(
 
 /**********************************************************************************/
 
-function createMovieCTEs(params: {
+function buildUpdateMovieCTEs(params: {
   handler: DatabaseHandler;
   models: {
     movie: DatabaseModel<'movie'>;
@@ -115,7 +115,7 @@ function createMovieCTEs(params: {
 
 async function updateMovieInDatabase(params: {
   handler: DatabaseHandler;
-  subQueries: Awaited<ReturnType<typeof createMovieCTEs>>;
+  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
   genreModel: DatabaseModel<'genre'>;
   movieId: string;
   genreId?: string | undefined;
@@ -154,7 +154,7 @@ async function updateMovieInDatabase(params: {
 async function updateMovieAndMoviePosterInDatabase(params: {
   handler: DatabaseHandler;
   fileManager: RequestContext['fileManager'];
-  subQueries: Awaited<ReturnType<typeof createMovieCTEs>>;
+  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
   models: {
     genre: DatabaseModel<'genre'>;
     moviePoster: DatabaseModel<'moviePoster'>;

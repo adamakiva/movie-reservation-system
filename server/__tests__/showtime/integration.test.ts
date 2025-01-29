@@ -76,15 +76,18 @@ function compareShowtimes(params: {
     })?.name,
     hallName,
   );
-  assert.deepStrictEqual(createdShowtime, {
-    ...fetchedShowtime,
-    at: new Date(at),
-  });
+  assert.deepStrictEqual(
+    { ...createdShowtime, reservations: [] },
+    {
+      ...fetchedShowtime,
+      at: new Date(at),
+    },
+  );
 }
 
 /**********************************************************************************/
 
-await suite('Showtime integration tests', async () => {
+await suite.only('Showtime integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();
@@ -848,7 +851,7 @@ await suite('Showtime integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      const { id, reservations, movieTitle, hallName, ...createdShowtime } =
+      const { id, movieTitle, hallName, ...createdShowtime } =
         (await res.json()) as Showtime;
       const { movieId: _1, hallId: _2, ...expectedShowtime } = showtimeData;
       showtimeId = id;
@@ -857,7 +860,6 @@ await suite('Showtime integration tests', async () => {
         { ...createdShowtime, at: new Date(createdShowtime.at) },
         expectedShowtime,
       );
-      assert.deepStrictEqual(reservations, []);
       assert.deepStrictEqual(
         { movieTitle, hallName },
         { movieTitle: createdMovie.title, hallName: createdHall.name },

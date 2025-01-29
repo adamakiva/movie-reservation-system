@@ -219,7 +219,7 @@ await suite('Movie integration tests', async () => {
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
-  await test.only('Valid - Create', async () => {
+  await test('Valid - Create', async () => {
     let movieId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);

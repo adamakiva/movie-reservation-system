@@ -50,43 +50,108 @@ async function getPaginatedShowtimesFromDatabase(
     showtime: showtimeModel,
     movie: movieModel,
     hall: hallModel,
+    userShowtime: userShowtimeModel,
   } = database.getModels();
   const { cursor, pageSize, movieId, hallId } = pagination;
 
   const filters = buildFilters({ movieId, hallId }, showtimeModel);
 
-  const showtimesPage = await handler
+  const getPaginatedShowtimesSubQuery = handler.$with('paginated_showtimes').as(
+    handler
+      .select({
+        showtimeId: showtimeModel.id,
+        at: showtimeModel.at,
+        movieId: showtimeModel.movieId,
+        hallId: showtimeModel.hallId,
+        createdAt: showtimeModel.createdAt,
+      })
+      .from(showtimeModel)
+      .where(
+        cursor
+          ? and(
+              filters,
+              or(
+                gt(showtimeModel.createdAt, cursor.createdAt),
+                and(
+                  eq(showtimeModel.createdAt, cursor.createdAt),
+                  gt(showtimeModel.id, cursor.showtimeId),
+                ),
+              ),
+            )
+          : filters,
+      )
+      // +1 Will allow us to check if there is an additional page after the current
+      // one
+      .limit(pageSize + 1)
+      .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id)),
+  );
+
+  const paginatedShowtimes = await handler
+    .with(getPaginatedShowtimesSubQuery)
     .select({
-      id: showtimeModel.id,
-      at: showtimeModel.at,
-      reservations: showtimeModel.reservations,
+      id: getPaginatedShowtimesSubQuery.showtimeId,
+      at: getPaginatedShowtimesSubQuery.at,
       movieTitle: movieModel.title,
       hallName: hallModel.name,
-      createdAt: showtimeModel.createdAt,
+      reservation: {
+        userId: userShowtimeModel.userId,
+        row: userShowtimeModel.row,
+        column: userShowtimeModel.column,
+      },
+      createdAt: getPaginatedShowtimesSubQuery.createdAt,
     })
-    .from(showtimeModel)
-    .where(
-      cursor
-        ? and(
-            filters,
-            or(
-              gt(showtimeModel.createdAt, cursor.createdAt),
-              and(
-                eq(showtimeModel.createdAt, cursor.createdAt),
-                gt(showtimeModel.id, cursor.showtimeId),
-              ),
-            ),
-          )
-        : filters,
+    .from(getPaginatedShowtimesSubQuery)
+    .innerJoin(
+      movieModel,
+      eq(movieModel.id, getPaginatedShowtimesSubQuery.movieId),
     )
-    .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
-    .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
-    // +1 Will allow us to check if there is an additional page after the current
-    // one
-    .limit(pageSize + 1)
-    .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
+    .innerJoin(
+      hallModel,
+      eq(hallModel.id, getPaginatedShowtimesSubQuery.hallId),
+    )
+    .leftJoin(
+      userShowtimeModel,
+      eq(
+        userShowtimeModel.showtimeId,
+        getPaginatedShowtimesSubQuery.showtimeId,
+      ),
+    );
 
-  return showtimesPage;
+  // Since the query returns duplicates for every joined user showtime, the code
+  // below groups it together
+  const groupedShowtimes = Object.groupBy(paginatedShowtimes, (showtime) => {
+    return showtime.id;
+  });
+
+  const sanitizedShowtimes = Object.values(groupedShowtimes).map(
+    (showtimes) => {
+      const { id, at, movieTitle, hallName, createdAt } = showtimes![0]!;
+
+      return {
+        id,
+        at,
+        movieTitle,
+        hallName,
+        createdAt,
+        reservations:
+          showtimes
+            ?.filter((showtime) => {
+              return showtime.reservation;
+            })
+            .map((showtime) => {
+              return {
+                // The undefined showtimes are filtered above so the assertion
+                // is fine
+                userId: showtime.reservation!.userId,
+                row: showtime.reservation!.row,
+                column: showtime.reservation!.column,
+              };
+            }) ?? [],
+      };
+    },
+  );
+
+  return sanitizedShowtimes;
 }
 
 function buildFilters(

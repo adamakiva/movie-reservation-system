@@ -18,20 +18,7 @@ async function updateRole(
   context: RequestContext,
   roleToUpdate: UpdateRoleValidatedData,
 ): Promise<Role> {
-  const updatedRole = await updateRoleInDatabase(
-    context.database,
-    roleToUpdate,
-  );
-
-  return updatedRole;
-}
-
-/**********************************************************************************/
-
-async function updateRoleInDatabase(
-  database: RequestContext['database'],
-  roleToUpdate: UpdateRoleValidatedData,
-) {
+  const { database } = context;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
   const { roleId, ...fieldsToUpdate } = roleToUpdate;

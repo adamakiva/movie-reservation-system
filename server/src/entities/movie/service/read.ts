@@ -21,21 +21,43 @@ async function getMovies(
   context: RequestContext,
   pagination: GetMoviesValidatedData,
 ): Promise<PaginatedResult<{ movies: Movie[] }>> {
-  const movies = await getPaginatedMoviesFromDatabase(
-    context.database,
-    pagination,
-  );
+  const movies = await getMoviesPageFromDatabase(context.database, pagination);
 
-  return sanitizePaginatedMovies(movies, pagination.pageSize);
+  return sanitizeMoviesPage(movies, pagination.pageSize);
 }
 
 async function getMovie(
   context: RequestContext,
   movieId: GetMovieValidatedData,
 ): Promise<Movie> {
-  const movie = await getMovieFromDatabase(context.database, movieId);
+  const { database } = context;
+  const handler = database.getHandler();
+  const { movie: movieModel, genre: genreModel } = database.getModels();
 
-  return movie;
+  // A general note. I've checked performance stuff, and on pk limit 1 has
+  // 0 effect, it is implied and will stop the search after the first result is
+  // found. In general limit should be used with order by otherwise the results
+  // are inconsistent (as a result of sql not guaranteeing return order for
+  // query results)
+  const movies = await handler
+    .select({
+      id: movieModel.id,
+      title: movieModel.title,
+      description: movieModel.description,
+      price: movieModel.price,
+      genre: genreModel.name,
+    })
+    .from(movieModel)
+    .where(eq(movieModel.id, movieId))
+    .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId));
+  if (!movies.length) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Movie '${movieId}' does not exist`,
+    );
+  }
+
+  return movies[0]!;
 }
 
 async function getMoviePoster(
@@ -52,7 +74,7 @@ async function getMoviePoster(
 
 /**********************************************************************************/
 
-async function getPaginatedMoviesFromDatabase(
+async function getMoviesPageFromDatabase(
   database: RequestContext['database'],
   pagination: GetMoviesValidatedData,
 ) {
@@ -90,8 +112,8 @@ async function getPaginatedMoviesFromDatabase(
   return moviesPage;
 }
 
-function sanitizePaginatedMovies(
-  movies: Awaited<ReturnType<typeof getPaginatedMoviesFromDatabase>>,
+function sanitizeMoviesPage(
+  movies: Awaited<ReturnType<typeof getMoviesPageFromDatabase>>,
   pageSize: number,
 ) {
   if (movies.length <= pageSize) {
@@ -117,44 +139,11 @@ function sanitizePaginatedMovies(
 }
 
 function sanitizeMovie(
-  movie: Awaited<ReturnType<typeof getPaginatedMoviesFromDatabase>>[number],
+  movie: Awaited<ReturnType<typeof getMoviesPageFromDatabase>>[number],
 ) {
   const { createdAt, ...fields } = movie;
 
   return fields;
-}
-
-async function getMovieFromDatabase(
-  database: RequestContext['database'],
-  movieId: GetMovieValidatedData,
-) {
-  const handler = database.getHandler();
-  const { movie: movieModel, genre: genreModel } = database.getModels();
-
-  // A general note. I've checked performance stuff, and on pk limit 1 has
-  // 0 effect, it is implied and will stop the search after the first result is
-  // found. In general limit should be used with order by otherwise the results
-  // are inconsistent (as a result of sql not guaranteeing return order for
-  // query results)
-  const movies = await handler
-    .select({
-      id: movieModel.id,
-      title: movieModel.title,
-      description: movieModel.description,
-      price: movieModel.price,
-      genre: genreModel.name,
-    })
-    .from(movieModel)
-    .where(eq(movieModel.id, movieId))
-    .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId));
-  if (!movies.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie '${movieId}' does not exist`,
-    );
-  }
-
-  return movies[0]!;
 }
 
 async function getMoviePosterMetadataFromDatabase(

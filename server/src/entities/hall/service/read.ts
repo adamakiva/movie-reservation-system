@@ -7,14 +7,7 @@ import type { Hall } from './utils.js';
 /**********************************************************************************/
 
 async function getHalls(context: RequestContext): Promise<Hall[]> {
-  const halls = await readHallsFromDatabase(context.database);
-
-  return halls;
-}
-
-/**********************************************************************************/
-
-async function readHallsFromDatabase(database: RequestContext['database']) {
+  const { database } = context;
   const handler = database.getHandler();
   const { hall: hallModel } = database.getModels();
 

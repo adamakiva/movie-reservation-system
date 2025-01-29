@@ -9,12 +9,11 @@ import {
   type RequestContext,
 } from '../../../utils/index.js';
 
-import {
-  type CreateShowtimeValidatedData,
-  handlePossibleDuplicationError,
-  type ReserveShowtimeTicketValidatedData,
-  type Showtime,
-  type ShowtimeTicket,
+import type {
+  CreateShowtimeValidatedData,
+  ReserveShowtimeTicketValidatedData,
+  Showtime,
+  ShowtimeTicket,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -23,12 +22,40 @@ async function createShowtime(
   context: RequestContext,
   showtimeToCreate: CreateShowtimeValidatedData,
 ): Promise<Showtime> {
-  const createdShowtime = await insertShowtimeToDatabase(
-    context.database,
-    showtimeToCreate,
-  );
+  const { database } = context;
+  const handler = database.getHandler();
+  const {
+    showtime: showtimeModel,
+    movie: movieModel,
+    hall: hallModel,
+  } = database.getModels();
 
-  return createdShowtime;
+  try {
+    const createShowtimeSubQuery = buildInsertShowtimeCTE({
+      handler,
+      showtimeModel,
+      showtimeToCreate,
+    });
+
+    const createdShowtime = await handler
+      .with(createShowtimeSubQuery)
+      .select({
+        id: createShowtimeSubQuery.id,
+        at: createShowtimeSubQuery.at,
+        movieTitle: movieModel.title,
+        hallName: hallModel.name,
+      })
+      .from(createShowtimeSubQuery)
+      .innerJoin(movieModel, eq(movieModel.id, createShowtimeSubQuery.movieId))
+      .innerJoin(hallModel, eq(hallModel.id, createShowtimeSubQuery.hallId));
+
+    return createdShowtime[0]!;
+  } catch (err) {
+    // TODO Check for possible error if movie/hall do not exist
+    console.error(err);
+
+    throw err;
+  }
 }
 
 async function reserveShowtimeTicket(params: {
@@ -44,71 +71,6 @@ async function reserveShowtimeTicket(params: {
 
   const userId = authentication.getUserId(req.headers.authorization!);
 
-  const createdShowtimeTicket = await insertShowtimeTicketToDatabase({
-    database,
-    showtimeTicket,
-    userId,
-  });
-
-  // TODO Add payment processing. This operation should be blocking for the client
-  // as well. Reason being that the user should receive a confirmation his payment
-  // was accepted and there's no point to not lock the UI until that happens.
-
-  return createdShowtimeTicket;
-}
-
-/**********************************************************************************/
-
-async function insertShowtimeToDatabase(
-  database: RequestContext['database'],
-  showtimeToCreate: CreateShowtimeValidatedData,
-) {
-  const handler = database.getHandler();
-  const {
-    showtime: showtimeModel,
-    movie: movieModel,
-    hall: hallModel,
-  } = database.getModels();
-
-  const [movieTitle, hallName] = await Promise.all([
-    getMovieTitle({
-      handler,
-      movieModel,
-      movieId: showtimeToCreate.movieId,
-    }),
-    getHallName({
-      handler,
-      hallModel,
-      hallId: showtimeToCreate.hallId,
-    }),
-  ]);
-
-  try {
-    const createdShowtime = (
-      await handler.insert(showtimeModel).values(showtimeToCreate).returning({
-        id: showtimeModel.id,
-        at: showtimeModel.at,
-        reservations: showtimeModel.reservations,
-      })
-    )[0]!;
-
-    return { ...createdShowtime, movieTitle, hallName } as const;
-  } catch (err) {
-    throw handlePossibleDuplicationError({
-      err,
-      showtime: showtimeToCreate.at,
-      hall: hallName,
-    });
-  }
-}
-
-async function insertShowtimeTicketToDatabase(params: {
-  database: RequestContext['database'];
-  showtimeTicket: ReserveShowtimeTicketValidatedData;
-  userId: string;
-}) {
-  const { database, showtimeTicket, userId } = params;
-
   const handler = database.getHandler();
   const {
     hall: hallModel,
@@ -116,79 +78,70 @@ async function insertShowtimeTicketToDatabase(params: {
     userShowtime: userShowtimeModel,
     movie: movieModel,
   } = database.getModels();
-  const { showtimeId } = showtimeTicket;
 
-  const createdShowtimeTicket = await handler.transaction(
-    async (transaction) => {
-      await checkTicketValues({
-        handler: transaction,
-        models: { hallModel, showtimeModel },
-        showtimeTicket,
-      });
+  return await handler.transaction(async (transaction) => {
+    await validateMovieReservation({
+      handler: transaction,
+      models: { hallModel, showtimeModel },
+      showtimeTicket,
+    });
 
-      await transaction
-        .insert(userShowtimeModel)
-        .values({ userId, showtimeId })
-        .onConflictDoNothing({
-          target: [userShowtimeModel.showtimeId, userShowtimeModel.userId],
-        });
+    const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
+      handler,
+      userShowtimeModel,
+      showtimeTicket: { ...showtimeTicket, userId },
+    });
 
-      return await getUserTicketInformation({
-        handler: transaction,
-        models: { showtimeModel, hallModel, movieModel },
-        showtimeTicket,
-      });
-    },
-  );
+    try {
+      const createdShowtimeTicket = await transaction
+        .with(createUserShowtimeSubQuery)
+        .select({
+          hallName: hallModel.name,
+          movieTitle: movieModel.title,
+          at: showtimeModel.at,
+          row: createUserShowtimeSubQuery.row,
+          column: createUserShowtimeSubQuery.column,
+        })
+        .from(showtimeModel)
+        .where(eq(showtimeModel, showtimeTicket.showtimeId))
+        .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
+        .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId));
 
-  return createdShowtimeTicket;
+      // TODO Add payment processing. This operation should be blocking for the client
+      // as well. Reason being that the user should receive a confirmation his payment
+      // was accepted and there's no point to not lock the UI until that happens.
+
+      return createdShowtimeTicket[0]!;
+    } catch (err) {
+      // TODO Check for duplicate error and handle it
+
+      throw err;
+    }
+  });
 }
 
 /**********************************************************************************/
 
-async function getMovieTitle(params: {
+function buildInsertShowtimeCTE(params: {
   handler: DatabaseHandler;
-  movieModel: DatabaseModel<'movie'>;
-  movieId: string;
+  showtimeModel: DatabaseModel<'showtime'>;
+  showtimeToCreate: CreateShowtimeValidatedData;
 }) {
-  const { handler, movieModel, movieId } = params;
+  const { handler, showtimeModel, showtimeToCreate } = params;
 
-  const movies = await handler
-    .select({ title: movieModel.title })
-    .from(movieModel)
-    .where(eq(movieModel.id, movieId));
-  if (!movies.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie ${movieId} does not exist`,
-    );
-  }
+  const createShowtimeSubQuery = handler.$with('insert_showtime').as(
+    handler.insert(showtimeModel).values(showtimeToCreate).returning({
+      id: showtimeModel.id,
+      at: showtimeModel.at,
+      movieId: showtimeModel.movieId,
+      hallId: showtimeModel.hallId,
+    }),
+  );
 
-  return movies[0]!.title;
+  return createShowtimeSubQuery;
 }
 
-async function getHallName(params: {
-  handler: DatabaseHandler;
-  hallModel: DatabaseModel<'hall'>;
-  hallId: string;
-}) {
-  const { handler, hallModel, hallId } = params;
-
-  const halls = await handler
-    .select({ name: hallModel.name })
-    .from(hallModel)
-    .where(eq(hallModel.id, hallId));
-  if (!halls.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Hall ${hallId} does not exist`,
-    );
-  }
-
-  return halls[0]!.name;
-}
-
-async function checkTicketValues(params: {
+async function validateMovieReservation(params: {
   handler: DatabaseHandler;
   models: {
     showtimeModel: DatabaseModel<'showtime'>;
@@ -202,74 +155,55 @@ async function checkTicketValues(params: {
     showtimeTicket,
   } = params;
 
-  const showTimesData = await handler
-    .select({
-      reservations: showtimeModel.reservations,
-      hallRows: hallModel.rows,
-      hallColumns: hallModel.columns,
-    })
-    .from(showtimeModel)
-    .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
-    .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
-  if (!showTimesData.length) {
-    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
-  }
-  const showTimeData = showTimesData[0]!;
+  try {
+    const showTimesData = await handler
+      .select({
+        hallRows: hallModel.rows,
+        hallColumns: hallModel.columns,
+      })
+      .from(showtimeModel)
+      // Checks the showtime id is valid
+      .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
+      .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
+    if (!showTimesData.length) {
+      throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
+    }
+    const showTimeData = showTimesData[0]!;
 
-  // Rows are 0 indexed for us, but 1 indexed for the end-user
-  if (showTimeData.hallRows > showtimeTicket.row) {
-    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
-  }
-  if (showTimeData.hallColumns > showtimeTicket.column) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.BAD_REQUEST,
-      'Invalid column number',
-    );
-  }
-
-  for (const [row, column] of showTimeData.reservations) {
-    if (showtimeTicket.row === row && showtimeTicket.column === column) {
+    // Rows are 0 indexed for us, but 1 indexed for the end-user
+    if (showTimeData.hallRows > showtimeTicket.row) {
       throw new GeneralError(
-        HTTP_STATUS_CODES.CONFLICT,
-        `Ticket [${row}, ${column}] is already reserved`,
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        'Invalid row number',
       );
     }
+    if (showTimeData.hallColumns > showtimeTicket.column) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.BAD_REQUEST,
+        'Invalid column number',
+      );
+    }
+  } catch (err) {
+    // TODO Check for invalid reference to hall id (FOREIGN_KEY_VIOLATION)
+    throw err;
   }
 }
 
-async function getUserTicketInformation(params: {
+function buildInsertUserShowtimeCTE(params: {
   handler: DatabaseHandler;
-  models: {
-    showtimeModel: DatabaseModel<'showtime'>;
-    hallModel: DatabaseModel<'hall'>;
-    movieModel: DatabaseModel<'movie'>;
-  };
-  showtimeTicket: ReserveShowtimeTicketValidatedData;
+  userShowtimeModel: DatabaseModel<'userShowtime'>;
+  showtimeTicket: ReserveShowtimeTicketValidatedData & { userId: string };
 }) {
-  const {
-    handler,
-    models: { showtimeModel, hallModel, movieModel },
-    showtimeTicket,
-  } = params;
+  const { handler, userShowtimeModel, showtimeTicket } = params;
 
-  const ticketInformation = (
-    await handler
-      .select({
-        hallName: hallModel.name,
-        movieTitle: movieModel.title,
-        at: showtimeModel.at,
-      })
-      .from(showtimeModel)
-      .where(eq(showtimeModel, showtimeTicket.showtimeId))
-      .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
-      .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
-  )[0]!; // Under the same transaction as the creation, so it must exist
+  const createUserShowtimeSubQuery = handler.$with('create_user_showtime').as(
+    handler.insert(userShowtimeModel).values(showtimeTicket).returning({
+      row: userShowtimeModel.row,
+      column: userShowtimeModel.column,
+    }),
+  );
 
-  return {
-    ...ticketInformation,
-    row: showtimeTicket.row,
-    column: showtimeTicket.column,
-  } as const;
+  return createUserShowtimeSubQuery;
 }
 
 /**********************************************************************************/

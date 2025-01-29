@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { Request } from 'express';
 
 import type {
@@ -18,7 +18,37 @@ async function deleteShowtime(
   context: RequestContext,
   showtimeId: DeleteShowtimeValidatedData,
 ): Promise<void> {
-  await deleteShowtimeFromDatabase(context.database, showtimeId);
+  const { database } = context;
+  const handler = database.getHandler();
+  const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
+    database.getModels();
+
+  await handler.transaction(async (transaction) => {
+    // When removing a showtime we need to cancel all reservations
+    const userIds = (
+      await transaction
+        .select({ userId: userShowtimeModel.userId })
+        .from(userShowtimeModel)
+        .where(eq(userShowtimeModel.showtimeId, showtimeId))
+    ).map(({ userId }) => {
+      return userId;
+    });
+    if (!userIds.length) {
+      await deleteShowtimeEntry({
+        handler: transaction,
+        showtimeModel,
+        showtimeId,
+      });
+      return;
+    }
+
+    await cancelShowtimeReservations({
+      handler: transaction,
+      models: { showtimeModel, userShowtimeModel },
+      showtimeId,
+      userIds,
+    });
+  });
 }
 
 async function cancelUserShowtimeReservation(params: {
@@ -40,39 +70,7 @@ async function cancelUserShowtimeReservation(params: {
     handler,
     userShowtimeModel,
     showtimeId,
-    userId,
-  });
-}
-
-/**********************************************************************************/
-
-async function deleteShowtimeFromDatabase(
-  database: RequestContext['database'],
-  showtimeId: DeleteShowtimeValidatedData,
-) {
-  const handler = database.getHandler();
-  const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
-    database.getModels();
-
-  // When removing a showtime we need to cancel all reservations
-  const userIds = (
-    await handler
-      .select({ userId: userShowtimeModel.userId })
-      .from(userShowtimeModel)
-      .where(eq(userShowtimeModel.showtimeId, showtimeId))
-  ).map(({ userId }) => {
-    return userId;
-  });
-  if (!userIds.length) {
-    await deleteShowtimeEntry({ handler, showtimeModel, showtimeId });
-    return;
-  }
-
-  await cancelShowtimeReservations({
-    handler,
-    models: { showtimeModel, userShowtimeModel },
-    showtimeId,
-    userIds,
+    userIds: userId,
   });
 }
 
@@ -94,23 +92,18 @@ async function cancelShowtimeReservations(params: {
     userIds,
   } = params;
 
-  await handler.transaction(async (transaction) => {
-    await Promise.all(
-      userIds.map(async (userId) => {
-        await cancelShowtimeReservation({
-          handler: transaction,
-          userShowtimeModel,
-          showtimeId,
-          userId,
-        });
-      }),
-    );
-
-    await deleteShowtimeEntry({
-      handler: transaction,
-      showtimeModel,
-      showtimeId,
-    });
+  // Don't promise.all here, the user showtimes entries must be deleted before
+  // deleting the showtime entry
+  await cancelShowtimeReservation({
+    handler,
+    userShowtimeModel,
+    showtimeId,
+    userIds,
+  });
+  await deleteShowtimeEntry({
+    handler,
+    showtimeModel,
+    showtimeId,
   });
 }
 
@@ -118,18 +111,23 @@ async function cancelShowtimeReservation(params: {
   handler: DatabaseHandler;
   userShowtimeModel: DatabaseModel<'userShowtime'>;
   showtimeId: string;
-  userId: string;
+  userIds: string | string[];
 }) {
-  const { handler, userShowtimeModel, showtimeId, userId } = params;
+  const { handler, userShowtimeModel, showtimeId } = params;
 
-  // TODO Send the refund request to the message queue
+  if (!Array.isArray(params.userIds)) {
+    params.userIds = [params.userIds];
+  }
+
+  // TODO Send the refund request to the message queue, non-blocking or
+  // the transaction will (probably) timeout
 
   await handler
     .delete(userShowtimeModel)
     .where(
       and(
         eq(userShowtimeModel.showtimeId, showtimeId),
-        eq(userShowtimeModel.userId, userId),
+        inArray(userShowtimeModel.userId, params.userIds),
       ),
     );
 }

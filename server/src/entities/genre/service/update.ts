@@ -18,20 +18,7 @@ async function updateGenre(
   context: RequestContext,
   genreToUpdate: UpdateGenreValidatedData,
 ): Promise<Genre> {
-  const updatedGenre = await updateGenreInDatabase(
-    context.database,
-    genreToUpdate,
-  );
-
-  return updatedGenre;
-}
-
-/**********************************************************************************/
-
-async function updateGenreInDatabase(
-  database: RequestContext['database'],
-  genreToUpdate: UpdateGenreValidatedData,
-) {
+  const { database } = context;
   const handler = database.getHandler();
   const { genre: genreModel } = database.getModels();
   const { genreId, ...fieldsToUpdate } = genreToUpdate;

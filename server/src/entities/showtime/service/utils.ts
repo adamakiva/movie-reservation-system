@@ -33,7 +33,6 @@ type GetUserShowtimesValidatedData = ReturnType<
 type Showtime = {
   id: string;
   at: Date;
-  reservations: [number, number][];
   movieTitle: string;
   hallName: string;
 };

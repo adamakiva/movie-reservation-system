@@ -7,14 +7,7 @@ import type { Role } from './utils.js';
 /**********************************************************************************/
 
 async function getRoles(context: RequestContext): Promise<Role[]> {
-  const roles = await readRolesFromDatabase(context.database);
-
-  return roles;
-}
-
-/**********************************************************************************/
-
-async function readRolesFromDatabase(database: RequestContext['database']) {
+  const { database } = context;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 

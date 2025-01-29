@@ -5,6 +5,8 @@ import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
+  type DatabaseHandler,
+  type DatabaseModel,
   type RequestContext,
 } from '../../../utils/index.js';
 
@@ -21,43 +23,26 @@ async function createUser(
 
   const hash = await authentication.hashPassword(password);
 
-  const createdUser = await insertUserToDatabase(database, {
-    ...userData,
-    hash,
-  });
-
-  return createdUser;
-}
-
-/**********************************************************************************/
-
-async function insertUserToDatabase(
-  database: RequestContext['database'],
-  userToCreate: Omit<CreateUserValidatedData, 'password'> & { hash: string },
-) {
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
 
-  const insertSubQuery = handler.$with('insertSubQuery').as(
-    handler.insert(userModel).values(userToCreate).returning({
-      id: userModel.id,
-      firstName: userModel.firstName,
-      lastName: userModel.lastName,
-      email: userModel.email,
-    }),
-  );
+  const createUserSubQuery = buildCreateUserCTEs({
+    handler,
+    userModel,
+    userToCreate: { ...userData, hash },
+  });
 
   try {
     const createdUser = await handler
-      .with(insertSubQuery)
+      .with(createUserSubQuery)
       .select({
-        id: insertSubQuery.id,
-        firstName: insertSubQuery.firstName,
-        lastName: insertSubQuery.lastName,
-        email: insertSubQuery.email,
+        id: createUserSubQuery.id,
+        firstName: createUserSubQuery.firstName,
+        lastName: createUserSubQuery.lastName,
+        email: createUserSubQuery.email,
         role: roleModel.name,
       })
-      .from(insertSubQuery)
+      .from(createUserSubQuery)
       .innerJoin(roleModel, eq(roleModel.id, userToCreate.roleId));
 
     return createdUser[0]!;
@@ -81,6 +66,27 @@ async function insertUserToDatabase(
 
     throw err;
   }
+}
+
+/**********************************************************************************/
+
+function buildCreateUserCTEs(params: {
+  handler: DatabaseHandler;
+  userModel: DatabaseModel<'user'>;
+  userToCreate: Omit<CreateUserValidatedData, 'password'> & { hash: string };
+}) {
+  const { handler, userModel, userToCreate } = params;
+
+  const createUserSubQuery = handler.$with('insert_user').as(
+    handler.insert(userModel).values(userToCreate).returning({
+      id: userModel.id,
+      firstName: userModel.firstName,
+      lastName: userModel.lastName,
+      email: userModel.email,
+    }),
+  );
+
+  return createUserSubQuery;
 }
 
 /**********************************************************************************/

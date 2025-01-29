@@ -12,20 +12,7 @@ async function createRole(
   context: RequestContext,
   roleToCreate: CreateRoleValidatedData,
 ): Promise<Role> {
-  const createdRole = await insertRoleToDatabase(
-    context.database,
-    roleToCreate,
-  );
-
-  return createdRole;
-}
-
-/**********************************************************************************/
-
-async function insertRoleToDatabase(
-  database: RequestContext['database'],
-  roleToCreate: CreateRoleValidatedData,
-) {
+  const { database } = context;
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 

@@ -19,18 +19,6 @@ async function createMovie(
   movieToCreate: CreateMovieValidatedData,
 ): Promise<Movie> {
   const { database } = context;
-
-  const createdMovie = await insertMovieToDatabase(database, movieToCreate);
-
-  return createdMovie;
-}
-
-/**********************************************************************************/
-
-async function insertMovieToDatabase(
-  database: RequestContext['database'],
-  movieToCreate: CreateMovieValidatedData,
-) {
   const handler = database.getHandler();
   const { movie, moviePoster, genre: genreModel } = database.getModels();
 

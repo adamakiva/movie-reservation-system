@@ -14,15 +14,7 @@ async function deleteHall(
   context: RequestContext,
   hallId: DeleteHallValidatedData,
 ): Promise<void> {
-  await deleteHallFromDatabase(context.database, hallId);
-}
-
-/**********************************************************************************/
-
-async function deleteHallFromDatabase(
-  database: RequestContext['database'],
-  hallId: DeleteHallValidatedData,
-) {
+  const { database } = context;
   const handler = database.getHandler();
   const { hall: hallModel, showtime: showtimeModel } = database.getModels();
 

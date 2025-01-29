@@ -1,5 +1,5 @@
 {
-  "id": "0bf0d616-45ba-4f49-a64d-dc6e71c680b1",
+  "id": "412a47aa-510d-469a-a3df-0e20db11b56f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -367,13 +367,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "reservations": {
-          "name": "reservations",
-          "type": "point[]",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "ARRAY[]::point[]"
-        },
         "movie_id": {
           "name": "movie_id",
           "type": "uuid",
@@ -639,6 +632,25 @@
       "name": "user_showtime",
       "schema": "",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "row": {
+          "name": "row",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "column": {
+          "name": "column",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
         "user_id": {
           "name": "user_id",
           "type": "uuid",
@@ -697,8 +709,8 @@
           "method": "btree",
           "with": {}
         },
-        "user_showtime_unique_index": {
-          "name": "user_showtime_unique_index",
+        "user_showtime_user_showtime_unique_index": {
+          "name": "user_showtime_user_showtime_unique_index",
           "columns": [
             {
               "expression": "showtime_id",
@@ -708,6 +720,33 @@
             },
             {
               "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_showtime_check_reservation_unique_index": {
+          "name": "user_showtime_check_reservation_unique_index",
+          "columns": [
+            {
+              "expression": "showtime_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "row",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "column",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

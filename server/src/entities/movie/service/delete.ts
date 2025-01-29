@@ -14,15 +14,6 @@ async function deleteMovie(
   context: RequestContext,
   movieId: DeleteMovieValidatedData,
 ): Promise<void> {
-  await deleteMovieFromDatabase(context, movieId);
-}
-
-/**********************************************************************************/
-
-async function deleteMovieFromDatabase(
-  context: RequestContext,
-  movieId: DeleteMovieValidatedData,
-) {
   const { database, fileManager, logger } = context;
   const handler = database.getHandler();
   const {

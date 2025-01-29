@@ -20,26 +20,48 @@ async function getUsers(
   context: RequestContext,
   pagination: GetUsersValidatedData,
 ): Promise<PaginatedResult<{ users: User[] }>> {
-  const users = await getPaginatedUsersFromDatabase(
-    context.database,
-    pagination,
-  );
+  const users = await getUserPageFromDatabase(context.database, pagination);
 
-  return sanitizePaginatedUsers(users, pagination.pageSize);
+  return sanitizeUserPage(users, pagination.pageSize);
 }
 
 async function getUser(
   context: RequestContext,
   userId: GetUserValidatedData,
 ): Promise<User> {
-  const user = await getUserFromDatabase(context.database, userId);
+  const { database } = context;
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
 
-  return user;
+  // A general note. I've checked performance stuff, and on pk limit 1 has
+  // 0 effect, it is implied and will stop the search after the first result is
+  // found. In general limit should be used with order by otherwise the results
+  // are inconsistent (as a result of sql not guaranteeing return order for
+  // query results)
+  const users = await handler
+    .select({
+      id: userModel.id,
+      firstName: userModel.firstName,
+      lastName: userModel.lastName,
+      email: userModel.email,
+      role: roleModel.name,
+    })
+    .from(userModel)
+    .where(eq(userModel.id, userId))
+    .innerJoin(roleModel, eq(roleModel.id, userModel.roleId));
+  if (!users.length) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `User '${userId}' does not exist`,
+    );
+  }
+
+  return users[0]!;
 }
 
 /**********************************************************************************/
 
-async function getPaginatedUsersFromDatabase(
+async function getUserPageFromDatabase(
   database: RequestContext['database'],
   pagination: GetUsersValidatedData,
 ) {
@@ -77,8 +99,8 @@ async function getPaginatedUsersFromDatabase(
   return usersPage;
 }
 
-function sanitizePaginatedUsers(
-  users: Awaited<ReturnType<typeof getPaginatedUsersFromDatabase>>,
+function sanitizeUserPage(
+  users: Awaited<ReturnType<typeof getUserPageFromDatabase>>,
   pageSize: number,
 ) {
   if (users.length > pageSize) {
@@ -104,44 +126,11 @@ function sanitizePaginatedUsers(
 }
 
 function sanitizeUser(
-  user: Awaited<ReturnType<typeof getPaginatedUsersFromDatabase>>[number],
+  user: Awaited<ReturnType<typeof getUserPageFromDatabase>>[number],
 ) {
   const { createdAt, ...fields } = user;
 
   return fields;
-}
-
-async function getUserFromDatabase(
-  database: RequestContext['database'],
-  userId: GetUserValidatedData,
-) {
-  const handler = database.getHandler();
-  const { user: userModel, role: roleModel } = database.getModels();
-
-  // A general note. I've checked performance stuff, and on pk limit 1 has
-  // 0 effect, it is implied and will stop the search after the first result is
-  // found. In general limit should be used with order by otherwise the results
-  // are inconsistent (as a result of sql not guaranteeing return order for
-  // query results)
-  const users = await handler
-    .select({
-      id: userModel.id,
-      firstName: userModel.firstName,
-      lastName: userModel.lastName,
-      email: userModel.email,
-      role: roleModel.name,
-    })
-    .from(userModel)
-    .where(eq(userModel.id, userId))
-    .innerJoin(roleModel, eq(roleModel.id, userModel.roleId));
-  if (!users.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `User '${userId}' does not exist`,
-    );
-  }
-
-  return users[0]!;
 }
 
 /**********************************************************************************/
