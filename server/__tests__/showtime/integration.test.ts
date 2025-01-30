@@ -87,7 +87,7 @@ function compareShowtimes(params: {
 
 /**********************************************************************************/
 
-await suite.only('Showtime integration tests', async () => {
+await suite('Showtime integration tests', async () => {
   let serverParams: ServerParams = null!;
   before(async () => {
     serverParams = await initServer();

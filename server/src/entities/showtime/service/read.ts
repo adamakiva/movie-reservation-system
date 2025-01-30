@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, or, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray, or, type SQL } from 'drizzle-orm';
 
 import {
   encodeCursor,
@@ -56,13 +56,13 @@ async function getPaginatedShowtimesFromDatabase(
 
   const filters = buildFilters({ movieId, hallId }, showtimeModel);
 
-  const getPaginatedShowtimesSubQuery = handler.$with('paginated_showtimes').as(
-    handler
+  return await handler.transaction(async (transaction) => {
+    const paginatedShowtimes = await transaction
       .select({
-        showtimeId: showtimeModel.id,
+        id: showtimeModel.id,
         at: showtimeModel.at,
-        movieId: showtimeModel.movieId,
-        hallId: showtimeModel.hallId,
+        movieTitle: movieModel.title,
+        hallName: hallModel.name,
         createdAt: showtimeModel.createdAt,
       })
       .from(showtimeModel)
@@ -80,78 +80,36 @@ async function getPaginatedShowtimesFromDatabase(
             )
           : filters,
       )
+      .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
+      .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
       // +1 Will allow us to check if there is an additional page after the current
       // one
       .limit(pageSize + 1)
-      .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id)),
-  );
+      .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
+    const showtimeIds = paginatedShowtimes.map(({ id }) => {
+      return id;
+    });
 
-  const paginatedShowtimes = await handler
-    .with(getPaginatedShowtimesSubQuery)
-    .select({
-      id: getPaginatedShowtimesSubQuery.showtimeId,
-      at: getPaginatedShowtimesSubQuery.at,
-      movieTitle: movieModel.title,
-      hallName: hallModel.name,
-      reservation: {
-        userId: userShowtimeModel.userId,
-        row: userShowtimeModel.row,
-        column: userShowtimeModel.column,
-      },
-      createdAt: getPaginatedShowtimesSubQuery.createdAt,
-    })
-    .from(getPaginatedShowtimesSubQuery)
-    .innerJoin(
-      movieModel,
-      eq(movieModel.id, getPaginatedShowtimesSubQuery.movieId),
-    )
-    .innerJoin(
-      hallModel,
-      eq(hallModel.id, getPaginatedShowtimesSubQuery.hallId),
-    )
-    .leftJoin(
-      userShowtimeModel,
-      eq(
-        userShowtimeModel.showtimeId,
-        getPaginatedShowtimesSubQuery.showtimeId,
-      ),
-    );
+    // Since the alternative join is a left-join you can't make it work in a
+    // single query. It must be separated. It can be done with a subquery which
+    // should save a round-trip, but it must be 2 queries
+    const reservationsForShowtimes = await transaction
+      .select({
+        showtimeId: userShowtimeModel.showtimeId,
+        reservations: {
+          userId: userShowtimeModel.userId,
+          row: userShowtimeModel.row,
+          column: userShowtimeModel.column,
+        },
+      })
+      .from(userShowtimeModel)
+      .where(inArray(userShowtimeModel.showtimeId, showtimeIds));
 
-  // Since the query returns duplicates for every joined user showtime, the code
-  // below groups it together
-  const groupedShowtimes = Object.groupBy(paginatedShowtimes, (showtime) => {
-    return showtime.id;
+    return {
+      paginatedShowtimes,
+      reservationsForShowtimes,
+    };
   });
-
-  const sanitizedShowtimes = Object.values(groupedShowtimes).map(
-    (showtimes) => {
-      const { id, at, movieTitle, hallName, createdAt } = showtimes![0]!;
-
-      return {
-        id,
-        at,
-        movieTitle,
-        hallName,
-        createdAt,
-        reservations:
-          showtimes
-            ?.filter((showtime) => {
-              return showtime.reservation;
-            })
-            .map((showtime) => {
-              return {
-                // The undefined showtimes are filtered above so the assertion
-                // is fine
-                userId: showtime.reservation!.userId,
-                row: showtime.reservation!.row,
-                column: showtime.reservation!.column,
-              };
-            }) ?? [],
-      };
-    },
-  );
-
-  return sanitizedShowtimes;
 }
 
 function buildFilters(
@@ -179,12 +137,43 @@ function buildFilters(
 }
 
 function sanitizePaginatedShowtimes(
-  showtimes: Awaited<ReturnType<typeof getPaginatedShowtimesFromDatabase>>,
+  showtimesAndReservations: Awaited<
+    ReturnType<typeof getPaginatedShowtimesFromDatabase>
+  >,
   pageSize: number,
 ) {
-  if (showtimes.length <= pageSize) {
+  const { paginatedShowtimes, reservationsForShowtimes } =
+    showtimesAndReservations;
+  // Since the query returns duplicates for every user showtime entry,
+  // the code below groups all matching entries together
+  const groupedShowtimes = Object.groupBy(
+    reservationsForShowtimes,
+    (reservations) => {
+      return reservations.showtimeId;
+    },
+  );
+
+  const unsanitizedShowtimes = paginatedShowtimes.map((showtime) => {
+    const { id, at, movieTitle, hallName, createdAt } = showtime;
     return {
-      showtimes: showtimes.map(sanitizeShowtime),
+      id,
+      at,
+      movieTitle,
+      hallName,
+      createdAt,
+      reservations:
+        groupedShowtimes[showtime.id]?.map(({ reservations }) => {
+          return reservations;
+        }) ?? [],
+    };
+  });
+
+  if (
+    unsanitizedShowtimes.length <= pageSize ||
+    unsanitizedShowtimes.length === 0
+  ) {
+    return {
+      showtimes: unsanitizedShowtimes.map(sanitizeShowtime),
       page: {
         hasNext: false,
         cursor: null,
@@ -192,11 +181,11 @@ function sanitizePaginatedShowtimes(
     } as const;
   }
 
-  showtimes.pop();
-  const lastShowtime = showtimes[showtimes.length - 1]!;
+  unsanitizedShowtimes.pop();
+  const lastShowtime = unsanitizedShowtimes[unsanitizedShowtimes.length - 1]!;
 
   return {
-    showtimes: showtimes.map(sanitizeShowtime),
+    showtimes: unsanitizedShowtimes.map(sanitizeShowtime),
     page: {
       hasNext: true,
       cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
@@ -204,11 +193,7 @@ function sanitizePaginatedShowtimes(
   } as const;
 }
 
-function sanitizeShowtime(
-  showtime: Awaited<
-    ReturnType<typeof getPaginatedShowtimesFromDatabase>
-  >[number],
-) {
+function sanitizeShowtime(showtime: Showtime & { createdAt: Date }) {
   const { createdAt, ...fields } = showtime;
 
   return fields;

@@ -1,8 +1,7 @@
-FROM node:22.13.0-alpine AS server-dev
+FROM node:22.13.1-slim AS server-dev
 
-# Install dependencies without cache (Not set versions since it is used for the
-# local development environment)
-RUN apk add --no-cache curl tini
+# Install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends curl tini && rm -rf /var/lib/apt/lists/*
 
 # Set the workdir
 WORKDIR /home/node/mrs
@@ -11,7 +10,7 @@ WORKDIR /home/node/mrs
 COPY ./server/entrypoint.sh /home/node/entrypoint.sh
 
 # Make tini the entry point of the image
-ENTRYPOINT ["/sbin/tini", "-s", "--"]
+ENTRYPOINT ["/usr/bin/tini", "-s", "--"]
 
 # Run the script as PID 1
 CMD ["/home/node/entrypoint.sh"]

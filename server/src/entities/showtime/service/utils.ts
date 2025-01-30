@@ -33,6 +33,11 @@ type GetUserShowtimesValidatedData = ReturnType<
 type Showtime = {
   id: string;
   at: Date;
+  reservations: {
+    userId: string;
+    row: number;
+    column: number;
+  }[];
   movieTitle: string;
   hallName: string;
 };
