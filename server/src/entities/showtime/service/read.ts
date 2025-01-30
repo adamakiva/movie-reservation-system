@@ -1,7 +1,8 @@
-import { and, asc, eq, gt, inArray, or, type SQL } from 'drizzle-orm';
+import { and, asc, eq, gt, or, type SQL } from 'drizzle-orm';
 
 import {
   encodeCursor,
+  type DatabaseHandler,
   type DatabaseModel,
   type PaginatedResult,
   type RequestContext,
@@ -52,64 +53,47 @@ async function getPaginatedShowtimesFromDatabase(
     hall: hallModel,
     userShowtime: userShowtimeModel,
   } = database.getModels();
-  const { cursor, pageSize, movieId, hallId } = pagination;
+  const { movieId, hallId } = pagination;
 
   const filters = buildFilters({ movieId, hallId }, showtimeModel);
 
-  return await handler.transaction(async (transaction) => {
-    const paginatedShowtimes = await transaction
-      .select({
-        id: showtimeModel.id,
-        at: showtimeModel.at,
-        movieTitle: movieModel.title,
-        hallName: hallModel.name,
-        createdAt: showtimeModel.createdAt,
-      })
-      .from(showtimeModel)
-      .where(
-        cursor
-          ? and(
-              filters,
-              or(
-                gt(showtimeModel.createdAt, cursor.createdAt),
-                and(
-                  eq(showtimeModel.createdAt, cursor.createdAt),
-                  gt(showtimeModel.id, cursor.showtimeId),
-                ),
-              ),
-            )
-          : filters,
-      )
-      .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
-      .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
-      // +1 Will allow us to check if there is an additional page after the current
-      // one
-      .limit(pageSize + 1)
-      .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
-    const showtimeIds = paginatedShowtimes.map(({ id }) => {
-      return id;
-    });
-
-    // Since the alternative join is a left-join you can't make it work in a
-    // single query. It must be separated. It can be done with a subquery which
-    // should save a round-trip, but it must be 2 queries
-    const reservationsForShowtimes = await transaction
-      .select({
-        showtimeId: userShowtimeModel.showtimeId,
-        reservations: {
-          userId: userShowtimeModel.userId,
-          row: userShowtimeModel.row,
-          column: userShowtimeModel.column,
-        },
-      })
-      .from(userShowtimeModel)
-      .where(inArray(userShowtimeModel.showtimeId, showtimeIds));
-
-    return {
-      paginatedShowtimes,
-      reservationsForShowtimes,
-    };
+  const getPaginatedShowtimes = buildGetPaginatedShowtimesCTE({
+    handler,
+    models: {
+      showtime: showtimeModel,
+      movie: movieModel,
+      hall: hallModel,
+    },
+    pagination,
+    filters,
   });
+
+  const paginatedShowtimes = await handler
+    .with(getPaginatedShowtimes)
+    .select({
+      id: getPaginatedShowtimes.showtimeId,
+      at: getPaginatedShowtimes.at,
+      movieTitle: getPaginatedShowtimes.movieTitle,
+      hallName: getPaginatedShowtimes.hallName,
+      reservation: {
+        userId: userShowtimeModel.userId,
+        row: userShowtimeModel.row,
+        column: userShowtimeModel.column,
+      },
+      createdAt: getPaginatedShowtimes.createdAt,
+    })
+    .from(getPaginatedShowtimes)
+
+    .leftJoin(
+      userShowtimeModel,
+      eq(userShowtimeModel.showtimeId, getPaginatedShowtimes.showtimeId),
+    )
+    .orderBy(
+      asc(getPaginatedShowtimes.createdAt),
+      asc(getPaginatedShowtimes.showtimeId),
+    );
+
+  return paginatedShowtimes;
 }
 
 function buildFilters(
@@ -136,25 +120,71 @@ function buildFilters(
   return and(...filterQueries);
 }
 
+function buildGetPaginatedShowtimesCTE(params: {
+  handler: DatabaseHandler;
+  models: {
+    showtime: DatabaseModel<'showtime'>;
+    movie: DatabaseModel<'movie'>;
+    hall: DatabaseModel<'hall'>;
+  };
+  pagination: GetShowtimeValidatedData;
+  filters: ReturnType<typeof buildFilters>;
+}) {
+  const {
+    handler,
+    models: { showtime: showtimeModel, movie: movieModel, hall: hallModel },
+    pagination: { cursor, pageSize },
+    filters,
+  } = params;
+
+  const getPaginatedShowtimesSubQuery = handler.$with('paginated_showtimes').as(
+    handler
+      .select({
+        showtimeId: showtimeModel.id,
+        at: showtimeModel.at,
+        movieTitle: movieModel.title,
+        hallName: hallModel.name,
+        createdAt: showtimeModel.createdAt,
+      })
+      .from(showtimeModel)
+      .where(
+        cursor
+          ? and(
+              filters,
+              or(
+                gt(showtimeModel.createdAt, cursor.createdAt),
+                and(
+                  eq(showtimeModel.createdAt, cursor.createdAt),
+                  gt(showtimeModel.id, cursor.showtimeId),
+                ),
+              ),
+            )
+          : filters,
+      )
+      .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
+      .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
+      // +1 Will allow us to check if there is an additional page after the current
+      // one
+      .limit(pageSize + 1)
+      .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id)),
+  );
+
+  return getPaginatedShowtimesSubQuery;
+}
+
 function sanitizePaginatedShowtimes(
-  showtimesAndReservations: Awaited<
+  paginatedShowtimes: Awaited<
     ReturnType<typeof getPaginatedShowtimesFromDatabase>
   >,
   pageSize: number,
 ) {
-  const { paginatedShowtimes, reservationsForShowtimes } =
-    showtimesAndReservations;
-  // Since the query returns duplicates for every user showtime entry,
-  // the code below groups all matching entries together
-  const groupedShowtimes = Object.groupBy(
-    reservationsForShowtimes,
-    (reservations) => {
-      return reservations.showtimeId;
-    },
-  );
+  const groupedShowtimes = Object.values(
+    Object.groupBy(paginatedShowtimes, (showtime) => {
+      return showtime.id;
+    }),
+  ).map((showtimes) => {
+    const { id, at, movieTitle, hallName, createdAt } = showtimes![0]!;
 
-  const unsanitizedShowtimes = paginatedShowtimes.map((showtime) => {
-    const { id, at, movieTitle, hallName, createdAt } = showtime;
     return {
       id,
       at,
@@ -162,18 +192,25 @@ function sanitizePaginatedShowtimes(
       hallName,
       createdAt,
       reservations:
-        groupedShowtimes[showtime.id]?.map(({ reservations }) => {
-          return reservations;
-        }) ?? [],
+        showtimes
+          ?.filter((showtime) => {
+            return showtime.reservation;
+          })
+          .map((showtime) => {
+            return {
+              // The undefined showtimes are filtered above so the assertion
+              // is fine
+              userId: showtime.reservation!.userId,
+              row: showtime.reservation!.row,
+              column: showtime.reservation!.column,
+            };
+          }) ?? [],
     };
   });
 
-  if (
-    unsanitizedShowtimes.length <= pageSize ||
-    unsanitizedShowtimes.length === 0
-  ) {
+  if (groupedShowtimes.length <= pageSize) {
     return {
-      showtimes: unsanitizedShowtimes.map(sanitizeShowtime),
+      showtimes: groupedShowtimes.map(sanitizeShowtime),
       page: {
         hasNext: false,
         cursor: null,
@@ -181,11 +218,11 @@ function sanitizePaginatedShowtimes(
     } as const;
   }
 
-  unsanitizedShowtimes.pop();
-  const lastShowtime = unsanitizedShowtimes[unsanitizedShowtimes.length - 1]!;
+  groupedShowtimes.pop();
+  const lastShowtime = groupedShowtimes[groupedShowtimes.length - 1]!;
 
   return {
-    showtimes: unsanitizedShowtimes.map(sanitizeShowtime),
+    showtimes: groupedShowtimes.map(sanitizeShowtime),
     page: {
       hasNext: true,
       cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
