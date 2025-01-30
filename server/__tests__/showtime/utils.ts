@@ -64,9 +64,6 @@ async function seedShowtimes(
             ...showtimeToCreate,
             movieId: ids.movie[randomNumber(0, ids.movie.length - 1)]!,
             hallId: hallIds[randomNumber(0, hallIds.length - 1)]!,
-            createdAt: new Date(
-              Date.now() + randomNumber(10_000, 1_000_000_000),
-            ),
           };
         }),
       )
