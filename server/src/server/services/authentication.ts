@@ -44,7 +44,6 @@ class AuthenticationManager {
     };
     keysPath: string;
     hashSecret: Buffer;
-    // See: https://datatracker.ietf.org/doc/html/rfc2617#section-2
   }) {
     const {
       audience,
