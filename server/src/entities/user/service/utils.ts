@@ -24,11 +24,11 @@ type User = {
 
 /**********************************************************************************/
 
-export {
-  type CreateUserValidatedData,
-  type DeleteUserValidatedData,
-  type GetUsersValidatedData,
-  type GetUserValidatedData,
-  type UpdateUserValidatedData,
-  type User,
+export type {
+  CreateUserValidatedData,
+  DeleteUserValidatedData,
+  GetUsersValidatedData,
+  GetUserValidatedData,
+  UpdateUserValidatedData,
+  User,
 };

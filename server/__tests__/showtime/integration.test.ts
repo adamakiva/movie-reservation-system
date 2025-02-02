@@ -858,7 +858,7 @@ await suite('Showtime integration tests', async () => {
 
       assert.deepStrictEqual(
         { ...createdShowtime, at: new Date(createdShowtime.at) },
-        expectedShowtime,
+        { ...expectedShowtime, reservations: [] },
       );
       assert.deepStrictEqual(
         { movieTitle, hallName },

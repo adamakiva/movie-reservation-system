@@ -8,7 +8,12 @@ import {
   UnauthorizedError,
 } from '../../../utils/index.js';
 
-import type { Credentials } from './utils.js';
+/**********************************************************************************/
+
+type Credentials = {
+  email: string;
+  password: string;
+};
 
 /**********************************************************************************/
 

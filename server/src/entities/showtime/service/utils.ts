@@ -52,20 +52,52 @@ type ShowtimeTicket = {
 
 /**********************************************************************************/
 
-function handlePossibleDuplicationError(params: {
+function handlePossibleShowtimeCreationError(params: {
   err: unknown;
-  showtime: Date;
+  at: Date;
+  movie: string;
   hall: string;
 }) {
-  const { err, showtime, hall } = params;
+  const { err, at, hall, movie } = params;
 
-  if (
-    err instanceof pg.PostgresError &&
-    err.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
-  ) {
+  if (!(err instanceof pg.PostgresError)) {
+    return err;
+  }
+
+  switch (err.code) {
+    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
+      return new GeneralError(
+        HTTP_STATUS_CODES.CONFLICT,
+        `A showtime at '${at.toISOString()}' in '${hall}' already exists`,
+        err.cause,
+      );
+    // Name matching the database schema definition (showtime schema)
+    // @see file:///./../../../database/schemas.ts
+    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
+      return handleForeignKeyNotFoundError({ err, movie, hall });
+    default:
+      return err;
+  }
+}
+
+function handleForeignKeyNotFoundError(params: {
+  err: pg.PostgresError;
+  movie: string;
+  hall: string;
+}) {
+  const { err, movie, hall } = params;
+
+  if (err.constraint_name === 'showtime_movie_id_fk') {
     return new GeneralError(
-      HTTP_STATUS_CODES.CONFLICT,
-      `A showtime at '${showtime.toISOString()}' in '${hall}' already exists`,
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Movie '${movie}' does not exist`,
+      err.cause,
+    );
+  }
+  if (err.constraint_name === 'showtime_hall_id_fk') {
+    return new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Hall '${hall}' does not exist`,
       err.cause,
     );
   }
@@ -73,10 +105,32 @@ function handlePossibleDuplicationError(params: {
   return err;
 }
 
+function handlePossibleTicketDuplicationError(params: {
+  err: unknown;
+  row: number;
+  column: number;
+}) {
+  const { err, row, column } = params;
+
+  if (
+    !(err instanceof pg.PostgresError) ||
+    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+  ) {
+    return err;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Seat at '[${row},${column}]' is already taken`,
+    err.cause,
+  );
+}
+
 /**********************************************************************************/
 
 export {
-  handlePossibleDuplicationError,
+  handlePossibleShowtimeCreationError,
+  handlePossibleTicketDuplicationError,
   type CancelUserShowtimeValidatedData,
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,

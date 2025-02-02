@@ -1,5 +1,5 @@
 {
-  "id": "7c5dd9fc-96ab-4bef-81e4-c244fc8d91b6",
+  "id": "56cbaeef-05d6-4fd2-beff-eb51bb1973b7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -40,8 +40,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "genre_name_unique": {
-          "name": "genre_name_unique",
+        "genre_unique_constraint": {
+          "name": "genre_unique_constraint",
           "nullsNotDistinct": false,
           "columns": [
             "name"
@@ -100,8 +100,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "hall_name_unique": {
-          "name": "hall_name_unique",
+        "hall_unique_constraint": {
+          "name": "hall_unique_constraint",
           "nullsNotDistinct": false,
           "columns": [
             "name"
@@ -164,8 +164,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "movie_genre_id_genre_id_fk": {
-          "name": "movie_genre_id_genre_id_fk",
+        "movie_genre_id_fk": {
+          "name": "movie_genre_id_fk",
           "tableFrom": "movie",
           "tableTo": "genre",
           "columnsFrom": [
@@ -229,8 +229,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "movie_poster_movie_id_movie_id_fk": {
-          "name": "movie_poster_movie_id_movie_id_fk",
+        "movie_poster_movie_id_fk": {
+          "name": "movie_poster_movie_id_fk",
           "tableFrom": "movie_poster",
           "tableTo": "movie",
           "columnsFrom": [
@@ -285,8 +285,8 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "role_name_unique": {
-          "name": "role_name_unique",
+        "role_unique_constraint": {
+          "name": "role_unique_constraint",
           "nullsNotDistinct": false,
           "columns": [
             "name"
@@ -343,8 +343,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "showtime_movie_id_movie_id_fk": {
-          "name": "showtime_movie_id_movie_id_fk",
+        "showtime_movie_id_fk": {
+          "name": "showtime_movie_id_fk",
           "tableFrom": "showtime",
           "tableTo": "movie",
           "columnsFrom": [
@@ -356,8 +356,8 @@
           "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "showtime_hall_id_hall_id_fk": {
-          "name": "showtime_hall_id_hall_id_fk",
+        "showtime_hall_id_fk": {
+          "name": "showtime_hall_id_fk",
           "tableFrom": "showtime",
           "tableTo": "hall",
           "columnsFrom": [
@@ -371,7 +371,16 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "showtime_unique_constraint": {
+          "name": "showtime_unique_constraint",
+          "nullsNotDistinct": false,
+          "columns": [
+            "at",
+            "hall_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -434,8 +443,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "user_role_id_role_id_fk": {
-          "name": "user_role_id_role_id_fk",
+        "user_role_id_fk": {
+          "name": "user_role_id_fk",
           "tableFrom": "user",
           "tableTo": "role",
           "columnsFrom": [
@@ -450,8 +459,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "user_email_unique": {
-          "name": "user_email_unique",
+        "user_unique_constraint": {
+          "name": "user_unique_constraint",
           "nullsNotDistinct": false,
           "columns": [
             "email"
@@ -514,8 +523,8 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "user_showtime_user_id_user_id_fk": {
-          "name": "user_showtime_user_id_user_id_fk",
+        "user_showtime_user_id_fk": {
+          "name": "user_showtime_user_id_fk",
           "tableFrom": "user_showtime",
           "tableTo": "user",
           "columnsFrom": [
@@ -527,8 +536,8 @@
           "onDelete": "no action",
           "onUpdate": "cascade"
         },
-        "user_showtime_showtime_id_showtime_id_fk": {
-          "name": "user_showtime_showtime_id_showtime_id_fk",
+        "user_showtime_showtime_id_fk": {
+          "name": "user_showtime_showtime_id_fk",
           "tableFrom": "user_showtime",
           "tableTo": "showtime",
           "columnsFrom": [
@@ -542,7 +551,17 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "user_showtime_unique_constraint": {
+          "name": "user_showtime_unique_constraint",
+          "nullsNotDistinct": false,
+          "columns": [
+            "row",
+            "column",
+            "showtime_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

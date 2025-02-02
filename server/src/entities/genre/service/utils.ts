@@ -25,19 +25,19 @@ type Genre = {
 
 /**********************************************************************************/
 
-function handlePossibleDuplicationError(err: unknown, conflictField: string) {
+function handlePossibleDuplicationError(err: unknown, genre: string) {
   if (
-    err instanceof pg.PostgresError &&
-    err.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+    !(err instanceof pg.PostgresError) ||
+    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   ) {
-    return new GeneralError(
-      HTTP_STATUS_CODES.CONFLICT,
-      `Genre '${conflictField}' already exists`,
-      err.cause,
-    );
+    return err;
   }
 
-  return err;
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Genre '${genre}' already exists`,
+    err.cause,
+  );
 }
 
 /**********************************************************************************/

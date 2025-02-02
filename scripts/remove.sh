@@ -18,7 +18,7 @@ check_prerequisites() {
         printf "\nDocker engine not installed, you may follow this: https://docs.docker.com/engine/install \n\n";
         exit 1;
     fi
-    # Checks docker-compose is installed
+    # Checks docker compose is installed
     if ! command -v docker compose >/dev/null 2>&1; then
         printf "\nDocker compose not installed, you may follow this: https://docs.docker.com/compose/install/linux/#install-the-plugin-manually \n\n";
         exit 1;

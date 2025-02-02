@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 
 import { eq, inArray } from 'drizzle-orm';
 
-import type { Credentials } from '../../src/entities/authentication/service/utils.js';
 import * as serviceFunctions from '../../src/entities/user/service/index.js';
 import type { User } from '../../src/entities/user/service/utils.js';
 import * as validationFunctions from '../../src/entities/user/validator.js';
@@ -150,7 +149,7 @@ async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
 
 async function checkUserPassword(
   serverParams: ServerParams,
-  credentials: Credentials,
+  credentials: { email: string; password: string },
 ) {
   const { authentication, database } = serverParams;
   const handler = database.getHandler();

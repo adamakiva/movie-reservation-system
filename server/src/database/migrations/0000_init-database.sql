@@ -3,7 +3,7 @@ CREATE TABLE "genre" (
 	"name" varchar NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "genre_name_unique" UNIQUE("name")
+	CONSTRAINT "genre_unique_constraint" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "hall" (
@@ -13,7 +13,7 @@ CREATE TABLE "hall" (
 	"columns" smallint NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "hall_name_unique" UNIQUE("name")
+	CONSTRAINT "hall_unique_constraint" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "movie" (
@@ -40,7 +40,7 @@ CREATE TABLE "role" (
 	"name" varchar NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "role_name_unique" UNIQUE("name")
+	CONSTRAINT "role_unique_constraint" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "showtime" (
@@ -49,7 +49,8 @@ CREATE TABLE "showtime" (
 	"movie_id" uuid NOT NULL,
 	"hall_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "showtime_unique_constraint" UNIQUE("at","hall_id")
 );
 --> statement-breakpoint
 CREATE TABLE "user" (
@@ -61,7 +62,7 @@ CREATE TABLE "user" (
 	"role_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "user_email_unique" UNIQUE("email")
+	CONSTRAINT "user_unique_constraint" UNIQUE("email")
 );
 --> statement-breakpoint
 CREATE TABLE "user_showtime" (
@@ -71,13 +72,14 @@ CREATE TABLE "user_showtime" (
 	"user_id" uuid NOT NULL,
 	"showtime_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
+	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "user_showtime_unique_constraint" UNIQUE("row","column","showtime_id")
 );
 --> statement-breakpoint
-ALTER TABLE "movie" ADD CONSTRAINT "movie_genre_id_genre_id_fk" FOREIGN KEY ("genre_id") REFERENCES "public"."genre"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "movie_poster" ADD CONSTRAINT "movie_poster_movie_id_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "showtime" ADD CONSTRAINT "showtime_movie_id_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "showtime" ADD CONSTRAINT "showtime_hall_id_hall_id_fk" FOREIGN KEY ("hall_id") REFERENCES "public"."hall"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user" ADD CONSTRAINT "user_role_id_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_showtime_id_showtime_id_fk" FOREIGN KEY ("showtime_id") REFERENCES "public"."showtime"("id") ON DELETE no action ON UPDATE cascade;
+ALTER TABLE "movie" ADD CONSTRAINT "movie_genre_id_fk" FOREIGN KEY ("genre_id") REFERENCES "public"."genre"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "movie_poster" ADD CONSTRAINT "movie_poster_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "showtime" ADD CONSTRAINT "showtime_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "showtime" ADD CONSTRAINT "showtime_hall_id_fk" FOREIGN KEY ("hall_id") REFERENCES "public"."hall"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user" ADD CONSTRAINT "user_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_showtime_id_fk" FOREIGN KEY ("showtime_id") REFERENCES "public"."showtime"("id") ON DELETE no action ON UPDATE cascade;

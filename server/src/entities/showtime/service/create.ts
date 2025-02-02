@@ -2,18 +2,20 @@ import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
 import {
-  type DatabaseHandler,
-  type DatabaseModel,
   GeneralError,
   HTTP_STATUS_CODES,
+  type DatabaseHandler,
+  type DatabaseModel,
   type RequestContext,
 } from '../../../utils/index.js';
 
-import type {
-  CreateShowtimeValidatedData,
-  ReserveShowtimeTicketValidatedData,
-  Showtime,
-  ShowtimeTicket,
+import {
+  handlePossibleShowtimeCreationError,
+  handlePossibleTicketDuplicationError,
+  type CreateShowtimeValidatedData,
+  type ReserveShowtimeTicketValidatedData,
+  type Showtime,
+  type ShowtimeTicket,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -49,12 +51,14 @@ async function createShowtime(
       .innerJoin(movieModel, eq(movieModel.id, createShowtimeSubQuery.movieId))
       .innerJoin(hallModel, eq(hallModel.id, createShowtimeSubQuery.hallId));
 
-    return createdShowtime[0]!;
+    return { ...createdShowtime[0]!, reservations: [] };
   } catch (err) {
-    // TODO Check for possible error if movie/hall do not exist
-    console.error(err);
-
-    throw err;
+    throw handlePossibleShowtimeCreationError({
+      err,
+      at: showtimeToCreate.at,
+      hall: showtimeToCreate.hallId,
+      movie: showtimeToCreate.movieId,
+    });
   }
 }
 
@@ -113,9 +117,11 @@ async function reserveShowtimeTicket(params: {
 
       return createdShowtimeTicket[0]!;
     } catch (err) {
-      // TODO Check for duplicate error and handle it
-
-      throw err;
+      throw handlePossibleTicketDuplicationError({
+        err,
+        row: showtimeTicket.row,
+        column: showtimeTicket.column,
+      });
     }
   });
 }
@@ -155,37 +161,29 @@ async function validateMovieReservation(params: {
     showtimeTicket,
   } = params;
 
-  try {
-    const showTimesData = await handler
-      .select({
-        hallRows: hallModel.rows,
-        hallColumns: hallModel.columns,
-      })
-      .from(showtimeModel)
-      // Checks the showtime id is valid
-      .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
-      .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
-    if (!showTimesData.length) {
-      throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
-    }
-    const showTimeData = showTimesData[0]!;
+  const showTimesData = await handler
+    .select({
+      hallRows: hallModel.rows,
+      hallColumns: hallModel.columns,
+    })
+    .from(showtimeModel)
+    // Checks the showtime id is valid
+    .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
+    .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
+  if (!showTimesData.length) {
+    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');
+  }
+  const showTimeData = showTimesData[0]!;
 
-    // Rows are 0 indexed for us, but 1 indexed for the end-user
-    if (showTimeData.hallRows > showtimeTicket.row) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.BAD_REQUEST,
-        'Invalid row number',
-      );
-    }
-    if (showTimeData.hallColumns > showtimeTicket.column) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.BAD_REQUEST,
-        'Invalid column number',
-      );
-    }
-  } catch (err) {
-    // TODO Check for invalid reference to hall id (FOREIGN_KEY_VIOLATION)
-    throw err;
+  // Rows are 0 indexed for us, but 1 indexed for the end-user
+  if (showTimeData.hallRows > showtimeTicket.row) {
+    throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
+  }
+  if (showTimeData.hallColumns > showtimeTicket.column) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Invalid column number',
+    );
   }
 }
 

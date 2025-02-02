@@ -3,7 +3,7 @@
 ## Inspired by https://roadmap.sh/projects/movie-reservation-system
 
 A backend which allows to reserve movie tickets.  
-This is a practice exercise so some stuff may be redundant/complicated for learning purposes.  
+This is a practice project so some stuff may be redundant/complicated for learning purposes.  
 For any questions/suggestions, contact details are in my github profile
 
 ## Tech stack

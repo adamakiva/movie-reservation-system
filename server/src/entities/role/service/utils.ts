@@ -25,19 +25,19 @@ type Role = {
 
 /**********************************************************************************/
 
-function handlePossibleDuplicationError(err: unknown, conflictField: string) {
+function handlePossibleDuplicationError(err: unknown, role: string) {
   if (
-    err instanceof pg.PostgresError &&
-    err.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+    !(err instanceof pg.PostgresError) ||
+    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   ) {
-    return new GeneralError(
-      HTTP_STATUS_CODES.CONFLICT,
-      `Role '${conflictField}' already exists`,
-      err.cause,
-    );
+    return err;
   }
 
-  return err;
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Role '${role}' already exists`,
+    err.cause,
+  );
 }
 
 /**********************************************************************************/

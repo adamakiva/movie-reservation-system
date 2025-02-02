@@ -374,17 +374,17 @@ function parseValidationResult<I, O>(
   res: SafeParseReturnType<I, O>,
   statusCode: number = HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
 ) {
-  if (!res.success) {
-    const errorMessages = res.error.errors
-      .map((err) => {
-        return err.message;
-      })
-      .join(', ');
-
-    throw new GeneralError(statusCode, errorMessages, res.error.cause);
+  if (res.success) {
+    return res.data;
   }
 
-  return res.data;
+  const errorMessages = res.error.errors
+    .map((err) => {
+      return err.message;
+    })
+    .join(', ');
+
+  throw new GeneralError(statusCode, errorMessages, res.error.cause);
 }
 
 // The cursor schema is checked with a programmer created object, so the

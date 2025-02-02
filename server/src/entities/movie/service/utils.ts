@@ -32,19 +32,19 @@ type Movie = {
 
 /**********************************************************************************/
 
-function handlePossibleMissingGenreError(err: unknown, conflictField: string) {
+function handlePossibleMissingGenreError(err: unknown, genre: string) {
   if (
-    err instanceof pg.PostgresError &&
-    err.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
+    !(err instanceof pg.PostgresError) ||
+    err.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
-    return new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Genre '${conflictField}' does not exist`,
-      err.cause,
-    );
+    return err;
   }
 
-  return err;
+  return new GeneralError(
+    HTTP_STATUS_CODES.NOT_FOUND,
+    `Genre '${genre}' does not exist`,
+    err.cause,
+  );
 }
 
 /**********************************************************************************/
