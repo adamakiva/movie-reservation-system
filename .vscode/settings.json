@@ -2,7 +2,6 @@
   // Use the latest typescript version, not the VSCode version
   "typescript.tsdk": "./node_modules/typescript/lib",
   "typescript.preferences.preferTypeOnlyAutoImports": true,
-
   "eslint.enable": true,
   "eslint.run": "onSave",
   "eslint.problems.shortenToSingleLine": true,

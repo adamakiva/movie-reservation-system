@@ -17,7 +17,8 @@
 !*.mts
 
 # Etc
-!src/database/migrations/*.sql
+!server/src/database/migrations/*.sql
+!eslint.config.js
 !*.json
 !*.sh
 !*.conf
@@ -27,5 +28,5 @@
 !.gitignore
 !LICENSE
 !.npmrc
-!scripts/postgresql.conf
-!__tests__/**/*.jpg
+!database/postgresql.conf
+!server/__tests__/**/*.jpg

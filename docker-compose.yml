@@ -1,3 +1,7 @@
+# Most environment variables are hard-coded due to it being a local development
+# environment. In production the container orchestration will be in charge
+# of managing these values
+
 services:
   mrs-pg:
     hostname: mrs-pg
@@ -14,14 +18,14 @@ services:
       - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
-      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - ./database/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
       - /etc/passwd:/etc/passwd:ro
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       # PostgresQL config options instead of passing it via the CLI
-      - ./scripts/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
       interval: 3s
@@ -29,53 +33,54 @@ services:
       retries: 5
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
 
-  mrs:
-    hostname: mrs
-    container_name: mrs
+  mrs-server:
+    hostname: mrs-server
+    container_name: mrs-server
     # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
     build:
       context: ./
       dockerfile: Dockerfile
-      target: backend-dev
+      target: server-dev
     user: ${UID}:${GID}
-    # Environment variables are hard-coded due to it being a local development environment
     environment:
       # Server options
       - SERVER_PORT=4334
-      - DEBUG_PORT=4335
+      - SERVER_DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
-      - HTTP_ROUTE=api/v0
-      - ALLOWED_HOSTS=::,127.0.0.1,localhost
-      - ALLOWED_ORIGINS=*
-      # Database URIs
+      - SERVER_HTTP_ROUTE=api/v0
+      - SERVER_ALLOWED_HOSTS=::,127.0.0.1,localhost
+      - SERVER_ALLOWED_ORIGINS=*
+      # Database options
       - DATABASE_URL=postgres://admin:admin@mrs-pg:5432/mrs
       - DATABASE_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
-      # Encryption salt
-      - HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
-      # Admin user data
+      - DATABASE_MAX_CONNECTIONS=32
+      - DATABASE_STATEMENT_TIMEOUT=30000
+      - DATABASE_TRANSACTION_TIMEOUT=60000
+      # Authentication options
+      - AUTHENTICATION_ACCESS_TOKEN_EXPIRATION=900 # 15 minutes
+      - AUTHENTICATION_REFRESH_TOKEN_EXPIRATION=2629746 # A month
+      - AUTHENTICATION_HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
+      # Seed admin user data
       - ADMIN_ROLE_ID=4d9097e1-3821-46f0-b19f-a75c02de9cb6
       - ADMIN_ROLE_NAME=admin
       - ADMIN_EMAIL=admin@admin.com
       - ADMIN_PASSWORD=bla123
-      # Node flags
-      - NODE_ENV=development
+      # Node flags and options
+      - NODE_ENV=production
+      - NODE_MAX_SOCKETS=256
+      - NODE_MAX_TOTAL_SOCKETS=2048
+      - NODE_DEFAULT_HIGH_WATERMARK=262144  # 256kb
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
-      - ./:/home/node/mrs:rw
+      - ./server:/home/node/mrs:rw
       # Volume npm cache to speed up the npm install. This should allow cache reuse
       # whenever node_modules are removed.
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
       - ./npm-cache:/home/node/.npm:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    # tty enables better log format for npm and debug. Using it in development
-    # is not an issue, however, don't enable it production since there's no need
-    tty: true
-    stdin_open: true
-    # Disallow going crazy with memory usage without being aware of it
-    mem_limit: 2048m
     ports:
       # The backend is proxied by nginx so it is not directly exposed
       # Only the debugger port is exposed
@@ -103,15 +108,13 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      target: nginx
+      target: nginx-dev
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    # Disallow going crazy with memory usage without being aware of it
-    mem_limit: 128m
     ports:
       # Map localhost:4336 to nginx:80
       - 4336:80
     depends_on:
-      mrs:
+      mrs-server:
         condition: service_healthy

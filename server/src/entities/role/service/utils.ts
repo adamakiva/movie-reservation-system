@@ -1,0 +1,51 @@
+import pg from 'postgres';
+
+import {
+  ERROR_CODES,
+  GeneralError,
+  HTTP_STATUS_CODES,
+} from '../../../utils/index.js';
+
+import type {
+  validateCreateRole,
+  validateDeleteRole,
+  validateUpdateRole,
+} from '../validator.js';
+
+/**********************************************************************************/
+
+type CreateRoleValidatedData = ReturnType<typeof validateCreateRole>;
+type UpdateRoleValidatedData = ReturnType<typeof validateUpdateRole>;
+type DeleteRoleValidatedData = ReturnType<typeof validateDeleteRole>;
+
+type Role = {
+  id: string;
+  name: string;
+};
+
+/**********************************************************************************/
+
+function handlePossibleDuplicationError(err: unknown, role: string) {
+  if (
+    !(err instanceof pg.PostgresError) ||
+    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+  ) {
+    return err;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Role '${role}' already exists`,
+    err.cause,
+  );
+}
+
+/**********************************************************************************/
+
+export {
+  handlePossibleDuplicationError,
+  type CreateRoleValidatedData,
+  type DeleteRoleValidatedData,
+  type Role,
+  type UpdateRoleValidatedData,
+};

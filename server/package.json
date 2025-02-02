@@ -1,0 +1,84 @@
+{
+  "name": "mrs",
+  "version": "1.0.0",
+  "description": "Movie reservation system",
+  "type": "module",
+  "main": "./src/main.ts",
+  "scripts": {
+    "test": "node --import tsx --test __tests__/**/*.test.ts",
+    "test-only": "node --inspect-wait=0.0.0.0:$SERVER_DEBUG_PORT --import tsx --test --test-only",
+    "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
+    "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
+    "commit-migrations": "tsx ./src/database/migrations/migrate.ts",
+    "check-global-updates": "ncu -g",
+    "check-local-updates": "ncu",
+    "commit-local-updates": "ncu -u",
+    "check-code-deps": "./check-unused-deps.sh",
+    "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
+    "check-licenses": "nlf -d -r 1"
+  },
+  "dependencies": {
+    "argon2": "~0.41.1",
+    "compression": "~1.7.5",
+    "cors": "~2.8.5",
+    "drizzle-orm": "~0.39.1",
+    "express": "~5.0.1",
+    "file-type": "~20.0.1",
+    "jose": "~5.9.6",
+    "multer": "~1.4.5-lts.1",
+    "postgres": "~3.4.5",
+    "zod": "~3.24.1"
+  },
+  "devDependencies": {
+    "@types/compression": "~1.7.5",
+    "@types/cors": "~2.8.17",
+    "@types/eslint-config-prettier": "~6.11.3",
+    "@types/eslint-plugin-security": "~3.0.0",
+    "@types/express": "~5.0.0",
+    "@types/node": "~22.13.0",
+    "@types/multer": "~1.4.12",
+    "dpdm": "~3.14.0",
+    "drizzle-kit": "~0.30.4",
+    "eslint": "~9.19.0",
+    "eslint-config-prettier": "~10.0.1",
+    "eslint-plugin-security": "~3.0.1",
+    "globals": "~15.14.0",
+    "nlf": "~2.1.1",
+    "node-mocks-http": "~1.16.2",
+    "npm-check-updates": "~17.1.14",
+    "prettier": "~3.4.2",
+    "tsx": "~4.19.2",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "~8.22.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "os": [
+    "linux"
+  ],
+  "author": "Adam Akiva",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AdamAkiva/movie-reservation-system"
+  },
+  "bugs": {
+    "url": "https://github.com/AdamAkiva/movie-reservation-system/issues"
+  },
+  "maintainers": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ]
+}
