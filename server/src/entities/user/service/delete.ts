@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
@@ -23,13 +23,11 @@ async function deleteUser(
   // to having an attached movie or because it does not exist
   await handler.transaction(async (transaction) => {
     // Only users without attached showtimes are allowed to be deleted
-    const userShowtimes = (
-      await transaction
-        .select({ count: count() })
-        .from(userShowtimeModel)
-        .where(eq(userShowtimeModel.userId, userId))
-    )[0]!.count;
-    if (userShowtimes) {
+    const hasShowtimes = await transaction.$count(
+      userShowtimeModel,
+      eq(userShowtimeModel.userId, userId),
+    );
+    if (hasShowtimes) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
         'User has one or more attached showtime(s)',

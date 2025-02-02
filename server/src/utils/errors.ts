@@ -8,7 +8,7 @@ import { HTTP_STATUS_CODES } from './constants.js';
 
 /**********************************************************************************/
 
-type PossibleErrors = ['missing', 'malformed', 'expired'];
+type PossibleUnauthenticatedErrors = ['missing', 'malformed', 'expired'];
 
 /**********************************************************************************/
 
@@ -42,12 +42,10 @@ class GeneralError extends Error {
   // The unused variable exists to allow overrides of child classes
   // eslint-disable-next-line no-unused-vars
   public getClientError(_res: Response) {
-    const clientError = {
+    return {
       code: this.#statusCode,
       message: this.#message,
     } as const;
-
-    return clientError;
   }
 
   /********************************************************************************/
@@ -75,8 +73,10 @@ class GeneralError extends Error {
 class UnauthorizedError extends GeneralError {
   // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
   static readonly #realm = 'Bearer realm="movie_reservation_system"';
-  // eslint-disable-next-line no-unused-vars
-  static readonly #errors: { [K in PossibleErrors[number]]: string } = {
+  static readonly #errors: {
+    // eslint-disable-next-line no-unused-vars
+    [K in PossibleUnauthenticatedErrors[number]]: string;
+  } = {
     missing: UnauthorizedError.#realm,
     malformed: `${UnauthorizedError.#realm}, error="invalid_token", error_description="Malformed access token"`,
     expired: `${UnauthorizedError.#realm}, error="invalid_token", error_description="The access token expired"`,
@@ -84,7 +84,10 @@ class UnauthorizedError extends GeneralError {
 
   readonly #reason;
 
-  public constructor(reason: PossibleErrors[number], cause?: unknown) {
+  public constructor(
+    reason: PossibleUnauthenticatedErrors[number],
+    cause?: unknown,
+  ) {
     super(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized', cause);
     Error.captureStackTrace(this, this.constructor);
 

@@ -24,19 +24,19 @@ async function updateGenre(
   const { genreId, ...fieldsToUpdate } = genreToUpdate;
 
   try {
-    const updatedGenre = await handler
+    const [updatedGenre] = await handler
       .update(genreModel)
       .set({ ...fieldsToUpdate, updatedAt: new Date() })
       .where(eq(genreModel.id, genreId))
       .returning({ id: genreModel.id, name: genreModel.name });
-    if (!updatedGenre.length) {
+    if (!updatedGenre) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Genre '${genreId}' does not exist`,
       );
     }
 
-    return updatedGenre[0]!;
+    return updatedGenre;
   } catch (err) {
     // If there is a conflict it is due to the name update, hence, the name
     // field must exist

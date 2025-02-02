@@ -101,4 +101,5 @@ The reason for that is the ability to be able to handle dynamic values.
 **`.send`** checks the options is receives and returns the matching type.  
 For example, string type will be returned as text/html and not application/json.  
 A downside may be that you be unsure what is the type which is returned.  
-However, since I'll implement everything, I don't really care
+To be consistent and remove the need to check for the content type on the client
+side, we always use `.json`

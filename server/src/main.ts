@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { globalAgent } from 'node:http';
 import { join, resolve } from 'node:path';
-import { Stream } from 'node:stream';
 
 import { HttpServer } from './server/index.js';
 import {
@@ -47,8 +46,6 @@ async function startServer() {
   globalAgent.maxSockets = node.maxSockets;
   globalAgent.maxTotalSockets = node.maxTotalSockets;
 
-  Stream.setDefaultHighWaterMark(false, node.defaultHighWaterMark);
-
   const server = await HttpServer.create({
     authenticationParams: {
       audience: 'mrs-users',
@@ -67,7 +64,7 @@ async function startServer() {
     fileManagerParams: {
       generatedNameLength: 32,
       saveDir: join(import.meta.dirname, '..', 'posters'),
-      logger: logger,
+      watermark: node.defaultHighWaterMark,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed

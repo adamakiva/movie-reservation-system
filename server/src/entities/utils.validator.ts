@@ -1,9 +1,5 @@
-import {
-  date as ZodDate,
+import zod, {
   ZodIssueCode,
-  NEVER as ZodNever,
-  object as ZodObject,
-  string as ZodString,
   type RefinementCtx,
   type SafeParseReturnType,
 } from 'zod';
@@ -389,11 +385,13 @@ function parseValidationResult<I, O>(
 
 // The cursor schema is checked with a programmer created object, so the
 // error messages only exist for possible error paths
-const cursorSchema = ZodObject({
-  id: ZodString({
-    invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
-  }).uuid(PAGINATION.CURSOR.ERROR_MESSAGE),
-  createdAt: ZodDate({
+const cursorSchema = zod.object({
+  id: zod
+    .string({
+      invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
+    })
+    .uuid(PAGINATION.CURSOR.ERROR_MESSAGE),
+  createdAt: zod.date({
     invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
   }),
 });
@@ -411,7 +409,7 @@ function coerceNumber(
         fatal: true,
       });
 
-      return ZodNever;
+      return zod.NEVER;
     } else if (arg === '' || isNaN(number)) {
       context.addIssue({
         code: ZodIssueCode.custom,
@@ -419,7 +417,7 @@ function coerceNumber(
         fatal: true,
       });
 
-      return ZodNever;
+      return zod.NEVER;
     }
 
     return number;

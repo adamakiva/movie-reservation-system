@@ -13,7 +13,7 @@ import * as genreValidator from './validator.js';
 async function getGenres(_req: Request, res: ResponseWithContext) {
   const genres = await genreService.getGenres(res.locals.context);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(genres);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(genres);
 }
 
 async function createGenre(req: Request, res: ResponseWithContext) {
@@ -24,7 +24,7 @@ async function createGenre(req: Request, res: ResponseWithContext) {
     genreToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createdGenre);
+  res.status(HTTP_STATUS_CODES.CREATED).json(createdGenre);
 }
 
 async function updateGenre(req: Request, res: ResponseWithContext) {
@@ -35,7 +35,7 @@ async function updateGenre(req: Request, res: ResponseWithContext) {
     genreToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(updatedGenre);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedGenre);
 }
 
 async function deleteGenre(req: Request, res: ResponseWithContext) {

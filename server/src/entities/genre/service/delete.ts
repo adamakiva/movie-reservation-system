@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
@@ -22,16 +22,14 @@ async function deleteGenre(
   // to having an attached movie or because it does not exist
   await handler.transaction(async (transaction) => {
     // Only genres without attached movies are allowed to be deleted
-    const moviesWithDeletedGenre = (
-      await transaction
-        .select({ count: count() })
-        .from(movieModel)
-        .where(eq(movieModel.genreId, genreId))
-    )[0]!.count;
-    if (moviesWithDeletedGenre) {
+    const hasMovies = await transaction.$count(
+      movieModel,
+      eq(movieModel.genreId, genreId),
+    );
+    if (hasMovies) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
-        'Genre has one or more attached movies',
+        'Genre has one or more attached movie(s)',
       );
     }
 

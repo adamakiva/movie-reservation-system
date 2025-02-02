@@ -30,7 +30,7 @@ function checkMethod(allowedMethods: Set<string>) {
 function handleNonExistentRoute(req: Request, res: ResponseWithoutContext) {
   res
     .status(HTTP_STATUS_CODES.NOT_FOUND)
-    .send(`The route '${req.url}' does not exist`);
+    .json(`The route '${req.url}' does not exist`);
 }
 
 function errorHandler(
@@ -48,7 +48,7 @@ function errorHandler(
     const { code, message } = err.getClientError(res);
 
     res.locals.context.logger.warn(err);
-    res.status(code).send(message);
+    res.status(code).json(message);
     return;
   }
   if (
@@ -58,7 +58,7 @@ function errorHandler(
   ) {
     res
       .status(HTTP_STATUS_CODES.CONTENT_TOO_LARGE)
-      .send('Request entity too large');
+      .json('Request entity too large');
     return;
   }
   if (err instanceof pg.PostgresError) {
@@ -99,7 +99,7 @@ function handlePostgresError(err: pg.PostgresError, res: ResponseWithContext) {
 
   res
     .status(HTTP_STATUS_CODES.SERVER_ERROR)
-    .send('Unexpected error, please try again');
+    .json('Unexpected error, please try again');
 }
 
 function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
@@ -113,7 +113,7 @@ function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
 
   res
     .status(HTTP_STATUS_CODES.SERVER_ERROR)
-    .send('Unexpected error, please try again');
+    .json('Unexpected error, please try again');
 }
 
 /**********************************************************************************/

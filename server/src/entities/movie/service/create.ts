@@ -29,7 +29,7 @@ async function createMovie(
       movieToCreate,
     });
 
-    const createdMovie = await handler
+    const [createdMovie] = await handler
       .with(insertMovieSubQuery, insertMoviePosterSubQuery)
       .select({
         id: insertMovieSubQuery.id,
@@ -41,7 +41,7 @@ async function createMovie(
       .from(insertMovieSubQuery)
       .innerJoin(genreModel, eq(genreModel.id, insertMovieSubQuery.genreId));
 
-    return createdMovie[0]!;
+    return createdMovie!;
   } catch (err) {
     throw handlePossibleMissingGenreError(err, movieToCreate.genreId);
   }

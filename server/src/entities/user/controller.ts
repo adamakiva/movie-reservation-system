@@ -15,7 +15,7 @@ async function getUsers(req: Request, res: ResponseWithContext) {
 
   const users = await userService.getUsers(res.locals.context, pagination);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(users);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(users);
 }
 
 async function getUser(req: Request, res: ResponseWithContext) {
@@ -23,7 +23,7 @@ async function getUser(req: Request, res: ResponseWithContext) {
 
   const user = await userService.getUser(res.locals.context, userId);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(user);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(user);
 }
 
 async function createUser(req: Request, res: ResponseWithContext) {
@@ -34,7 +34,7 @@ async function createUser(req: Request, res: ResponseWithContext) {
     userToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createdUser);
+  res.status(HTTP_STATUS_CODES.CREATED).json(createdUser);
 }
 
 async function updateUser(req: Request, res: ResponseWithContext) {
@@ -45,7 +45,7 @@ async function updateUser(req: Request, res: ResponseWithContext) {
     userToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(updatedUser);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedUser);
 }
 
 async function deleteUser(req: Request, res: ResponseWithContext) {

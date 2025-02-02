@@ -1,11 +1,5 @@
 import type { Request } from 'express';
-import {
-  ZodIssueCode,
-  number as ZodNumber,
-  object as ZodObject,
-  preprocess as ZodPreprocessor,
-  string as ZodString,
-} from 'zod';
+import zod, { ZodIssueCode } from 'zod';
 
 import {
   coerceNumber,
@@ -19,35 +13,39 @@ const { HALL, PARAMS, BODY } = VALIDATION;
 
 /**********************************************************************************/
 
-const createHallSchema = ZodObject(
+const createHallSchema = zod.object(
   {
-    id: ZodString({
-      invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
-    })
+    id: zod
+      .string({
+        invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
+      })
       .uuid(HALL.ID.ERROR_MESSAGE)
       .optional(),
-    name: ZodString({
-      invalid_type_error: HALL.NAME.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: HALL.NAME.REQUIRED_ERROR_MESSAGE,
-    })
+    name: zod
+      .string({
+        invalid_type_error: HALL.NAME.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: HALL.NAME.REQUIRED_ERROR_MESSAGE,
+      })
       .min(HALL.NAME.MIN_LENGTH.VALUE, HALL.NAME.MIN_LENGTH.ERROR_MESSAGE)
       .max(HALL.NAME.MAX_LENGTH.VALUE, HALL.NAME.MAX_LENGTH.ERROR_MESSAGE)
       .toLowerCase(),
-    rows: ZodPreprocessor(
+    rows: zod.preprocess(
       coerceNumber(
         HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         HALL.ROWS.REQUIRED_ERROR_MESSAGE,
       ),
-      ZodNumber()
+      zod
+        .number()
         .min(HALL.ROWS.MIN_LENGTH.VALUE, HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE)
         .max(HALL.ROWS.MAX_LENGTH.VALUE, HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE),
     ),
-    columns: ZodPreprocessor(
+    columns: zod.preprocess(
       coerceNumber(
         HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         HALL.COLUMNS.REQUIRED_ERROR_MESSAGE,
       ),
-      ZodNumber()
+      zod
+        .number()
         .min(
           HALL.COLUMNS.MIN_LENGTH.VALUE,
           HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
@@ -64,55 +62,69 @@ const createHallSchema = ZodObject(
   },
 );
 
-const updateHallBodySchema = ZodObject(
-  {
-    name: ZodString({
-      invalid_type_error: HALL.NAME.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: HALL.NAME.REQUIRED_ERROR_MESSAGE,
-    })
-      .min(HALL.NAME.MIN_LENGTH.VALUE, HALL.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(HALL.NAME.MAX_LENGTH.VALUE, HALL.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase()
-      .optional(),
-    rows: ZodPreprocessor(
-      coerceNumber(HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE),
-      ZodNumber()
-        .min(HALL.ROWS.MIN_LENGTH.VALUE, HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE)
-        .max(HALL.ROWS.MAX_LENGTH.VALUE, HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE),
-    ).optional(),
-    columns: ZodPreprocessor(
-      coerceNumber(HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE),
-      ZodNumber()
-        .min(
-          HALL.COLUMNS.MIN_LENGTH.VALUE,
-          HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
+const updateHallBodySchema = zod
+  .object(
+    {
+      name: zod
+        .string({
+          invalid_type_error: HALL.NAME.INVALID_TYPE_ERROR_MESSAGE,
+          required_error: HALL.NAME.REQUIRED_ERROR_MESSAGE,
+        })
+        .min(HALL.NAME.MIN_LENGTH.VALUE, HALL.NAME.MIN_LENGTH.ERROR_MESSAGE)
+        .max(HALL.NAME.MAX_LENGTH.VALUE, HALL.NAME.MAX_LENGTH.ERROR_MESSAGE)
+        .toLowerCase()
+        .optional(),
+      rows: zod
+        .preprocess(
+          coerceNumber(HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE),
+          zod
+            .number()
+            .min(HALL.ROWS.MIN_LENGTH.VALUE, HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE)
+            .max(
+              HALL.ROWS.MAX_LENGTH.VALUE,
+              HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
+            ),
         )
-        .max(
-          HALL.COLUMNS.MAX_LENGTH.VALUE,
-          HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
-        ),
-    ).optional(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-).superRefine((hallUpdates, context) => {
-  if (!Object.keys(hallUpdates).length) {
-    context.addIssue({
-      code: ZodIssueCode.custom,
-      message: HALL.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-});
+        .optional(),
+      columns: zod
+        .preprocess(
+          coerceNumber(HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE),
+          zod
+            .number()
+            .min(
+              HALL.COLUMNS.MIN_LENGTH.VALUE,
+              HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
+            )
+            .max(
+              HALL.COLUMNS.MAX_LENGTH.VALUE,
+              HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
+            ),
+        )
+        .optional(),
+    },
+    {
+      invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: BODY.REQUIRED_ERROR_MESSAGE,
+    },
+  )
+  .superRefine((hallUpdates, context) => {
+    if (!Object.keys(hallUpdates).length) {
+      context.addIssue({
+        code: ZodIssueCode.custom,
+        message: HALL.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+        fatal: true,
+      });
+    }
+  });
 
-const updateHallParamsSchema = ZodObject(
+const updateHallParamsSchema = zod.object(
   {
-    hall_id: ZodString({
-      invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: HALL.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(HALL.ID.ERROR_MESSAGE),
+    hall_id: zod
+      .string({
+        invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: HALL.ID.REQUIRED_ERROR_MESSAGE,
+      })
+      .uuid(HALL.ID.ERROR_MESSAGE),
   },
   {
     invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
@@ -120,12 +132,14 @@ const updateHallParamsSchema = ZodObject(
   },
 );
 
-const deleteHallSchema = ZodObject(
+const deleteHallSchema = zod.object(
   {
-    hall_id: ZodString({
-      invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: HALL.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(HALL.ID.ERROR_MESSAGE),
+    hall_id: zod
+      .string({
+        invalid_type_error: HALL.ID.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: HALL.ID.REQUIRED_ERROR_MESSAGE,
+      })
+      .uuid(HALL.ID.ERROR_MESSAGE),
   },
   {
     invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,

@@ -78,6 +78,7 @@ async function createServer() {
 
   const environmentManager = new EnvironmentManager(logger);
   const {
+    node,
     jwt,
     server: serverEnv,
     database,
@@ -104,7 +105,7 @@ async function createServer() {
     fileManagerParams: {
       generatedNameLength: 32,
       saveDir: tmpdir(),
-      logger: logger,
+      watermark: node.defaultHighWaterMark,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed

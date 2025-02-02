@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
@@ -26,39 +26,37 @@ async function deleteMovie(
   // to having an attached showtime or because it does not exist
   const absolutePath = await handler.transaction(async (transaction) => {
     // Only movies without attached showtimes are allowed to be deleted
-    const showtimesWithDeletedMovie = (
-      await handler
-        .select({ count: count() })
-        .from(showtimeModel)
-        .where(eq(showtimeModel.movieId, movieId))
-    )[0]!.count;
-    if (showtimesWithDeletedMovie) {
+    const hasShowtimes = await transaction.$count(
+      showtimeModel,
+      eq(showtimeModel.movieId, movieId),
+    );
+    if (hasShowtimes) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
-        'Movie has one or more attached showtime',
+        'Movie has one or more attached showtime(s)',
       );
     }
 
     // I've decided that if nothing was deleted because it didn't exist in the
     // first place, it is still considered as a success since the end result
     // is the same
-    const deletedMoviePoster = await transaction
+    const [deletedMoviePoster] = await transaction
       .delete(moviePosterModel)
       .where(eq(moviePosterModel.movieId, movieId))
       .returning({ absolutePath: moviePosterModel.absolutePath });
-    if (!deletedMoviePoster.length) {
+    if (!deletedMoviePoster) {
       return '';
     }
     await transaction.delete(movieModel).where(eq(movieModel.id, movieId));
 
-    return deletedMoviePoster[0]!.absolutePath;
+    return deletedMoviePoster.absolutePath;
   });
-  if (!absolutePath) {
-    return;
-  }
 
   fileManager.deleteFile(absolutePath).catch((err: unknown) => {
-    logger.warn(`Failure to delete file: ${absolutePath}`, err);
+    logger.warn(
+      `Failure to delete file: '${absolutePath}'`,
+      (err as Error).cause,
+    );
   });
 }
 

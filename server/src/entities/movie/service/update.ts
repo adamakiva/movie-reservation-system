@@ -34,28 +34,31 @@ async function updateMovie(
     movieToUpdate,
   });
 
-  if (subQueries.updateMoviePosterSubQuery) {
-    return await updateMovieAndMoviePosterInDatabase({
-      handler,
-      fileManager,
-      subQueries,
-      models: {
-        genre: genreModel,
-        moviePoster: moviePosterModel,
-      },
-      movieId: movieToUpdate.movieId,
-      genreId: movieToUpdate.genreId,
-      logger,
-    });
-  }
+  try {
+    if (subQueries.updateMoviePosterSubQuery) {
+      return await updateMovieIncludingPosterInDatabase({
+        handler,
+        fileManager,
+        subQueries,
+        models: {
+          genre: genreModel,
+          moviePoster: moviePosterModel,
+        },
+        movieId: movieToUpdate.movieId,
+        logger,
+      });
+    }
 
-  return await updateMovieInDatabase({
-    handler,
-    subQueries,
-    genreModel,
-    movieId: movieToUpdate.movieId,
-    genreId: movieToUpdate.genreId,
-  });
+    return await updateMovieInDatabase({
+      handler,
+      subQueries,
+      genreModel,
+      movieId: movieToUpdate.movieId,
+    });
+  } catch (err) {
+    // Genre type is asserted because if the error type match, it will be defined
+    throw handlePossibleMissingGenreError(err, movieToUpdate.genreId!);
+  }
 }
 
 /**********************************************************************************/
@@ -113,45 +116,7 @@ function buildUpdateMovieCTEs(params: {
   } as const;
 }
 
-async function updateMovieInDatabase(params: {
-  handler: DatabaseHandler;
-  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
-  genreModel: DatabaseModel<'genre'>;
-  movieId: string;
-  genreId?: string | undefined;
-}) {
-  const { handler, subQueries, genreModel, movieId, genreId } = params;
-  const sanitizedSubQueries = Object.values(params.subQueries);
-
-  try {
-    const updatedMovie = await handler
-      .with(...sanitizedSubQueries)
-      .select({
-        id: subQueries.updateMovieSubQuery.id,
-        title: subQueries.updateMovieSubQuery.title,
-        description: subQueries.updateMovieSubQuery.description,
-        price: subQueries.updateMovieSubQuery.price,
-        genre: genreModel.name,
-      })
-      .from(subQueries.updateMovieSubQuery)
-      .innerJoin(
-        genreModel,
-        eq(genreModel.id, subQueries.updateMovieSubQuery.genreId),
-      );
-    if (!updatedMovie.length) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.NOT_FOUND,
-        `Movie '${movieId}' does not exist`,
-      );
-    }
-
-    return updatedMovie[0]!;
-  } catch (err) {
-    throw handlePossibleMissingGenreError(err, genreId!);
-  }
-}
-
-async function updateMovieAndMoviePosterInDatabase(params: {
+async function updateMovieIncludingPosterInDatabase(params: {
   handler: DatabaseHandler;
   fileManager: RequestContext['fileManager'];
   subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
@@ -160,7 +125,6 @@ async function updateMovieAndMoviePosterInDatabase(params: {
     moviePoster: DatabaseModel<'moviePoster'>;
   };
   movieId: string;
-  genreId?: string | undefined;
   logger: RequestContext['logger'];
 }) {
   const {
@@ -169,43 +133,76 @@ async function updateMovieAndMoviePosterInDatabase(params: {
     subQueries,
     models: { genre: genreModel, moviePoster: moviePosterModel },
     movieId,
-    genreId,
     logger,
   } = params;
 
   return await handler.transaction(async (transaction) => {
-    const moviePosters = await transaction
+    // Making this a separate query because we need the old absolute path
+    // in order to remove the old file
+    const [moviePoster] = await transaction
       .select({
         absolutePath: moviePosterModel.absolutePath,
       })
       .from(moviePosterModel)
       .where(eq(moviePosterModel.movieId, movieId));
-    if (!moviePosters.length) {
+    if (!moviePoster) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Movie '${movieId}' does not exist`,
       );
     }
 
-    const outdatedFileAbsolutePath = moviePosters[0]!.absolutePath;
+    const outdatedFileAbsolutePath = moviePoster.absolutePath;
 
     const updatedMovie = await updateMovieInDatabase({
       handler,
       subQueries,
       genreModel,
       movieId,
-      genreId,
     });
 
     fileManager.deleteFile(outdatedFileAbsolutePath).catch((err: unknown) => {
       logger.warn(
         `Failure to delete old file: ${outdatedFileAbsolutePath}`,
-        err,
+        (err as Error).cause,
       );
     });
 
     return updatedMovie;
   });
+}
+
+async function updateMovieInDatabase(params: {
+  handler: DatabaseHandler;
+  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
+  genreModel: DatabaseModel<'genre'>;
+  movieId: string;
+}) {
+  const { handler, subQueries, genreModel, movieId } = params;
+  const sanitizedSubQueries = Object.values(params.subQueries);
+
+  const [updatedMovie] = await handler
+    .with(...sanitizedSubQueries)
+    .select({
+      id: subQueries.updateMovieSubQuery.id,
+      title: subQueries.updateMovieSubQuery.title,
+      description: subQueries.updateMovieSubQuery.description,
+      price: subQueries.updateMovieSubQuery.price,
+      genre: genreModel.name,
+    })
+    .from(subQueries.updateMovieSubQuery)
+    .innerJoin(
+      genreModel,
+      eq(genreModel.id, subQueries.updateMovieSubQuery.genreId),
+    );
+  if (!updatedMovie) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Movie '${movieId}' does not exist`,
+    );
+  }
+
+  return updatedMovie;
 }
 
 /**********************************************************************************/

@@ -2,15 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
-import {
-  decodeJwt,
-  importPKCS8,
-  importSPKI,
-  errors as joseErrors,
-  jwtVerify,
-  SignJWT,
-  type KeyLike,
-} from 'jose';
+import * as jose from 'jose';
 
 import {
   UnauthorizedError,
@@ -79,10 +71,10 @@ class AuthenticationManager {
       publicRefreshKey,
       privateRefreshKey,
     ] = await Promise.all([
-      importSPKI(accessPublicKey, algorithm),
-      importPKCS8(accessPrivateKey, algorithm),
-      importSPKI(refreshPublicKey, algorithm),
-      importPKCS8(refreshPrivateKey, algorithm),
+      jose.importSPKI(accessPublicKey, algorithm),
+      jose.importPKCS8(accessPrivateKey, algorithm),
+      jose.importSPKI(refreshPublicKey, algorithm),
+      jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
 
     const self = new AuthenticationManager({
@@ -128,7 +120,7 @@ class AuthenticationManager {
     userId: string,
     accessTokenExpirationTime: number,
   ) {
-    const jwt = await new SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -144,7 +136,7 @@ class AuthenticationManager {
     userId: string,
     refreshTokenExpirationTime: number,
   ) {
-    const jwt = await new SignJWT()
+    const jwt = await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -157,7 +149,7 @@ class AuthenticationManager {
   }
 
   public async validateToken(token: string, type: TokenTypes[number]) {
-    let publicKey: KeyLike = null!;
+    let publicKey: jose.KeyLike = null!;
     switch (type) {
       case 'access':
         ({ publicKey } = this.#access);
@@ -167,7 +159,7 @@ class AuthenticationManager {
         break;
     }
 
-    const parsedJwt = await jwtVerify(token, publicKey, {
+    const parsedJwt = await jose.jwtVerify(token, publicKey, {
       audience: this.#audience,
       issuer: this.#issuer,
     });
@@ -178,7 +170,7 @@ class AuthenticationManager {
   public getUserId(authorizationHeader: string) {
     const token = authorizationHeader.replace('Bearer', '');
 
-    const decodedJwt = decodeJwt(token);
+    const decodedJwt = jose.decodeJwt(token);
 
     return decodedJwt.sub!;
   }
@@ -208,13 +200,13 @@ class AuthenticationManager {
     type: string;
     algorithm: string;
     access: {
-      publicKey: KeyLike;
-      privateKey: KeyLike;
+      publicKey: jose.KeyLike;
+      privateKey: jose.KeyLike;
       expiresAt: number;
     };
     refresh: {
-      publicKey: KeyLike;
-      privateKey: KeyLike;
+      publicKey: jose.KeyLike;
+      privateKey: jose.KeyLike;
       expiresAt: number;
     };
     hashSecret: Buffer;
@@ -254,10 +246,10 @@ class AuthenticationManager {
         throw new UnauthorizedError('malformed');
       }
     } catch (err) {
-      if (err instanceof joseErrors.JWTExpired) {
+      if (err instanceof jose.errors.JWTExpired) {
         throw new UnauthorizedError('expired', err.cause);
       }
-      if (err instanceof joseErrors.JWSInvalid) {
+      if (err instanceof jose.errors.JWSInvalid) {
         throw new UnauthorizedError('malformed', err.cause);
       }
 

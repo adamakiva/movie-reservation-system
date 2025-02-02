@@ -20,10 +20,10 @@ async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
   healthCheckValidator.validateHealthCheck(req, res);
 
   const notReadyMsg = await isReady(res.locals.context);
-  if (notReadyMsg.length) {
+  if (notReadyMsg) {
     res
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
-      .send(`Application is not available: ${notReadyMsg}`);
+      .json(`Application is not available: ${notReadyMsg}`);
     return;
   }
 

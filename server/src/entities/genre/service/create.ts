@@ -17,14 +17,12 @@ async function createGenre(
   const { genre: genreModel } = database.getModels();
 
   try {
-    const createdGenre = (
-      await handler
-        .insert(genreModel)
-        .values(genreToCreate)
-        .returning({ id: genreModel.id, name: genreModel.name })
-    )[0]!;
+    const [createdGenre] = await handler
+      .insert(genreModel)
+      .values(genreToCreate)
+      .returning({ id: genreModel.id, name: genreModel.name });
 
-    return createdGenre;
+    return createdGenre!;
   } catch (err) {
     throw handlePossibleDuplicationError(err, genreToCreate.name);
   }

@@ -32,7 +32,10 @@ class HttpServer {
 
   public static async create(params: {
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
-    fileManagerParams: ConstructorParameters<typeof FileManager>[0];
+    fileManagerParams: Omit<
+      ConstructorParameters<typeof FileManager>[0],
+      'logger'
+    >;
     corsOptions: Parameters<typeof cors>[0];
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
@@ -53,7 +56,7 @@ class HttpServer {
 
     const authentication =
       await AuthenticationManager.create(authenticationParams);
-    const fileManager = new FileManager(fileManagerParams);
+    const fileManager = new FileManager({ ...fileManagerParams, logger });
     const database = new Database({ ...databaseParams, logger });
 
     const app = express().use(
@@ -84,6 +87,9 @@ class HttpServer {
   }
 
   public async listen(port?: number) {
+    // This function await for the async listen to emit the listening event before
+    // returning. In addition it allows to listen to the server on a dynamic port
+    // and returns it (used by the tests to run another server instance)
     const actualPort = await new Promise<number>((resolve) => {
       this.#server.once('listening', () => {
         // Can be asserted since this is not a unix socket and we are inside
@@ -175,7 +181,7 @@ class HttpServer {
     // When a function is passed as a callback (even a method), the `this`
     // context is lost (if it's not an arrow function). There are a couple
     // of options to resolve said issue:
-    // 1. Make `this._healthCheck` an arrow function
+    // 1. An arrow function
     // 2. Inline implementation as an anonymous arrow function
     // 3. Bind `this` context to the called function
     // We chose number 3 to be in line with the rest of the style of
@@ -190,9 +196,8 @@ class HttpServer {
   #handleErrorEvent(err: Error) {
     this.#logger.fatal(err, 'HTTP Server error');
 
-    // If an event emitter error happened, we shutdown the application.
-    // As a result we allow the deployment orchestration tool to attempt to
-    // rerun the application in a "clean" state
+    // If an http server error happened, we shutdown the application with status
+    // code that indicates that a server restart should happen
     process.exit(ERROR_CODES.EXIT_RESTART);
   }
 
@@ -222,6 +227,7 @@ class HttpServer {
         next();
       })
       .use(routers.healthcheckRouter)
+      // No point in logging all healthcheck requests
       .use(logMiddleware)
       .use(
         this.#routes.http,

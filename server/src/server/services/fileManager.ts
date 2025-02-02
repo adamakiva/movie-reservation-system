@@ -19,19 +19,22 @@ import {
 class fileManager implements multer.StorageEngine {
   readonly #generatedNameLength;
   readonly #saveDir;
+  readonly #watermark;
   readonly #logger;
   readonly #upload;
 
   public constructor(params: {
     generatedNameLength: number;
     saveDir: string;
+    watermark: number;
     logger: LoggerHandler;
     limits?: multer.Options['limits'];
   }) {
-    const { generatedNameLength, saveDir, logger, limits } = params;
+    const { generatedNameLength, saveDir, watermark, logger, limits } = params;
 
     this.#generatedNameLength = generatedNameLength;
     this.#saveDir = saveDir;
+    this.#watermark = watermark;
     this.#logger = logger;
 
     this.#upload = multer({ storage: this, limits });
@@ -46,15 +49,36 @@ class fileManager implements multer.StorageEngine {
   }
 
   public async streamFile(dest: Writable, absolutePath: PathLike) {
-    // This path is provided by the program, not the end-user
-    // eslint-disable-next-line @security/detect-non-literal-fs-filename
-    await pipeline(createReadStream(absolutePath), dest);
+    try {
+      // This path is provided by the program, not the end-user
+      await pipeline(
+        // eslint-disable-next-line @security/detect-non-literal-fs-filename
+        createReadStream(absolutePath, {
+          highWaterMark: this.#watermark,
+        }),
+        dest,
+      );
+    } catch (err) {
+      if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+        throw new GeneralError(
+          HTTP_STATUS_CODES.SERVER_ERROR,
+          'Should never happen, contact an administrator',
+          err.cause,
+        );
+      }
+
+      throw err;
+    }
   }
 
-  public async deleteFile(absolutePath: PathLike) {
+  public deleteFile(absolutePath: PathLike) {
+    if (!absolutePath) {
+      return Promise.resolve();
+    }
+
     // This path is provided by the program, not the end-user
     // eslint-disable-next-line @security/detect-non-literal-fs-filename
-    await unlink(absolutePath);
+    return unlink(absolutePath);
   }
 
   /********************************************************************************/
@@ -79,13 +103,15 @@ class fileManager implements multer.StorageEngine {
         file.path = join(this.#saveDir, `${filename}.${extension}`);
         // This path is provided by the program, not the end-user
         // eslint-disable-next-line @security/detect-non-literal-fs-filename
-        const outStream = createWriteStream(file.path);
+        const outStream = createWriteStream(file.path, {
+          highWaterMark: this.#watermark,
+        });
 
         return pipeline(fileStreamWithFileType, outStream)
           .then(() => {
             callback(null, {
               filename,
-              // @ts-expect-error Figure out a nice way to do this (changing
+              // @ts-expect-error TODO Figure out a nice way to do this (changing
               // mime type key name)
               mimeType: mimetype,
               path: file.path,
@@ -115,7 +141,10 @@ class fileManager implements multer.StorageEngine {
         callback(null);
       })
       .catch((err: unknown) => {
-        this.#logger.warn(`Failure to delete file: ${file.path}`, err);
+        this.#logger.warn(
+          `Failure to delete file: ${file.path}`,
+          (err as Error).cause,
+        );
         callback(err as Error | null);
       });
   }

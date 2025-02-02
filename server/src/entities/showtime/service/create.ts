@@ -39,7 +39,7 @@ async function createShowtime(
       showtimeToCreate,
     });
 
-    const createdShowtime = await handler
+    const [createdShowtime] = await handler
       .with(createShowtimeSubQuery)
       .select({
         id: createShowtimeSubQuery.id,
@@ -51,7 +51,7 @@ async function createShowtime(
       .innerJoin(movieModel, eq(movieModel.id, createShowtimeSubQuery.movieId))
       .innerJoin(hallModel, eq(hallModel.id, createShowtimeSubQuery.hallId));
 
-    return { ...createdShowtime[0]!, reservations: [] };
+    return { ...createdShowtime!, reservations: [] };
   } catch (err) {
     throw handlePossibleShowtimeCreationError({
       err,
@@ -83,6 +83,11 @@ async function reserveShowtimeTicket(params: {
     movie: movieModel,
   } = database.getModels();
 
+  const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
+    handler,
+    userShowtimeModel,
+    showtimeTicket: { ...showtimeTicket, userId },
+  });
   return await handler.transaction(async (transaction) => {
     await validateMovieReservation({
       handler: transaction,
@@ -90,14 +95,8 @@ async function reserveShowtimeTicket(params: {
       showtimeTicket,
     });
 
-    const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
-      handler,
-      userShowtimeModel,
-      showtimeTicket: { ...showtimeTicket, userId },
-    });
-
     try {
-      const createdShowtimeTicket = await transaction
+      const [createdShowtimeTicket] = await transaction
         .with(createUserShowtimeSubQuery)
         .select({
           hallName: hallModel.name,
@@ -115,7 +114,7 @@ async function reserveShowtimeTicket(params: {
       // as well. Reason being that the user should receive a confirmation his payment
       // was accepted and there's no point to not lock the UI until that happens.
 
-      return createdShowtimeTicket[0]!;
+      return createdShowtimeTicket!;
     } catch (err) {
       throw handlePossibleTicketDuplicationError({
         err,

@@ -24,19 +24,19 @@ async function updateRole(
   const { roleId, ...fieldsToUpdate } = roleToUpdate;
 
   try {
-    const updatedRoles = await handler
+    const [updatedRole] = await handler
       .update(roleModel)
       .set({ ...fieldsToUpdate, updatedAt: new Date() })
       .where(eq(roleModel.id, roleId))
       .returning({ id: roleModel.id, name: roleModel.name });
-    if (!updatedRoles.length) {
+    if (!updatedRole) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Role '${roleId}' does not exist`,
       );
     }
 
-    return updatedRoles[0]!;
+    return updatedRole;
   } catch (err) {
     // If there is a conflict it is due to the name update, hence, the name
     // field must exist

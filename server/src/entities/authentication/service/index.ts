@@ -26,9 +26,7 @@ async function login(context: RequestContext, credentials: Credentials) {
     credentials,
   });
 
-  const tokens = await generateTokens(authentication, userId);
-
-  return tokens;
+  return await generateTokens(authentication, userId);
 }
 
 async function refreshAccessToken(
@@ -46,12 +44,10 @@ async function refreshAccessToken(
       throw new UnauthorizedError('malformed');
     }
 
-    const refreshedToken = await authentication.generateAccessToken(
+    return await authentication.generateAccessToken(
       userId,
       accessTokenExpirationTime,
     );
-
-    return refreshedToken;
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       throw err;
@@ -93,18 +89,18 @@ async function readUserFromDatabase(
   const handler = database.getHandler();
   const { user: userModel } = database.getModels();
 
-  const users = await handler
+  const [user] = await handler
     .select({ id: userModel.id, hash: userModel.hash })
     .from(userModel)
     .where(eq(userModel.email, email))
     .limit(1);
-  if (!users.length) {
+  if (!user) {
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Email and/or password are incorrect',
     );
   }
-  const { id: userId, hash } = users[0]!;
+  const { id: userId, hash } = user;
 
   return {
     userId,
@@ -120,8 +116,8 @@ async function validatePassword(params: {
   try {
     const { authentication, hash, password } = params;
 
-    const validPassword = await authentication.verifyPassword(hash, password);
-    if (!validPassword) {
+    const isPasswordValid = await authentication.verifyPassword(hash, password);
+    if (!isPasswordValid) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
         'Email and/or password are incorrect',

@@ -3,7 +3,8 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
-import { ERROR_CODES, Logger, type LoggerHandler } from '../../utils/index.js';
+import { ERROR_CODES } from '../../utils/constants.js';
+import Logger, { type LoggerHandler } from '../../utils/logger.js';
 
 import * as schemas from '../schemas.js';
 

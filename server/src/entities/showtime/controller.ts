@@ -18,7 +18,7 @@ async function getShowtimes(req: Request, res: ResponseWithContext) {
     pagination,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(showtimes);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(showtimes);
 }
 
 async function createShowtime(req: Request, res: ResponseWithContext) {
@@ -29,7 +29,7 @@ async function createShowtime(req: Request, res: ResponseWithContext) {
     showtimeToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createdShowtime);
+  res.status(HTTP_STATUS_CODES.CREATED).json(createdShowtime);
 }
 
 async function deleteShowtime(req: Request, res: ResponseWithContext) {
@@ -49,7 +49,7 @@ async function reserveShowtimeTicket(req: Request, res: ResponseWithContext) {
     showtimeTicket,
   });
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createdShowtimeTicket);
+  res.status(HTTP_STATUS_CODES.CREATED).json(createdShowtimeTicket);
 }
 
 async function cancelUserShowtimeReservation(
@@ -76,7 +76,7 @@ async function getUserShowtimes(req: Request, res: ResponseWithContext) {
     pagination,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(userShowtimes);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(userShowtimes);
 }
 
 /**********************************************************************************/

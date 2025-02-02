@@ -13,6 +13,7 @@ import type {
   GetMoviesValidatedData,
   GetMovieValidatedData,
   Movie,
+  MoviePoster,
 } from './utils.js';
 
 /**********************************************************************************/
@@ -21,63 +22,7 @@ async function getMovies(
   context: RequestContext,
   pagination: GetMoviesValidatedData,
 ): Promise<PaginatedResult<{ movies: Movie[] }>> {
-  const movies = await getMoviesPageFromDatabase(context.database, pagination);
-
-  return sanitizeMoviesPage(movies, pagination.pageSize);
-}
-
-async function getMovie(
-  context: RequestContext,
-  movieId: GetMovieValidatedData,
-): Promise<Movie> {
   const { database } = context;
-  const handler = database.getHandler();
-  const { movie: movieModel, genre: genreModel } = database.getModels();
-
-  // A general note. I've checked performance stuff, and on pk limit 1 has
-  // 0 effect, it is implied and will stop the search after the first result is
-  // found. In general limit should be used with order by otherwise the results
-  // are inconsistent (as a result of sql not guaranteeing return order for
-  // query results)
-  const movies = await handler
-    .select({
-      id: movieModel.id,
-      title: movieModel.title,
-      description: movieModel.description,
-      price: movieModel.price,
-      genre: genreModel.name,
-    })
-    .from(movieModel)
-    .where(eq(movieModel.id, movieId))
-    .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId));
-  if (!movies.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie '${movieId}' does not exist`,
-    );
-  }
-
-  return movies[0]!;
-}
-
-async function getMoviePoster(
-  res: ResponseWithContext,
-  movieId: GetMovieValidatedData,
-): Promise<void> {
-  const moviePosterMetadata = await getMoviePosterMetadataFromDatabase(
-    res.locals.context.database,
-    movieId,
-  );
-
-  await streamMoviePosterResponse(res, moviePosterMetadata);
-}
-
-/**********************************************************************************/
-
-async function getMoviesPageFromDatabase(
-  database: RequestContext['database'],
-  pagination: GetMoviesValidatedData,
-) {
   const handler = database.getHandler();
   const { movie: movieModel, genre: genreModel } = database.getModels();
   const { cursor, pageSize } = pagination;
@@ -109,11 +54,75 @@ async function getMoviesPageFromDatabase(
     .limit(pageSize + 1)
     .orderBy(asc(movieModel.createdAt), asc(movieModel.id));
 
-  return moviesPage;
+  return sanitizeMoviesPage(moviesPage, pagination.pageSize);
 }
 
+async function getMovie(
+  context: RequestContext,
+  movieId: GetMovieValidatedData,
+): Promise<Movie> {
+  const { database } = context;
+  const handler = database.getHandler();
+  const { movie: movieModel, genre: genreModel } = database.getModels();
+
+  const [movie] = await handler
+    .select({
+      id: movieModel.id,
+      title: movieModel.title,
+      description: movieModel.description,
+      price: movieModel.price,
+      genre: genreModel.name,
+    })
+    .from(movieModel)
+    .where(eq(movieModel.id, movieId))
+    .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId));
+  if (!movie) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Movie '${movieId}' does not exist`,
+    );
+  }
+
+  return movie;
+}
+
+async function getMoviePoster(
+  res: ResponseWithContext,
+  movieId: GetMovieValidatedData,
+): Promise<void> {
+  const { database } = res.locals.context;
+  const handler = database.getHandler();
+  const { moviePoster: moviePosterModel } = database.getModels();
+
+  const [moviePoster] = await handler
+    .select({
+      absolutePath: moviePosterModel.absolutePath,
+      mimeType: moviePosterModel.mimeType,
+      sizeInBytes: moviePosterModel.sizeInBytes,
+    })
+    .from(moviePosterModel)
+    .where(eq(moviePosterModel.movieId, movieId));
+  if (!moviePoster) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Movie '${movieId}' does not exist`,
+    );
+  }
+  const { absolutePath, mimeType, sizeInBytes } = moviePoster;
+
+  await streamMoviePosterResponse(res, {
+    absolutePath,
+    sizeInBytes,
+    // Pay attention if the mime type needs the addition of charset, and if so
+    // make sure it is handled
+    contentType: mimeType,
+  });
+}
+
+/**********************************************************************************/
+
 function sanitizeMoviesPage(
-  movies: Awaited<ReturnType<typeof getMoviesPageFromDatabase>>,
+  movies: (Movie & { createdAt: Date })[],
   pageSize: number,
 ) {
   if (movies.length <= pageSize) {
@@ -139,48 +148,16 @@ function sanitizeMoviesPage(
 }
 
 function sanitizeMovie(
-  movie: Awaited<ReturnType<typeof getMoviesPageFromDatabase>>[number],
+  movie: Parameters<typeof sanitizeMoviesPage>[0][number],
 ) {
   const { createdAt, ...fields } = movie;
 
   return fields;
 }
 
-async function getMoviePosterMetadataFromDatabase(
-  database: RequestContext['database'],
-  movieId: string,
-) {
-  const handler = database.getHandler();
-  const { moviePoster: moviePosterModel } = database.getModels();
-
-  const moviePosters = await handler
-    .select({
-      absolutePath: moviePosterModel.absolutePath,
-      mimeType: moviePosterModel.mimeType,
-      sizeInBytes: moviePosterModel.sizeInBytes,
-    })
-    .from(moviePosterModel)
-    .where(eq(moviePosterModel.movieId, movieId));
-  if (!moviePosters.length) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie '${movieId}' does not exist`,
-    );
-  }
-  const { absolutePath, mimeType, sizeInBytes } = moviePosters[0]!;
-
-  return {
-    absolutePath,
-    sizeInBytes,
-    // Pay attention if the mime type needs the addition of charset, and if so
-    // make sure it is handled
-    contentType: mimeType,
-  };
-}
-
 async function streamMoviePosterResponse(
   res: ResponseWithContext,
-  movieMetadata: Awaited<ReturnType<typeof getMoviePosterMetadataFromDatabase>>,
+  movieMetadata: MoviePoster,
 ) {
   const { absolutePath, contentType, sizeInBytes } = movieMetadata;
 

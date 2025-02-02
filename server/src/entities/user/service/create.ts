@@ -1,16 +1,16 @@
 import { eq } from 'drizzle-orm';
-import pg from 'postgres';
 
-import {
-  ERROR_CODES,
-  GeneralError,
-  HTTP_STATUS_CODES,
-  type DatabaseHandler,
-  type DatabaseModel,
-  type RequestContext,
+import type {
+  DatabaseHandler,
+  DatabaseModel,
+  RequestContext,
 } from '../../../utils/index.js';
 
-import type { CreateUserValidatedData, User } from './utils.js';
+import {
+  handleUserCreationError,
+  type CreateUserValidatedData,
+  type User,
+} from './utils.js';
 
 /**********************************************************************************/
 
@@ -33,7 +33,7 @@ async function createUser(
   });
 
   try {
-    const createdUser = await handler
+    const [createdUser] = await handler
       .with(createUserSubQuery)
       .select({
         id: createUserSubQuery.id,
@@ -45,26 +45,13 @@ async function createUser(
       .from(createUserSubQuery)
       .innerJoin(roleModel, eq(roleModel.id, userToCreate.roleId));
 
-    return createdUser[0]!;
+    return createdUser!;
   } catch (err) {
-    if (err instanceof pg.PostgresError) {
-      switch (err.code) {
-        case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
-          throw new GeneralError(
-            HTTP_STATUS_CODES.CONFLICT,
-            `User '${userToCreate.email}' already exists`,
-            err.cause,
-          );
-        case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-          throw new GeneralError(
-            HTTP_STATUS_CODES.NOT_FOUND,
-            `Role '${userToCreate.roleId}' does not exist`,
-            err.cause,
-          );
-      }
-    }
-
-    throw err;
+    throw handleUserCreationError({
+      err,
+      email: userToCreate.email,
+      role: userToCreate.roleId,
+    });
   }
 }
 

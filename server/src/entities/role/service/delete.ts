@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import {
   GeneralError,
@@ -22,13 +22,11 @@ async function deleteRole(
   // to having an attached movie or because it does not exist
   await handler.transaction(async (transaction) => {
     // Only roles without attached users are allowed to be deleted
-    const usersWithDeletedRole = (
-      await transaction
-        .select({ count: count() })
-        .from(userModel)
-        .where(eq(userModel.roleId, roleId))
-    )[0]!.count;
-    if (usersWithDeletedRole) {
+    const hasUsers = await transaction.$count(
+      userModel,
+      eq(userModel.roleId, roleId),
+    );
+    if (hasUsers) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
         'Role has attached users',

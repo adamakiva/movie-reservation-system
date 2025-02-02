@@ -92,7 +92,7 @@ async function cancelShowtimeReservations(params: {
     userIds,
   } = params;
 
-  // Don't promise.all here, the user showtimes entries must be deleted before
+  // Don't promise.all here, the user showtimes entries MUST be deleted before
   // deleting the showtime entry
   await cancelShowtimeReservation({
     handler,
@@ -113,21 +113,29 @@ async function cancelShowtimeReservation(params: {
   showtimeId: string;
   userIds: string | string[];
 }) {
-  const { handler, userShowtimeModel, showtimeId } = params;
-
-  if (!Array.isArray(params.userIds)) {
-    params.userIds = [params.userIds];
-  }
+  const { handler, userShowtimeModel, showtimeId, userIds } = params;
 
   // TODO Send the refund request to the message queue, non-blocking or
   // the transaction will (probably) timeout
+
+  if (!Array.isArray(userIds)) {
+    await handler
+      .delete(userShowtimeModel)
+      .where(
+        and(
+          eq(userShowtimeModel.showtimeId, showtimeId),
+          eq(userShowtimeModel.userId, userIds),
+        ),
+      );
+    return;
+  }
 
   await handler
     .delete(userShowtimeModel)
     .where(
       and(
         eq(userShowtimeModel.showtimeId, showtimeId),
-        inArray(userShowtimeModel.userId, params.userIds),
+        inArray(userShowtimeModel.userId, userIds),
       ),
     );
 }

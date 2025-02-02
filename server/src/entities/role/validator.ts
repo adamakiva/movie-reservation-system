@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { ZodIssueCode, object as ZodObject, string as ZodString } from 'zod';
+import zod, { ZodIssueCode } from 'zod';
 
 import { parseValidationResult, VALIDATION } from '../utils.validator.js';
 
@@ -9,17 +9,19 @@ const { ROLE, PARAMS, BODY } = VALIDATION;
 
 /**********************************************************************************/
 
-const createRoleSchema = ZodObject(
+const createRoleSchema = zod.object(
   {
-    id: ZodString({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-    })
+    id: zod
+      .string({
+        invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+      })
       .uuid(ROLE.ID.ERROR_MESSAGE)
       .optional(),
-    name: ZodString({
-      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
-    })
+    name: zod
+      .string({
+        invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
+      })
       .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
       .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
       .toLowerCase(),
@@ -30,36 +32,41 @@ const createRoleSchema = ZodObject(
   },
 );
 
-const updateRoleBodySchema = ZodObject(
-  {
-    name: ZodString({
-      invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
-    })
-      .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
-      .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
-      .toLowerCase()
-      .optional(),
-  },
-  {
-    invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: BODY.REQUIRED_ERROR_MESSAGE,
-  },
-).superRefine((roleUpdates, context) => {
-  if (!Object.keys(roleUpdates).length) {
-    context.addIssue({
-      code: ZodIssueCode.custom,
-      message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-      fatal: true,
-    });
-  }
-});
+const updateRoleBodySchema = zod
+  .object(
+    {
+      name: zod
+        .string({
+          invalid_type_error: ROLE.NAME.INVALID_TYPE_ERROR_MESSAGE,
+        })
+        .min(ROLE.NAME.MIN_LENGTH.VALUE, ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE)
+        .max(ROLE.NAME.MAX_LENGTH.VALUE, ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE)
+        .toLowerCase()
+        .optional(),
+    },
+    {
+      invalid_type_error: BODY.INVALID_TYPE_ERROR_MESSAGE,
+      required_error: BODY.REQUIRED_ERROR_MESSAGE,
+    },
+  )
+  .superRefine((roleUpdates, context) => {
+    if (!Object.keys(roleUpdates).length) {
+      context.addIssue({
+        code: ZodIssueCode.custom,
+        message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
+        fatal: true,
+      });
+    }
+  });
 
-const updateRoleParamsSchema = ZodObject(
+const updateRoleParamsSchema = zod.object(
   {
-    role_id: ZodString({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(ROLE.ID.ERROR_MESSAGE),
+    role_id: zod
+      .string({
+        invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+      })
+      .uuid(ROLE.ID.ERROR_MESSAGE),
   },
   {
     invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
@@ -67,12 +74,14 @@ const updateRoleParamsSchema = ZodObject(
   },
 );
 
-const deleteRoleSchema = ZodObject(
+const deleteRoleSchema = zod.object(
   {
-    role_id: ZodString({
-      invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
-    }).uuid(ROLE.ID.ERROR_MESSAGE),
+    role_id: zod
+      .string({
+        invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+      })
+      .uuid(ROLE.ID.ERROR_MESSAGE),
   },
   {
     invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,

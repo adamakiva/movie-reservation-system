@@ -41,7 +41,12 @@ type Showtime = {
   movieTitle: string;
   hallName: string;
 };
-
+type UserShowtime = {
+  id: string;
+  hallName: string;
+  movieTitle: string;
+  at: Date;
+};
 type ShowtimeTicket = {
   hallName: string;
   movieTitle: string;
@@ -71,12 +76,14 @@ function handlePossibleShowtimeCreationError(params: {
         `A showtime at '${at.toISOString()}' in '${hall}' already exists`,
         err.cause,
       );
-    // Name matching the database schema definition (showtime schema)
-    // @see file:///./../../../database/schemas.ts
     case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
       return handleForeignKeyNotFoundError({ err, movie, hall });
     default:
-      return err;
+      return new GeneralError(
+        HTTP_STATUS_CODES.SERVER_ERROR,
+        'Should not be possible',
+        err.cause,
+      );
   }
 }
 
@@ -87,6 +94,8 @@ function handleForeignKeyNotFoundError(params: {
 }) {
   const { err, movie, hall } = params;
 
+  // Name matching the database schema definition (showtime schema)
+  // @see file:///./../../../database/schemas.ts
   if (err.constraint_name === 'showtime_movie_id_fk') {
     return new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
@@ -102,7 +111,11 @@ function handleForeignKeyNotFoundError(params: {
     );
   }
 
-  return err;
+  return new GeneralError(
+    HTTP_STATUS_CODES.SERVER_ERROR,
+    'Should not be possible',
+    err.cause,
+  );
 }
 
 function handlePossibleTicketDuplicationError(params: {
@@ -139,4 +152,5 @@ export {
   type ReserveShowtimeTicketValidatedData,
   type Showtime,
   type ShowtimeTicket,
+  type UserShowtime,
 };

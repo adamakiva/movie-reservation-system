@@ -17,14 +17,12 @@ async function createRole(
   const { role: roleModel } = database.getModels();
 
   try {
-    const createdRole = (
-      await handler
-        .insert(roleModel)
-        .values(roleToCreate)
-        .returning({ id: roleModel.id, name: roleModel.name })
-    )[0]!;
+    const [createdRole] = await handler
+      .insert(roleModel)
+      .values(roleToCreate)
+      .returning({ id: roleModel.id, name: roleModel.name });
 
-    return createdRole;
+    return createdRole!;
   } catch (err) {
     throw handlePossibleDuplicationError(err, roleToCreate.name);
   }

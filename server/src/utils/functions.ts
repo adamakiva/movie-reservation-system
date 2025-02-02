@@ -7,11 +7,9 @@ const ALPHA_NUMERIC = {
 /**********************************************************************************/
 
 function strcasecmp<T extends string>(s1: T, s2: T) {
-  const result = s1.localeCompare(s2, undefined, {
+  return s1.localeCompare(s2, undefined, {
     sensitivity: 'accent',
   });
-
-  return result;
 }
 
 function randomAlphaNumericString(len = 32) {
@@ -26,11 +24,7 @@ function randomAlphaNumericString(len = 32) {
 }
 
 function encodeCursor(id: string, createdAt: Date) {
-  const encodedCursor = Buffer.from(
-    `${id},${createdAt.toISOString()}`,
-  ).toString('base64');
-
-  return encodedCursor;
+  return Buffer.from(`${id},${createdAt.toISOString()}`).toString('base64');
 }
 
 function decodeCursor(cursor: string) {
@@ -38,12 +32,10 @@ function decodeCursor(cursor: string) {
     .toString('utf-8')
     .split(',');
 
-  const result = {
+  return {
     id: decodedCursor[0]!,
     createdAt: new Date(decodedCursor[1]!),
   } as const;
-
-  return result;
 }
 
 /**********************************************************************************/

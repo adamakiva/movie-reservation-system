@@ -1,4 +1,4 @@
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import {
   type RequestContext,
@@ -22,16 +22,14 @@ async function deleteHall(
   // to having an attached showtime or because it does not exist
   await handler.transaction(async (transaction) => {
     // Only halls without attached showtimes are allowed to be deleted
-    const showtimesWithDeletedHall = (
-      await transaction
-        .select({ count: count() })
-        .from(showtimeModel)
-        .where(eq(showtimeModel.hallId, hallId))
-    )[0]!.count;
-    if (showtimesWithDeletedHall) {
+    const hasShowtimes = await transaction.$count(
+      showtimeModel,
+      eq(showtimeModel.hallId, hallId),
+    );
+    if (hasShowtimes) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
-        'Hall has one or more attached showtime',
+        'Hall has one or more attached showtime(s)',
       );
     }
 

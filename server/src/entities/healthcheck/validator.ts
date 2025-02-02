@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { enum as ZodEnum, string as ZodString } from 'zod';
+import zod from 'zod';
 
 import {
   HTTP_STATUS_CODES,
@@ -14,10 +14,11 @@ const { HEALTHCHECK } = VALIDATION;
 
 /**********************************************************************************/
 
-const healthCheckSchema = ZodString({
-  invalid_type_error: HEALTHCHECK.HTTP_METHODS.INVALID_TYPE_ERROR_MESSAGE,
-  required_error: HEALTHCHECK.HTTP_METHODS.REQUIRED_ERROR_MESSAGE,
-})
+const healthCheckSchema = zod
+  .string({
+    invalid_type_error: HEALTHCHECK.HTTP_METHODS.INVALID_TYPE_ERROR_MESSAGE,
+    required_error: HEALTHCHECK.HTTP_METHODS.REQUIRED_ERROR_MESSAGE,
+  })
   .min(
     HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.VALUE,
     HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.ERROR_MESSAGE,
@@ -28,7 +29,7 @@ const healthCheckSchema = ZodString({
   )
   .toUpperCase()
   .pipe(
-    ZodEnum(HEALTHCHECK.HTTP_METHODS.NAMES, {
+    zod.enum(HEALTHCHECK.HTTP_METHODS.NAMES, {
       errorMap: () => {
         return {
           message: HEALTHCHECK.HTTP_METHODS.ERROR_MESSAGE,

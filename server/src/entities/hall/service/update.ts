@@ -24,7 +24,7 @@ async function updateHall(
   const { hallId, ...fieldsToUpdate } = hallToUpdate;
 
   try {
-    const updatedHall = await handler
+    const [updatedHall] = await handler
       .update(hallModel)
       .set({ ...fieldsToUpdate, updatedAt: new Date() })
       .where(eq(hallModel.id, hallId))
@@ -34,14 +34,14 @@ async function updateHall(
         rows: hallModel.rows,
         columns: hallModel.columns,
       });
-    if (!updatedHall.length) {
+    if (!updatedHall) {
       throw new GeneralError(
         HTTP_STATUS_CODES.NOT_FOUND,
         `Hall '${hallId}' does not exist`,
       );
     }
 
-    return updatedHall[0]!;
+    return updatedHall;
   } catch (err) {
     // If there is a conflict it is due to the name update, hence, the name
     // field must exist

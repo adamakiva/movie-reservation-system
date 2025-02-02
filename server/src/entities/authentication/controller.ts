@@ -18,7 +18,7 @@ async function login(req: Request, res: ResponseWithContext) {
     credentials,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(result);
+  res.status(HTTP_STATUS_CODES.CREATED).json(result);
 }
 
 async function refreshAccessToken(req: Request, res: ResponseWithContext) {
@@ -30,7 +30,7 @@ async function refreshAccessToken(req: Request, res: ResponseWithContext) {
     refreshToken,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(result);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(result);
 }
 
 /**********************************************************************************/

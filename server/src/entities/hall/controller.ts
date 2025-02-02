@@ -13,7 +13,7 @@ import * as hallValidator from './validator.js';
 async function getHalls(_req: Request, res: ResponseWithContext) {
   const halls = await hallService.getHalls(res.locals.context);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(halls);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(halls);
 }
 
 async function createHall(req: Request, res: ResponseWithContext) {
@@ -24,7 +24,7 @@ async function createHall(req: Request, res: ResponseWithContext) {
     hallToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).send(createdHall);
+  res.status(HTTP_STATUS_CODES.CREATED).json(createdHall);
 }
 
 async function updateHall(req: Request, res: ResponseWithContext) {
@@ -35,7 +35,7 @@ async function updateHall(req: Request, res: ResponseWithContext) {
     hallToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).send(updatedHall);
+  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedHall);
 }
 
 async function deleteHall(req: Request, res: ResponseWithContext) {
