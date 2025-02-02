@@ -39,6 +39,7 @@ class GeneralError extends Error {
     return logMessage;
   }
 
+  // The unused variable exists to allow overrides of child classes
   // eslint-disable-next-line no-unused-vars
   public getClientError(_res: Response) {
     const clientError = {

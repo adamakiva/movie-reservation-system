@@ -8,7 +8,7 @@ import type {
 
 import EnvironmentManager from './config.js';
 import { ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
-import { GeneralError, UnauthorizedError } from './error.js';
+import { GeneralError, UnauthorizedError } from './errors.js';
 import {
   decodeCursor,
   encodeCursor,
