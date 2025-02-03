@@ -18,14 +18,14 @@ services:
       - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
-      - ./database/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+      - ./config/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
       - /etc/passwd:/etc/passwd:ro
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       # PostgresQL config options instead of passing it via the CLI
-      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
       interval: 3s
