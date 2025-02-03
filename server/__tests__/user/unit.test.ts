@@ -1,8 +1,8 @@
-import { deleteRoles } from '../role/utils.js';
 import {
   after,
   assert,
   before,
+  clearDatabase,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
@@ -17,16 +17,15 @@ import {
   terminateServer,
   test,
   VALIDATION,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteUsers,
   generateRandomUserData,
   seedUser,
   seedUsers,
   serviceFunctions,
   validationFunctions,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -973,16 +972,13 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdUser, createdRole, ids } = await seedUser(
-      serverParams,
-      true,
-    );
+    const { createdUser, createdRole } = await seedUser(serverParams, true);
 
     try {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const shouldNotOccur = await serviceFunctions.createUser(
+          await serviceFunctions.createUser(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -994,7 +990,6 @@ await suite('User unit tests', async () => {
               email: createdUser.email,
             },
           );
-          ids.user.push(shouldNotOccur.id);
         },
         (err: GeneralError) => {
           assert.strictEqual(err instanceof GeneralError, true);
@@ -1007,8 +1002,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
@@ -1625,7 +1619,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdUsers, ids } = await seedUsers(serverParams, 2);
+    const { createdUsers } = await seedUsers(serverParams, 2);
 
     try {
       await assert.rejects(
@@ -1654,15 +1648,14 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
-    const { createdUser, ids } = await seedUser(serverParams, true);
+    const { createdUser } = await seedUser(serverParams, true);
 
     try {
       await assert.rejects(
@@ -1691,8 +1684,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

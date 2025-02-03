@@ -4,9 +4,9 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
-import type { DeleteRoleValidatedData } from './utils.js';
+import type { DeleteRoleValidatedData } from './utils.ts';
 
 /**********************************************************************************/
 

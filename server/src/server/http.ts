@@ -5,19 +5,19 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import type { AddressInfo } from 'node:net';
 
-import { Database } from '../database/index.js';
-import * as routers from '../entities/index.js';
+import { Database } from '../database/index.ts';
+import * as routers from '../entities/index.ts';
 import {
   ERROR_CODES,
   type LoggerHandler,
   type LogMiddleware,
-} from '../utils/index.js';
+} from '../utils/index.ts';
 
 import {
   AuthenticationManager,
   FileManager,
   Middlewares,
-} from './services/index.js';
+} from './services/index.ts';
 
 /**********************************************************************************/
 

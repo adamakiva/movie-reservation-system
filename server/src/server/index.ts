@@ -1,4 +1,4 @@
-import HttpServer from './http.js';
+import HttpServer from './http.ts';
 
 /**********************************************************************************/
 

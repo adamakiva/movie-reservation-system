@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
@@ -16,15 +17,14 @@ import {
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteGenres,
   seedGenre,
   seedGenres,
   serviceFunctions,
   validationFunctions,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -156,15 +156,15 @@ await suite('Genre unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdGenre, genreIds } = await seedGenre(serverParams);
+    const { name: genreName } = await seedGenre(serverParams);
 
-    const genreToCreate = { name: createdGenre.name };
+    const genreToCreate = { name: genreName };
 
     try {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const duplicateGenre = await serviceFunctions.createGenre(
+          await serviceFunctions.createGenre(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -173,20 +173,19 @@ await suite('Genre unit tests', async () => {
             },
             genreToCreate,
           );
-          genreIds.push(duplicateGenre.id);
         },
         (err: GeneralError) => {
           assert.strictEqual(err instanceof GeneralError, true);
           assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Genre '${createdGenre.name}' already exists`,
+            message: `Genre '${genreName}' already exists`,
           });
 
           return true;
         },
       );
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -409,7 +408,7 @@ await suite('Genre unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdGenres, genreIds } = await seedGenres(serverParams, 2);
+    const createdGenres = await seedGenres(serverParams, 2);
 
     const genreToUpdate = {
       genreId: createdGenres[0]!.id,
@@ -440,7 +439,7 @@ await suite('Genre unit tests', async () => {
         },
       );
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

@@ -50,14 +50,12 @@ const userModel = pgTable(
   },
   (table) => {
     return [
-      // Enforced on the code level, you may not delete a role which has users
-      // attached to it
       foreignKey({
         columns: [table.roleId],
         foreignColumns: [roleModel.id],
         name: 'user_role_id_fk',
       })
-        .onDelete('no action')
+        .onDelete('cascade')
         .onUpdate('cascade'),
     ];
   },
@@ -175,24 +173,19 @@ const usersShowtimesModel = pgTable(
   },
   (table) => {
     return [
-      // We don't allow deleting a user with movie reservations. First you must
-      // cancel his reservations and only when they have no reservations they
-      // are allowed to be deleted (this logic is done on the code level)
       foreignKey({
         columns: [table.userId],
         foreignColumns: [userModel.id],
         name: 'user_showtime_user_id_fk',
       })
-        .onDelete('no action')
+        .onDelete('cascade')
         .onUpdate('cascade'),
-      // When a showtime is deleted the users should be notified/refunded
-      // before removing the entry for them (this logic is done on the code level)
       foreignKey({
         columns: [table.showtimeId],
         foreignColumns: [showtimeModel.id],
         name: 'user_showtime_showtime_id_fk',
       })
-        .onDelete('no action')
+        .onDelete('cascade')
         .onUpdate('cascade'),
       unique('user_showtime_unique_constraint').on(
         table.row,

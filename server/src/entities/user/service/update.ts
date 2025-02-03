@@ -6,13 +6,13 @@ import {
   type DatabaseHandler,
   type DatabaseModel,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   handleUserUpdateError,
   type UpdateUserValidatedData,
   type User,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

@@ -4,13 +4,13 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   type CreateMovieValidatedData,
   type Movie,
   handlePossibleMissingGenreError,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

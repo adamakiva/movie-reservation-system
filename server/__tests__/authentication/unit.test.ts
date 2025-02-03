@@ -1,5 +1,5 @@
-import * as serviceFunctions from '../../src/entities/authentication/service/index.js';
-import * as validationFunctions from '../../src/entities/authentication/validator.js';
+import * as serviceFunctions from '../../src/entities/authentication/service/index.ts';
+import * as validationFunctions from '../../src/entities/authentication/validator.ts';
 
 import {
   after,
@@ -19,7 +19,7 @@ import {
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 /**********************************************************************************/
 

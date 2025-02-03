@@ -1,15 +1,13 @@
-import { inArray } from 'drizzle-orm';
-
-import * as serviceFunctions from '../../src/entities/hall/service/index.js';
-import type { Hall } from '../../src/entities/hall/service/utils.js';
-import * as validationFunctions from '../../src/entities/hall/validator.js';
+import * as serviceFunctions from '../../src/entities/hall/service/index.ts';
+import type { Hall } from '../../src/entities/hall/service/utils.ts';
+import * as validationFunctions from '../../src/entities/hall/validator.ts';
 
 import {
   randomNumber,
   randomString,
   type ServerParams,
   VALIDATION,
-} from '../utils.js';
+} from '../utils.ts';
 
 const { HALL } = VALIDATION;
 
@@ -20,12 +18,9 @@ type CreateHall = Omit<Hall, 'id'>;
 /**********************************************************************************/
 
 async function seedHall(serverParams: ServerParams) {
-  const { createdHalls, hallIds } = await seedHalls(serverParams, 1);
+  const [createdHall] = await seedHalls(serverParams, 1);
 
-  return {
-    createdHall: createdHalls[0]!,
-    hallIds,
-  };
+  return createdHall!;
 }
 
 async function seedHalls(serverParams: ServerParams, amount: number) {
@@ -45,12 +40,7 @@ async function seedHalls(serverParams: ServerParams, amount: number) {
       columns: hallModel.columns,
     });
 
-  return {
-    createdHalls,
-    hallIds: createdHalls.map(({ id }) => {
-      return id;
-    }),
-  };
+  return createdHalls;
 }
 
 function generateHallsData(amount = 1) {
@@ -71,25 +61,9 @@ function generateHallsData(amount = 1) {
   return halls;
 }
 
-async function deleteHalls(serverParams: ServerParams, ...hallIds: string[]) {
-  hallIds = hallIds.filter((hallId) => {
-    return hallId;
-  });
-  if (!hallIds.length) {
-    return;
-  }
-
-  const { database } = serverParams;
-  const handler = database.getHandler();
-  const { hall: hallModel } = database.getModels();
-
-  await handler.delete(hallModel).where(inArray(hallModel.id, hallIds));
-}
-
 /**********************************************************************************/
 
 export {
-  deleteHalls,
   generateHallsData,
   seedHall,
   seedHalls,

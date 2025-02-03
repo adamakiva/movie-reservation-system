@@ -1,11 +1,11 @@
-import { router as authenticationRouter } from './authentication/router.js';
-import { router as genreRouter } from './genre/router.js';
-import { router as hallRouter } from './hall/router.js';
-import { router as healthcheckRouter } from './healthcheck/router.js';
-import { router as movieRouter } from './movie/router.js';
-import { router as roleRouter } from './role/router.js';
-import { router as showtimeRouter } from './showtime/router.js';
-import { router as userRouter } from './user/router.js';
+import { router as authenticationRouter } from './authentication/router.ts';
+import { router as genreRouter } from './genre/router.ts';
+import { router as hallRouter } from './hall/router.ts';
+import { router as healthcheckRouter } from './healthcheck/router.ts';
+import { router as movieRouter } from './movie/router.ts';
+import { router as roleRouter } from './role/router.ts';
+import { router as showtimeRouter } from './showtime/router.ts';
+import { router as userRouter } from './user/router.ts';
 
 /**********************************************************************************/
 

@@ -7,7 +7,7 @@ import {
   type DatabaseHandler,
   type DatabaseModel,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   handlePossibleShowtimeCreationError,
@@ -16,7 +16,7 @@ import {
   type ReserveShowtimeTicketValidatedData,
   type Showtime,
   type ShowtimeTicket,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

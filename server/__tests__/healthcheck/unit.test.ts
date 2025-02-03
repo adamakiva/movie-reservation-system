@@ -1,4 +1,4 @@
-import * as controller from '../../src/entities/healthcheck/controller.js';
+import * as controller from '../../src/entities/healthcheck/controller.ts';
 
 import {
   after,
@@ -16,7 +16,7 @@ import {
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 /**********************************************************************************/
 

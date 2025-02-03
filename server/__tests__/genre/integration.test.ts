@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -13,15 +14,14 @@ import {
   terminateServer,
   test,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteGenres,
   generateGenresData,
   seedGenre,
   seedGenres,
   type Genre,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -36,7 +36,7 @@ await suite('Genre integration tests', async () => {
 
   await test('Valid - Read many', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdGenres, genreIds } = await seedGenres(serverParams, 32);
+    const createdGenres = await seedGenres(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -55,12 +55,12 @@ await suite('Genre integration tests', async () => {
         assert.deepStrictEqual(genre, matchingGenre);
       });
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdGenres, genreIds } = await seedGenres(serverParams, 8_192);
+    const createdGenres = await seedGenres(serverParams, 8_192);
 
     try {
       const res = await sendHttpRequest({
@@ -79,7 +79,7 @@ await suite('Genre integration tests', async () => {
         assert.deepStrictEqual(genre, matchingGenre);
       });
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -92,8 +92,6 @@ await suite('Genre integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let genreId = '';
-
     const { accessToken } = await getAdminTokens(serverParams);
 
     const genreData = generateGenresData()[0]!;
@@ -108,14 +106,13 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Genre;
-      genreId = id;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...genreData, name: genreData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteGenres(serverParams, genreId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -129,13 +126,13 @@ await suite('Genre integration tests', async () => {
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdGenre, genreIds } = await seedGenre(serverParams);
+    const createdGenre = await seedGenre(serverParams);
 
     const updatedGenreData = generateGenresData()[0]!;
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/genres/${genreIds[0]}`,
+        route: `${serverParams.routes.http}/genres/${createdGenre.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedGenreData,
@@ -154,7 +151,7 @@ await suite('Genre integration tests', async () => {
         updatedGenre,
       );
     } finally {
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent genre', async () => {
@@ -186,7 +183,7 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteGenres(serverParams, genreId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent genre', async () => {

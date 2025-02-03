@@ -4,7 +4,7 @@ import { inspect } from 'node:util';
 
 import type { Response } from 'express';
 
-import { HTTP_STATUS_CODES } from './constants.js';
+import { HTTP_STATUS_CODES } from './constants.ts';
 
 /**********************************************************************************/
 

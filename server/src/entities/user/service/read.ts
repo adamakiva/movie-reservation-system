@@ -6,13 +6,13 @@ import {
   type PaginatedResult,
   type RequestContext,
   encodeCursor,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   GetUserValidatedData,
   GetUsersValidatedData,
   User,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

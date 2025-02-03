@@ -1,7 +1,7 @@
-import { createRole } from './create.js';
-import { deleteRole } from './delete.js';
-import { getRoles } from './read.js';
-import { updateRole } from './update.js';
+import { createRole } from './create.ts';
+import { deleteRole } from './delete.ts';
+import { getRoles } from './read.ts';
+import { updateRole } from './update.ts';
 
 /**********************************************************************************/
 

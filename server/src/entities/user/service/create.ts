@@ -4,13 +4,13 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   handleUserCreationError,
   type CreateUserValidatedData,
   type User,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

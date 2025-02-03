@@ -4,9 +4,9 @@ import {
   type RequestContext,
   type ResponseWithContext,
   HTTP_STATUS_CODES,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
-import * as healthCheckValidator from './validator.js';
+import * as healthCheckValidator from './validator.ts';
 
 /**********************************************************************************/
 

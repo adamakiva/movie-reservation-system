@@ -7,14 +7,14 @@ import {
   type PaginatedResult,
   type RequestContext,
   type ResponseWithContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   GetMoviesValidatedData,
   GetMovieValidatedData,
   Movie,
   MoviePoster,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

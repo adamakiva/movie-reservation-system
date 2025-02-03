@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -13,15 +14,9 @@ import {
   terminateServer,
   test,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
-import {
-  deleteHalls,
-  generateHallsData,
-  seedHall,
-  seedHalls,
-  type Hall,
-} from './utils.js';
+import { generateHallsData, seedHall, seedHalls, type Hall } from './utils.ts';
 
 /**********************************************************************************/
 
@@ -36,7 +31,7 @@ await suite('Hall integration tests', async () => {
 
   await test('Valid - Read many', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdHalls, hallIds } = await seedHalls(serverParams, 32);
+    const createdHalls = await seedHalls(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -55,12 +50,12 @@ await suite('Hall integration tests', async () => {
         assert.deepStrictEqual(hall, matchingHall);
       });
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdHalls, hallIds } = await seedHalls(serverParams, 8_192);
+    const createdHalls = await seedHalls(serverParams, 8_192);
 
     try {
       const res = await sendHttpRequest({
@@ -79,7 +74,7 @@ await suite('Hall integration tests', async () => {
         assert.deepStrictEqual(hall, matchingHall);
       });
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -92,8 +87,6 @@ await suite('Hall integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let hallId = '';
-
     const { accessToken } = await getAdminTokens(serverParams);
 
     const hallData = generateHallsData()[0]!;
@@ -108,14 +101,13 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Hall;
-      hallId = id;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...hallData, name: hallData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteHalls(serverParams, hallId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -129,13 +121,13 @@ await suite('Hall integration tests', async () => {
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdHall, hallIds } = await seedHall(serverParams);
+    const createdHall = await seedHall(serverParams);
 
     const updatedHallData = generateHallsData()[0]!;
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/halls/${hallIds[0]}`,
+        route: `${serverParams.routes.http}/halls/${createdHall.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedHallData,
@@ -154,7 +146,7 @@ await suite('Hall integration tests', async () => {
         updatedHall,
       );
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent hall', async () => {
@@ -186,7 +178,7 @@ await suite('Hall integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteHalls(serverParams, hallId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent hall', async () => {

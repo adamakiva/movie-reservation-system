@@ -1,7 +1,7 @@
-import { createMovie } from './create.js';
-import { deleteMovie } from './delete.js';
-import { getMovie, getMoviePoster, getMovies } from './read.js';
-import { updateMovie } from './update.js';
+import { createMovie } from './create.ts';
+import { deleteMovie } from './delete.ts';
+import { getMovie, getMoviePoster, getMovies } from './read.ts';
+import { updateMovie } from './update.ts';
 
 /**********************************************************************************/
 

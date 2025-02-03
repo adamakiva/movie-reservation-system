@@ -1,352 +1,17 @@
 import type { Request } from 'express';
-import zod, { ZodIssueCode } from 'zod';
 
-import { decodeCursor } from '../../utils/index.js';
-
-import {
-  coerceNumber,
-  cursorSchema,
-  parseValidationResult,
-  VALIDATION,
-} from '../utils.validator.js';
+import { parseValidationResult, SCHEMAS } from '../utils.validator.ts';
 
 /**********************************************************************************/
 
-const { GENRE, MOVIE, PAGINATION, PARAMS, QUERY } = VALIDATION;
-
-/**********************************************************************************/
-
-const getMoviesSchema = zod
-  .object(
-    {
-      cursor: zod
-        .string({
-          invalid_type_error: PAGINATION.CURSOR.INVALID_TYPE_ERROR_MESSAGE,
-        })
-        .min(
-          PAGINATION.CURSOR.MIN_LENGTH.VALUE,
-          PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
-        )
-        .max(
-          PAGINATION.CURSOR.MAX_LENGTH.VALUE,
-          PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
-        )
-        .base64(PAGINATION.CURSOR.ERROR_MESSAGE)
-        .optional(),
-      'page-size': zod
-        .preprocess(
-          coerceNumber(PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE),
-          zod
-            .number()
-            .min(
-              PAGINATION.PAGE_SIZE.MIN_LENGTH.VALUE,
-              PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
-            )
-            .max(
-              PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE,
-              PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
-            ),
-        )
-        .default(PAGINATION.PAGE_SIZE.DEFAULT_VALUE),
-    },
-    {
-      invalid_type_error: QUERY.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: QUERY.REQUIRED_ERROR_MESSAGE,
-    },
-  )
-  .transform((val, context) => {
-    if (!val.cursor || val.cursor === 'undefined' || val.cursor === 'null') {
-      return {
-        pageSize: val['page-size'],
-      } as const;
-    }
-
-    try {
-      const { id, createdAt } = cursorSchema.parse(decodeCursor(val.cursor));
-
-      return {
-        cursor: { id, createdAt },
-        pageSize: val['page-size'],
-      } as const;
-    } catch {
-      context.addIssue({
-        code: ZodIssueCode.custom,
-        message: PAGINATION.CURSOR.ERROR_MESSAGE,
-        fatal: true,
-      });
-    }
-
-    return zod.NEVER;
-  });
-
-const getMovieSchema = zod.object(
-  {
-    movie_id: zod
-      .string({
-        invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
-      })
-      .uuid(MOVIE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const getMoviePosterSchema = zod.object(
-  {
-    movie_id: zod
-      .string({
-        invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
-      })
-      .uuid(MOVIE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const createMovieSchema = zod.object({
-  title: zod
-    .string({
-      invalid_type_error: MOVIE.TITLE.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: MOVIE.TITLE.REQUIRED_ERROR_MESSAGE,
-    })
-    .min(MOVIE.TITLE.MIN_LENGTH.VALUE, MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE)
-    .max(MOVIE.TITLE.MAX_LENGTH.VALUE, MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE),
-  description: zod
-    .string({
-      invalid_type_error: MOVIE.DESCRIPTION.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: MOVIE.DESCRIPTION.REQUIRED_ERROR_MESSAGE,
-    })
-    .min(
-      MOVIE.DESCRIPTION.MIN_LENGTH.VALUE,
-      MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
-    )
-    .max(
-      MOVIE.DESCRIPTION.MAX_LENGTH.VALUE,
-      MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
-    ),
-  poster: zod
-    .object(
-      {
-        path: zod
-          .string({
-            invalid_type_error:
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-            required_error:
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
-          })
-          .min(
-            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE,
-            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
-          )
-          .max(
-            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE,
-            MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
-          ),
-        mimeType: zod
-          .string({
-            invalid_type_error:
-              MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
-          })
-          .nonempty(MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE),
-        size: zod
-          .number({
-            invalid_type_error:
-              MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
-          })
-          .min(
-            MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE,
-            MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
-          )
-          .max(
-            MOVIE.POSTER.FILE_SIZE.MAX_VALUE.VALUE,
-            MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
-          ),
-      },
-      {
-        invalid_type_error: MOVIE.POSTER.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
-      },
-    )
-    .transform((val) => {
-      const { path, size, ...fields } = val;
-
-      return {
-        ...fields,
-        absolutePath: path,
-        sizeInBytes: size,
-      };
-    }),
-  price: zod.preprocess(
-    coerceNumber(
-      MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
-      MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
-    ),
-    zod
-      .number()
-      .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
-      .max(MOVIE.PRICE.MAX_VALUE.VALUE, MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE),
-  ),
-  genreId: zod
-    .string({
-      invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
-      required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
-    })
-    .uuid(GENRE.ID.ERROR_MESSAGE),
-});
-
-const updateMovieBodySchema = zod
-  .object({
-    title: zod
-      .string({
-        invalid_type_error: MOVIE.TITLE.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.TITLE.REQUIRED_ERROR_MESSAGE,
-      })
-      .min(MOVIE.TITLE.MIN_LENGTH.VALUE, MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE)
-      .max(MOVIE.TITLE.MAX_LENGTH.VALUE, MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE)
-      .optional(),
-    description: zod
-      .string({
-        invalid_type_error: MOVIE.DESCRIPTION.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.DESCRIPTION.REQUIRED_ERROR_MESSAGE,
-      })
-      .min(
-        MOVIE.DESCRIPTION.MIN_LENGTH.VALUE,
-        MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
-      )
-      .max(
-        MOVIE.DESCRIPTION.MAX_LENGTH.VALUE,
-        MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
-      )
-      .optional(),
-    poster: zod
-      .object(
-        {
-          path: zod
-            .string({
-              invalid_type_error:
-                MOVIE.POSTER.ABSOLUTE_FILE_PATH.INVALID_TYPE_ERROR_MESSAGE,
-              required_error:
-                MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
-            })
-            .min(
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE,
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
-            )
-            .max(
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE,
-              MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
-            ),
-          mimeType: zod
-            .string({
-              invalid_type_error:
-                MOVIE.POSTER.MIME_TYPE.INVALID_TYPE_ERROR_MESSAGE,
-              required_error: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
-            })
-            .nonempty(MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE),
-          size: zod
-            .number({
-              invalid_type_error:
-                MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
-              required_error: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
-            })
-            .min(
-              MOVIE.POSTER.FILE_SIZE.MIN_VALUE.VALUE,
-              MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
-            )
-            .max(
-              MOVIE.POSTER.FILE_SIZE.MAX_VALUE.VALUE,
-              MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
-            ),
-        },
-        {
-          invalid_type_error: MOVIE.POSTER.INVALID_TYPE_ERROR_MESSAGE,
-          required_error: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
-        },
-      )
-      .transform((val) => {
-        const { path, size, ...fields } = val;
-
-        return {
-          ...fields,
-          absolutePath: path,
-          sizeInBytes: size,
-        };
-      })
-      .optional(),
-    price: zod
-      .preprocess(
-        coerceNumber(MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE),
-        zod
-          .number()
-          .min(MOVIE.PRICE.MIN_VALUE.VALUE, MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE)
-          .max(
-            MOVIE.PRICE.MAX_VALUE.VALUE,
-            MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
-          ),
-      )
-      .optional(),
-    genreId: zod
-      .string({
-        invalid_type_error: GENRE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: GENRE.ID.REQUIRED_ERROR_MESSAGE,
-      })
-      .uuid(GENRE.ID.ERROR_MESSAGE)
-      .optional(),
-  })
-  .superRefine((movieUpdates, context) => {
-    if (!Object.keys(movieUpdates).length) {
-      context.addIssue({
-        code: ZodIssueCode.custom,
-        message: MOVIE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
-        fatal: true,
-      });
-    }
-  });
-
-const updateMovieParamsSchema = zod.object(
-  {
-    movie_id: zod
-      .string({
-        invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
-      })
-      .uuid(MOVIE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
-
-const deleteMovieSchema = zod.object(
-  {
-    movie_id: zod
-      .string({
-        invalid_type_error: MOVIE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
-      })
-      .uuid(MOVIE.ID.ERROR_MESSAGE),
-  },
-  {
-    invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
-  },
-);
+const { MOVIE, MOVIE_POSTER } = SCHEMAS;
 
 /**********************************************************************************/
 
 function validateGetMovies(req: Request) {
   const { query } = req;
 
-  const validatedResult = getMoviesSchema.safeParse(query);
+  const validatedResult = MOVIE.READ.MANY.safeParse(query);
   const parsedValidatedResult = parseValidationResult(validatedResult);
 
   return parsedValidatedResult;
@@ -355,7 +20,7 @@ function validateGetMovies(req: Request) {
 function validateGetMovie(req: Request) {
   const { params } = req;
 
-  const validatedResult = getMovieSchema.safeParse(params);
+  const validatedResult = MOVIE.READ.SINGLE.safeParse(params);
   const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;
@@ -364,7 +29,7 @@ function validateGetMovie(req: Request) {
 function validateGetMoviePoster(req: Request) {
   const { params } = req;
 
-  const validatedResult = getMoviePosterSchema.safeParse(params);
+  const validatedResult = MOVIE_POSTER.READ.safeParse(params);
   const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;
@@ -374,7 +39,7 @@ function validateCreateMovie(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { body, file } = req;
 
-  const validatedResult = createMovieSchema.safeParse({
+  const validatedResult = MOVIE.CREATE.safeParse({
     ...body,
     poster: file,
   });
@@ -390,10 +55,10 @@ function validateUpdateMovie(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const updates = file ? { ...body, poster: file } : body;
 
-  const validatedBodyResult = updateMovieBodySchema.safeParse(updates);
+  const validatedBodyResult = MOVIE.UPDATE.BODY.safeParse(updates);
   const movieToUpdate = parseValidationResult(validatedBodyResult);
 
-  const validatedParamsResult = updateMovieParamsSchema.safeParse(params);
+  const validatedParamsResult = MOVIE.UPDATE.PARAMS.safeParse(params);
   const { movie_id: movieId } = parseValidationResult(validatedParamsResult);
 
   return {
@@ -405,7 +70,7 @@ function validateUpdateMovie(req: Request) {
 function validateDeleteMovie(req: Request) {
   const { params } = req;
 
-  const validatedResult = deleteMovieSchema.safeParse(params);
+  const validatedResult = MOVIE.DELETE.safeParse(params);
   const { movie_id: movieId } = parseValidationResult(validatedResult);
 
   return movieId;

@@ -68,6 +68,7 @@ services:
       - ADMIN_PASSWORD=bla123
       # Node flags and options
       - NODE_ENV=production
+      - NODE_NO_WARNINGS=0
       - NODE_MAX_SOCKETS=256
       - NODE_MAX_TOTAL_SOCKETS=2048
       - NODE_DEFAULT_HIGH_WATERMARK=262144  # 256kb

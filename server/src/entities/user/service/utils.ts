@@ -4,7 +4,7 @@ import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   validateCreateUser,
@@ -12,7 +12,7 @@ import type {
   validateGetUser,
   validateGetUsers,
   validateUpdateUser,
-} from '../validator.js';
+} from '../validator.ts';
 
 /**********************************************************************************/
 

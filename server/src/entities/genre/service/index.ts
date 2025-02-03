@@ -1,7 +1,7 @@
-import { createGenre } from './create.js';
-import { deleteGenre } from './delete.js';
-import { getGenres } from './read.js';
-import { updateGenre } from './update.js';
+import { createGenre } from './create.ts';
+import { deleteGenre } from './delete.ts';
+import { getGenres } from './read.ts';
+import { updateGenre } from './update.ts';
 
 /**********************************************************************************/
 

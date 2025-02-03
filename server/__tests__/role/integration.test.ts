@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -13,15 +14,9 @@ import {
   terminateServer,
   test,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
-import {
-  deleteRoles,
-  generateRolesData,
-  seedRole,
-  seedRoles,
-  type Role,
-} from './utils.js';
+import { generateRolesData, seedRole, seedRoles, type Role } from './utils.ts';
 
 /**********************************************************************************/
 
@@ -36,7 +31,7 @@ await suite('Role integration tests', async () => {
 
   await test('Valid - Read many', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdRoles, roleIds } = await seedRoles(serverParams, 32);
+    const createdRoles = await seedRoles(serverParams, 32);
 
     try {
       const res = await sendHttpRequest({
@@ -55,12 +50,12 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await deleteRoles(serverParams, ...roleIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdRoles, roleIds } = await seedRoles(serverParams, 8_192);
+    const createdRoles = await seedRoles(serverParams, 8_192);
 
     try {
       const res = await sendHttpRequest({
@@ -79,7 +74,7 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await deleteRoles(serverParams, ...roleIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -92,8 +87,6 @@ await suite('Role integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let roleId = '';
-
     const { accessToken } = await getAdminTokens(serverParams);
 
     const roleData = generateRolesData()[0]!;
@@ -108,14 +101,13 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...fields } = (await res.json()) as Role;
-      roleId = id;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...roleData, name: roleData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await deleteRoles(serverParams, roleId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -129,13 +121,13 @@ await suite('Role integration tests', async () => {
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdRole, roleIds } = await seedRole(serverParams);
+    const createdRole = await seedRole(serverParams);
 
     const updatedRoleData = generateRolesData()[0]!;
 
     try {
       const res = await sendHttpRequest({
-        route: `${serverParams.routes.http}/roles/${roleIds[0]}`,
+        route: `${serverParams.routes.http}/roles/${createdRole.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedRoleData,
@@ -154,7 +146,7 @@ await suite('Role integration tests', async () => {
         updatedRole,
       );
     } finally {
-      await deleteRoles(serverParams, ...roleIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent role', async () => {
@@ -186,7 +178,7 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteRoles(serverParams, roleId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent role', async () => {

@@ -7,7 +7,7 @@ import {
   HTTP_STATUS_CODES,
   type ResponseWithContext,
   type ResponseWithoutContext,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
 /**********************************************************************************/
 

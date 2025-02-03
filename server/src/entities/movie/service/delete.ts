@@ -4,9 +4,9 @@ import {
   type RequestContext,
   GeneralError,
   HTTP_STATUS_CODES,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
-import type { DeleteMovieValidatedData } from './utils.js';
+import type { DeleteMovieValidatedData } from './utils.ts';
 
 /**********************************************************************************/
 

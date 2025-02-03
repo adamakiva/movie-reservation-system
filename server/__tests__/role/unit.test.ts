@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
@@ -16,15 +17,14 @@ import {
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteRoles,
   seedRole,
   seedRoles,
   serviceFunctions,
   validationFunctions,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -156,10 +156,10 @@ await suite('Role unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdRole, roleIds } = await seedRole(serverParams);
+    const { name: roleName } = await seedRole(serverParams);
 
     try {
-      const roleToCreate = { name: createdRole.name };
+      const roleToCreate = { name: roleName };
 
       await assert.rejects(
         async () => {
@@ -177,14 +177,14 @@ await suite('Role unit tests', async () => {
           assert.strictEqual(err instanceof GeneralError, true);
           assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Role '${createdRole.name}' already exists`,
+            message: `Role '${roleName}' already exists`,
           });
 
           return true;
         },
       );
     } finally {
-      await deleteRoles(serverParams, ...roleIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -407,7 +407,7 @@ await suite('Role unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdRoles, roleIds } = await seedRoles(serverParams, 2);
+    const createdRoles = await seedRoles(serverParams, 2);
 
     try {
       const roleToUpdate = {
@@ -438,7 +438,7 @@ await suite('Role unit tests', async () => {
         },
       );
     } finally {
-      await deleteRoles(serverParams, ...roleIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

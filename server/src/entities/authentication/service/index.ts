@@ -6,7 +6,7 @@ import {
   HTTP_STATUS_CODES,
   type RequestContext,
   UnauthorizedError,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 /**********************************************************************************/
 

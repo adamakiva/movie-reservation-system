@@ -4,13 +4,13 @@ import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   validateCreateRole,
   validateDeleteRole,
   validateUpdateRole,
-} from '../validator.js';
+} from '../validator.ts';
 
 /**********************************************************************************/
 

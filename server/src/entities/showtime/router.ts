@@ -1,8 +1,8 @@
 import { Router, json } from 'express';
 
-import type { AuthenticationManager } from '../../server/services/index.js';
+import type { AuthenticationManager } from '../../server/services/index.ts';
 
-import * as showtimeController from './controller.js';
+import * as showtimeController from './controller.ts';
 
 /**********************************************************************************/
 

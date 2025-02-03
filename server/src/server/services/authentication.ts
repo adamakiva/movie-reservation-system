@@ -7,7 +7,7 @@ import * as jose from 'jose';
 import {
   UnauthorizedError,
   type ResponseWithContext,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
 /**********************************************************************************/
 

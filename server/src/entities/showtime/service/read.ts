@@ -6,14 +6,14 @@ import {
   type DatabaseModel,
   type PaginatedResult,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   GetShowtimeValidatedData,
   GetUserShowtimesValidatedData,
   Showtime,
   UserShowtime,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -59,7 +59,6 @@ async function getShowtimes(
       createdAt: getPaginatedShowtimes.createdAt,
     })
     .from(getPaginatedShowtimes)
-
     .leftJoin(
       userShowtimeModel,
       eq(userShowtimeModel.showtimeId, getPaginatedShowtimes.showtimeId),

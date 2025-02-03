@@ -1,10 +1,10 @@
-import { deleteGenres } from '../genre/utils.js';
-import { deleteHalls, seedHall } from '../hall/utils.js';
-import { deleteMovies, seedMovie } from '../movie/utils.js';
+import { seedHall } from '../hall/utils.ts';
+import { seedMovie } from '../movie/utils.ts';
 import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -17,39 +17,18 @@ import {
   test,
   VALIDATION,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteShowtimes,
   generateShowtimesData,
   seedShowtimes,
   type Showtime,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
 const { SHOWTIME } = VALIDATION;
-
-async function createShowtime(params: {
-  serverParams: ServerParams;
-  genreIds: string[];
-  movieIds: string[];
-  hallIds: string[];
-}) {
-  const { genreIds, movieIds, hallIds, serverParams } = params;
-
-  const { createdMovie, ids } = await seedMovie(serverParams);
-  genreIds.push(...ids.genre);
-  movieIds.push(...ids.movie);
-
-  const { createdHall, hallIds: createdHallIds } = await seedHall(serverParams);
-  hallIds.push(...createdHallIds);
-
-  return {
-    createdMovie,
-    createdHall,
-  };
-}
+const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 function compareShowtimes(params: {
   movies: Awaited<ReturnType<typeof seedShowtimes>>['createdMovies'];
@@ -98,11 +77,13 @@ await suite('Showtime integration tests', async () => {
 
   await test('Valid - Read a single page without filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 32);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(serverParams, SINGLE_PAGE.CREATE);
 
     try {
-      const query = new URLSearchParams({ 'page-size': String(32) });
+      const query = new URLSearchParams({
+        'page-size': String(SINGLE_PAGE.SIZE),
+      });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
@@ -135,16 +116,13 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages without filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 1_024);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(serverParams, MULTIPLE_PAGES.CREATE);
 
     try {
       let pagination = {
@@ -156,7 +134,7 @@ await suite('Showtime integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -191,16 +169,13 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages without filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 8_192);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(serverParams, LOT_OF_PAGES.CREATE);
 
     try {
       let pagination = {
@@ -212,7 +187,7 @@ await suite('Showtime integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -247,22 +222,23 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a single page with movie filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 32, 16);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        SINGLE_PAGE.CREATE,
+        SINGLE_PAGE.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
 
     try {
       const query = new URLSearchParams({
         'movie-id': movieIdToFilterBy,
-        'page-size': String(32),
+        'page-size': String(SINGLE_PAGE.SIZE),
       });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -301,16 +277,17 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages with movie filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 1_024, 512);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        MULTIPLE_PAGES.CREATE,
+        MULTIPLE_PAGES.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
 
     try {
@@ -324,7 +301,7 @@ await suite('Showtime integration tests', async () => {
         const query = new URLSearchParams({
           'movie-id': movieIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -364,16 +341,17 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages with movie filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 8_192, 4_096);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        LOT_OF_PAGES.CREATE,
+        LOT_OF_PAGES.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
 
     try {
@@ -387,7 +365,7 @@ await suite('Showtime integration tests', async () => {
         const query = new URLSearchParams({
           'movie-id': movieIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -427,22 +405,23 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a single page with hall filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 32, 16);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        SINGLE_PAGE.CREATE,
+        SINGLE_PAGE.CREATE / 2,
+      );
     const hallIdToFilterBy = createdHalls[0]!.id;
 
     try {
       const query = new URLSearchParams({
         'hall-id': hallIdToFilterBy,
-        'page-size': String(32),
+        'page-size': String(SINGLE_PAGE.SIZE),
       });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -481,16 +460,17 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages with hall filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 1_024, 512);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        MULTIPLE_PAGES.CREATE,
+        MULTIPLE_PAGES.CREATE / 2,
+      );
     const hallIdToFilterBy = createdHalls[0]!.id;
 
     try {
@@ -504,7 +484,7 @@ await suite('Showtime integration tests', async () => {
         const query = new URLSearchParams({
           'hall-id': hallIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -544,16 +524,17 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages with hall filter', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 8_192, 4_096);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        LOT_OF_PAGES.CREATE,
+        LOT_OF_PAGES.CREATE / 2,
+      );
     const hallIdToFilterBy = createdHalls[0]!.id;
 
     try {
@@ -567,7 +548,7 @@ await suite('Showtime integration tests', async () => {
         const query = new URLSearchParams({
           'hall-id': hallIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -607,16 +588,17 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a single page with all filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 32, 16);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        SINGLE_PAGE.CREATE,
+        SINGLE_PAGE.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
     const hallIdToFilterBy = createdHalls[0]!.id;
 
@@ -624,7 +606,7 @@ await suite('Showtime integration tests', async () => {
       const query = new URLSearchParams({
         'movie-id': movieIdToFilterBy,
         'hall-id': hallIdToFilterBy,
-        'page-size': String(32),
+        'page-size': String(SINGLE_PAGE.SIZE),
       });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -666,16 +648,17 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages with all filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 1_024, 512);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        MULTIPLE_PAGES.CREATE,
+        MULTIPLE_PAGES.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
     const hallIdToFilterBy = createdHalls[0]!.id;
 
@@ -691,7 +674,7 @@ await suite('Showtime integration tests', async () => {
           'movie-id': movieIdToFilterBy,
           'hall-id': hallIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -734,16 +717,17 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages with all filters', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, createdHalls, createdShowtimes, ids } =
-      await seedShowtimes(serverParams, 8_192, 4_096);
+    const { createdMovies, createdHalls, createdShowtimes } =
+      await seedShowtimes(
+        serverParams,
+        LOT_OF_PAGES.CREATE,
+        LOT_OF_PAGES.CREATE / 2,
+      );
     const movieIdToFilterBy = createdMovies[0]!.id;
     const hallIdToFilterBy = createdHalls[0]!.id;
 
@@ -759,7 +743,7 @@ await suite('Showtime integration tests', async () => {
           'movie-id': movieIdToFilterBy,
           'hall-id': hallIdToFilterBy,
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/showtimes?${query}`,
@@ -802,10 +786,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
-      await deleteHalls(serverParams, ...ids.hall);
-      await deleteShowtimes(serverParams, ...ids.showtime);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -823,19 +804,9 @@ await suite('Showtime integration tests', async () => {
   });
   await test('Valid - Create', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-
-    let showtimeId = '';
-    const genreIds: string[] = [];
-    const movieIds: string[] = [];
-    const hallIds: string[] = [];
-
     try {
-      const { createdMovie, createdHall } = await createShowtime({
-        serverParams,
-        genreIds,
-        movieIds,
-        hallIds,
-      });
+      const { createdMovie } = await seedMovie(serverParams);
+      const createdHall = await seedHall(serverParams);
 
       const showtimeData = {
         ...generateShowtimesData()[0]!,
@@ -854,7 +825,6 @@ await suite('Showtime integration tests', async () => {
       const { id, movieTitle, hallName, ...createdShowtime } =
         (await res.json()) as Showtime;
       const { movieId: _1, hallId: _2, ...expectedShowtime } = showtimeData;
-      showtimeId = id;
 
       assert.deepStrictEqual(
         { ...createdShowtime, at: new Date(createdShowtime.at) },
@@ -865,27 +835,15 @@ await suite('Showtime integration tests', async () => {
         { movieTitle: createdMovie.title, hallName: createdHall.name },
       );
     } finally {
-      await deleteMovies(serverParams, ...movieIds);
-      await deleteGenres(serverParams, ...genreIds);
-      await deleteHalls(serverParams, ...hallIds);
-      await deleteShowtimes(serverParams, showtimeId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    let showtimeId = '';
-    const genreIds: string[] = [];
-    const movieIds: string[] = [];
-    const hallIds: string[] = [];
-
     try {
-      const { createdMovie, createdHall } = await createShowtime({
-        serverParams,
-        genreIds,
-        movieIds,
-        hallIds,
-      });
+      const { createdMovie } = await seedMovie(serverParams);
+      const createdHall = await seedHall(serverParams);
 
       const showtimeData = {
         ...generateShowtimesData()[0]!,
@@ -901,7 +859,7 @@ await suite('Showtime integration tests', async () => {
       });
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-      ({ id: showtimeId } = (await res.json()) as Showtime);
+      const { id: showtimeId } = (await res.json()) as Showtime;
 
       res = await sendHttpRequest({
         route: `${serverParams.routes.http}/showtimes/${showtimeId}`,
@@ -914,10 +872,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteMovies(serverParams, ...movieIds);
-      await deleteGenres(serverParams, ...genreIds);
-      await deleteHalls(serverParams, ...hallIds);
-      await deleteShowtimes(serverParams, showtimeId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent', async () => {

@@ -1,42 +1,22 @@
 import type { Request } from 'express';
-import zod from 'zod';
 
 import {
   HTTP_STATUS_CODES,
   type ResponseWithContext,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
-import { parseValidationResult, VALIDATION } from '../utils.validator.js';
+import {
+  parseValidationResult,
+  SCHEMAS,
+  VALIDATION,
+} from '../utils.validator.ts';
 
 /**********************************************************************************/
 
-const { HEALTHCHECK } = VALIDATION;
-
-/**********************************************************************************/
-
-const healthCheckSchema = zod
-  .string({
-    invalid_type_error: HEALTHCHECK.HTTP_METHODS.INVALID_TYPE_ERROR_MESSAGE,
-    required_error: HEALTHCHECK.HTTP_METHODS.REQUIRED_ERROR_MESSAGE,
-  })
-  .min(
-    HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.VALUE,
-    HEALTHCHECK.HTTP_METHODS.MIN_LENGTH.ERROR_MESSAGE,
-  )
-  .max(
-    HEALTHCHECK.HTTP_METHODS.MAX_LENGTH.VALUE,
-    HEALTHCHECK.HTTP_METHODS.MAX_LENGTH.ERROR_MESSAGE,
-  )
-  .toUpperCase()
-  .pipe(
-    zod.enum(HEALTHCHECK.HTTP_METHODS.NAMES, {
-      errorMap: () => {
-        return {
-          message: HEALTHCHECK.HTTP_METHODS.ERROR_MESSAGE,
-        } as const;
-      },
-    }),
-  );
+const { HEALTHCHECK } = SCHEMAS;
+const {
+  HEALTHCHECK: { HTTP_METHODS },
+} = VALIDATION;
 
 /**********************************************************************************/
 
@@ -44,7 +24,7 @@ function validateHealthCheck(req: Request, res: ResponseWithContext) {
   try {
     const { method } = req;
 
-    const validatedResult = healthCheckSchema.safeParse(method);
+    const validatedResult = HEALTHCHECK.safeParse(method);
     const parsedValidatedResult = parseValidationResult(
       validatedResult,
       HTTP_STATUS_CODES.NOT_ALLOWED,
@@ -54,7 +34,7 @@ function validateHealthCheck(req: Request, res: ResponseWithContext) {
   } catch (err) {
     // When returning 405 you **must** supply the Allow header.
     // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-    res.set('Allow', Array.from(HEALTHCHECK.HTTP_METHODS.NAMES).join(', '));
+    res.set('Allow', Array.from(HTTP_METHODS.NAMES).join(', '));
 
     throw err;
   }

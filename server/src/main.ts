@@ -2,13 +2,13 @@ import { EventEmitter } from 'node:events';
 import { globalAgent } from 'node:http';
 import { join, resolve } from 'node:path';
 
-import { HttpServer } from './server/index.js';
+import { HttpServer } from './server/index.ts';
 import {
   EnvironmentManager,
   ERROR_CODES,
   Logger,
   type LoggerHandler,
-} from './utils/index.js';
+} from './utils/index.ts';
 
 /**********************************************************************************/
 

@@ -2,11 +2,11 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import pg from 'postgres';
 
-import type { LoggerHandler } from '../utils/index.js';
+import type { LoggerHandler } from '../utils/index.ts';
 
-import DatabaseLogger from './logger.js';
+import DatabaseLogger from './logger.ts';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */
-import * as schemas from './schemas.js';
+import * as schemas from './schemas.ts';
 
 /**********************************************************************************/
 
@@ -33,8 +33,8 @@ class Database {
 
     this.#healthCheckQuery = healthCheckQuery;
 
-    // Note about transactions, postgres.js and drizzle:
-    // Postgres.js create prepared statements per connection which lasts 60 minutes
+    // Note about transactions, postgres.ts and drizzle:
+    // Postgres.ts create prepared statements per connection which lasts 60 minutes
     // (according to the settings we've supplied). Using drizzle with prepared
     // statements (which is a lie, see the description in `handler.ts` file)
     // make an additional query before and after the transaction for something

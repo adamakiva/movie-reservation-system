@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
+import { hash } from 'argon2';
 import type { NextFunction, Request, Response } from 'express';
 import {
   createRequest,
@@ -16,20 +17,23 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
-import type { Database } from '../src/database/index.js';
-import { VALIDATION } from '../src/entities/utils.validator.js';
-import { HttpServer } from '../src/server/index.js';
-import * as Middlewares from '../src/server/services/middlewares.js';
+import { getTableName, sql } from 'drizzle-orm';
+import type { Database } from '../src/database/index.ts';
+import { VALIDATION } from '../src/entities/utils.validator.ts';
+import { HttpServer } from '../src/server/index.ts';
+import * as Middlewares from '../src/server/services/middlewares.ts';
 import {
   EnvironmentManager,
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
   Logger,
+  type DatabaseHandler,
+  type DatabaseModel,
   type LoggerHandler,
   type ResponseWithContext,
   type ResponseWithoutContext,
-} from '../src/utils/index.js';
+} from '../src/utils/index.ts';
 
 /**********************************************************************************/
 
@@ -47,7 +51,19 @@ process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 const CONSTANTS = {
   ONE_MEGABYTE_IN_BYTES: 1_000_000,
   EIGHT_MEGABYTES_IN_BYTES: 8_000_000,
-};
+  SINGLE_PAGE: {
+    CREATE: 32,
+    SIZE: 32,
+  },
+  MULTIPLE_PAGES: {
+    CREATE: 512,
+    SIZE: 8,
+  },
+  LOT_OF_PAGES: {
+    CREATE: 2_048,
+    SIZE: 8,
+  },
+} as const;
 
 const { PostgresError } = pg;
 
@@ -171,6 +187,53 @@ function getAdminRole() {
   } as const;
 
   return adminRole;
+}
+
+async function clearDatabase(serverParams: ServerParams) {
+  const { database } = serverParams;
+  const handler = database.getHandler();
+  const models = database.getModels();
+
+  const queryParts = Object.values(models)
+    .map((model) => {
+      return `"${getTableName(model)}"`;
+    })
+    .join(', ');
+  await handler.execute(sql.raw(`TRUNCATE ${queryParts} CASCADE;`));
+
+  await recreateAdminRoleAndUser(handler, {
+    role: models.role,
+    user: models.user,
+  });
+}
+
+async function recreateAdminRoleAndUser(
+  handler: DatabaseHandler,
+  models: { role: DatabaseModel<'role'>; user: DatabaseModel<'user'> },
+) {
+  const { role: roleModel, user: userModel } = models;
+
+  // Don't promise.all this, the role has to be created before the user
+  await handler
+    .insert(roleModel)
+    .values({
+      id: process.env.ADMIN_ROLE_ID!,
+      name: process.env.ADMIN_ROLE_NAME!,
+    })
+    .onConflictDoNothing();
+  await handler
+    .insert(userModel)
+    .values({
+      firstName: 'admin',
+      lastName: 'admin',
+      email: process.env.ADMIN_EMAIL!,
+      hash: await hash(process.env.ADMIN_PASSWORD!, {
+        type: 1,
+        secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
+      }),
+      roleId: process.env.ADMIN_ROLE_ID!,
+    })
+    .onConflictDoNothing();
 }
 
 /***************************** General utils **************************************/
@@ -339,6 +402,7 @@ export {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   createHttpMocks,
   ERROR_CODES,

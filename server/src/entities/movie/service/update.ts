@@ -6,13 +6,13 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   handlePossibleMissingGenreError,
   type Movie,
   type UpdateMovieValidatedData,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -155,7 +155,7 @@ async function updateMovieIncludingPosterInDatabase(params: {
     const outdatedFileAbsolutePath = moviePoster.absolutePath;
 
     const updatedMovie = await updateMovieInDatabase({
-      handler,
+      handler: transaction,
       subQueries,
       genreModel,
       movieId,

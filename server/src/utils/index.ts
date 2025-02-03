@@ -1,21 +1,21 @@
 import type { Response } from 'express';
 
-import type { Database } from '../database/index.js';
+import type { Database } from '../database/index.ts';
 import type {
   AuthenticationManager,
   FileManager,
-} from '../server/services/index.js';
+} from '../server/services/index.ts';
 
-import EnvironmentManager from './config.js';
-import { ERROR_CODES, HTTP_STATUS_CODES } from './constants.js';
-import { GeneralError, UnauthorizedError } from './errors.js';
+import EnvironmentManager from './config.ts';
+import { ERROR_CODES, HTTP_STATUS_CODES } from './constants.ts';
+import { GeneralError, UnauthorizedError } from './errors.ts';
 import {
   decodeCursor,
   encodeCursor,
   randomAlphaNumericString,
   strcasecmp,
-} from './functions.js';
-import Logger, { type LogMiddleware, type LoggerHandler } from './logger.js';
+} from './functions.ts';
+import Logger, { type LogMiddleware, type LoggerHandler } from './logger.ts';
 
 /********************************** Http ******************************************/
 

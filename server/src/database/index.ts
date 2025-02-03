@@ -1,4 +1,4 @@
-import Database from './handler.js';
+import Database from './handler.ts';
 
 /**********************************************************************************/
 

@@ -1,10 +1,8 @@
-import { inArray } from 'drizzle-orm';
+import * as serviceFunctions from '../../src/entities/genre/service/index.ts';
+import type { Genre } from '../../src/entities/genre/service/utils.ts';
+import * as validationFunctions from '../../src/entities/genre/validator.ts';
 
-import * as serviceFunctions from '../../src/entities/genre/service/index.js';
-import type { Genre } from '../../src/entities/genre/service/utils.js';
-import * as validationFunctions from '../../src/entities/genre/validator.js';
-
-import { randomString, VALIDATION, type ServerParams } from '../utils.js';
+import { randomString, VALIDATION, type ServerParams } from '../utils.ts';
 
 /**********************************************************************************/
 
@@ -15,12 +13,9 @@ const { GENRE } = VALIDATION;
 /**********************************************************************************/
 
 async function seedGenre(serverParams: ServerParams) {
-  const { createdGenres, genreIds } = await seedGenres(serverParams, 1);
+  const [createdGenre] = await seedGenres(serverParams, 1);
 
-  return {
-    createdGenre: createdGenres[0]!,
-    genreIds,
-  };
+  return createdGenre!;
 }
 
 async function seedGenres(serverParams: ServerParams, amount: number) {
@@ -35,12 +30,7 @@ async function seedGenres(serverParams: ServerParams, amount: number) {
     .values(genresToCreate)
     .returning({ id: genreModel.id, name: genreModel.name });
 
-  return {
-    createdGenres,
-    genreIds: createdGenres.map(({ id }) => {
-      return id;
-    }),
-  };
+  return createdGenres;
 }
 
 function generateGenresData(amount = 1) {
@@ -53,25 +43,9 @@ function generateGenresData(amount = 1) {
   return genres;
 }
 
-async function deleteGenres(serverParams: ServerParams, ...genreIds: string[]) {
-  genreIds = genreIds.filter((genreId) => {
-    return genreId;
-  });
-  if (!genreIds.length) {
-    return;
-  }
-
-  const { database } = serverParams;
-  const handler = database.getHandler();
-  const { genre: genreModel } = database.getModels();
-
-  await handler.delete(genreModel).where(inArray(genreModel.id, genreIds));
-}
-
 /**********************************************************************************/
 
 export {
-  deleteGenres,
   generateGenresData,
   seedGenre,
   seedGenres,

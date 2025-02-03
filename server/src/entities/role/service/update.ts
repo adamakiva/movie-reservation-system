@@ -4,13 +4,13 @@ import {
   type RequestContext,
   GeneralError,
   HTTP_STATUS_CODES,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   type Role,
   type UpdateRoleValidatedData,
   handlePossibleDuplicationError,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

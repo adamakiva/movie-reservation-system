@@ -1,7 +1,7 @@
-import { createUser } from './create.js';
-import { deleteUser } from './delete.js';
-import { getUser, getUsers } from './read.js';
-import { updateUser } from './update.js';
+import { createUser } from './create.ts';
+import { deleteUser } from './delete.ts';
+import { getUser, getUsers } from './read.ts';
+import { updateUser } from './update.ts';
 
 /**********************************************************************************/
 

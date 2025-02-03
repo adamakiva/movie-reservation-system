@@ -4,13 +4,13 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   type RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import {
   type Genre,
   type UpdateGenreValidatedData,
   handlePossibleDuplicationError,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

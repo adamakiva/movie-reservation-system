@@ -1,10 +1,10 @@
-import type { RequestContext } from '../../../utils/index.js';
+import type { RequestContext } from '../../../utils/index.ts';
 
 import {
   type CreateHallValidatedData,
   type Hall,
   handlePossibleDuplicationError,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

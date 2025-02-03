@@ -12,7 +12,7 @@ import {
   HTTP_STATUS_CODES,
   randomAlphaNumericString,
   type LoggerHandler,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
 /**********************************************************************************/
 

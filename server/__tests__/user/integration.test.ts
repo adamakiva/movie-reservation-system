@@ -1,8 +1,8 @@
-import { deleteRoles } from '../role/utils.js';
 import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminRole,
   getAdminTokens,
@@ -17,20 +17,20 @@ import {
   test,
   VALIDATION,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
   checkUserPassword,
-  deleteUsers,
   generateRandomUserData,
   seedUser,
   seedUsers,
   type User,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
 const { USER } = VALIDATION;
+const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 /**********************************************************************************/
 
@@ -45,11 +45,13 @@ await suite('User integration tests', async () => {
 
   await test('Valid - Read a single page', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers, ids } = await seedUsers(serverParams, 32);
+    const { createdUsers } = await seedUsers(serverParams, SINGLE_PAGE.CREATE);
 
     try {
       // 33 instead of 32 to include the admin as well
-      const query = new URLSearchParams({ 'page-size': String(33) });
+      const query = new URLSearchParams({
+        'page-size': String(SINGLE_PAGE.SIZE + 1),
+      });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/users?${query}`,
         method: 'GET',
@@ -79,13 +81,15 @@ await suite('User integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers, ids } = await seedUsers(serverParams, 1_024);
+    const { createdUsers } = await seedUsers(
+      serverParams,
+      MULTIPLE_PAGES.CREATE,
+    );
 
     try {
       let pagination = {
@@ -97,7 +101,7 @@ await suite('User integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/users?${query}`,
@@ -129,13 +133,12 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers, ids } = await seedUsers(serverParams, 8_192);
+    const { createdUsers } = await seedUsers(serverParams, LOT_OF_PAGES.CREATE);
 
     try {
       let pagination = {
@@ -147,7 +150,7 @@ await suite('User integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/users?${query}`,
@@ -179,8 +182,7 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -199,7 +201,6 @@ await suite('User integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let userId = '';
     const { accessToken } = await getAdminTokens(serverParams);
     const { id: roleId, name: roleName } = getAdminRole();
 
@@ -215,7 +216,6 @@ await suite('User integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
       const { id, ...createdUser } = (await res.json()) as User;
-      userId = id;
       const { roleId: _1, password: _2, ...expectedUser } = userData;
 
       assert.deepStrictEqual(createdUser, {
@@ -223,7 +223,7 @@ await suite('User integration tests', async () => {
         role: roleName,
       });
     } finally {
-      await deleteUsers(serverParams, userId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -237,10 +237,7 @@ await suite('User integration tests', async () => {
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUser, createdRole, ids } = await seedUser(
-      serverParams,
-      true,
-    );
+    const { createdUser, createdRole } = await seedUser(serverParams, true);
 
     try {
       const updatedUserData = generateRandomUserData(createdRole.id);
@@ -268,8 +265,7 @@ await suite('User integration tests', async () => {
         password: updatedUserData.password,
       });
     } finally {
-      await deleteUsers(serverParams, ...ids.user);
-      await deleteRoles(serverParams, ...ids.role);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent user', async () => {
@@ -299,7 +295,7 @@ await suite('User integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteUsers(serverParams, userId);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent user', async () => {

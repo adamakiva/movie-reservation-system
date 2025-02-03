@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  clearDatabase,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
@@ -17,15 +18,14 @@ import {
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteHalls,
   seedHall,
   seedHalls,
   serviceFunctions,
   validationFunctions,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -463,10 +463,10 @@ await suite('Hall unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdHall, hallIds } = await seedHall(serverParams);
+    const { name: hallName } = await seedHall(serverParams);
 
     const hallToCreate = {
-      name: createdHall.name,
+      name: hallName,
       rows: randomNumber(
         HALL.ROWS.MIN_LENGTH.VALUE + 1,
         HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -481,7 +481,7 @@ await suite('Hall unit tests', async () => {
       await assert.rejects(
         async () => {
           // In case the function does not throw, we want to clean the created entry
-          const duplicateHall = await serviceFunctions.createHall(
+          await serviceFunctions.createHall(
             {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
@@ -490,20 +490,19 @@ await suite('Hall unit tests', async () => {
             },
             hallToCreate,
           );
-          hallIds.push(duplicateHall.id);
         },
         (err: GeneralError) => {
           assert.strictEqual(err instanceof GeneralError, true);
           assert.deepStrictEqual(err.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
-            message: `Hall '${createdHall.name}' already exists`,
+            message: `Hall '${hallName}' already exists`,
           });
 
           return true;
         },
       );
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -918,7 +917,7 @@ await suite('Hall unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdHalls, hallIds } = await seedHalls(serverParams, 2);
+    const createdHalls = await seedHalls(serverParams, 2);
 
     const hallToUpdate = {
       hallId: createdHalls[0]!.id,
@@ -949,7 +948,7 @@ await suite('Hall unit tests', async () => {
         },
       );
     } finally {
-      await deleteHalls(serverParams, ...hallIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

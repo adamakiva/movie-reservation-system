@@ -1,7 +1,7 @@
-import { createHall } from './create.js';
-import { deleteHall } from './delete.js';
-import { getHalls } from './read.js';
-import { updateHall } from './update.js';
+import { createHall } from './create.ts';
+import { deleteHall } from './delete.ts';
+import { getHalls } from './read.ts';
+import { updateHall } from './update.ts';
 
 /**********************************************************************************/
 

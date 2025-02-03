@@ -1,6 +1,6 @@
-import { createShowtime, reserveShowtimeTicket } from './create.js';
-import { cancelUserShowtimeReservation, deleteShowtime } from './delete.js';
-import { getShowtimes, getUserShowtimes } from './read.js';
+import { createShowtime, reserveShowtimeTicket } from './create.ts';
+import { cancelUserShowtimeReservation, deleteShowtime } from './delete.ts';
+import { getShowtimes, getUserShowtimes } from './read.ts';
 
 /**********************************************************************************/
 

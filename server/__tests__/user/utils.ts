@@ -1,19 +1,20 @@
 import assert from 'node:assert/strict';
 
-import { eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
-import * as serviceFunctions from '../../src/entities/user/service/index.js';
-import type { User } from '../../src/entities/user/service/utils.js';
-import * as validationFunctions from '../../src/entities/user/validator.js';
+import * as serviceFunctions from '../../src/entities/user/service/index.ts';
+import type { User } from '../../src/entities/user/service/utils.ts';
+import * as validationFunctions from '../../src/entities/user/validator.ts';
 
-import { deleteRoles, seedRoles } from '../role/utils.js';
+import { seedRoles } from '../role/utils.ts';
 import {
+  clearDatabase,
   randomNumber,
   randomString,
   randomUUID,
   VALIDATION,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 /**********************************************************************************/
 
@@ -27,7 +28,7 @@ const { USER } = VALIDATION;
 /**********************************************************************************/
 
 async function seedUser(serverParams: ServerParams, withHashing = false) {
-  const { createdUsers, createdRoles, ids } = await seedUsers(
+  const { createdUsers, createdRoles } = await seedUsers(
     serverParams,
     1,
     withHashing,
@@ -36,7 +37,6 @@ async function seedUser(serverParams: ServerParams, withHashing = false) {
   return {
     createdUser: createdUsers[0]!,
     createdRole: createdRoles[0]!,
-    ids,
   };
 }
 
@@ -52,10 +52,7 @@ async function seedUsers(
 
   const usersToCreate = generateUsersData(amount);
 
-  const { createdRoles, roleIds } = await seedRoles(
-    serverParams,
-    Math.ceil(amount / ratio),
-  );
+  const createdRoles = await seedRoles(serverParams, Math.ceil(amount / ratio));
 
   try {
     const createdUsers = (
@@ -73,7 +70,8 @@ async function seedUsers(
 
               return {
                 ...fields,
-                roleId: roleIds[randomNumber(0, roleIds.length - 1)]!,
+                roleId:
+                  createdRoles[randomNumber(0, createdRoles.length - 1)]!.id,
                 hash,
               };
             }),
@@ -102,15 +100,9 @@ async function seedUsers(
     return {
       createdUsers,
       createdRoles,
-      ids: {
-        user: createdUsers.map(({ id }) => {
-          return id;
-        }),
-        role: roleIds,
-      },
     };
   } catch (err) {
-    await deleteRoles(serverParams, ...roleIds);
+    await clearDatabase(serverParams);
 
     throw err;
   }
@@ -131,20 +123,6 @@ function generateUsersData(amount = 1) {
 
 function generateRandomUserData(roleId?: string) {
   return { ...generateUsersData(1)[0]!, roleId: roleId ?? randomUUID() };
-}
-
-async function deleteUsers(serverParams: ServerParams, ...userIds: string[]) {
-  userIds = userIds.filter((userId) => {
-    return userId;
-  });
-  if (!userIds.length) {
-    return;
-  }
-
-  const databaseHandler = serverParams.database.getHandler();
-  const { user: userModel } = serverParams.database.getModels();
-
-  await databaseHandler.delete(userModel).where(inArray(userModel.id, userIds));
 }
 
 async function checkUserPassword(
@@ -172,7 +150,6 @@ async function checkUserPassword(
 
 export {
   checkUserPassword,
-  deleteUsers,
   generateRandomUserData,
   generateUsersData,
   seedUser,

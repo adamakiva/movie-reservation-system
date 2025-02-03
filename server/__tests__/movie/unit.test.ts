@@ -1,8 +1,8 @@
-import { deleteGenres } from '../genre/utils.js';
 import {
   after,
   assert,
   before,
+  clearDatabase,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
@@ -17,15 +17,14 @@ import {
   terminateServer,
   test,
   VALIDATION,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
-  deleteMovies,
   generateMovieDataIncludingPoster,
   seedMovie,
   serviceFunctions,
   validationFunctions,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
@@ -2055,7 +2054,7 @@ await suite('Movie unit tests', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const updatedGenreId = randomUUID();
 
-    const { createdMovie, ids } = await seedMovie(serverParams);
+    const { createdMovie } = await seedMovie(serverParams);
 
     try {
       await assert.rejects(
@@ -2084,8 +2083,7 @@ await suite('Movie unit tests', async () => {
         },
       );
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

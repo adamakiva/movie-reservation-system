@@ -1,13 +1,15 @@
-import { inArray } from 'drizzle-orm';
+import * as serviceFunctions from '../../src/entities/showtime/service/index.ts';
+import type { Showtime } from '../../src/entities/showtime/service/utils.ts';
+import * as validationFunctions from '../../src/entities/showtime/validator.ts';
 
-import * as serviceFunctions from '../../src/entities/showtime/service/index.js';
-import type { Showtime } from '../../src/entities/showtime/service/utils.js';
-import * as validationFunctions from '../../src/entities/showtime/validator.js';
-
-import { deleteGenres } from '../genre/utils.js';
-import { deleteHalls, seedHalls } from '../hall/utils.js';
-import { deleteMovies, seedMovies } from '../movie/utils.js';
-import { randomNumber, type ServerParams, VALIDATION } from '../utils.js';
+import { seedHalls } from '../hall/utils.ts';
+import { seedMovies } from '../movie/utils.ts';
+import {
+  clearDatabase,
+  randomNumber,
+  type ServerParams,
+  VALIDATION,
+} from '../utils.ts';
 
 /**********************************************************************************/
 
@@ -47,13 +49,10 @@ async function seedShowtimes(
   const { showtime: showtimeModel } = database.getModels();
 
   const showtimesToCreate = generateShowtimesData(amount);
-  const { createdMovies, createdMoviePosters, createdGenres, ids } =
+  const { createdMovies, createdMoviePosters, createdGenres } =
     await seedMovies(serverParams, Math.ceil(amount / ratio));
 
-  const { createdHalls, hallIds } = await seedHalls(
-    serverParams,
-    Math.ceil(amount / ratio),
-  );
+  const createdHalls = await seedHalls(serverParams, Math.ceil(amount / ratio));
 
   try {
     const createdShowtimes = await handler
@@ -62,8 +61,9 @@ async function seedShowtimes(
         showtimesToCreate.map((showtimeToCreate) => {
           return {
             ...showtimeToCreate,
-            movieId: ids.movie[randomNumber(0, ids.movie.length - 1)]!,
-            hallId: hallIds[randomNumber(0, hallIds.length - 1)]!,
+            movieId:
+              createdMovies[randomNumber(0, createdMovies.length - 1)]!.id,
+            hallId: createdHalls[randomNumber(0, createdHalls.length - 1)]!.id,
           };
         }),
       )
@@ -80,19 +80,9 @@ async function seedShowtimes(
       createdMoviePosters,
       createdHalls,
       createdGenres,
-      ids: {
-        ...ids,
-        hall: hallIds,
-        showtime: createdShowtimes.map(({ id }) => {
-          return id;
-        }),
-      },
     };
   } catch (err) {
-    // Sequential on purpose to prevent deadlock
-    await deleteGenres(serverParams, ...ids.genre);
-    await deleteMovies(serverParams, ...ids.movie);
-    await deleteHalls(serverParams, ...hallIds);
+    await clearDatabase(serverParams);
 
     throw err;
   }
@@ -113,29 +103,9 @@ function generateShowtimesData(amount = 1) {
   return showtimes;
 }
 
-async function deleteShowtimes(
-  serverParams: ServerParams,
-  ...showtimeIds: string[]
-) {
-  showtimeIds = showtimeIds.filter((showtimeId) => {
-    return showtimeId;
-  });
-  if (!showtimeIds.length) {
-    return;
-  }
-
-  const databaseHandler = serverParams.database.getHandler();
-  const { showtime: showtimeModel } = serverParams.database.getModels();
-
-  await databaseHandler
-    .delete(showtimeModel)
-    .where(inArray(showtimeModel.id, showtimeIds));
-}
-
 /**********************************************************************************/
 
 export {
-  deleteShowtimes,
   generateShowtimesData,
   seedShowtime,
   seedShowtimes,

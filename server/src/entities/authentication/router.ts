@@ -1,6 +1,6 @@
 import { Router, json } from 'express';
 
-import * as authenticationController from './controller.js';
+import * as authenticationController from './controller.ts';
 
 /**********************************************************************************/
 

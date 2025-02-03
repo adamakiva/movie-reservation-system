@@ -5,11 +5,11 @@
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
-    "test": "node --import tsx --test __tests__/**/*.test.ts",
-    "test-only": "node --inspect-wait=0.0.0.0:$SERVER_DEBUG_PORT --import tsx --test --test-only",
+    "test": "NODE_NO_WARNINGS=1 node --experimental-transform-types --test --test-concurrency=1 __tests__/**/*.test.ts",
+    "test-only": "NODE_NO_WARNINGS=1 node --experimental-transform-types --inspect-wait=0.0.0.0:$SERVER_DEBUG_PORT --test --test-only --test-concurrency=1",
     "lint": "tsc --noEmit; eslint {src,__tests__}/**/*.ts",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
-    "commit-migrations": "tsx ./src/database/migrations/migrate.ts",
+    "commit-migrations": "node --experimental-transform-types ./src/database/migrations/migrate.ts",
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
@@ -47,12 +47,11 @@
     "node-mocks-http": "~1.16.2",
     "npm-check-updates": "~17.1.14",
     "prettier": "~3.4.2",
-    "tsx": "~4.19.2",
     "typescript": "~5.7.3",
     "typescript-eslint": "~8.22.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.7"
   },
   "os": [
     "linux"

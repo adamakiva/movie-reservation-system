@@ -3,9 +3,9 @@ import { Router, json } from 'express';
 import type {
   AuthenticationManager,
   FileManager,
-} from '../../server/services/index.js';
+} from '../../server/services/index.ts';
 
-import * as movieController from './controller.js';
+import * as movieController from './controller.ts';
 
 /**********************************************************************************/
 

@@ -1,5 +1,5 @@
-import { ERROR_CODES } from './constants.js';
-import type { LoggerHandler } from './logger.js';
+import { ERROR_CODES } from './constants.ts';
+import type { LoggerHandler } from './logger.ts';
 
 /**********************************************************************************/
 

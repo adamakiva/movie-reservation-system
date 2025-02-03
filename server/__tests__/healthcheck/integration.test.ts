@@ -8,7 +8,7 @@ import {
   terminateServer,
   test,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 /**********************************************************************************/
 

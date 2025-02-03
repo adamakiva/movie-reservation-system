@@ -16,9 +16,9 @@ import {
   terminateServer,
   test,
   VALIDATION,
-} from '../utils.js';
+} from '../utils.ts';
 
-import { generateShowtimesData, validationFunctions } from './utils.js';
+import { generateShowtimesData, validationFunctions } from './utils.ts';
 
 /**********************************************************************************/
 

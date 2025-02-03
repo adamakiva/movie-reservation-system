@@ -1,8 +1,8 @@
 import { asc } from 'drizzle-orm';
 
-import type { RequestContext } from '../../../utils/index.js';
+import type { RequestContext } from '../../../utils/index.ts';
 
-import type { Hall } from './utils.js';
+import type { Hall } from './utils.ts';
 
 /**********************************************************************************/
 

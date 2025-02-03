@@ -1,6 +1,6 @@
-import AuthenticationManager from './authentication.js';
-import FileManager from './fileManager.js';
-import * as Middlewares from './middlewares.js';
+import AuthenticationManager from './authentication.ts';
+import FileManager from './fileManager.ts';
+import * as Middlewares from './middlewares.ts';
 
 /**********************************************************************************/
 

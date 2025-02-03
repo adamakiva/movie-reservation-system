@@ -1,8 +1,8 @@
-import { deleteGenres } from '../genre/utils.js';
 import {
   after,
   assert,
   before,
+  clearDatabase,
   CONSTANTS,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -16,11 +16,10 @@ import {
   test,
   VALIDATION,
   type ServerParams,
-} from '../utils.js';
+} from '../utils.ts';
 
 import {
   compareFiles,
-  deleteMovies,
   generateMovieDataIncludingPoster,
   generateMoviePostersData,
   generateMoviesData,
@@ -29,11 +28,12 @@ import {
   seedMovie,
   seedMovies,
   type Movie,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 
 const { MOVIE, USER } = VALIDATION;
+const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 /**********************************************************************************/
 
@@ -48,10 +48,15 @@ await suite('Movie integration tests', async () => {
 
   await test('Valid - Read a single page', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, ids } = await seedMovies(serverParams, 32);
+    const { createdMovies } = await seedMovies(
+      serverParams,
+      SINGLE_PAGE.CREATE,
+    );
 
     try {
-      const query = new URLSearchParams({ 'page-size': String(32) });
+      const query = new URLSearchParams({
+        'page-size': String(SINGLE_PAGE.SIZE),
+      });
       const res = await sendHttpRequest({
         route: `${serverParams.routes.http}/movies?${query}`,
         method: 'GET',
@@ -81,13 +86,15 @@ await suite('Movie integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read many pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, ids } = await seedMovies(serverParams, 1_024);
+    const { createdMovies } = await seedMovies(
+      serverParams,
+      MULTIPLE_PAGES.CREATE,
+    );
 
     let pagination = {
       hasNext: true,
@@ -99,7 +106,7 @@ await suite('Movie integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(MULTIPLE_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/movies?${query}`,
@@ -131,13 +138,15 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read a lot pages', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies, ids } = await seedMovies(serverParams, 8_192);
+    const { createdMovies } = await seedMovies(
+      serverParams,
+      LOT_OF_PAGES.CREATE,
+    );
 
     let pagination = {
       hasNext: true,
@@ -149,7 +158,7 @@ await suite('Movie integration tests', async () => {
       while (pagination.hasNext) {
         const query = new URLSearchParams({
           cursor: pagination.cursor,
-          'page-size': String(8),
+          'page-size': String(LOT_OF_PAGES.SIZE),
         });
         const res = await sendHttpRequest({
           route: `${serverParams.routes.http}/movies?${query}`,
@@ -181,14 +190,12 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Read movie poster', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovie, createdMoviePoster, ids } =
-      await seedMovie(serverParams);
+    const { createdMovie, createdMoviePoster } = await seedMovie(serverParams);
 
     try {
       const res = await sendHttpRequest({
@@ -200,8 +207,7 @@ await suite('Movie integration tests', async () => {
 
       await compareFiles(res, createdMoviePoster.absolutePath);
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -220,15 +226,12 @@ await suite('Movie integration tests', async () => {
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    let movieId = '';
-
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdGenre, genreIds } = await seedGenre(serverParams);
+    const { id: genreId, name: genreName } = await seedGenre(serverParams);
 
     try {
-      const { poster, ...movieData } = await generateMovieDataIncludingPoster(
-        createdGenre.id,
-      );
+      const { poster, ...movieData } =
+        await generateMovieDataIncludingPoster(genreId);
       const file = new Blob([await readFile(poster.path)]);
 
       const formData = new FormData();
@@ -251,15 +254,13 @@ await suite('Movie integration tests', async () => {
 
       const { id, ...createdMovie } = (await res.json()) as Movie;
       const { genreId: _, ...expectedMovie } = movieData;
-      movieId = id;
 
       assert.deepStrictEqual(createdMovie, {
         ...expectedMovie,
-        genre: createdGenre.name,
+        genre: genreName,
       });
     } finally {
-      await deleteMovies(serverParams, movieId);
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -273,11 +274,10 @@ await suite('Movie integration tests', async () => {
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovie, ids } = await seedMovie(serverParams);
+    const { createdMovie } = await seedMovie(serverParams);
 
     try {
-      const { createdGenre: newGenre } = await seedGenre(serverParams);
-      ids.genre.push(newGenre.id);
+      const newGenre = await seedGenre(serverParams);
 
       const updatedMovieData = {
         ...generateMoviesData()[0]!,
@@ -316,20 +316,18 @@ await suite('Movie integration tests', async () => {
         updatedMovie,
       );
     } finally {
-      await deleteMovies(serverParams, ...ids.movie);
-      await deleteGenres(serverParams, ...ids.genre);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete existent movie', async () => {
     let movieId = '';
 
     const { accessToken } = await getAdminTokens(serverParams);
-    const { createdGenre, genreIds } = await seedGenre(serverParams);
+    const { id: genreId } = await seedGenre(serverParams);
 
     try {
-      const { poster, ...movieData } = await generateMovieDataIncludingPoster(
-        createdGenre.id,
-      );
+      const { poster, ...movieData } =
+        await generateMovieDataIncludingPoster(genreId);
       const file = new Blob([await readFile(poster.path)]);
       const formData = new FormData();
       Object.entries(movieData).forEach(([key, value]) => {
@@ -361,8 +359,7 @@ await suite('Movie integration tests', async () => {
       const responseBody = await res.text();
       assert.strictEqual(responseBody, '');
     } finally {
-      await deleteMovies(serverParams, movieId);
-      await deleteGenres(serverParams, ...genreIds);
+      await clearDatabase(serverParams);
     }
   });
   await test('Valid - Delete non-existent movie', async () => {

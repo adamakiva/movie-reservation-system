@@ -1,6 +1,6 @@
 import { Router, json } from 'express';
 
-import * as healthcheckController from './controller.js';
+import * as healthcheckController from './controller.ts';
 
 /**********************************************************************************/
 

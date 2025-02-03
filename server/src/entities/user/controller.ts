@@ -3,10 +3,10 @@ import type { Request } from 'express';
 import {
   HTTP_STATUS_CODES,
   type ResponseWithContext,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
-import * as userService from './service/index.js';
-import * as userValidator from './validator.js';
+import * as userService from './service/index.ts';
+import * as userValidator from './validator.ts';
 
 /**********************************************************************************/
 

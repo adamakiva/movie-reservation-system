@@ -17,7 +17,7 @@ import {
   type ResponseWithContext,
   type ResponseWithoutContext,
   type ServerParams,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

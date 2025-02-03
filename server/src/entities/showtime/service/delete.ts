@@ -5,12 +5,12 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   RequestContext,
-} from '../../../utils/index.js';
+} from '../../../utils/index.ts';
 
 import type {
   CancelUserShowtimeValidatedData,
   DeleteShowtimeValidatedData,
-} from './utils.js';
+} from './utils.ts';
 
 /**********************************************************************************/
 

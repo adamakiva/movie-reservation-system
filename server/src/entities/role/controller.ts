@@ -3,10 +3,10 @@ import type { Request } from 'express';
 import {
   HTTP_STATUS_CODES,
   type ResponseWithContext,
-} from '../../utils/index.js';
+} from '../../utils/index.ts';
 
-import * as roleService from './service/index.js';
-import * as roleValidator from './validator.js';
+import * as roleService from './service/index.ts';
+import * as roleValidator from './validator.ts';
 
 /**********************************************************************************/
 

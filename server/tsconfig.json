@@ -5,12 +5,10 @@
     "moduleResolution": "nodenext",
     "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
 
     // Emit
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "removeComments": false,
-    "noEmitOnError": true,
+    "noEmit": true,
 
     // Type checking
     "allowUnreachableCode": false,
