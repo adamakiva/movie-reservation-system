@@ -77,7 +77,7 @@ class AuthenticationManager {
       jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
 
-    const self = new AuthenticationManager({
+    return new AuthenticationManager({
       audience,
       issuer,
       type,
@@ -94,8 +94,6 @@ class AuthenticationManager {
       },
       hashSecret,
     });
-
-    return self;
   }
 
   public httpAuthenticationMiddleware() {
@@ -108,19 +106,17 @@ class AuthenticationManager {
     // JWT expects exp in seconds since epoch, not milliseconds
     const now = Math.round(Date.now() / 1_000);
 
-    const result = {
+    return {
       accessTokenExpirationTime: now + this.#access.expiresAt,
       refreshTokenExpirationTime: now + this.#refresh.expiresAt,
     } as const;
-
-    return result;
   }
 
   public async generateAccessToken(
     userId: string,
     accessTokenExpirationTime: number,
   ) {
-    const jwt = await new jose.SignJWT()
+    return await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -128,15 +124,13 @@ class AuthenticationManager {
       .setExpirationTime(accessTokenExpirationTime)
       .setProtectedHeader(this.#header)
       .sign(this.#access.privateKey);
-
-    return jwt;
   }
 
   public async generateRefreshToken(
     userId: string,
     refreshTokenExpirationTime: number,
   ) {
-    const jwt = await new jose.SignJWT()
+    return await new jose.SignJWT()
       .setSubject(userId)
       .setAudience(this.#audience)
       .setIssuer(this.#issuer)
@@ -144,8 +138,6 @@ class AuthenticationManager {
       .setExpirationTime(refreshTokenExpirationTime)
       .setProtectedHeader(this.#header)
       .sign(this.#refresh.privateKey);
-
-    return jwt;
   }
 
   public async validateToken(token: string, type: TokenTypes[number]) {
@@ -159,12 +151,10 @@ class AuthenticationManager {
         break;
     }
 
-    const parsedJwt = await jose.jwtVerify(token, publicKey, {
+    return await jose.jwtVerify(token, publicKey, {
       audience: this.#audience,
       issuer: this.#issuer,
     });
-
-    return parsedJwt;
   }
 
   public getUserId(authorizationHeader: string) {
@@ -176,20 +166,16 @@ class AuthenticationManager {
   }
 
   public async hashPassword(password: string) {
-    const hashedPassword = await hash(password, {
+    return await hash(password, {
       type: 1,
       secret: this.#hashSecret,
     });
-
-    return hashedPassword;
   }
 
   public async verifyPassword(hash: string, password: string) {
-    const isValid = await verify(hash, password, {
+    return await verify(hash, password, {
       secret: this.#hashSecret,
     });
-
-    return isValid;
   }
 
   /********************************************************************************/
@@ -261,4 +247,3 @@ class AuthenticationManager {
 /**********************************************************************************/
 
 export default AuthenticationManager;
-export type { TokenTypes };

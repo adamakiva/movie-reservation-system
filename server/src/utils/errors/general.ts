@@ -1,14 +1,6 @@
-/* eslint-disable max-classes-per-file */
-
 import { inspect } from 'node:util';
 
 import type { Response } from 'express';
-
-import { HTTP_STATUS_CODES } from './constants.ts';
-
-/**********************************************************************************/
-
-type PossibleUnauthenticatedErrors = ['missing', 'malformed', 'expired'];
 
 /**********************************************************************************/
 
@@ -33,7 +25,7 @@ class GeneralError extends Error {
 
     let logMessage = `${this.#statusCode}: ${this.#message}${stackTrace}`;
     if (this.cause && this.cause instanceof Error) {
-      logMessage += `\n[cause]: ${GeneralError.#formatError(this.cause)}`;
+      logMessage += `\n[cause]: ${this.#formatError(this.cause)}`;
     }
 
     return logMessage;
@@ -50,7 +42,7 @@ class GeneralError extends Error {
 
   /********************************************************************************/
 
-  static #formatError(err: Error) {
+  #formatError(err: Error) {
     const header = `${err.name} - ${err.message}`;
     const stackTrace = err.stack
       ? `\nStack trace:\n${err.stack.split('\n').slice(1).join('\n')}`
@@ -70,44 +62,4 @@ class GeneralError extends Error {
 
 /**********************************************************************************/
 
-class UnauthorizedError extends GeneralError {
-  // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
-  static readonly #realm = 'Bearer realm="movie_reservation_system"';
-  static readonly #errors: {
-    // eslint-disable-next-line no-unused-vars
-    [K in PossibleUnauthenticatedErrors[number]]: string;
-  } = {
-    missing: UnauthorizedError.#realm,
-    malformed: `${UnauthorizedError.#realm}, error="invalid_token", error_description="Malformed access token"`,
-    expired: `${UnauthorizedError.#realm}, error="invalid_token", error_description="The access token expired"`,
-  } as const;
-
-  readonly #reason;
-
-  public constructor(
-    reason: PossibleUnauthenticatedErrors[number],
-    cause?: unknown,
-  ) {
-    super(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized', cause);
-    Error.captureStackTrace(this, this.constructor);
-
-    this.name = this.constructor.name;
-    this.#reason = reason;
-  }
-
-  public override getClientError(res: Response) {
-    res.setHeader('WWW-Authenticate', this.#getWWWAuthenticateHeaderValue());
-
-    return super.getClientError(res);
-  }
-
-  /********************************************************************************/
-
-  #getWWWAuthenticateHeaderValue() {
-    return UnauthorizedError.#errors[this.#reason];
-  }
-}
-
-/**********************************************************************************/
-
-export { GeneralError, UnauthorizedError };
+export default GeneralError;

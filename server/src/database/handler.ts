@@ -11,7 +11,6 @@ import * as schemas from './schemas.ts';
 /**********************************************************************************/
 
 class Database {
-  readonly #connection;
   readonly #handler;
   readonly #models;
 
@@ -48,8 +47,8 @@ class Database {
     // least transaction * 2) the database will get stuck since no one
     // frees any connections and the server will get stuck as a result.
     // Currently we have no good way to resolve this
-    this.#connection = pg(url, options ?? {});
-    this.#handler = drizzle(this.#connection, {
+    const connection = pg(url, options ?? {});
+    this.#handler = drizzle(connection, {
       schema: schemas,
       logger: new DatabaseLogger(this.#healthCheckQuery, logger),
     });
@@ -67,7 +66,7 @@ class Database {
   }
 
   public async close() {
-    await this.#connection.end({ timeout: 10 }); // in seconds
+    await this.#handler.$client.end({ timeout: 10 }); // in seconds
   }
 
   public async isReady() {

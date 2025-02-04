@@ -8,7 +8,7 @@ import type {
 
 import EnvironmentManager from './config.ts';
 import { ERROR_CODES, HTTP_STATUS_CODES } from './constants.ts';
-import { GeneralError, UnauthorizedError } from './errors.ts';
+import { GeneralError, UnauthorizedError } from './errors/index.ts';
 import {
   decodeCursor,
   encodeCursor,
