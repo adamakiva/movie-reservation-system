@@ -12,8 +12,8 @@ import * as validationFunctions from '../../src/entities/movie/validator.ts';
 import { seedGenre, seedGenres } from '../genre/utils.ts';
 import {
   clearDatabase,
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   randomUUID,
   type ServerParams,
   VALIDATION,
@@ -142,8 +142,10 @@ async function seedMovies(
 function generateMoviesData(amount = 1) {
   const movies = [...Array(amount)].map(() => {
     return {
-      title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
-      description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE + 1),
+      title: randomAlphaNumericString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
+      description: randomAlphaNumericString(
+        MOVIE.DESCRIPTION.MIN_LENGTH.VALUE + 1,
+      ),
       price: randomNumber(
         MOVIE.PRICE.MIN_VALUE.VALUE + 1,
         MOVIE.PRICE.MAX_VALUE.VALUE - 1,

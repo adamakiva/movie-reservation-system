@@ -7,7 +7,7 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   sendHttpRequest,
   suite,
@@ -81,7 +81,9 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles`,
       method: 'POST',
-      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
+      payload: {
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+      },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -114,7 +116,9 @@ await suite('Role integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
+      payload: {
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+      },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

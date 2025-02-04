@@ -28,6 +28,7 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   Logger,
+  randomAlphaNumericString,
   type DatabaseHandler,
   type DatabaseModel,
   type LoggerHandler,
@@ -75,16 +76,12 @@ type ServerParams = Awaited<ReturnType<typeof initServer>>;
 /**********************************************************************************/
 
 async function initServer() {
-  const server = await createServer();
-
-  return server;
+  return await createServer();
 }
 
 function terminateServer(serverParams: ServerParams) {
-  const { server } = serverParams;
-
   // The database closure is handled by the server close event handler
-  server.close();
+  serverParams.server.close();
 }
 
 /**********************************************************************************/
@@ -160,7 +157,7 @@ async function createServer() {
   const baseUrl = `http://127.0.0.1:${port}`;
 
   return {
-    server: server,
+    server,
     authentication: server.getAuthenticationManager(),
     fileManager: server.getFileManager(),
     database: server.getDatabase(),
@@ -181,12 +178,10 @@ function getRequestContext(serverParams: ServerParams, logger: LoggerHandler) {
 }
 
 function getAdminRole() {
-  const adminRole = {
+  return {
     id: process.env.ADMIN_ROLE_ID!,
     name: process.env.ADMIN_ROLE_NAME!,
   } as const;
-
-  return adminRole;
 }
 
 async function clearDatabase(serverParams: ServerParams) {
@@ -238,21 +233,6 @@ async function recreateAdminRoleAndUser(
 
 /***************************** General utils **************************************/
 /**********************************************************************************/
-
-function randomString(len = 32) {
-  const alphabeticCharacters =
-    'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  const alphabeticCharactersLen = alphabeticCharacters.length;
-
-  let str = '';
-  for (let i = 0; i < len; ++i) {
-    str += alphabeticCharacters.charAt(
-      Math.floor(Math.random() * alphabeticCharactersLen),
-    );
-  }
-
-  return str;
-}
 
 function randomNumber(min = 0, max = 9) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -314,9 +294,8 @@ function sendHttpRequest<
       headers: { ...headers },
     };
   }
-  const fetchResponse = fetch(route, fetchOptions);
 
-  return fetchResponse;
+  return fetch(route, fetchOptions);
 }
 
 async function generateTokens(params: {
@@ -333,18 +312,14 @@ async function generateTokens(params: {
   });
   assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
 
-  const jsonResponse = await res.json();
-
-  return jsonResponse;
+  return await res.json();
 }
 
 async function getAdminTokens(serverParams: ServerParams) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  const tokens = await generateTokens({ serverParams, email, password });
-
-  return tokens;
+  return await generateTokens({ serverParams, email, password });
 }
 
 /**********************************************************************************/
@@ -358,7 +333,7 @@ function mockLogger() {
   const logger = new Logger();
   const loggerHandler = logger.getHandler();
 
-  const mockLogger = {
+  return {
     logger: {
       ...loggerHandler,
       debug: emptyFunction,
@@ -372,8 +347,6 @@ function mockLogger() {
       next();
     },
   } as const;
-
-  return mockLogger;
 }
 
 function createHttpMocks<T extends Response = Response>(params: {
@@ -383,7 +356,7 @@ function createHttpMocks<T extends Response = Response>(params: {
 }) {
   const { logger, reqOptions, resOptions } = params;
 
-  const httpMocks = {
+  return {
     request: createRequest(reqOptions),
     response: createResponse<T>({
       ...resOptions,
@@ -392,8 +365,6 @@ function createHttpMocks<T extends Response = Response>(params: {
       },
     }),
   } as const;
-
-  return httpMocks;
 }
 
 /**********************************************************************************/
@@ -416,8 +387,8 @@ export {
   Middlewares,
   mockLogger,
   PostgresError,
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   randomUUID,
   sendHttpRequest,
   shuffleArray,

@@ -8,7 +8,7 @@ import {
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   suite,
   terminateServer,
@@ -101,7 +101,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -130,7 +130,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -221,7 +221,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -253,7 +253,7 @@ await suite('Role unit tests', async () => {
           role_id: '',
         },
         body: {
-          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -282,10 +282,10 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          role_id: randomString(),
+          role_id: randomAlphaNumericString(),
         },
         body: {
-          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(ROLE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -349,7 +349,7 @@ await suite('Role unit tests', async () => {
           role_id: randomUUID(),
         },
         body: {
-          name: randomString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(ROLE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -381,7 +381,7 @@ await suite('Role unit tests', async () => {
           role_id: randomUUID(),
         },
         body: {
-          name: randomString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(ROLE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -499,7 +499,7 @@ await suite('Role unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          role_id: randomString(),
+          role_id: randomAlphaNumericString(),
         },
       },
     });

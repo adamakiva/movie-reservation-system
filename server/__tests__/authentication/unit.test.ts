@@ -10,7 +10,7 @@ import {
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   suite,
   terminateServer,
@@ -98,7 +98,7 @@ await suite('Authentication unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          email: `${randomString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
+          email: `${randomAlphaNumericString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
           password: 'bla123',
         },
       },
@@ -154,7 +154,9 @@ await suite('Authentication unit tests', async () => {
       reqOptions: {
         body: {
           email: 'ph@ph.com',
-          password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MIN_LENGTH.VALUE - 1,
+          ),
         },
       },
     });
@@ -182,7 +184,9 @@ await suite('Authentication unit tests', async () => {
       reqOptions: {
         body: {
           email: 'ph@ph.com',
-          password: randomString(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MAX_LENGTH.VALUE + 1,
+          ),
         },
       },
     });
@@ -221,7 +225,7 @@ await suite('Authentication unit tests', async () => {
           },
           {
             email: `${randomUUID()}@ph.com`,
-            password: randomString(),
+            password: randomAlphaNumericString(),
           },
         );
       },
@@ -248,7 +252,9 @@ await suite('Authentication unit tests', async () => {
                 where: () => {
                   return {
                     limit: () => {
-                      return [{ id: randomUUID(), hash: randomString() }];
+                      return [
+                        { id: randomUUID(), hash: randomAlphaNumericString() },
+                      ];
                     },
                   };
                 },
@@ -271,7 +277,7 @@ await suite('Authentication unit tests', async () => {
           },
           {
             email: `${randomUUID()}@ph.com`,
-            password: randomString(),
+            password: randomAlphaNumericString(),
           },
         );
       },
@@ -314,7 +320,7 @@ await suite('Authentication unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          refreshToken: randomString(64),
+          refreshToken: randomAlphaNumericString(64),
         },
       },
     });

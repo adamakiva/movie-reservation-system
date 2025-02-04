@@ -150,9 +150,11 @@ class fileManager implements multer.StorageEngine {
   }
 
   #generateFileName() {
-    const randomString = randomAlphaNumericString(this.#generatedNameLength);
+    const randomAlphaNumericString = randomAlphaNumericString(
+      this.#generatedNameLength,
+    );
 
-    return randomString;
+    return randomAlphaNumericString;
   }
 }
 

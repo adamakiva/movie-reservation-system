@@ -9,7 +9,7 @@ import {
   initServer,
   type LoggerHandler,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   type ResponseWithContext,
   type ServerParams,
@@ -98,7 +98,7 @@ await suite('Movie unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        params: { movie_id: randomString() },
+        params: { movie_id: randomAlphaNumericString() },
       },
     });
 
@@ -201,7 +201,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
           ).toString('base64'),
         },
       },
@@ -232,7 +232,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
           ).toString('base64'),
         },
       },
@@ -346,7 +346,7 @@ await suite('Movie unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        query: { 'page-size': randomString() },
+        query: { 'page-size': randomAlphaNumericString() },
       },
     });
 
@@ -443,7 +443,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...movieData,
-          title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
+          title: randomAlphaNumericString(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
         },
         file: poster,
       },
@@ -476,7 +476,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...movieData,
-          title: randomString(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
+          title: randomAlphaNumericString(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
         },
         file: poster,
       },
@@ -575,7 +575,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...movieData,
-          description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1),
+          description: randomAlphaNumericString(
+            MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1,
+          ),
         },
         file: poster,
       },
@@ -608,7 +610,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...movieData,
-          description: randomString(MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1),
+          description: randomAlphaNumericString(
+            MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1,
+          ),
         },
         file: poster,
       },
@@ -737,7 +741,7 @@ await suite('Movie unit tests', async () => {
         body: movieData,
         file: {
           ...poster,
-          path: randomString(
+          path: randomAlphaNumericString(
             MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE - 1,
           ),
         },
@@ -772,7 +776,7 @@ await suite('Movie unit tests', async () => {
         body: movieData,
         file: {
           ...poster,
-          path: randomString(
+          path: randomAlphaNumericString(
             MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE + 1,
           ),
         },
@@ -1202,7 +1206,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         body: {
           ...movieData,
-          genreId: randomString(),
+          genreId: randomAlphaNumericString(),
         },
         file: poster,
       },
@@ -1346,7 +1350,7 @@ await suite('Movie unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        params: { movie_id: randomString() },
+        params: { movie_id: randomAlphaNumericString() },
         body: { genreId: randomUUID() },
       },
     });
@@ -1404,7 +1408,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         body: {
-          title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
+          title: randomAlphaNumericString(MOVIE.TITLE.MIN_LENGTH.VALUE - 1),
           genreId: randomUUID(),
         },
       },
@@ -1435,7 +1439,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         body: {
-          title: randomString(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
+          title: randomAlphaNumericString(MOVIE.TITLE.MAX_LENGTH.VALUE + 1),
           genreId: randomUUID(),
         },
       },
@@ -1494,7 +1498,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         body: {
-          description: randomString(MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1),
+          description: randomAlphaNumericString(
+            MOVIE.DESCRIPTION.MIN_LENGTH.VALUE - 1,
+          ),
           genreId: randomUUID(),
         },
       },
@@ -1525,7 +1531,9 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         body: {
-          description: randomString(MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1),
+          description: randomAlphaNumericString(
+            MOVIE.DESCRIPTION.MAX_LENGTH.VALUE + 1,
+          ),
           genreId: randomUUID(),
         },
       },
@@ -1620,7 +1628,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         file: {
-          path: randomString(
+          path: randomAlphaNumericString(
             MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.VALUE - 1,
           ),
           mimeType: 'application/json',
@@ -1654,7 +1662,7 @@ await suite('Movie unit tests', async () => {
       reqOptions: {
         params: { movie_id: randomUUID() },
         file: {
-          path: randomString(
+          path: randomAlphaNumericString(
             MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.VALUE + 1,
           ),
           mimeType: 'application/json',
@@ -1969,7 +1977,7 @@ await suite('Movie unit tests', async () => {
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
-        body: { title: randomString(), genreId: '' },
+        body: { title: randomAlphaNumericString(), genreId: '' },
       },
     });
 
@@ -1997,7 +2005,10 @@ await suite('Movie unit tests', async () => {
       logger,
       reqOptions: {
         params: { movie_id: randomUUID() },
-        body: { title: randomString(), genreId: randomString() },
+        body: {
+          title: randomAlphaNumericString(),
+          genreId: randomAlphaNumericString(),
+        },
       },
     });
 
@@ -2035,7 +2046,7 @@ await suite('Movie unit tests', async () => {
           },
           {
             movieId,
-            title: randomString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
+            title: randomAlphaNumericString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
           },
         );
       },
@@ -2138,7 +2149,7 @@ await suite('Movie unit tests', async () => {
   await test('Invalid - Delete validation: Invalid id', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
-      reqOptions: { params: { movie_id: randomString() } },
+      reqOptions: { params: { movie_id: randomAlphaNumericString() } },
     });
 
     const validateDeleteMovieSpy = context.mock.fn(

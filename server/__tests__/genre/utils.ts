@@ -2,7 +2,11 @@ import * as serviceFunctions from '../../src/entities/genre/service/index.ts';
 import type { Genre } from '../../src/entities/genre/service/utils.ts';
 import * as validationFunctions from '../../src/entities/genre/validator.ts';
 
-import { randomString, VALIDATION, type ServerParams } from '../utils.ts';
+import {
+  randomAlphaNumericString,
+  VALIDATION,
+  type ServerParams,
+} from '../utils.ts';
 
 /**********************************************************************************/
 
@@ -36,7 +40,7 @@ async function seedGenres(serverParams: ServerParams, amount: number) {
 function generateGenresData(amount = 1) {
   const genres = [...Array(amount)].map(() => {
     return {
-      name: randomString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
+      name: randomAlphaNumericString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
     } satisfies CreateGenre;
   });
 

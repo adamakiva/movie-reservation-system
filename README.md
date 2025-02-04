@@ -20,7 +20,6 @@ For any questions/suggestions, contact details are in my github profile
 - **[zod](<(https://github.com/colinhacks/zod)>)** - Validation library
 - **[ESLint](<(https://github.com/eslint/eslint)>)** - Code linter
 - **[Prettier](<(https://github.com/prettier/prettier)>)** - Code prettifier
-- **[tsx](<(https://github.com/privatenumber/tsx)>)** - Typescript execute to run typescript in Node.js
 - **[argon2](<(https://github.com/ranisalt/node-argon2)>)** - encryption and decryption library
 - **[multer](<(https://github.com/expressjs/multer)>)** - `multipart/form-data` request handler
 - **[Typescript](https://github.com/microsoft/TypeScript)** - Because someone needs to fix the mistake which was javascript (to some extent at the very least)

@@ -7,7 +7,7 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   sendHttpRequest,
   suite,
@@ -86,7 +86,9 @@ await suite('Genre integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres`,
       method: 'POST',
-      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
+      payload: {
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+      },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
@@ -119,7 +121,9 @@ await suite('Genre integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'PUT',
-      payload: { name: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
+      payload: {
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+      },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

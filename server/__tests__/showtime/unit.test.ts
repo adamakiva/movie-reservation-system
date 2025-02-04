@@ -8,7 +8,7 @@ import {
   initServer,
   type LoggerHandler,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   type ResponseWithContext,
   type ServerParams,
@@ -71,7 +71,7 @@ await suite('Showtime unit tests', async () => {
       logger,
       reqOptions: {
         query: {
-          'movie-id': randomString(),
+          'movie-id': randomAlphaNumericString(),
         },
       },
     });
@@ -129,7 +129,7 @@ await suite('Showtime unit tests', async () => {
       logger,
       reqOptions: {
         query: {
-          'hall-id': randomString(),
+          'hall-id': randomAlphaNumericString(),
         },
       },
     });
@@ -186,7 +186,7 @@ await suite('Showtime unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
           ).toString('base64'),
         },
       },
@@ -217,7 +217,7 @@ await suite('Showtime unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
           ).toString('base64'),
         },
       },
@@ -331,7 +331,7 @@ await suite('Showtime unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        query: { 'page-size': randomString() },
+        query: { 'page-size': randomAlphaNumericString() },
       },
     });
 
@@ -451,7 +451,7 @@ await suite('Showtime unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          at: randomString(),
+          at: randomAlphaNumericString(),
           movieId: randomUUID(),
           hallId: randomUUID(),
         },
@@ -544,7 +544,7 @@ await suite('Showtime unit tests', async () => {
       reqOptions: {
         body: {
           ...generateShowtimesData()[0],
-          movieId: randomString(),
+          movieId: randomAlphaNumericString(),
           hallId: randomUUID(),
         },
       },
@@ -637,7 +637,7 @@ await suite('Showtime unit tests', async () => {
         body: {
           ...generateShowtimesData()[0],
           movieId: randomUUID(),
-          hallId: randomString(),
+          hallId: randomAlphaNumericString(),
         },
       },
     });
@@ -713,7 +713,7 @@ await suite('Showtime unit tests', async () => {
   await test('Invalid - Delete validation: Invalid id', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
-      reqOptions: { params: { showtime_id: randomString() } },
+      reqOptions: { params: { showtime_id: randomAlphaNumericString() } },
     });
 
     const validateDeleteShowtimeSpy = context.mock.fn(

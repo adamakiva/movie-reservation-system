@@ -3,8 +3,8 @@ import type { Hall } from '../../src/entities/hall/service/utils.ts';
 import * as validationFunctions from '../../src/entities/hall/validator.ts';
 
 import {
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   type ServerParams,
   VALIDATION,
 } from '../utils.ts';
@@ -46,7 +46,7 @@ async function seedHalls(serverParams: ServerParams, amount: number) {
 function generateHallsData(amount = 1) {
   const halls = [...Array(amount)].map(() => {
     return {
-      name: randomString(HALL.NAME.MAX_LENGTH.VALUE - 1),
+      name: randomAlphaNumericString(HALL.NAME.MAX_LENGTH.VALUE - 1),
       rows: randomNumber(
         HALL.ROWS.MIN_LENGTH.VALUE + 1,
         HALL.ROWS.MAX_LENGTH.VALUE - 1,

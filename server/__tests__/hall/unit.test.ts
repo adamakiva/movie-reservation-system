@@ -8,8 +8,8 @@ import {
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   randomUUID,
   suite,
   terminateServer,
@@ -122,7 +122,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE - 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -159,7 +159,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MAX_LENGTH.VALUE + 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -196,7 +196,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           columns: randomNumber(
             HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
             HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
@@ -229,7 +229,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: '',
           columns: randomNumber(
             HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
@@ -263,7 +263,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: HALL.ROWS.MIN_LENGTH.VALUE - 1,
           columns: randomNumber(
             HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
@@ -297,7 +297,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: HALL.ROWS.MAX_LENGTH.VALUE + 1,
           columns: randomNumber(
             HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
@@ -331,7 +331,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -364,7 +364,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -398,7 +398,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -432,7 +432,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE + 1),
           rows: randomNumber(
             HALL.ROWS.MIN_LENGTH.VALUE + 1,
             HALL.ROWS.MAX_LENGTH.VALUE - 1,
@@ -539,7 +539,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(),
+          name: randomAlphaNumericString(),
         },
       },
     });
@@ -571,7 +571,7 @@ await suite('Hall unit tests', async () => {
           hall_id: '',
         },
         body: {
-          name: randomString(),
+          name: randomAlphaNumericString(),
         },
       },
     });
@@ -600,10 +600,10 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          hall_id: randomString(),
+          hall_id: randomAlphaNumericString(),
         },
         body: {
-          name: randomString(),
+          name: randomAlphaNumericString(),
         },
       },
     });
@@ -667,7 +667,7 @@ await suite('Hall unit tests', async () => {
           hall_id: randomUUID(),
         },
         body: {
-          name: randomString(HALL.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(HALL.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -699,7 +699,7 @@ await suite('Hall unit tests', async () => {
           hall_id: randomUUID(),
         },
         body: {
-          name: randomString(HALL.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(HALL.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -1009,7 +1009,7 @@ await suite('Hall unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          hall_id: randomString(),
+          hall_id: randomAlphaNumericString(),
         },
       },
     });

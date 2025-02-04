@@ -9,7 +9,7 @@ import {
   initServer,
   type LoggerHandler,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   type ResponseWithContext,
   type ServerParams,
@@ -99,7 +99,7 @@ await suite('User unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        params: { user_id: randomString() },
+        params: { user_id: randomAlphaNumericString() },
       },
     });
 
@@ -202,7 +202,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MIN_LENGTH.VALUE - 1),
           ).toString('base64'),
         },
       },
@@ -233,7 +233,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         query: {
           cursor: Buffer.from(
-            randomString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
+            randomAlphaNumericString(PAGINATION.CURSOR.MAX_LENGTH.VALUE + 1),
           ).toString('base64'),
         },
       },
@@ -347,7 +347,7 @@ await suite('User unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        query: { 'page-size': randomString() },
+        query: { 'page-size': randomAlphaNumericString() },
       },
     });
 
@@ -436,7 +436,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE - 1),
+          firstName: randomAlphaNumericString(
+            USER.FIRST_NAME.MIN_LENGTH.VALUE - 1,
+          ),
         },
       },
     });
@@ -466,7 +468,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          firstName: randomString(USER.FIRST_NAME.MAX_LENGTH.VALUE + 1),
+          firstName: randomAlphaNumericString(
+            USER.FIRST_NAME.MAX_LENGTH.VALUE + 1,
+          ),
         },
       },
     });
@@ -556,7 +560,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE - 1),
+          lastName: randomAlphaNumericString(
+            USER.LAST_NAME.MIN_LENGTH.VALUE - 1,
+          ),
         },
       },
     });
@@ -586,7 +592,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          lastName: randomString(USER.LAST_NAME.MAX_LENGTH.VALUE + 1),
+          lastName: randomAlphaNumericString(
+            USER.LAST_NAME.MAX_LENGTH.VALUE + 1,
+          ),
         },
       },
     });
@@ -676,7 +684,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          email: randomString(USER.EMAIL.MIN_LENGTH.VALUE - 1),
+          email: randomAlphaNumericString(USER.EMAIL.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -706,7 +714,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          email: `${randomString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
+          email: `${randomAlphaNumericString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
         },
       },
     });
@@ -736,7 +744,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          email: randomString(),
+          email: randomAlphaNumericString(),
         },
       },
     });
@@ -826,7 +834,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MIN_LENGTH.VALUE - 1,
+          ),
         },
       },
     });
@@ -856,7 +866,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          password: randomString(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MAX_LENGTH.VALUE + 1,
+          ),
         },
       },
     });
@@ -946,7 +958,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         body: {
           ...generateRandomUserData(),
-          roleId: randomString(),
+          roleId: randomAlphaNumericString(),
         },
       },
     });
@@ -1116,7 +1128,7 @@ await suite('User unit tests', async () => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
-        params: { user_id: randomString() },
+        params: { user_id: randomAlphaNumericString() },
         body: { roleId: randomUUID() },
       },
     });
@@ -1174,7 +1186,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE - 1),
+          firstName: randomAlphaNumericString(
+            USER.FIRST_NAME.MIN_LENGTH.VALUE - 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1205,7 +1219,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          firstName: randomString(USER.FIRST_NAME.MAX_LENGTH.VALUE + 1),
+          firstName: randomAlphaNumericString(
+            USER.FIRST_NAME.MAX_LENGTH.VALUE + 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1264,7 +1280,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE - 1),
+          lastName: randomAlphaNumericString(
+            USER.LAST_NAME.MIN_LENGTH.VALUE - 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1295,7 +1313,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          lastName: randomString(USER.LAST_NAME.MAX_LENGTH.VALUE + 1),
+          lastName: randomAlphaNumericString(
+            USER.LAST_NAME.MAX_LENGTH.VALUE + 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1354,7 +1374,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          email: randomString(USER.EMAIL.MIN_LENGTH.VALUE - 1),
+          email: randomAlphaNumericString(USER.EMAIL.MIN_LENGTH.VALUE - 1),
           roleId: randomUUID(),
         },
       },
@@ -1385,7 +1405,7 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          email: `${randomString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
+          email: `${randomAlphaNumericString(USER.EMAIL.MAX_LENGTH.VALUE + 1)}@ph.com`,
           roleId: randomUUID(),
         },
       },
@@ -1415,7 +1435,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
-        body: { email: randomString(32), roleId: randomUUID() },
+        body: { email: randomAlphaNumericString(32), roleId: randomUUID() },
       },
     });
 
@@ -1472,7 +1492,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE - 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MIN_LENGTH.VALUE - 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1503,7 +1525,9 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          password: randomString(USER.PASSWORD.MAX_LENGTH.VALUE + 1),
+          password: randomAlphaNumericString(
+            USER.PASSWORD.MAX_LENGTH.VALUE + 1,
+          ),
           roleId: randomUUID(),
         },
       },
@@ -1533,7 +1557,7 @@ await suite('User unit tests', async () => {
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
-        body: { firstName: randomString(), roleId: '' },
+        body: { firstName: randomAlphaNumericString(), roleId: '' },
       },
     });
 
@@ -1562,8 +1586,10 @@ await suite('User unit tests', async () => {
       reqOptions: {
         params: { user_id: randomUUID() },
         body: {
-          firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
-          roleId: randomString(),
+          firstName: randomAlphaNumericString(
+            USER.FIRST_NAME.MIN_LENGTH.VALUE + 1,
+          ),
+          roleId: randomAlphaNumericString(),
         },
       },
     });
@@ -1602,7 +1628,9 @@ await suite('User unit tests', async () => {
           },
           {
             userId,
-            firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+            firstName: randomAlphaNumericString(
+              USER.FIRST_NAME.MIN_LENGTH.VALUE + 1,
+            ),
           },
         );
       },
@@ -1739,7 +1767,7 @@ await suite('User unit tests', async () => {
   await test('Invalid - Delete validation: Invalid id', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
-      reqOptions: { params: { user_id: randomString() } },
+      reqOptions: { params: { user_id: randomAlphaNumericString() } },
     });
 
     const validateDeleteUserSpy = context.mock.fn(

@@ -9,7 +9,7 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   sendHttpRequest,
   suite,
@@ -795,7 +795,7 @@ await suite('Showtime integration tests', async () => {
       method: 'POST',
       payload: {
         at: new Date(SHOWTIME.AT.MIN_VALUE.VALUE() + 1),
-        movieId: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+        movieId: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
         hallId: randomUUID(),
       },
     });

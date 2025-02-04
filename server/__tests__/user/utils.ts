@@ -9,8 +9,8 @@ import * as validationFunctions from '../../src/entities/user/validator.ts';
 import { seedRoles } from '../role/utils.ts';
 import {
   clearDatabase,
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   randomUUID,
   VALIDATION,
   type ServerParams,
@@ -111,10 +111,10 @@ async function seedUsers(
 function generateUsersData(amount = 1) {
   const users = [...Array(amount)].map(() => {
     return {
-      firstName: randomString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
-      lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
-      email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
-      password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
+      firstName: randomAlphaNumericString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
+      lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+      email: `${randomAlphaNumericString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+      password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
     } satisfies Omit<CreateUser, 'roleId'>;
   });
 

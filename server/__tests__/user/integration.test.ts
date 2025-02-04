@@ -8,8 +8,8 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
+  randomAlphaNumericString,
   randomNumber,
-  randomString,
   randomUUID,
   sendHttpRequest,
   suite,
@@ -190,10 +190,10 @@ await suite('User integration tests', async () => {
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       payload: {
-        firstName: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
-        lastName: randomString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
-        email: `${randomString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
-        password: randomString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
+        firstName: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+        lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
+        email: `${randomAlphaNumericString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
+        password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: randomUUID(),
       },
     });
@@ -230,7 +230,9 @@ await suite('User integration tests', async () => {
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
-      payload: { firstName: randomString(CONSTANTS.ONE_MEGABYTE_IN_BYTES) },
+      payload: {
+        firstName: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+      },
     });
 
     assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);

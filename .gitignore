@@ -10,6 +10,8 @@
 **/node_modules/
 **/dev-data/
 **/npm-cache/
+**/config/
+**/nginx/
 
 # Exclude source files
 !*.ts
@@ -21,12 +23,10 @@
 !eslint.config.js
 !*.json
 !*.sh
-!*.conf
 !README.md
 !docker-compose.yml
 !Dockerfile
 !.gitignore
 !LICENSE
 !.npmrc
-!database/postgresql.conf
 !server/__tests__/**/*.jpg

@@ -2,7 +2,11 @@ import * as serviceFunctions from '../../src/entities/role/service/index.ts';
 import type { Role } from '../../src/entities/role/service/utils.ts';
 import * as validationFunctions from '../../src/entities/role/validator.ts';
 
-import { randomString, VALIDATION, type ServerParams } from '../utils.ts';
+import {
+  randomAlphaNumericString,
+  VALIDATION,
+  type ServerParams,
+} from '../utils.ts';
 
 /**********************************************************************************/
 
@@ -36,7 +40,7 @@ async function seedRoles(serverParams: ServerParams, amount: number) {
 function generateRolesData(amount = 1) {
   const roles = [...Array(amount)].map(() => {
     return {
-      name: randomString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
+      name: randomAlphaNumericString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
     } satisfies CreateRole;
   });
 

@@ -8,7 +8,7 @@ import {
   HTTP_STATUS_CODES,
   initServer,
   mockLogger,
-  randomString,
+  randomAlphaNumericString,
   randomUUID,
   suite,
   terminateServer,
@@ -101,7 +101,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -130,7 +130,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -222,7 +222,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         body: {
-          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -254,7 +254,7 @@ await suite('Genre unit tests', async () => {
           genre_id: '',
         },
         body: {
-          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -283,10 +283,10 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genre_id: randomString(),
+          genre_id: randomAlphaNumericString(),
         },
         body: {
-          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(GENRE.NAME.MIN_LENGTH.VALUE + 1),
         },
       },
     });
@@ -350,7 +350,7 @@ await suite('Genre unit tests', async () => {
           genre_id: randomUUID(),
         },
         body: {
-          name: randomString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
+          name: randomAlphaNumericString(GENRE.NAME.MIN_LENGTH.VALUE - 1),
         },
       },
     });
@@ -382,7 +382,7 @@ await suite('Genre unit tests', async () => {
           genre_id: randomUUID(),
         },
         body: {
-          name: randomString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
+          name: randomAlphaNumericString(GENRE.NAME.MAX_LENGTH.VALUE + 1),
         },
       },
     });
@@ -500,7 +500,7 @@ await suite('Genre unit tests', async () => {
       logger,
       reqOptions: {
         params: {
-          genre_id: randomString(),
+          genre_id: randomAlphaNumericString(),
         },
       },
     });
