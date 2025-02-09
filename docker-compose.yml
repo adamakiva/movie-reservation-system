@@ -8,7 +8,8 @@ services:
     container_name: mrs-pg
     # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
-    image: postgres:17.2-alpine
+    build:
+      target: pg
     user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=admin
@@ -18,20 +19,16 @@ services:
       - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
-      - ./config/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
       - /etc/passwd:/etc/passwd:ro
       # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      # PostgresQL config options instead of passing it via the CLI
-      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
       interval: 3s
       timeout: 2s
       retries: 5
-    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
 
   mrs-server:
     hostname: mrs-server
@@ -39,14 +36,14 @@ services:
     # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
     build:
-      context: ./
-      dockerfile: Dockerfile
-      target: server-dev
+      target: server
     user: ${UID}:${GID}
+    # Run node as PID 1
+    init: true
     environment:
       # Server options
       - SERVER_PORT=4334
-      - SERVER_DEBUG_PORT=4335
+      - SERVER_DEBUG=0.0.0.0:4335
       - SERVER_BASE_URL=http://localhost
       - SERVER_HTTP_ROUTE=api/v0
       - SERVER_ALLOWED_HOSTS=::,127.0.0.1,localhost
@@ -68,10 +65,12 @@ services:
       - ADMIN_PASSWORD=bla123
       # Node flags and options
       - NODE_ENV=production
-      - NODE_NO_WARNINGS=0
       - NODE_MAX_SOCKETS=256
       - NODE_MAX_TOTAL_SOCKETS=2048
       - NODE_DEFAULT_HIGH_WATERMARK=262144  # 256kb
+      # Argon2 uses addons so the flag --no-addons is not present. It should be
+      # present if the application does not require it
+      - NODE_OPTIONS=--no-warnings --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
@@ -107,9 +106,7 @@ services:
     # Restart is disabled to allow reading the correct status code from the container
     restart: "no"
     build:
-      context: ./
-      dockerfile: Dockerfile
-      target: nginx-dev
+      target: nginx
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

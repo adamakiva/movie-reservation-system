@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { hash, verify } from 'argon2';
+import { argon2i, hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
 import * as jose from 'jose';
 
@@ -167,7 +167,7 @@ class AuthenticationManager {
 
   public async hashPassword(password: string) {
     return await hash(password, {
-      type: 1,
+      type: argon2i,
       secret: this.#hashSecret,
     });
   }

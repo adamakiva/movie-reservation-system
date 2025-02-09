@@ -28,10 +28,7 @@ check_prerequisites() {
 }
 
 install_dependencies() {
-    # Installing node dependencies
-    printf "\nInstalling dependencies...\n";
-
-    cd "$ROOT_DIR"/server;
+    cd "$ROOT_DIR"/server || exit 1;
     if ! npm install --include=dev -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
@@ -39,20 +36,16 @@ install_dependencies() {
 }
 
 generate_keys() {
-    # Generate RSA keys for the application JWT
     if [ ! -d "$KEYS_FOLDER" ]; then
-        printf "\nGenerating missing keys...\n";
-
-        mkdir "$KEYS_FOLDER";
-
+        mkdir "$KEYS_FOLDER" || exit 1;
         # Access keys
         openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
         openssl rsa -in "$KEYS_FOLDER"/access_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/access_public_key.pem;
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/access_public_key.pem || exit 1;
         # Refresh keys
         openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
         openssl rsa -in "$KEYS_FOLDER"/refresh_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/refresh_public_key.pem;
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/refresh_public_key.pem || exit 1;
     fi
 }
 
@@ -62,15 +55,14 @@ check_services_health() {
     error_occurred=false;
 
     for service in $(docker compose ps --all --services 2>/dev/null); do
-        # Check the health status of each container, ignoring failures
-        health_status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$container" 2>/dev/null || continue)
+        health_status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$service" 2>/dev/null) || continue;
         if [ "$health_status" = "unhealthy" ]; then
             docker logs "$service" >> "$ERR_LOG_FILE" 2>&1;
             error_occurred=true;
         elif [ "$health_status" = "exited" ]; then
             exit_code=$(docker inspect --format '{{.State.ExitCode}}' "$service");
             if [ "$exit_code" -ne 0 ]; then
-                docker logs "$service" >> "$ERR_LOG_FILE" 2>&1;
+                docker logs "$service" >> "$ERR_LOG_FILE" 2>&1 || exit 1;
                 error_occurred=true;
             fi
         fi
@@ -78,30 +70,23 @@ check_services_health() {
 
     if [ "$error_occurred" = true ]; then
         [ -f "$ERR_LOG_FILE" ] && cat "$ERR_LOG_FILE"
-        printf "\nPlease address the issues above and try again.\n\n"
-        exit 1
+        printf "\nPlease address the issues above and try again.\n\n";
+        exit 1;
     fi
 }
 
 start() {
     check_prerequisites &&
-
-    printf "\nStarting application...\n" &&
-
-    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_CACHE_FOLDER" &&
-
+    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_CACHE_FOLDER" || exit 1;
     install_dependencies &&
     generate_keys &&
-
-    rm -f "$ERR_LOG_FILE" &&
-
-    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait &&
+    rm -f "$ERR_LOG_FILE";
+    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait || exit 1;
     check_services_health;
 }
 
 main() {
     cd "$ROOT_DIR" || exit 1;
-
     start;
 }
 

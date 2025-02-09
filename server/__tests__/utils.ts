@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
-import { hash } from 'argon2';
+import { argon2i, hash } from 'argon2';
 import type { NextFunction, Request, Response } from 'express';
 import {
   createRequest,
@@ -223,7 +223,7 @@ async function recreateAdminRoleAndUser(
       lastName: 'admin',
       email: process.env.ADMIN_EMAIL!,
       hash: await hash(process.env.ADMIN_PASSWORD!, {
-        type: 1,
+        type: argon2i,
         secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
       }),
       roleId: process.env.ADMIN_ROLE_ID!,

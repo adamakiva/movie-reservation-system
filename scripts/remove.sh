@@ -26,21 +26,13 @@ check_prerequisites() {
 }
 
 remove() {
-    check_prerequisites;
-
-    printf "\nRemoving application...\n\n";
-
-    if ! UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose down; then
-        printf "\nDocker removal failed. solve the errors and try again\n";
-        exit 1;
-    fi
-
-    rm -rf "$TESTS_COVERAGE_FOLDER" "$DATABASE_FOLDER";
+    check_prerequisites &&
+    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose down || exit 1;
+    rm -rf "$TESTS_COVERAGE_FOLDER" "$DATABASE_FOLDER" || exit 1;
 }
 
 main() {
     cd "$ROOT_DIR" || exit 1;
-
     remove;
 }
 

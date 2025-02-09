@@ -1,4 +1,4 @@
-import { hash } from 'argon2';
+import { argon2i, hash } from 'argon2';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
@@ -55,7 +55,7 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
         lastName: DEFAULT_ADMIN_LAST_NAME,
         email: process.env.ADMIN_EMAIL!,
         hash: await hash(process.env.ADMIN_PASSWORD!, {
-          type: 1,
+          type: argon2i,
           secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
         }),
         roleId: process.env.ADMIN_ROLE_ID!,

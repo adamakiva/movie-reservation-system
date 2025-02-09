@@ -6,6 +6,13 @@ import GeneralError from './general.ts';
 
 /**********************************************************************************/
 
+type UnauthenticatedErrors = {
+  // eslint-disable-next-line no-unused-vars
+  [K in PossibleUnauthenticatedErrors[number]]: {
+    message: string;
+    header: string;
+  };
+};
 type PossibleUnauthenticatedErrors = ['missing', 'malformed', 'expired'];
 
 /**********************************************************************************/
@@ -13,13 +20,19 @@ type PossibleUnauthenticatedErrors = ['missing', 'malformed', 'expired'];
 class UnauthorizedError extends GeneralError {
   // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
   static readonly #realm = 'Bearer realm="movie_reservation_system"';
-  static readonly #errors: {
-    // eslint-disable-next-line no-unused-vars
-    [K in PossibleUnauthenticatedErrors[number]]: string;
-  } = {
-    missing: UnauthorizedError.#realm,
-    malformed: `${UnauthorizedError.#realm}, error="invalid_token", error_description="Malformed access token"`,
-    expired: `${UnauthorizedError.#realm}, error="invalid_token", error_description="The access token expired"`,
+  static readonly #errors: UnauthenticatedErrors = {
+    missing: {
+      message: 'Missing authorization header',
+      header: UnauthorizedError.#realm,
+    },
+    malformed: {
+      message: 'Malformed JWT token',
+      header: `${UnauthorizedError.#realm}, error="invalid_token", error_description="Malformed access token"`,
+    },
+    expired: {
+      message: 'JWT token expired',
+      header: `${UnauthorizedError.#realm}, error="invalid_token", error_description="The access token expired"`,
+    },
   } as const;
 
   readonly #reason;
@@ -28,7 +41,11 @@ class UnauthorizedError extends GeneralError {
     reason: PossibleUnauthenticatedErrors[number],
     cause?: unknown,
   ) {
-    super(HTTP_STATUS_CODES.UNAUTHORIZED, 'Unauthorized', cause);
+    super(
+      HTTP_STATUS_CODES.UNAUTHORIZED,
+      UnauthorizedError.#errors[reason].message,
+      cause,
+    );
     Error.captureStackTrace(this, this.constructor);
 
     this.name = this.constructor.name;
@@ -44,7 +61,7 @@ class UnauthorizedError extends GeneralError {
   /********************************************************************************/
 
   #getWWWAuthenticateHeaderValue() {
-    return UnauthorizedError.#errors[this.#reason];
+    return UnauthorizedError.#errors[this.#reason].header;
   }
 }
 

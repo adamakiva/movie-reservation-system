@@ -84,7 +84,6 @@ async function startServer() {
       options: {
         max: database.maxConnections,
         connection: {
-          application_name: 'movie_reservation_system_pg',
           statement_timeout: database.statementTimeout,
           idle_in_transaction_session_timeout: database.transactionTimeout,
         },

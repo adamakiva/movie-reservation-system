@@ -6,6 +6,7 @@
     "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
 
     // Emit
     "noEmit": true,
