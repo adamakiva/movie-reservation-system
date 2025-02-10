@@ -64,28 +64,7 @@ function handleUserUpdateError(params: {
   email: string;
   role: string;
 }) {
-  const { err, email, role } = params;
-
-  if (!(err instanceof pg.PostgresError)) {
-    return err;
-  }
-
-  switch (err.code) {
-    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
-      return new GeneralError(
-        HTTP_STATUS_CODES.CONFLICT,
-        `User '${email}' already exists`,
-        err.cause,
-      );
-    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-      return handleForeignKeyNotFoundError({ err, role });
-    default:
-      return new GeneralError(
-        HTTP_STATUS_CODES.SERVER_ERROR,
-        'Should not be possible',
-        err.cause,
-      );
-  }
+  return handleUserCreationError(params);
 }
 
 function handleForeignKeyNotFoundError(params: {

@@ -16,7 +16,7 @@ import {
 
 /**********************************************************************************/
 
-class fileManager implements multer.StorageEngine {
+class FileManager implements multer.StorageEngine {
   readonly #generatedNameLength;
   readonly #saveDir;
   readonly #watermark;
@@ -156,4 +156,4 @@ class fileManager implements multer.StorageEngine {
 
 /**********************************************************************************/
 
-export default fileManager;
+export default FileManager;

@@ -4,10 +4,10 @@ import {
   pgTable,
   real,
   smallint,
+  text,
   timestamp,
   unique,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
 
 /**********************************************************************************/
@@ -33,7 +33,7 @@ const timestamps = {
 
 const roleModel = pgTable('role', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
-  name: varchar('name').unique('role_unique_constraint').notNull(),
+  name: text('name').unique('role_unique_constraint').notNull(),
   ...timestamps,
 });
 
@@ -41,10 +41,10 @@ const userModel = pgTable(
   'user',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    firstName: varchar('first_name').notNull(),
-    lastName: varchar('last_name').notNull(),
-    email: varchar('email').unique('user_unique_constraint').notNull(),
-    hash: varchar('hash').notNull(),
+    firstName: text('first_name').notNull(),
+    lastName: text('last_name').notNull(),
+    email: text('email').unique('user_unique_constraint').notNull(),
+    hash: text('hash').notNull(),
     roleId: uuid('role_id').notNull(),
     ...timestamps,
   },
@@ -65,7 +65,7 @@ const userModel = pgTable(
 
 const genreModel = pgTable('genre', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
-  name: varchar('name').unique('genre_unique_constraint').notNull(),
+  name: text('name').unique('genre_unique_constraint').notNull(),
   ...timestamps,
 });
 
@@ -73,8 +73,8 @@ const movieModel = pgTable(
   'movie',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    title: varchar('title').notNull(),
-    description: varchar('description').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
     price: real('price').notNull(),
     genreId: uuid('genre_id').notNull(),
     ...timestamps,
@@ -96,8 +96,8 @@ const moviePosterModel = pgTable(
   'movie_poster',
   {
     movieId: uuid('movie_id').primaryKey(),
-    absolutePath: varchar('absolute_path').notNull(),
-    mimeType: varchar('mime_type').notNull(),
+    absolutePath: text('absolute_path').notNull(),
+    mimeType: text('mime_type').notNull(),
     sizeInBytes: integer('size_in_bytes').notNull(),
     ...timestamps,
   },
@@ -118,7 +118,7 @@ const moviePosterModel = pgTable(
 
 const hallModel = pgTable('hall', {
   id: uuid('id').primaryKey().defaultRandom().notNull(),
-  name: varchar('name').unique('hall_unique_constraint').notNull(),
+  name: text('name').unique('hall_unique_constraint').notNull(),
   rows: smallint('rows').notNull(),
   columns: smallint('columns').notNull(),
   ...timestamps,

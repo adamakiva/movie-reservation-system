@@ -61,9 +61,9 @@ check() {
     export FILES;
 
     # Run the following script in a sub-shell
-    xargs -P ${CONCURRENT:-1} -r -a "$PACKAGES" -I[] sh -c '
+    xargs -P "${CONCURRENT:-1}" -r -a "$PACKAGES" -I[] sh -c '
         PACKAGE="[]";
-        FILES='"$FILES"';
+        FILES="$FILES";
 
         # Count the number of times every import-like statement for a line in
         # $FILES exists in $PACKAGE. If the count is 0, the package is unused

@@ -1,6 +1,6 @@
 CREATE TABLE "genre" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" varchar NOT NULL,
+	"name" text NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "genre_unique_constraint" UNIQUE("name")
@@ -8,7 +8,7 @@ CREATE TABLE "genre" (
 --> statement-breakpoint
 CREATE TABLE "hall" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" varchar NOT NULL,
+	"name" text NOT NULL,
 	"rows" smallint NOT NULL,
 	"columns" smallint NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
@@ -18,8 +18,8 @@ CREATE TABLE "hall" (
 --> statement-breakpoint
 CREATE TABLE "movie" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"title" varchar NOT NULL,
-	"description" varchar NOT NULL,
+	"title" text NOT NULL,
+	"description" text NOT NULL,
 	"price" real NOT NULL,
 	"genre_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
@@ -28,8 +28,8 @@ CREATE TABLE "movie" (
 --> statement-breakpoint
 CREATE TABLE "movie_poster" (
 	"movie_id" uuid PRIMARY KEY NOT NULL,
-	"absolute_path" varchar NOT NULL,
-	"mime_type" varchar NOT NULL,
+	"absolute_path" text NOT NULL,
+	"mime_type" text NOT NULL,
 	"size_in_bytes" integer NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL
@@ -37,7 +37,7 @@ CREATE TABLE "movie_poster" (
 --> statement-breakpoint
 CREATE TABLE "role" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" varchar NOT NULL,
+	"name" text NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "role_unique_constraint" UNIQUE("name")
@@ -55,10 +55,10 @@ CREATE TABLE "showtime" (
 --> statement-breakpoint
 CREATE TABLE "user" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"first_name" varchar NOT NULL,
-	"last_name" varchar NOT NULL,
-	"email" varchar NOT NULL,
-	"hash" varchar NOT NULL,
+	"first_name" text NOT NULL,
+	"last_name" text NOT NULL,
+	"email" text NOT NULL,
+	"hash" text NOT NULL,
 	"role_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
@@ -80,6 +80,6 @@ ALTER TABLE "movie" ADD CONSTRAINT "movie_genre_id_fk" FOREIGN KEY ("genre_id") 
 ALTER TABLE "movie_poster" ADD CONSTRAINT "movie_poster_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "showtime" ADD CONSTRAINT "showtime_movie_id_fk" FOREIGN KEY ("movie_id") REFERENCES "public"."movie"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "showtime" ADD CONSTRAINT "showtime_hall_id_fk" FOREIGN KEY ("hall_id") REFERENCES "public"."hall"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user" ADD CONSTRAINT "user_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE cascade;--> statement-breakpoint
-ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_showtime_id_fk" FOREIGN KEY ("showtime_id") REFERENCES "public"."showtime"("id") ON DELETE no action ON UPDATE cascade;
+ALTER TABLE "user" ADD CONSTRAINT "user_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."role"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "user_showtime" ADD CONSTRAINT "user_showtime_showtime_id_fk" FOREIGN KEY ("showtime_id") REFERENCES "public"."showtime"("id") ON DELETE cascade ON UPDATE cascade;

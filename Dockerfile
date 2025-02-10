@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl tini && rm
 
 WORKDIR /home/node/mrs
 
-COPY --chown=node:node ./config/init-server.sh /home/node/init.sh
+COPY ./config/init-server.sh /home/node/init.sh
 
 ENTRYPOINT ["/home/node/init.sh"]
 
@@ -22,6 +22,6 @@ ENTRYPOINT ["/home/node/init.sh"]
 FROM nginxinc/nginx-unprivileged:1.27.3-alpine-slim AS nginx
 USER nginx
 
-COPY --chown=nginx:nginx ./nginx /etc/nginx
+COPY ./nginx /etc/nginx
 
 CMD ["nginx", "-g", "daemon off;"]

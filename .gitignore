@@ -4,19 +4,12 @@
 # Exclude folders from above rule
 !**/
 
-# Block previously allowed folders
-**/build/
-**/coverage/
-**/node_modules/
-**/dev-data/
-**/npm-cache/
-
 # Exclude source files
 !*.ts
 !*.cts
 !*.mts
 
-# Etc
+# Exclude config files
 !server/src/database/migrations/*.sql
 !eslint.config.js
 !*.conf
@@ -29,3 +22,10 @@
 !LICENSE
 !.npmrc
 !server/__tests__/**/*.jpg
+
+# Block previously allowed folders
+**/build/
+**/coverage/
+**/node_modules/
+**/dev-data/
+**/npm-cache/
