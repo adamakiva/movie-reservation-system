@@ -30,6 +30,29 @@ services:
       timeout: 2s
       retries: 5
 
+  mrs-rabbitmq:
+    hostname: mrs-rbmq
+    container_name: mrs-rbmq
+    # Restart is disabled to allow reading the correct status code from the container
+    restart: "no"
+    build:
+      target: rabbitmq
+    user: ${UID}:${GID}
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_NODE_PORT=5672
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/rbmq.definitions.json"
+    volumes:
+      - ./dev-data/rbmq:/var/lib/rabbitmq:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
   mrs-server:
     hostname: mrs-server
     container_name: mrs-server
@@ -54,6 +77,8 @@ services:
       - DATABASE_MAX_CONNECTIONS=32
       - DATABASE_STATEMENT_TIMEOUT=30000
       - DATABASE_TRANSACTION_TIMEOUT=60000
+      # Message queue options
+      - MESSAGE_QUEUE_URL=amqp://admin:admin@mrs-rbmq:5672
       # Authentication options
       - AUTHENTICATION_ACCESS_TOKEN_EXPIRATION=900 # 15 minutes
       - AUTHENTICATION_REFRESH_TOKEN_EXPIRATION=2629746 # A month

@@ -26,6 +26,7 @@
     "jose": "~5.9.6",
     "multer": "~1.4.5-lts.1",
     "postgres": "~3.4.5",
+    "rabbitmq-client": "~5.0.2",
     "zod": "~3.24.1"
   },
   "devDependencies": {

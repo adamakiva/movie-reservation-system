@@ -7,6 +7,12 @@ CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
 ####################################################################################
 
+FROM rabbitmq:4.0.5-management-alpine AS rabbitmq
+
+COPY ./config/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
+
+####################################################################################
+
 FROM node:22.13.1-slim AS server
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*

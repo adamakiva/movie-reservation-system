@@ -28,6 +28,7 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   Logger,
+  MESSAGE_QUEUE,
   randomAlphaNumericString,
   type DatabaseHandler,
   type DatabaseModel,
@@ -95,6 +96,7 @@ async function createServer() {
     jwt,
     server: serverEnv,
     database,
+    messageQueue,
   } = environmentManager.getEnvVariables();
 
   // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
@@ -144,6 +146,22 @@ async function createServer() {
         },
       },
       healthCheckQuery: 'SELECT NOW()',
+    },
+    messageQueueParams: {
+      connectionOptions: { url: messageQueue.url },
+      publishers: {
+        ticket: {
+          confirm: true,
+          maxAttempts: 32,
+          routing: [
+            {
+              exchange: MESSAGE_QUEUE.TICKET.RESERVE.EXCHANGE_NAME,
+              queue: MESSAGE_QUEUE.TICKET.RESERVE.QUEUE_NAME,
+              routingKey: MESSAGE_QUEUE.TICKET.RESERVE.ROUTING_KEY_NAME,
+            },
+          ],
+        },
+      },
     },
     allowedMethods: serverEnv.allowedMethods,
     routes: {

@@ -43,13 +43,13 @@ async function deleteShowtime(req: Request, res: ResponseWithContext) {
 async function reserveShowtimeTicket(req: Request, res: ResponseWithContext) {
   const showtimeTicket = showtimeValidator.validateReserveShowtimeTicket(req);
 
-  const createdShowtimeTicket = await showtimeService.reserveShowtimeTicket({
+  await showtimeService.reserveShowtimeTicket({
     req,
     context: res.locals.context,
     showtimeTicket,
   });
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdShowtimeTicket);
+  res.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
 async function cancelUserShowtimeReservation(
@@ -65,7 +65,7 @@ async function cancelUserShowtimeReservation(
     showtimeId,
   });
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  res.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
 async function getUserShowtimes(req: Request, res: ResponseWithContext) {

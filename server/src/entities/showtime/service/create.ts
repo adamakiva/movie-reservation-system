@@ -15,7 +15,6 @@ import {
   type CreateShowtimeValidatedData,
   type ReserveShowtimeTicketValidatedData,
   type Showtime,
-  type ShowtimeTicket,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -66,7 +65,7 @@ async function reserveShowtimeTicket(params: {
   req: Request;
   context: RequestContext;
   showtimeTicket: ReserveShowtimeTicketValidatedData;
-}): Promise<ShowtimeTicket> {
+}): Promise<void> {
   const {
     req,
     context: { database, authentication },
@@ -88,7 +87,7 @@ async function reserveShowtimeTicket(params: {
     userShowtimeModel,
     showtimeTicket: { ...showtimeTicket, userId },
   });
-  return await handler.transaction(async (transaction) => {
+  await handler.transaction(async (transaction) => {
     await validateMovieReservation({
       handler: transaction,
       models: { hallModel, showtimeModel },
@@ -96,7 +95,7 @@ async function reserveShowtimeTicket(params: {
     });
 
     try {
-      const [createdShowtimeTicket] = await transaction
+      await transaction
         .with(createUserShowtimeSubQuery)
         .select({
           hallName: hallModel.name,
@@ -110,11 +109,8 @@ async function reserveShowtimeTicket(params: {
         .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
         .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId));
 
-      // TODO Add payment processing. This operation should be blocking for the client
-      // as well. Reason being that the user should receive a confirmation his payment
-      // was accepted and there's no point to not lock the UI until that happens.
-
-      return createdShowtimeTicket!;
+      // TODO Add payment processing. This operation should be async for the server
+      // with the option for the client to wait for it to complete
     } catch (err) {
       throw handlePossibleTicketDuplicationError({
         err,

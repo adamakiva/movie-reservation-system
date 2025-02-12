@@ -18,8 +18,23 @@ const HTTP_STATUS_CODES = {
   UNPROCESSABLE_ENTITY: 422,
   TOO_MANY_REQUESTS: 429,
   SERVER_ERROR: 500,
+  BAD_GATEWAY: 502,
   GATEWAY_TIMEOUT: 504,
 } as const;
+
+const SIGNALS = [
+  'SIGHUP',
+  'SIGINT',
+  'SIGQUIT',
+  'SIGILL',
+  'SIGTRAP',
+  'SIGABRT',
+  'SIGBUS',
+  'SIGFPE',
+  'SIGSEGV',
+  'SIGUSR2',
+  'SIGTERM',
+] as const;
 
 const ERROR_CODES = {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
@@ -35,6 +50,21 @@ const ERROR_CODES = {
   EXIT_NO_RESTART: 180,
 } as const;
 
+const MESSAGE_QUEUE = {
+  TICKET: {
+    RESERVE: {
+      EXCHANGE_NAME: 'mrs',
+      QUEUE_NAME: 'mrs.ticket.reserve',
+      ROUTING_KEY_NAME: 'mrs-ticket-reserve',
+    },
+    CANCEL: {
+      EXCHANGE_NAME: 'mrs',
+      QUEUE_NAME: 'mrs.ticket.cancel',
+      ROUTING_KEY_NAME: 'mrs-ticket-cancel',
+    },
+  },
+} as const;
+
 /**********************************************************************************/
 
-export { ERROR_CODES, HTTP_STATUS_CODES };
+export { ERROR_CODES, HTTP_STATUS_CODES, MESSAGE_QUEUE, SIGNALS };

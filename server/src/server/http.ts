@@ -16,15 +16,17 @@ import {
 import {
   AuthenticationManager,
   FileManager,
+  MessageQueue,
   Middlewares,
 } from './services/index.ts';
 
 /**********************************************************************************/
 
 class HttpServer {
-  readonly #database;
   readonly #authentication;
   readonly #fileManager;
+  readonly #database;
+  readonly #messageQueue;
   readonly #server;
   readonly #routes;
   readonly #requestContext;
@@ -34,6 +36,10 @@ class HttpServer {
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
     fileManagerParams: Omit<
       ConstructorParameters<typeof FileManager>[0],
+      'logger'
+    >;
+    messageQueueParams: Omit<
+      ConstructorParameters<typeof MessageQueue>[0],
       'logger'
     >;
     corsOptions: Parameters<typeof cors>[0];
@@ -48,6 +54,7 @@ class HttpServer {
       fileManagerParams,
       corsOptions,
       databaseParams,
+      messageQueueParams,
       allowedMethods,
       routes,
       logMiddleware,
@@ -58,6 +65,7 @@ class HttpServer {
       await AuthenticationManager.create(authenticationParams);
     const fileManager = new FileManager({ ...fileManagerParams, logger });
     const database = new Database({ ...databaseParams, logger });
+    const messageQueue = new MessageQueue({ ...messageQueueParams, logger });
 
     const app = express().use(
       Middlewares.checkMethod(allowedMethods),
@@ -73,6 +81,7 @@ class HttpServer {
       authentication,
       fileManager,
       database,
+      messageQueue,
       server,
       routes,
       logger,
@@ -126,22 +135,35 @@ class HttpServer {
     return this.#database;
   }
 
+  public getMessageQueue() {
+    return this.#messageQueue;
+  }
+
   /********************************************************************************/
 
   private constructor(params: {
     authentication: AuthenticationManager;
     fileManager: FileManager;
     database: Database;
+    messageQueue: MessageQueue;
     server: Server;
     routes: { http: string };
     logger: LoggerHandler;
   }) {
-    const { authentication, fileManager, database, server, routes, logger } =
-      params;
+    const {
+      authentication,
+      fileManager,
+      database,
+      messageQueue,
+      server,
+      routes,
+      logger,
+    } = params;
 
     this.#authentication = authentication;
     this.#fileManager = fileManager;
     this.#database = database;
+    this.#messageQueue = messageQueue;
     this.#server = server;
     this.#routes = routes;
     this.#logger = logger;
@@ -203,7 +225,10 @@ class HttpServer {
 
   async #handleCloseEvent() {
     let exitCode = 0;
-    const results = await Promise.allSettled([this.#database.close()]);
+    const results = await Promise.allSettled([
+      this.#database.close(),
+      this.#messageQueue.close(),
+    ]);
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.fatal(result.reason, 'Error during server termination');

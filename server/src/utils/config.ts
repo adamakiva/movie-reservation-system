@@ -14,6 +14,7 @@ class EnvironmentManager {
     'SERVER_ALLOWED_HOSTS',
     'SERVER_ALLOWED_ORIGINS',
     'DATABASE_URL',
+    'MESSAGE_QUEUE_URL',
     'AUTHENTICATION_HASH_SECRET',
   ] as const;
 
@@ -70,6 +71,9 @@ class EnvironmentManager {
             'DATABASE_TRANSACTION_TIMEOUT',
             process.env.DATABASE_TRANSACTION_TIMEOUT,
           ) ?? 60_000,
+      },
+      messageQueue: {
+        url: process.env.MESSAGE_QUEUE_URL!,
       },
       jwt: {
         accessTokenExpiration:
