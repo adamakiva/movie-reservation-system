@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import assert from 'node:assert/strict';
 import { randomUUID as nodeRandomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
@@ -259,7 +261,7 @@ function randomNumber(min = 0, max = 9) {
 function randomUUID<T extends number = 1>(
   amount = 1 as T,
 ): T extends 1 ? string : string[] {
-  const uuids = [...Array(amount)].map(() => {
+  const uuids = [...Array<string>(amount)].map(() => {
     return nodeRandomUUID();
   });
 

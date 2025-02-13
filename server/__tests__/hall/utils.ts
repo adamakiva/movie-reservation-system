@@ -44,7 +44,7 @@ async function seedHalls(serverParams: ServerParams, amount: number) {
 }
 
 function generateHallsData(amount = 1) {
-  const halls = [...Array(amount)].map(() => {
+  const halls = [...Array<CreateHall>(amount)].map(() => {
     return {
       name: randomAlphaNumericString(HALL.NAME.MAX_LENGTH.VALUE - 1),
       rows: randomNumber(

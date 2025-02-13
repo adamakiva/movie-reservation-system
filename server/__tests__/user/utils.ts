@@ -109,7 +109,7 @@ async function seedUsers(
 }
 
 function generateUsersData(amount = 1) {
-  const users = [...Array(amount)].map(() => {
+  const users = [...Array<Omit<CreateUser, 'roleId'>>(amount)].map(() => {
     return {
       firstName: randomAlphaNumericString(USER.FIRST_NAME.MIN_LENGTH.VALUE + 1),
       lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),

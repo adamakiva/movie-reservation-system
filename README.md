@@ -9,20 +9,22 @@ For any questions/suggestions, contact details are in my github profile
 ## Tech stack
 
 - Node.js
-- PostgreSQL
+- PostgresQL
+- Rabbitmq
 
 ## Libraries
 
+- **[argon2](<(https://github.com/ranisalt/node-argon2)>)** - Argon2 encryption and decryption
+- **[compression](<(https://github.com/expressjs/express)>)** - Compress http responses
+- **[cors](<(https://github.com/expressjs/express)>)** - Adds cors headers to the http responses
+- **[Drizzle ORM](<(https://github.com/drizzle-team/drizzle-orm)>)** - SQL ORM (More of a query builder)
 - **[Express.js](<(https://github.com/expressjs/express)>)** - Http routing
-- **[Drizzle ORM](<(https://github.com/drizzle-team/drizzle-orm)>)** - SQL ORM
-- **[Postgres](<(https://github.com/porsager/postgres)>)** - Native handler for postgreSQL (used by the ORM)
+- **[file-type](<(https://github.com/expressjs/express)>)** - Detect file type from the magic numbers
 - **[jose](<(https://github.com/panva/jose)>)** - JWT generation & validation
+- **[multer](<(https://github.com/expressjs/multer)>)** - `multipart/form-data` handler
+- **[Postgres](<(https://github.com/porsager/postgres)>)** - Native handler for postgreSQL (used by the ORM)
+- **[rabbitmq-client](<(https://github.com/expressjs/express)>)** - Node.js rabbitmq client
 - **[zod](<(https://github.com/colinhacks/zod)>)** - Validation library
-- **[ESLint](<(https://github.com/eslint/eslint)>)** - Code linter
-- **[Prettier](<(https://github.com/prettier/prettier)>)** - Code prettifier
-- **[argon2](<(https://github.com/ranisalt/node-argon2)>)** - encryption and decryption library
-- **[multer](<(https://github.com/expressjs/multer)>)** - `multipart/form-data` request handler
-- **[Typescript](https://github.com/microsoft/TypeScript)** - Because someone needs to fix the mistake which was javascript (to some extent at the very least)
 
 ---
 

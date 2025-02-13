@@ -89,7 +89,7 @@ async function seedShowtimes(
 }
 
 function generateShowtimesData(amount = 1) {
-  const showtimes = [...Array(amount)].map(() => {
+  const showtimes = [...Array<CreateShowtime>(amount)].map(() => {
     return {
       at: new Date(
         randomNumber(

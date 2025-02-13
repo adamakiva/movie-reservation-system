@@ -3,7 +3,7 @@
 # TODO Currently this script does not work with multi-line imports.
 # The reason is the following line:
 # RES=$(< "$FILES" xargs -r grep -E -i "(import|require|loader|plugins|${PACKAGE}).*[\"'\''\"](${PACKAGE}|.?\d+)[\"'\''\"]" | wc -l);
-# This should be resolved at some point, otherwise we will have false-positives
+# This should be resolved at some point, until that is done we will have false-positives
 
 # Base was taken from: https://stackoverflow.com/a/69708249 and modified a bit by me
 

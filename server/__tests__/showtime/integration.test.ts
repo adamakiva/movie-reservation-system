@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { seedHall } from '../hall/utils.ts';
 import { seedMovie } from '../movie/utils.ts';
 import {

@@ -140,7 +140,9 @@ async function seedMovies(
 }
 
 function generateMoviesData(amount = 1) {
-  const movies = [...Array(amount)].map(() => {
+  const movies = [
+    ...Array<Omit<CreateMovie, 'poster' | 'genreId'>>(amount),
+  ].map(() => {
     return {
       title: randomAlphaNumericString(MOVIE.TITLE.MIN_LENGTH.VALUE + 1),
       description: randomAlphaNumericString(

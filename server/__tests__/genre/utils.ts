@@ -38,7 +38,7 @@ async function seedGenres(serverParams: ServerParams, amount: number) {
 }
 
 function generateGenresData(amount = 1) {
-  const genres = [...Array(amount)].map(() => {
+  const genres = [...Array<CreateGenre>(amount)].map(() => {
     return {
       name: randomAlphaNumericString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
     } satisfies CreateGenre;

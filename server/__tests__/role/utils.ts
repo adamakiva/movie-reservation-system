@@ -38,7 +38,7 @@ async function seedRoles(serverParams: ServerParams, amount: number) {
 }
 
 function generateRolesData(amount = 1) {
-  const roles = [...Array(amount)].map(() => {
+  const roles = [...Array<CreateRole>(amount)].map(() => {
     return {
       name: randomAlphaNumericString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
     } satisfies CreateRole;
