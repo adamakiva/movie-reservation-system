@@ -14,7 +14,8 @@ class Database {
   readonly #handler;
   readonly #models;
 
-  readonly #healthCheckQuery;
+  readonly #isAliveQuery;
+  readonly #isReadyQuery;
 
   // In regards to using handler and transaction interchangeably, have a look at:
   // https://www.answeroverflow.com/m/1164318289674125392
@@ -25,12 +26,14 @@ class Database {
     url: string;
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     options?: pg.Options<{}>;
-    healthCheckQuery: string;
+    isAliveQuery: string;
+    isReadyQuery: string;
     logger: LoggerHandler;
   }) {
-    const { url, options, healthCheckQuery, logger } = params;
+    const { url, options, isAliveQuery, isReadyQuery, logger } = params;
 
-    this.#healthCheckQuery = healthCheckQuery;
+    this.#isAliveQuery = isAliveQuery;
+    this.#isReadyQuery = isReadyQuery;
 
     // Note about transactions, postgres.ts and drizzle:
     // Postgres.ts create prepared statements per connection which lasts 60 minutes
@@ -50,7 +53,10 @@ class Database {
     const connection = pg(url, options ?? {});
     this.#handler = drizzle(connection, {
       schema: schemas,
-      logger: new DatabaseLogger(this.#healthCheckQuery, logger),
+      logger: new DatabaseLogger(
+        { isAlive: isAliveQuery, isReady: isReadyQuery },
+        logger,
+      ),
     });
 
     this.#models = {
@@ -69,8 +75,12 @@ class Database {
     await this.#handler.$client.end({ timeout: 10 }); // in seconds
   }
 
+  public async isAlive() {
+    await this.#handler.execute(sql.raw(this.#isAliveQuery));
+  }
+
   public async isReady() {
-    await this.#handler.execute(sql.raw(this.#healthCheckQuery));
+    await this.#handler.execute(sql.raw(this.#isReadyQuery));
   }
 
   public getHandler() {

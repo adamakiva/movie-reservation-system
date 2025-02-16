@@ -1,9 +1,12 @@
+import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import pg from 'postgres';
 
 import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
+  type DatabaseHandler,
+  type DatabaseModel,
 } from '../../../utils/index.ts';
 
 import type {
@@ -56,6 +59,53 @@ type ShowtimeTicket = {
 };
 
 /**********************************************************************************/
+
+async function reserveShowtimeTicket(params: {
+  handler: DatabaseHandler;
+  userShowtimeModel: DatabaseModel<'userShowtime'>;
+  userShowtimeId: string;
+  transactionId: string;
+}) {
+  const { handler, userShowtimeModel, userShowtimeId, transactionId } = params;
+
+  await handler
+    .update(userShowtimeModel)
+    .set({ transactionId })
+    .where(eq(userShowtimeModel.id, userShowtimeId));
+}
+
+async function cancelShowtimeReservations(params: {
+  handler: DatabaseHandler;
+  userShowtimeModel: DatabaseModel<'userShowtime'>;
+  userIds: string | string[];
+  showtimeId: string;
+}) {
+  const { handler, userShowtimeModel, userIds, showtimeId } = params;
+
+  // Only delete confirmed reservations (Reservations which were payed for)
+  if (!Array.isArray(userIds)) {
+    await handler
+      .delete(userShowtimeModel)
+      .where(
+        and(
+          eq(userShowtimeModel.showtimeId, showtimeId),
+          eq(userShowtimeModel.userId, userIds),
+          isNotNull(userShowtimeModel.transactionId),
+        ),
+      );
+    return;
+  }
+
+  await handler
+    .delete(userShowtimeModel)
+    .where(
+      and(
+        eq(userShowtimeModel.showtimeId, showtimeId),
+        inArray(userShowtimeModel.userId, userIds),
+        isNotNull(userShowtimeModel.transactionId),
+      ),
+    );
+}
 
 function handlePossibleShowtimeCreationError(params: {
   err: unknown;
@@ -142,8 +192,10 @@ function handlePossibleTicketDuplicationError(params: {
 /**********************************************************************************/
 
 export {
+  cancelShowtimeReservations,
   handlePossibleShowtimeCreationError,
   handlePossibleTicketDuplicationError,
+  reserveShowtimeTicket,
   type CancelUserShowtimeValidatedData,
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,

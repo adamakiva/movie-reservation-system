@@ -4,6 +4,7 @@ import type { Database } from '../database/index.ts';
 import type {
   AuthenticationManager,
   FileManager,
+  MessageQueue,
 } from '../server/services/index.ts';
 
 import EnvironmentManager from './config.ts';
@@ -34,6 +35,7 @@ type RequestContext = {
   authentication: AuthenticationManager;
   database: Database;
   fileManager: FileManager;
+  messageQueue: MessageQueue;
   logger: LoggerHandler;
 };
 

@@ -70,6 +70,7 @@ CREATE TABLE "user_showtime" (
 	"row" smallint NOT NULL,
 	"column" smallint NOT NULL,
 	"user_id" uuid NOT NULL,
+	"transaction_id" text,
 	"showtime_id" uuid NOT NULL,
 	"created_at" timestamp (3) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (3) with time zone DEFAULT now() NOT NULL,

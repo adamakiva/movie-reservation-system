@@ -13,7 +13,7 @@ COPY ./config/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
 
 ####################################################################################
 
-FROM node:22.13.1-slim AS server
+FROM node:22.14.0-slim AS server
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 

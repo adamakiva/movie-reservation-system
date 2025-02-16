@@ -1,7 +1,11 @@
 import {
   Connection,
   type ConnectionOptions,
+  type Consumer,
+  type ConsumerHandler,
+  type ConsumerProps,
   type Envelope,
+  type Publisher,
   type PublisherProps,
   type ReturnedMessage,
 } from 'rabbitmq-client';
@@ -10,30 +14,56 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   type LoggerHandler,
+  type MESSAGE_QUEUE,
 } from '../../utils/index.ts';
 
 /**********************************************************************************/
 
-type PublishersNames = ['ticket'];
 type Exchanges = ['mrs'];
-type Queues = {
+type Publishers = ['ticket'];
+type Consumers = ['ticket'];
+type PublishersQueues = {
   [K in Exchanges[number]]: [
-    `${K}.${PublishersNames[0]}.reserve`,
-    `${K}.${PublishersNames[0]}.cancel`,
+    `${K}.${Publishers[0]}.reserve`,
+    `${K}.${Publishers[0]}.cancel`,
   ];
 };
-type RoutingKeys = {
+type PublishersRoutingKeys = {
   [K in Exchanges[number]]: [
-    `${K}-${PublishersNames[0]}-reserve`,
-    `${K}-${PublishersNames[0]}-cancel`,
+    `${K}-${Publishers[0]}-reserve`,
+    `${K}-${Publishers[0]}-cancel`,
   ];
+};
+type ConsumersQueues = {
+  [K in Exchanges[number]]: [
+    `${K}.${Consumers[0]}.reserve.reply.to`,
+    `${K}.${Consumers[0]}.cancel.reply.to`,
+  ];
+};
+type ConsumersRoutingKeys = {
+  [K in Exchanges[number]]: [
+    `${K}-${Consumers[0]}-reserve-reply-to`,
+    `${K}-${Consumers[0]}-cancel-reply-to`,
+  ];
+};
+
+type PublishOptions<E extends Exchanges[number]> = Omit<
+  Envelope,
+  'exchange' | 'routingKey' | 'replyTo' | 'correlationId'
+> & {
+  replyTo?: ConsumersQueues[E][number];
+  correlationId?:
+    | (typeof MESSAGE_QUEUE)['TICKET']['RESERVE']['CORRELATION_ID']
+    | (typeof MESSAGE_QUEUE)['TICKET']['CANCEL']['CORRELATION_ID'];
 };
 
 /**********************************************************************************/
 
 class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   readonly #handler;
-  readonly #publishers;
+
+  #publishers: { [key: string]: Publisher };
+  readonly #consumers: Consumer[];
 
   readonly #logger;
 
@@ -42,22 +72,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
 
   public constructor(params: {
     connectionOptions: ConnectionOptions;
-    publishers: {
-      // eslint-disable-next-line no-unused-vars
-      [K in PublishersNames[number]]: Pick<
-        PublisherProps,
-        'confirm' | 'maxAttempts'
-      > & {
-        routing: {
-          exchange: E;
-          queue: Queues[E][number];
-          routingKey: RoutingKeys[E][number];
-        }[];
-      };
-    };
     logger: LoggerHandler;
   }) {
-    const { connectionOptions, publishers, logger } = params;
+    const { connectionOptions, logger } = params;
 
     this.#handler = new Connection(connectionOptions)
       .on('error', this.#handleErrorEvent.bind(this))
@@ -65,28 +82,86 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .on('connection.blocked', this.#handleBlockedEvent.bind(this))
       .on('connection.unblocked', this.#handleUnblockedEvent.bind(this));
 
-    this.#publishers = Object.fromEntries(
-      Object.entries(publishers).map(([publisher, publisherOptions]) => {
-        const { routing, ...options } = publisherOptions;
-
-        const exchanges: PublisherProps['exchanges'] = [];
-        const queues: PublisherProps['queues'] = [];
-        const queueBindings: PublisherProps['queueBindings'] = [];
-        routing.forEach(({ exchange, queue, routingKey }) => {
-          exchanges.push({ exchange, passive: true });
-          queues.push({ queue, passive: true });
-          queueBindings.push({ exchange, queue, routingKey });
-        });
-
-        const handler = this.#handler
-          .createPublisher({ ...options, exchanges, queues, queueBindings })
-          .on('basic.return', this.#handleUndeliveredMessageEvent.bind(this));
-
-        return [publisher, handler];
-      }),
-    );
+    this.#publishers = {};
+    this.#consumers = [];
 
     this.#logger = logger;
+  }
+
+  public createPublishers(publishers: {
+    // eslint-disable-next-line no-unused-vars
+    [K in Publishers[number]]: Pick<
+      PublisherProps,
+      'confirm' | 'maxAttempts'
+    > & {
+      routing: {
+        exchange: E;
+        queue: PublishersQueues[E][number];
+        routingKey: PublishersRoutingKeys[E][number];
+      }[];
+    };
+  }) {
+    this.#publishers = {
+      ...this.#publishers,
+      ...Object.fromEntries(
+        Object.entries(publishers).map(([publisher, publisherOptions]) => {
+          const { routing, ...options } = publisherOptions;
+
+          const exchanges: PublisherProps['exchanges'] = [];
+          const queues: PublisherProps['queues'] = [];
+          const queueBindings: PublisherProps['queueBindings'] = [];
+          routing.forEach(({ exchange, queue, routingKey }) => {
+            exchanges.push({ exchange, passive: true, durable: true });
+            queues.push({ queue, passive: true });
+            queueBindings.push({ exchange, queue, routingKey });
+          });
+
+          const handler = this.#handler
+            .createPublisher({ ...options, exchanges, queues, queueBindings })
+            .on('basic.return', this.#handleUndeliveredMessageEvent.bind(this));
+
+          return [publisher, handler];
+        }),
+      ),
+    };
+  }
+
+  public createConsumer(
+    consumer: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
+      routing: {
+        exchange: E;
+        queue: ConsumersQueues[E][number];
+        routingKey: ConsumersRoutingKeys[E][number];
+      };
+      handler: ConsumerHandler;
+    },
+  ) {
+    const {
+      routing: { exchange, queue, routingKey },
+      handler,
+      ...options
+    } = consumer;
+    const exchanges: ConsumerProps['exchanges'] = [
+      { exchange, passive: true, durable: true },
+    ];
+    const queueBindings: ConsumerProps['queueBindings'] = [
+      { exchange, queue, routingKey },
+    ];
+
+    this.#consumers.push(
+      this.#handler
+        .createConsumer(
+          {
+            ...options,
+            exchanges,
+            queue,
+            queueBindings,
+            queueOptions: { passive: true },
+          },
+          handler,
+        )
+        .on('error', this.#handleConsumerErrorEvent.bind(this)),
+    );
   }
 
   public async close() {
@@ -99,21 +174,28 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .removeListener('connection.blocked', this.#handleBlockedEvent)
       .removeListener('connection.unblocked', this.#handleUnblockedEvent);
 
-    await Promise.all(
-      Object.values(this.#publishers).map(async (publisher) => {
-        await publisher.close();
-      }),
-    );
+    await Promise.all([
+      Promise.all(
+        Object.values(this.#publishers).map(async (publisher) => {
+          await publisher.close();
+        }),
+      ),
+      Promise.all(
+        this.#consumers.map(async (consumer) => {
+          await consumer.close();
+        }),
+      ),
+    ]);
 
     await this.#handler.close();
   }
 
   public async publish(params: {
-    publisher: PublishersNames[number];
+    publisher: Publishers[number];
     exchange: E;
-    routingKey: RoutingKeys[E][number];
+    routingKey: PublishersRoutingKeys[E][number];
     data: Buffer | string | object;
-    options: Omit<Envelope, 'exchange' | 'routingKey'>;
+    options: PublishOptions<E>;
   }) {
     const { publisher, exchange, routingKey, data, options } = params;
 
@@ -130,8 +212,6 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
         'Message queue is not alive',
       );
     }
-
-    return this.#isAlive;
   }
 
   public isReady() {
@@ -143,8 +223,6 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
         'Message queue is not ready',
       );
     }
-
-    return this.#isReady;
   }
 
   /********************************************************************************/
@@ -176,7 +254,11 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   }
 
   #handleUndeliveredMessageEvent(message: ReturnedMessage) {
-    this.#logger.error('Message was not delivered. This may help', message);
+    this.#logger.error('Message was not delivered. This may help:', message);
+  }
+
+  #handleConsumerErrorEvent(error: unknown) {
+    this.#logger.error(error, 'Consumer error');
   }
 }
 

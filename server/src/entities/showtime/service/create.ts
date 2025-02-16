@@ -68,7 +68,7 @@ async function reserveShowtimeTicket(params: {
 }): Promise<void> {
   const {
     req,
-    context: { database, authentication },
+    context: { database, authentication, messageQueue },
     showtimeTicket,
   } = params;
 
@@ -80,6 +80,7 @@ async function reserveShowtimeTicket(params: {
     showtime: showtimeModel,
     userShowtime: userShowtimeModel,
     movie: movieModel,
+    user: userModel,
   } = database.getModels();
 
   const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
@@ -95,22 +96,70 @@ async function reserveShowtimeTicket(params: {
     });
 
     try {
-      await transaction
-        .with(createUserShowtimeSubQuery)
-        .select({
-          hallName: hallModel.name,
-          movieTitle: movieModel.title,
-          at: showtimeModel.at,
-          row: createUserShowtimeSubQuery.row,
-          column: createUserShowtimeSubQuery.column,
-        })
-        .from(showtimeModel)
-        .where(eq(showtimeModel, showtimeTicket.showtimeId))
-        .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
-        .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId));
+      const {
+        userShowtimeId,
+        userEmail,
+        userId,
+        hallName,
+        movieTitle,
+        price,
+        at,
+        row,
+        column,
+      } = (
+        await transaction
+          .with(createUserShowtimeSubQuery)
+          .select({
+            userShowtimeId: createUserShowtimeSubQuery.userShowtimeId,
+            showtimeId: createUserShowtimeSubQuery.showtimeId,
+            userId: createUserShowtimeSubQuery.userId,
+            row: createUserShowtimeSubQuery.row,
+            column: createUserShowtimeSubQuery.column,
+            hallName: hallModel.name,
+            movieTitle: movieModel.title,
+            price: movieModel.price,
+            at: showtimeModel.at,
+            userEmail: userModel.email,
+          })
+          .from(createUserShowtimeSubQuery)
+          .innerJoin(
+            showtimeModel,
+            eq(showtimeModel.id, createUserShowtimeSubQuery.showtimeId),
+          )
+          .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
+          .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
+          .innerJoin(
+            userModel,
+            eq(userModel.id, createUserShowtimeSubQuery.userId),
+          )
+      )[0]!;
 
-      // TODO Add payment processing. This operation should be async for the server
-      // with the option for the client to wait for it to complete
+      await messageQueue.publish({
+        publisher: 'ticket',
+        exchange: 'mrs',
+        routingKey: 'mrs-ticket-reserve',
+        data: {
+          // TODO Add payment method
+          userShowtimeId: userShowtimeId,
+          userDetails: { id: userId, email: userEmail },
+          // Used to send an email with the reservation details
+          movieDetails: {
+            hallName: hallName,
+            movieTitle: movieTitle,
+            price: price,
+            at: at,
+            row: row,
+            column: column,
+          },
+        },
+        options: {
+          durable: true,
+          mandatory: true,
+          replyTo: 'mrs.ticket.reserve.reply.to',
+          correlationId: 'reserve',
+          contentType: 'application/json',
+        },
+      });
     } catch (err) {
       throw handlePossibleTicketDuplicationError({
         err,
@@ -191,6 +240,9 @@ function buildInsertUserShowtimeCTE(params: {
 
   const createUserShowtimeSubQuery = handler.$with('create_user_showtime').as(
     handler.insert(userShowtimeModel).values(showtimeTicket).returning({
+      userShowtimeId: userShowtimeModel.id,
+      showtimeId: userShowtimeModel.showtimeId,
+      userId: userShowtimeModel.userId,
       row: userShowtimeModel.row,
       column: userShowtimeModel.column,
     }),

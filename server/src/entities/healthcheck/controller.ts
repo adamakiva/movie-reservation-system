@@ -10,8 +10,16 @@ import * as healthCheckValidator from './validator.ts';
 
 /**********************************************************************************/
 
-function livenessHealthCheck(req: Request, res: ResponseWithContext) {
+async function livenessHealthCheck(req: Request, res: ResponseWithContext) {
   healthCheckValidator.validateHealthCheck(req, res);
+
+  const notAliveMessage = await isAlive(res.locals.context);
+  if (notAliveMessage) {
+    res
+      .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
+      .json(`Application is not alive: ${notAliveMessage}`);
+    return;
+  }
 
   res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
@@ -23,7 +31,7 @@ async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
   if (notReadyMsg) {
     res
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
-      .json(`Application is not available: ${notReadyMsg}`);
+      .json(`Application is not ready: ${notReadyMsg}`);
     return;
   }
 
@@ -32,15 +40,41 @@ async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
 
 /**********************************************************************************/
 
+async function isAlive(context: RequestContext) {
+  const { database, messageQueue, logger } = context;
+
+  let notAliveMessage = '';
+  try {
+    await database.isAlive();
+  } catch (err) {
+    logger.error(err);
+    notAliveMessage += '\nDatabase is not alive';
+  }
+  try {
+    messageQueue.isAlive();
+  } catch (err) {
+    logger.error(err);
+    notAliveMessage += '\nMessage queue is not alive';
+  }
+
+  return notAliveMessage;
+}
+
 async function isReady(context: RequestContext) {
-  const { database, logger } = context;
+  const { database, messageQueue, logger } = context;
 
   let notReadyMsg = '';
   try {
     await database.isReady();
   } catch (err) {
     logger.error(err);
-    notReadyMsg += '\nDatabase is unavailable';
+    notReadyMsg += '\nDatabase is not ready';
+  }
+  try {
+    messageQueue.isReady();
+  } catch (err) {
+    logger.error(err);
+    notReadyMsg += '\nMessage queue is not ready';
   }
 
   return notReadyMsg;

@@ -123,7 +123,8 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
@@ -154,6 +155,7 @@ await suite('User unit tests', async () => {
             authentication,
             fileManager,
             database,
+            messageQueue,
             logger,
           },
           randomUUID(),
@@ -995,6 +997,7 @@ await suite('User unit tests', async () => {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
               database: serverParams.database,
+              messageQueue: serverParams.messageQueue,
               logger,
             },
             {
@@ -1028,6 +1031,7 @@ await suite('User unit tests', async () => {
             authentication: serverParams.authentication,
             fileManager: serverParams.fileManager,
             database: serverParams.database,
+            messageQueue: serverParams.messageQueue,
             logger,
           },
           generateRandomUserData(roleId),
@@ -1624,6 +1628,7 @@ await suite('User unit tests', async () => {
             authentication: serverParams.authentication,
             fileManager: serverParams.fileManager,
             database: serverParams.database,
+            messageQueue: serverParams.messageQueue,
             logger,
           },
           {
@@ -1657,6 +1662,7 @@ await suite('User unit tests', async () => {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
               database: serverParams.database,
+              messageQueue: serverParams.messageQueue,
               logger,
             },
             {
@@ -1693,6 +1699,7 @@ await suite('User unit tests', async () => {
               authentication: serverParams.authentication,
               fileManager: serverParams.fileManager,
               database: serverParams.database,
+              messageQueue: serverParams.messageQueue,
               logger,
             },
             {

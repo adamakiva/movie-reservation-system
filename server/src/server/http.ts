@@ -8,9 +8,15 @@ import type { AddressInfo } from 'node:net';
 import { Database } from '../database/index.ts';
 import * as routers from '../entities/index.ts';
 import {
+  cancelShowtimeReservations,
+  reserveShowtimeTicket,
+} from '../entities/showtime/service/utils.ts';
+import {
   ERROR_CODES,
+  MESSAGE_QUEUE,
   type LoggerHandler,
   type LogMiddleware,
+  type RequestContext,
 } from '../utils/index.ts';
 
 import {
@@ -41,7 +47,7 @@ class HttpServer {
     messageQueueParams: Omit<
       ConstructorParameters<typeof MessageQueue>[0],
       'logger'
-    >;
+    > & { routing: typeof MESSAGE_QUEUE };
     corsOptions: Parameters<typeof cors>[0];
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: Set<string>;
@@ -65,7 +71,10 @@ class HttpServer {
       await AuthenticationManager.create(authenticationParams);
     const fileManager = new FileManager({ ...fileManagerParams, logger });
     const database = new Database({ ...databaseParams, logger });
-    const messageQueue = new MessageQueue({ ...messageQueueParams, logger });
+    const messageQueue = new MessageQueue({
+      connectionOptions: messageQueueParams.connectionOptions,
+      logger,
+    });
 
     const app = express().use(
       Middlewares.checkMethod(allowedMethods),
@@ -81,7 +90,10 @@ class HttpServer {
       authentication,
       fileManager,
       database,
-      messageQueue,
+      messageQueue: {
+        handler: messageQueue,
+        routing: messageQueueParams.routing,
+      },
       server,
       routes,
       logger,
@@ -145,7 +157,12 @@ class HttpServer {
     authentication: AuthenticationManager;
     fileManager: FileManager;
     database: Database;
-    messageQueue: MessageQueue;
+    messageQueue: {
+      handler: MessageQueue;
+      routing: Parameters<
+        typeof HttpServer.create
+      >[0]['messageQueueParams']['routing'];
+    };
     server: Server;
     routes: { http: string };
     logger: LoggerHandler;
@@ -163,17 +180,100 @@ class HttpServer {
     this.#authentication = authentication;
     this.#fileManager = fileManager;
     this.#database = database;
-    this.#messageQueue = messageQueue;
+    this.#messageQueue = messageQueue.handler;
     this.#server = server;
     this.#routes = routes;
     this.#logger = logger;
+
+    this.#initMessageQueue(messageQueue.handler, messageQueue.routing);
 
     this.#requestContext = {
       authentication,
       fileManager,
       database,
+      messageQueue: messageQueue.handler,
       logger,
-    };
+    } satisfies RequestContext;
+  }
+
+  #initMessageQueue(
+    messageQueue: MessageQueue,
+    routing: Parameters<
+      typeof HttpServer.create
+    >[0]['messageQueueParams']['routing'],
+  ) {
+    messageQueue.createPublishers({
+      ticket: {
+        confirm: true,
+        maxAttempts: 32,
+        routing: [
+          {
+            exchange: routing.TICKET.RESERVE.SERVER.EXCHANGE_NAME,
+            queue: routing.TICKET.RESERVE.SERVER.QUEUE_NAME,
+            routingKey: routing.TICKET.RESERVE.SERVER.ROUTING_KEY_NAME,
+          },
+          {
+            exchange: routing.TICKET.CANCEL.SERVER.EXCHANGE_NAME,
+            queue: routing.TICKET.CANCEL.SERVER.QUEUE_NAME,
+            routingKey: routing.TICKET.CANCEL.SERVER.ROUTING_KEY_NAME,
+          },
+        ],
+      },
+    });
+    messageQueue.createConsumer({
+      concurrency: 1,
+      exclusive: true,
+      routing: {
+        exchange: routing.TICKET.RESERVE.CLIENT.EXCHANGE_NAME,
+        queue: routing.TICKET.RESERVE.CLIENT.QUEUE_NAME,
+        routingKey: routing.TICKET.RESERVE.CLIENT.ROUTING_KEY_NAME,
+      },
+      handler: async (message) => {
+        const handler = this.#database.getHandler();
+        const { userShowtime: userShowtimeModel } = this.#database.getModels();
+
+        const { correlationId, body } = message;
+
+        if (correlationId !== MESSAGE_QUEUE.TICKET.RESERVE.CORRELATION_ID) {
+          return;
+        }
+        const { userShowtimeId, transactionId } = body;
+
+        await reserveShowtimeTicket({
+          handler,
+          userShowtimeModel,
+          userShowtimeId,
+          transactionId,
+        });
+      },
+    });
+    messageQueue.createConsumer({
+      concurrency: 1,
+      exclusive: true,
+      routing: {
+        exchange: routing.TICKET.CANCEL.CLIENT.EXCHANGE_NAME,
+        queue: routing.TICKET.CANCEL.CLIENT.QUEUE_NAME,
+        routingKey: routing.TICKET.CANCEL.CLIENT.ROUTING_KEY_NAME,
+      },
+      handler: async (message) => {
+        const handler = this.#database.getHandler();
+        const { userShowtime: userShowtimeModel } = this.#database.getModels();
+
+        const { correlationId, body } = message;
+
+        if (correlationId !== MESSAGE_QUEUE.TICKET.CANCEL.CORRELATION_ID) {
+          return;
+        }
+        const { showtimeId, userIds } = body;
+
+        await cancelShowtimeReservations({
+          handler,
+          userShowtimeModel,
+          showtimeId,
+          userIds,
+        });
+      },
+    });
   }
 
   #attachServerConfigurations() {

@@ -53,14 +53,30 @@ const ERROR_CODES = {
 const MESSAGE_QUEUE = {
   TICKET: {
     RESERVE: {
-      EXCHANGE_NAME: 'mrs',
-      QUEUE_NAME: 'mrs.ticket.reserve',
-      ROUTING_KEY_NAME: 'mrs-ticket-reserve',
+      CLIENT: {
+        EXCHANGE_NAME: 'mrs',
+        QUEUE_NAME: 'mrs.ticket.reserve.reply.to',
+        ROUTING_KEY_NAME: 'mrs-ticket-reserve-reply-to',
+      },
+      SERVER: {
+        EXCHANGE_NAME: 'mrs',
+        QUEUE_NAME: 'mrs.ticket.reserve',
+        ROUTING_KEY_NAME: 'mrs-ticket-reserve',
+      },
+      CORRELATION_ID: 'reserve',
     },
     CANCEL: {
-      EXCHANGE_NAME: 'mrs',
-      QUEUE_NAME: 'mrs.ticket.cancel',
-      ROUTING_KEY_NAME: 'mrs-ticket-cancel',
+      CLIENT: {
+        EXCHANGE_NAME: 'mrs',
+        QUEUE_NAME: 'mrs.ticket.cancel.reply.to',
+        ROUTING_KEY_NAME: 'mrs-ticket-cancel-reply-to',
+      },
+      SERVER: {
+        EXCHANGE_NAME: 'mrs',
+        QUEUE_NAME: 'mrs.ticket.cancel',
+        ROUTING_KEY_NAME: 'mrs-ticket-cancel',
+      },
+      CORRELATION_ID: 'cancel',
     },
   },
 } as const;

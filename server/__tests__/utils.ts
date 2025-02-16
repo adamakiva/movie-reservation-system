@@ -142,28 +142,18 @@ async function createServer() {
       options: {
         max: database.maxConnections,
         connection: {
-          application_name: 'movie_reservation_system_pg',
           statement_timeout: database.statementTimeout,
           idle_in_transaction_session_timeout: database.transactionTimeout,
         },
       },
-      healthCheckQuery: 'SELECT NOW()',
+      // Alive vs Readiness check boils down to:
+      // Should we restart the pod OR redirect the traffic to a different pod
+      isAliveQuery: 'SELECT NOW()',
+      isReadyQuery: 'SELECT NOW()',
     },
     messageQueueParams: {
       connectionOptions: { url: messageQueue.url },
-      publishers: {
-        ticket: {
-          confirm: true,
-          maxAttempts: 32,
-          routing: [
-            {
-              exchange: MESSAGE_QUEUE.TICKET.RESERVE.EXCHANGE_NAME,
-              queue: MESSAGE_QUEUE.TICKET.RESERVE.QUEUE_NAME,
-              routingKey: MESSAGE_QUEUE.TICKET.RESERVE.ROUTING_KEY_NAME,
-            },
-          ],
-        },
-      },
+      routing: MESSAGE_QUEUE,
     },
     allowedMethods: serverEnv.allowedMethods,
     routes: {
@@ -181,6 +171,7 @@ async function createServer() {
     authentication: server.getAuthenticationManager(),
     fileManager: server.getFileManager(),
     database: server.getDatabase(),
+    messageQueue: server.getMessageQueue(),
     environmentManager,
     routes: {
       base: baseUrl,

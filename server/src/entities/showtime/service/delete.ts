@@ -1,10 +1,12 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
+import {
+  GeneralError,
+  HTTP_STATUS_CODES,
+  type DatabaseHandler,
+  type DatabaseModel,
+  type RequestContext,
 } from '../../../utils/index.ts';
 
 import type {
@@ -18,7 +20,7 @@ async function deleteShowtime(
   context: RequestContext,
   showtimeId: DeleteShowtimeValidatedData,
 ): Promise<void> {
-  const { database } = context;
+  const { database, messageQueue } = context;
   const handler = database.getHandler();
   const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
     database.getModels();
@@ -44,7 +46,8 @@ async function deleteShowtime(
 
     await cancelShowtimeReservations({
       handler: transaction,
-      models: { showtimeModel, userShowtimeModel },
+      messageQueue,
+      showtimeModel,
       showtimeId,
       userIds,
     });
@@ -58,19 +61,22 @@ async function cancelUserShowtimeReservation(params: {
 }) {
   const {
     req,
-    context: { database, authentication },
+    context: { authentication, database, messageQueue },
     showtimeId,
   } = params;
   const handler = database.getHandler();
-  const { userShowtime: userShowtimeModel } = database.getModels();
+  const { showtime: showtimeModel } = database.getModels();
 
   const userId = authentication.getUserId(req.headers.authorization!);
 
-  await cancelShowtimeReservation({
-    handler,
-    userShowtimeModel,
-    showtimeId,
-    userIds: userId,
+  await handler.transaction(async (transaction) => {
+    await cancelShowtimeReservation({
+      handler: transaction,
+      messageQueue,
+      showtimeModel,
+      showtimeId,
+      userIds: userId,
+    });
   });
 }
 
@@ -78,25 +84,19 @@ async function cancelUserShowtimeReservation(params: {
 
 async function cancelShowtimeReservations(params: {
   handler: DatabaseHandler;
-  models: {
-    showtimeModel: DatabaseModel<'showtime'>;
-    userShowtimeModel: DatabaseModel<'userShowtime'>;
-  };
+  messageQueue: RequestContext['messageQueue'];
+  showtimeModel: DatabaseModel<'showtime'>;
   showtimeId: string;
   userIds: string[];
 }) {
-  const {
-    handler,
-    models: { showtimeModel, userShowtimeModel },
-    showtimeId,
-    userIds,
-  } = params;
+  const { handler, messageQueue, showtimeModel, showtimeId, userIds } = params;
 
   // Don't promise.all here, the user showtimes entries MUST be deleted before
   // deleting the showtime entry
   await cancelShowtimeReservation({
     handler,
-    userShowtimeModel,
+    messageQueue,
+    showtimeModel,
     showtimeId,
     userIds,
   });
@@ -109,35 +109,43 @@ async function cancelShowtimeReservations(params: {
 
 async function cancelShowtimeReservation(params: {
   handler: DatabaseHandler;
-  userShowtimeModel: DatabaseModel<'userShowtime'>;
+  messageQueue: RequestContext['messageQueue'];
+  showtimeModel: DatabaseModel<'showtime'>;
   showtimeId: string;
   userIds: string | string[];
 }) {
-  const { handler, userShowtimeModel, showtimeId, userIds } = params;
+  const { handler, messageQueue, showtimeModel, showtimeId, userIds } = params;
 
-  // TODO Send the refund request to the message queue, non-blocking or
-  // the transaction will (probably) timeout
-
-  if (!Array.isArray(userIds)) {
-    await handler
-      .delete(userShowtimeModel)
-      .where(
-        and(
-          eq(userShowtimeModel.showtimeId, showtimeId),
-          eq(userShowtimeModel.userId, userIds),
-        ),
-      );
+  const [showtime] = await handler
+    .select({ at: showtimeModel.at })
+    .from(showtimeModel)
+    .where(eq(showtimeModel.id, showtimeId));
+  if (!showtime) {
     return;
   }
 
-  await handler
-    .delete(userShowtimeModel)
-    .where(
-      and(
-        eq(userShowtimeModel.showtimeId, showtimeId),
-        inArray(userShowtimeModel.userId, userIds),
-      ),
+  if (showtime.at <= new Date()) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.BAD_REQUEST,
+      'Unable to cancel a past reservation(s)',
     );
+  }
+
+  await messageQueue.publish({
+    publisher: 'ticket',
+    exchange: 'mrs',
+    routingKey: 'mrs-ticket-cancel',
+    data: {
+      showtimeId,
+      userIds,
+    },
+    options: {
+      durable: true,
+      mandatory: true,
+      replyTo: 'mrs.ticket.cancel.reply.to',
+      correlationId: 'cancel',
+    },
+  });
 }
 
 async function deleteShowtimeEntry(params: {

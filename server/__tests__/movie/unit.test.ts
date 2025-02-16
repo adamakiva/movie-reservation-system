@@ -122,7 +122,8 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
@@ -153,6 +154,7 @@ await suite('Movie unit tests', async () => {
             authentication,
             database,
             fileManager,
+            messageQueue,
             logger,
           },
           randomUUID(),
@@ -1243,6 +1245,7 @@ await suite('Movie unit tests', async () => {
             authentication: serverParams.authentication,
             database: serverParams.database,
             fileManager: serverParams.fileManager,
+            messageQueue: serverParams.messageQueue,
             logger,
           },
           {
@@ -2042,6 +2045,7 @@ await suite('Movie unit tests', async () => {
             authentication: serverParams.authentication,
             database: serverParams.database,
             fileManager: serverParams.fileManager,
+            messageQueue: serverParams.messageQueue,
             logger,
           },
           {
@@ -2075,6 +2079,7 @@ await suite('Movie unit tests', async () => {
               authentication: serverParams.authentication,
               database: serverParams.database,
               fileManager: serverParams.fileManager,
+              messageQueue: serverParams.messageQueue,
               logger,
             },
             {

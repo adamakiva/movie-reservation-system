@@ -209,7 +209,8 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Non-existent user', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     const loginSpy = context.mock.fn(serviceFunctions.login);
@@ -221,6 +222,7 @@ await suite('Authentication unit tests', async () => {
             authentication,
             fileManager,
             database,
+            messageQueue,
             logger,
           },
           {
@@ -240,7 +242,8 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Incorrect password', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
@@ -273,6 +276,7 @@ await suite('Authentication unit tests', async () => {
             authentication,
             fileManager,
             database,
+            messageQueue,
             logger,
           },
           {
@@ -345,7 +349,8 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh service: Malformed JWT', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     const refreshAccessTokenSpy = context.mock.fn(
@@ -359,6 +364,7 @@ await suite('Authentication unit tests', async () => {
             authentication,
             fileManager,
             database,
+            messageQueue,
             logger,
           },
           'Bearer ph',
@@ -375,7 +381,8 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
-    const { authentication, fileManager, database } = serverParams;
+    const { authentication, fileManager, database, messageQueue } =
+      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(authentication, 'validateToken', async () => {
@@ -394,6 +401,7 @@ await suite('Authentication unit tests', async () => {
             authentication,
             fileManager,
             database,
+            messageQueue,
             logger,
           },
           await authentication.generateRefreshToken(
