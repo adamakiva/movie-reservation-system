@@ -103,7 +103,7 @@ services:
       # Volume npm cache to speed up the npm install. This should allow cache reuse
       # whenever node_modules are removed.
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
-      - ./npm-cache:/home/node/.npm:rw
+      - ./npm-cache/server:/home/node/.npm:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -123,6 +123,38 @@ services:
       start_period: 30s
     depends_on:
       mrs-pg:
+        condition: service_healthy
+
+  mrs-ticket-worker:
+    hostname: mrs-ticket-worker
+    container_name: mrs-ticket-worker
+    # Restart is disabled to allow reading the correct status code from the container
+    restart: "no"
+    build:
+      target: ticket-worker
+    user: ${UID}:${GID}
+    # Run node as PID 1
+    init: true
+    environment:
+      # Message queue options
+      - MESSAGE_QUEUE_URL=amqp://admin:admin@mrs-rbmq:5672
+      # Node flags and options
+      - NODE_ENV=production
+      - NODE_OPTIONS=--no-warnings --no-addons --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536
+      # libuv options
+      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
+    volumes:
+      - ./ticket-worker:/home/node/ticket-worker:rw
+      # Volume npm cache to speed up the npm install. This should allow cache reuse
+      # whenever node_modules are removed.
+      # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
+      - ./npm-cache/ticket-worker:/home/node/.npm:rw
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      mrs-pg:
+        condition: service_healthy
+      mrs-server:
         condition: service_healthy
 
   mrs-nginx:

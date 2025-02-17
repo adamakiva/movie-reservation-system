@@ -140,16 +140,16 @@ async function reserveShowtimeTicket(params: {
         routingKey: 'mrs-ticket-reserve',
         data: {
           // TODO Add payment method
-          userShowtimeId: userShowtimeId,
+          userShowtimeId,
           userDetails: { id: userId, email: userEmail },
           // Used to send an email with the reservation details
           movieDetails: {
-            hallName: hallName,
-            movieTitle: movieTitle,
-            price: price,
-            at: at,
-            row: row,
-            column: column,
+            hallName,
+            movieTitle,
+            price,
+            at,
+            row,
+            column,
           },
         },
         options: {

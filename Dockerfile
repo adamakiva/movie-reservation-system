@@ -1,7 +1,7 @@
 FROM postgres:17.2-alpine AS pg
 
 COPY ./config/postgresql.conf /etc/postgresql.conf
-COPY ./config/init-databases.sh /docker-entrypoint-initdb.d/init-databases.sh
+COPY ./config/init.databases.sh /docker-entrypoint-initdb.d/init.databases.sh
 
 CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
@@ -19,7 +19,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf 
 
 WORKDIR /home/node/mrs
 
-COPY ./config/init-server.sh /home/node/init.sh
+COPY ./config/init.server.sh /home/node/init.sh
+
+ENTRYPOINT ["/home/node/init.sh"]
+
+####################################################################################
+
+FROM node:22.14.0-slim AS ticket-worker
+
+WORKDIR /home/node/ticket-worker
+
+COPY ./config/init.ticket.worker.sh /home/node/init.sh
 
 ENTRYPOINT ["/home/node/init.sh"]
 

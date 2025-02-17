@@ -7,7 +7,8 @@ ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
 DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
 MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
-NPM_CACHE_FOLDER="$ROOT_DIR"/npm-cache;
+NPM_SERVER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/server;
+NPM_TICKET_WORKER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/ticket-worker;
 KEYS_FOLDER="$ROOT_DIR"/server/keys;
 ERR_LOG_FILE=err_logs.txt;
 
@@ -30,6 +31,12 @@ check_prerequisites() {
 
 install_dependencies() {
     cd "$ROOT_DIR"/server || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+
+    cd "$ROOT_DIR"/ticket-worker || exit 1;
     if ! npm install --include=dev -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
@@ -78,7 +85,7 @@ check_services_health() {
 
 start() {
     check_prerequisites &&
-    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_CACHE_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
+    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_SERVER_CACHE_FOLDER" "$NPM_TICKET_WORKER_CACHE_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
     install_dependencies &&
     generate_keys &&
     rm -f "$ERR_LOG_FILE";
