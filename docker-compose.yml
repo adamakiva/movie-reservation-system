@@ -6,8 +6,7 @@ services:
   mrs-pg:
     hostname: mrs-pg
     container_name: mrs-pg
-    # Restart is disabled to allow reading the correct status code from the container
-    restart: "no"
+    restart: unless-stopped
     build:
       target: pg
     user: ${UID}:${GID}
@@ -25,7 +24,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -p 5432 -U admin -d mrs && pg_isready -p 5432 -U admin -d mrs_test"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d mrs && pg_isready -U admin -d mrs_test"]
       interval: 3s
       timeout: 2s
       retries: 5
@@ -33,15 +32,13 @@ services:
   mrs-rabbitmq:
     hostname: mrs-rbmq
     container_name: mrs-rbmq
-    # Restart is disabled to allow reading the correct status code from the container
-    restart: "no"
+    restart: unless-stopped
     build:
-      target: rabbitmq
+      target: rbmq
     user: ${UID}:${GID}
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin
-      - RABBITMQ_NODE_PORT=5672
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/rbmq.definitions.json"
     volumes:
       - ./dev-data/rbmq:/var/lib/rabbitmq:rw
@@ -56,8 +53,7 @@ services:
   mrs-server:
     hostname: mrs-server
     container_name: mrs-server
-    # Restart is disabled to allow reading the correct status code from the container
-    restart: "no"
+    restart: unless-stopped
     build:
       target: server
     user: ${UID}:${GID}
@@ -66,7 +62,7 @@ services:
     environment:
       # Server options
       - SERVER_PORT=4334
-      - SERVER_DEBUG=0.0.0.0:4335
+      - SERVER_DEBUG_PORT=4335
       - SERVER_BASE_URL=http://localhost
       - SERVER_HTTP_ROUTE=api/v0
       - SERVER_ALLOWED_HOSTS=::,127.0.0.1,localhost
@@ -100,8 +96,6 @@ services:
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
       - ./server:/home/node/mrs:rw
-      # Volume npm cache to speed up the npm install. This should allow cache reuse
-      # whenever node_modules are removed.
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
       - ./npm-cache/server:/home/node/.npm:rw
       - /etc/timezone:/etc/timezone:ro
@@ -128,8 +122,7 @@ services:
   mrs-ticket-worker:
     hostname: mrs-ticket-worker
     container_name: mrs-ticket-worker
-    # Restart is disabled to allow reading the correct status code from the container
-    restart: "no"
+    restart: unless-stopped
     build:
       target: ticket-worker
     user: ${UID}:${GID}
@@ -145,8 +138,6 @@ services:
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
     volumes:
       - ./ticket-worker:/home/node/ticket-worker:rw
-      # Volume npm cache to speed up the npm install. This should allow cache reuse
-      # whenever node_modules are removed.
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
       - ./npm-cache/ticket-worker:/home/node/.npm:rw
       - /etc/timezone:/etc/timezone:ro
@@ -160,15 +151,13 @@ services:
   mrs-nginx:
     hostname: mrs-nginx
     container_name: mrs-nginx
-    # Restart is disabled to allow reading the correct status code from the container
-    restart: "no"
+    restart: unless-stopped
     build:
       target: nginx
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
-      # Map localhost:4336 to nginx:80
       - 4336:80
     depends_on:
       mrs-server:

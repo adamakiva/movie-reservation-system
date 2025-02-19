@@ -7,7 +7,7 @@ CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
 ####################################################################################
 
-FROM rabbitmq:4.0.5-management-alpine AS rabbitmq
+FROM rabbitmq:4.0.5-management-alpine AS rbmq
 
 COPY ./config/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
 
