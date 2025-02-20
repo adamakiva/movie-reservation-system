@@ -1,6 +1,6 @@
 {
   // Use the latest typescript version, not the VSCode version (Assumes you have
-  // nvm on your machine)
+  // nvm on your machine, and lts version of node)
   "typescript.tsdk": "~/.nvm/versions/node/v22.14.0/lib/node_modules/typescript/lib",
   "typescript.preferences.preferTypeOnlyAutoImports": true,
   "eslint.enable": true,
@@ -10,14 +10,6 @@
     "enable": true,
     "location": "separateLine"
   },
-  "eslint.probe": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "html",
-    "vue",
-    "markdown"
-  ],
+  "eslint.probe": ["javascript", "typescript", "typescriptreact", "markdown"],
   "eslint.useFlatConfig": true
 }

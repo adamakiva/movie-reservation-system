@@ -1,8 +1,3 @@
 #!/bin/sh
 
-# Install dependencies
-npm install --include=dev &&
-# Commit database migrations
-node ./src/database/migrations/migrate.ts &&
-# Run the server
-node --watch ./src/main.ts;
+npm install --include=dev && node ./src/database/migrations/migrate.ts && node --watch ./src/main.ts;

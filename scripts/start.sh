@@ -17,12 +17,10 @@ UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
 ####################################################################################
 
 check_prerequisites() {
-    # Checks docker is installed
     if ! command -v docker >/dev/null 2>&1; then
         printf "\nDocker engine not installed, you may follow this: https://docs.docker.com/engine/install \n\n";
         exit 1;
     fi
-    # Checks docker compose is installed
     if ! command -v docker compose >/dev/null 2>&1; then
         printf "\nDocker compose not installed, you may follow this: https://docs.docker.com/compose/install/linux/#install-the-plugin-manually \n\n";
         exit 1;
@@ -46,11 +44,11 @@ install_dependencies() {
 generate_keys() {
     if [ ! -d "$KEYS_FOLDER" ]; then
         mkdir "$KEYS_FOLDER" || exit 1;
-        # Access keys
+
         openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
         openssl rsa -in "$KEYS_FOLDER"/access_private_key.pem -pubout -outform DER |
         openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/access_public_key.pem || exit 1;
-        # Refresh keys
+
         openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
         openssl rsa -in "$KEYS_FOLDER"/refresh_private_key.pem -pubout -outform DER |
         openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/refresh_public_key.pem || exit 1;
@@ -58,8 +56,6 @@ generate_keys() {
 }
 
 check_services_health() {
-    # Checks for any errors during the docker startup, log them to stdout and to a
-    # designated file
     error_occurred=false;
 
     for service in $(docker compose ps --all --services 2>/dev/null); do
