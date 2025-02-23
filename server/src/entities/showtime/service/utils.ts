@@ -1,12 +1,13 @@
 import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import pg from 'postgres';
+import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
 import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
-  type DatabaseHandler,
-  type DatabaseModel,
+  MESSAGE_QUEUE,
+  type RequestContext,
 } from '../../../utils/index.ts';
 
 import type {
@@ -60,51 +61,60 @@ type ShowtimeTicket = {
 
 /**********************************************************************************/
 
-async function reserveShowtimeTicket(params: {
-  handler: DatabaseHandler;
-  userShowtimeModel: DatabaseModel<'userShowtime'>;
-  userShowtimeId: string;
-  transactionId: string;
-}) {
-  const { handler, userShowtimeModel, userShowtimeId, transactionId } = params;
+function reserveShowtimeTicket(database: RequestContext['database']) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & {
+      body: { userShowtimeId: string; transactionId: string };
+    },
+  ) => {
+    const { correlationId, body } = message;
 
-  await handler
-    .update(userShowtimeModel)
-    .set({ transactionId })
-    .where(eq(userShowtimeModel.id, userShowtimeId));
+    if (correlationId !== MESSAGE_QUEUE.TICKET.RESERVE.CORRELATION_ID) {
+      return ConsumerStatus.DROP;
+    }
+    const { userShowtimeId, transactionId } = body;
+
+    const handler = database.getHandler();
+    const { userShowtime: userShowtimeModel } = database.getModels();
+
+    await handler
+      .update(userShowtimeModel)
+      .set({ transactionId })
+      .where(eq(userShowtimeModel.id, userShowtimeId));
+
+    return ConsumerStatus.ACK;
+  };
 }
 
-async function cancelShowtimeReservations(params: {
-  handler: DatabaseHandler;
-  userShowtimeModel: DatabaseModel<'userShowtime'>;
-  userIds: string | string[];
-  showtimeId: string;
-}) {
-  const { handler, userShowtimeModel, userIds, showtimeId } = params;
+function cancelShowtimeReservations(database: RequestContext['database']) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & {
+      body: { showtimeId: string; userIds: string | string[] };
+    },
+  ) => {
+    const { correlationId, body } = message;
 
-  // Only delete confirmed reservations (Reservations which were payed for)
-  if (!Array.isArray(userIds)) {
-    await handler
-      .delete(userShowtimeModel)
-      .where(
-        and(
-          eq(userShowtimeModel.showtimeId, showtimeId),
-          eq(userShowtimeModel.userId, userIds),
-          isNotNull(userShowtimeModel.transactionId),
-        ),
-      );
-    return;
-  }
+    if (correlationId !== MESSAGE_QUEUE.TICKET.CANCEL.CORRELATION_ID) {
+      return ConsumerStatus.DROP;
+    }
+    const { showtimeId, userIds } = body;
 
-  await handler
-    .delete(userShowtimeModel)
-    .where(
+    const handler = database.getHandler();
+    const { userShowtime: userShowtimeModel } = database.getModels();
+
+    await handler.delete(userShowtimeModel).where(
       and(
         eq(userShowtimeModel.showtimeId, showtimeId),
-        inArray(userShowtimeModel.userId, userIds),
+        // Only delete confirmed reservations (Reservations which were payed for)
         isNotNull(userShowtimeModel.transactionId),
+        !Array.isArray(userIds)
+          ? eq(userShowtimeModel.userId, userIds)
+          : inArray(userShowtimeModel.userId, userIds),
       ),
     );
+
+    return ConsumerStatus.ACK;
+  };
 }
 
 function handlePossibleShowtimeCreationError(params: {

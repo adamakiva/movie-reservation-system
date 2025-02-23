@@ -145,18 +145,20 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .removeListener('connection.blocked', this.#handleBlockedEvent)
       .removeListener('connection.unblocked', this.#handleUnblockedEvent);
 
-    await Promise.all([
-      Promise.all(
-        Object.values(this.#publishers).map(async (publisher) => {
-          await publisher.close();
-        }),
-      ),
-      Promise.all(
-        this.#consumers.map(async (consumer) => {
-          await consumer.close();
-        }),
-      ),
-    ]);
+    await Promise.all(
+      Object.values(this.#publishers).map(async (publisher) => {
+        await publisher.close();
+      }),
+    ).catch((err: unknown) => {
+      console.error('Failure to shutdown publisher(s):', err);
+    });
+    await Promise.all(
+      this.#consumers.map(async (consumer) => {
+        await consumer.close();
+      }),
+    ).catch((err: unknown) => {
+      console.error('Failure to shutdown consumer(s):', err);
+    });
 
     await this.#handler.close();
   }

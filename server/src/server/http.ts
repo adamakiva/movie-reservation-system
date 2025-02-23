@@ -13,9 +13,9 @@ import {
 } from '../entities/showtime/service/utils.ts';
 import {
   ERROR_CODES,
-  MESSAGE_QUEUE,
   type LoggerHandler,
   type LogMiddleware,
+  type MESSAGE_QUEUE,
   type RequestContext,
 } from '../utils/index.ts';
 
@@ -228,24 +228,7 @@ class HttpServer {
         queue: routing.TICKET.RESERVE.CLIENT.QUEUE_NAME,
         routingKey: routing.TICKET.RESERVE.CLIENT.ROUTING_KEY_NAME,
       },
-      handler: async (message) => {
-        const handler = this.#database.getHandler();
-        const { userShowtime: userShowtimeModel } = this.#database.getModels();
-
-        const { correlationId, body } = message;
-
-        if (correlationId !== MESSAGE_QUEUE.TICKET.RESERVE.CORRELATION_ID) {
-          return;
-        }
-        const { userShowtimeId, transactionId } = body;
-
-        await reserveShowtimeTicket({
-          handler,
-          userShowtimeModel,
-          userShowtimeId,
-          transactionId,
-        });
-      },
+      handler: reserveShowtimeTicket(this.#database),
     });
     messageQueue.createConsumer({
       concurrency: 1,
@@ -255,24 +238,7 @@ class HttpServer {
         queue: routing.TICKET.CANCEL.CLIENT.QUEUE_NAME,
         routingKey: routing.TICKET.CANCEL.CLIENT.ROUTING_KEY_NAME,
       },
-      handler: async (message) => {
-        const handler = this.#database.getHandler();
-        const { userShowtime: userShowtimeModel } = this.#database.getModels();
-
-        const { correlationId, body } = message;
-
-        if (correlationId !== MESSAGE_QUEUE.TICKET.CANCEL.CORRELATION_ID) {
-          return;
-        }
-        const { showtimeId, userIds } = body;
-
-        await cancelShowtimeReservations({
-          handler,
-          userShowtimeModel,
-          showtimeId,
-          userIds,
-        });
-      },
+      handler: cancelShowtimeReservations(this.#database),
     });
   }
 
@@ -346,11 +312,7 @@ class HttpServer {
     // The order matters
     app
       // Attach context to every request
-      .use((_req, res, next) => {
-        res.locals.context = this.#requestContext;
-
-        next();
-      })
+      .use(Middlewares.attachRequestContext(this.#requestContext))
       .use(routers.healthcheckRouter)
       // No point in logging all healthcheck requests
       .use(logMiddleware)

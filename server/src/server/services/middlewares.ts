@@ -1,10 +1,11 @@
-import type { NextFunction, Request } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import pg from 'postgres';
 
 import {
   ERROR_CODES,
   GeneralError,
   HTTP_STATUS_CODES,
+  type RequestContext,
   type ResponseWithContext,
   type ResponseWithoutContext,
 } from '../../utils/index.ts';
@@ -22,6 +23,14 @@ function checkMethod(allowedMethods: Set<string>) {
         .end();
       return;
     }
+
+    next();
+  };
+}
+
+function attachRequestContext(context: RequestContext) {
+  return (_req: Request, res: Response, next: NextFunction) => {
+    res.locals.context = context;
 
     next();
   };
@@ -118,4 +127,9 @@ function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
 
 /**********************************************************************************/
 
-export { checkMethod, errorHandler, handleNonExistentRoute };
+export {
+  attachRequestContext,
+  checkMethod,
+  errorHandler,
+  handleNonExistentRoute,
+};

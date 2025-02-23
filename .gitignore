@@ -15,9 +15,9 @@
 !*.ts
 !*.cts
 !*.mts
+!server/src/database/migrations/*.sql
 
 # Exclude config files
-!server/src/database/migrations/*.sql
 !eslint.config.js
 !*.conf
 !*.json
@@ -28,4 +28,6 @@
 !.gitignore
 !LICENSE
 !.npmrc
+
+# Exclude assets
 !server/__tests__/**/*.jpg

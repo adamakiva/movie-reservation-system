@@ -141,7 +141,7 @@ class AuthenticationManager {
   }
 
   public async validateToken(token: string, type: TokenTypes[number]) {
-    let publicKey: jose.KeyLike = null!;
+    let publicKey: jose.CryptoKey = null!;
     switch (type) {
       case 'access':
         ({ publicKey } = this.#access);
@@ -186,13 +186,13 @@ class AuthenticationManager {
     type: string;
     algorithm: string;
     access: {
-      publicKey: jose.KeyLike;
-      privateKey: jose.KeyLike;
+      publicKey: jose.CryptoKey;
+      privateKey: jose.CryptoKey;
       expiresAt: number;
     };
     refresh: {
-      publicKey: jose.KeyLike;
-      privateKey: jose.KeyLike;
+      publicKey: jose.CryptoKey;
+      privateKey: jose.CryptoKey;
       expiresAt: number;
     };
     hashSecret: Buffer;

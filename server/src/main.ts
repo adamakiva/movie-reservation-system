@@ -75,8 +75,8 @@ async function startServer() {
           idle_in_transaction_session_timeout: database.transactionTimeout,
         },
       },
-      // Alive vs Readiness check boils down to:
-      // Should we restart the pod OR redirect the traffic to a different pod
+      // Alive vs Readiness check boils down to the following:
+      // Should we restart the pod (isAlive) OR redirect the traffic to a different pod (isReady)
       isAliveQuery: 'SELECT NOW()',
       isReadyQuery: 'SELECT NOW()',
     },
