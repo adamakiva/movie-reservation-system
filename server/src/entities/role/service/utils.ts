@@ -1,10 +1,10 @@
-import pg from 'postgres';
-
 import {
   ERROR_CODES,
-  GeneralError,
   HTTP_STATUS_CODES,
-} from '../../../utils/index.ts';
+} from '@adamakiva/movie-reservation-system-shared';
+import pg from 'postgres';
+
+import { GeneralError } from '../../../utils/index.ts';
 
 import type {
   validateCreateRole,

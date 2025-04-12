@@ -18,7 +18,6 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.ts';
 
@@ -27,12 +26,12 @@ import {
   generateRandomUserData,
   seedUser,
   seedUsers,
+  USER,
   type User,
 } from './utils.ts';
 
 /**********************************************************************************/
 
-const { USER } = VALIDATION;
 const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 /**********************************************************************************/
@@ -189,9 +188,12 @@ await suite('User integration tests', async () => {
     }
   });
   await test('Invalid - Create request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
+      headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
         lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
@@ -230,9 +232,12 @@ await suite('User integration tests', async () => {
     }
   });
   await test('Invalid - Update request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
+      headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
       },

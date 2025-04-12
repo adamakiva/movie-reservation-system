@@ -8,11 +8,8 @@ class DatabaseLogger implements DrizzleLogger {
   readonly #queriesToIgnore;
   readonly #logger;
 
-  public constructor(
-    queries: { isAlive: string; isReady: string },
-    logger: LoggerHandler,
-  ) {
-    this.#queriesToIgnore = new Set(Object.values(queries));
+  public constructor(queries: Set<string>, logger: LoggerHandler) {
+    this.#queriesToIgnore = queries;
     this.#logger = logger;
   }
 

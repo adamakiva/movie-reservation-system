@@ -18,19 +18,18 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.ts';
 
 import {
   generateShowtimesData,
   seedShowtimes,
+  SHOWTIME,
   type Showtime,
 } from './utils.ts';
 
 /**********************************************************************************/
 
-const { SHOWTIME } = VALIDATION;
 const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 function compareShowtimes(params: {
@@ -793,9 +792,12 @@ await suite('Showtime integration tests', async () => {
     }
   });
   await test('Invalid - Create request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
+      headers: { Authorization: accessToken },
       payload: {
         at: new Date(SHOWTIME.AT.MIN_VALUE.VALUE() + 1),
         movieId: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),

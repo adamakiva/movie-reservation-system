@@ -1,47 +1,16 @@
 import { Router, json } from 'express';
 
-import type { AuthenticationManager } from '../../server/services/index.ts';
-
 import * as userController from './controller.ts';
 
 /**********************************************************************************/
 
-function router(authentication: AuthenticationManager) {
-  const router = Router()
-    .get(
-      '/users',
-      json({ limit: 0 }),
-      authentication.httpAuthenticationMiddleware(),
-      userController.getUsers,
-    )
-    .get(
-      '/users/:user_id',
-      json({ limit: 0 }),
-      authentication.httpAuthenticationMiddleware(),
-      userController.getUser,
-    )
-    .post(
-      '/users',
-      json({ limit: '8kb' }),
-      authentication.httpAuthenticationMiddleware(),
-      userController.createUser,
-    )
-    .put(
-      '/users/:user_id',
-      json({ limit: '8kb' }),
-      authentication.httpAuthenticationMiddleware(),
-      userController.updateUser,
-    )
-    .delete(
-      '/users/:user_id',
-      json({ limit: 0 }),
-      authentication.httpAuthenticationMiddleware(),
-      userController.deleteUser,
-    );
-
-  return router;
-}
+const router = Router()
+  .get('/users', userController.getUsers)
+  .get('/users/:user_id', userController.getUser)
+  .post('/users', json({ limit: '8kb' }), userController.createUser)
+  .put('/users/:user_id', json({ limit: '8kb' }), userController.updateUser)
+  .delete('/users/:user_id', userController.deleteUser);
 
 /**********************************************************************************/
 
-export { router };
+export default router;

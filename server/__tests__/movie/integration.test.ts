@@ -17,7 +17,6 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type ServerParams,
 } from '../utils.ts';
 
@@ -26,16 +25,17 @@ import {
   generateMovieDataIncludingPoster,
   generateMoviePostersData,
   generateMoviesData,
+  MOVIE,
   readFile,
   seedGenre,
   seedMovie,
   seedMovies,
+  USER,
   type Movie,
 } from './utils.ts';
 
 /**********************************************************************************/
 
-const { MOVIE, USER } = VALIDATION;
 const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
 /**********************************************************************************/
@@ -214,9 +214,12 @@ await suite('Movie integration tests', async () => {
     }
   });
   await test('Invalid - Create request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies`,
       method: 'POST',
+      headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES_IN_BYTES),
         lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
@@ -267,9 +270,12 @@ await suite('Movie integration tests', async () => {
     }
   });
   await test('Invalid - Update request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'PUT',
+      headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES_IN_BYTES),
       },

@@ -85,9 +85,12 @@ await suite('Genre integration tests', async () => {
     }
   });
   await test('Invalid - Create request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres`,
       method: 'POST',
+      headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
       },
@@ -120,9 +123,12 @@ await suite('Genre integration tests', async () => {
     }
   });
   await test('Invalid - Update request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'PUT',
+      headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
       },

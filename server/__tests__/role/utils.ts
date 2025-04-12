@@ -1,18 +1,13 @@
 import * as serviceFunctions from '../../src/entities/role/service/index.ts';
 import type { Role } from '../../src/entities/role/service/utils.ts';
 import * as validationFunctions from '../../src/entities/role/validator.ts';
+import { ROLE } from '../../src/entities/role/validator.ts';
 
-import {
-  randomAlphaNumericString,
-  VALIDATION,
-  type ServerParams,
-} from '../utils.ts';
+import { randomAlphaNumericString, type ServerParams } from '../utils.ts';
 
 /**********************************************************************************/
 
 type CreateRole = Omit<Role, 'id'>;
-
-const { ROLE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -51,6 +46,7 @@ function generateRolesData(amount = 1) {
 
 export {
   generateRolesData,
+  ROLE,
   seedRole,
   seedRoles,
   serviceFunctions,

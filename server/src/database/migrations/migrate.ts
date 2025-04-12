@@ -1,10 +1,10 @@
+import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash } from 'argon2';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
-import { ERROR_CODES } from '../../utils/constants.ts';
-import Logger, { type LoggerHandler } from '../../utils/logger.ts';
+import { Logger, type LoggerHandler } from '../../utils/logger.ts';
 
 import * as schemas from '../schemas.ts';
 
@@ -65,7 +65,7 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
     throw new Error(`Migration failed for ${databaseUrl}`, { cause: err });
   } finally {
     try {
-      await connection.end({ timeout: 30 });
+      await connection.end({ timeout: 30 }); // in seconds
     } catch (err) {
       // No point in propagating it, because there is nothing to do with it
       logger.fatal(`Error closing database connection for ${databaseUrl}`, err);
@@ -85,7 +85,7 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
 //@ts-expect-error On purpose, see the above comment
 // eslint-disable-next-line consistent-return
 function run() {
-  const logger = new Logger().getHandler();
+  const logger = new Logger().handler;
 
   const environmentVariables = new Map([
     ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],

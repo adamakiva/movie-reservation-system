@@ -1,10 +1,7 @@
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
 
-import {
-  type RequestContext,
-  GeneralError,
-  HTTP_STATUS_CODES,
-} from '../../../utils/index.ts';
+import { type RequestContext, GeneralError } from '../../../utils/index.ts';
 
 import type { DeleteGenreValidatedData } from './utils.ts';
 

@@ -14,22 +14,18 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
 } from '../utils.ts';
 
 import {
+  HALL,
   seedHall,
   seedHalls,
   serviceFunctions,
   validationFunctions,
 } from './utils.ts';
-
-/**********************************************************************************/
-
-const { HALL } = VALIDATION;
 
 /**********************************************************************************/
 

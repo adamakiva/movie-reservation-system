@@ -1,3 +1,8 @@
+import {
+  ERROR_CODES,
+  MESSAGE_QUEUE,
+  SIGNALS,
+} from '@adamakiva/movie-reservation-system-shared';
 import { EventEmitter } from 'node:events';
 import { globalAgent } from 'node:http';
 import { join, resolve } from 'node:path';
@@ -5,10 +10,7 @@ import { join, resolve } from 'node:path';
 import { HttpServer } from './server/index.ts';
 import {
   EnvironmentManager,
-  ERROR_CODES,
   Logger,
-  MESSAGE_QUEUE,
-  SIGNALS,
   type LoggerHandler,
 } from './utils/index.ts';
 
@@ -29,7 +31,7 @@ async function startServer() {
   // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
   EventEmitter.captureRejections = true;
 
-  // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
+  // See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
   globalAgent.maxSockets = node.maxSockets;
   globalAgent.maxTotalSockets = node.maxTotalSockets;
 
@@ -103,50 +105,36 @@ function createLogger() {
   const logger = new Logger();
 
   return {
-    logger: logger.getHandler(),
+    logger: logger.handler,
     logMiddleware: logger.getLogMiddleware(),
   } as const;
-}
-
-function signalHandler(server: HttpServer) {
-  return () => {
-    server.close();
-
-    process.exit(ERROR_CODES.EXIT_NO_RESTART);
-  };
-}
-
-function globalErrorHandler(params: {
-  server: HttpServer;
-  reason: 'exception' | 'rejection';
-  logger: LoggerHandler;
-}) {
-  const { server, reason, logger } = params;
-
-  return (err: unknown) => {
-    logger.fatal(err, `Unhandled ${reason}`);
-
-    server.close();
-
-    // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
-    process.exit(ERROR_CODES.EXIT_RESTART);
-  };
 }
 
 function attachProcessHandlers(server: HttpServer, logger: LoggerHandler) {
   process
     .on('warning', logger.warn)
-    .once(
-      'unhandledRejection',
-      globalErrorHandler({ server, reason: 'rejection', logger }),
-    )
-    .once(
-      'uncaughtException',
-      globalErrorHandler({ server, reason: 'exception', logger }),
-    );
+    .once('unhandledRejection', (reason: unknown) => {
+      logger.fatal(`Unhandled rejection:`, reason);
+      server.close();
 
+      // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
+      process.exit(ERROR_CODES.EXIT_RESTART);
+    })
+    .once('uncaughtException', (err: unknown) => {
+      logger.fatal(`Unhandled exception:`, err);
+      server.close();
+
+      // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
+      process.exit(ERROR_CODES.EXIT_RESTART);
+    });
+
+  const signalHandler = function signalHandler() {
+    server.close();
+
+    process.exit(ERROR_CODES.EXIT_NO_RESTART);
+  };
   SIGNALS.forEach((signal) => {
-    process.once(signal, signalHandler(server));
+    process.once(signal, signalHandler);
   });
 }
 

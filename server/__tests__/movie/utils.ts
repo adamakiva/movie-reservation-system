@@ -8,15 +8,16 @@ import { fileTypeFromFile } from 'file-type';
 import * as serviceFunctions from '../../src/entities/movie/service/index.ts';
 import type { Movie } from '../../src/entities/movie/service/utils.ts';
 import * as validationFunctions from '../../src/entities/movie/validator.ts';
+import { MOVIE } from '../../src/entities/movie/validator.ts';
 
 import { seedGenre, seedGenres } from '../genre/utils.ts';
+import { USER } from '../user/utils.ts';
 import {
   clearDatabase,
   randomAlphaNumericString,
   randomNumber,
   randomUUID,
   type ServerParams,
-  VALIDATION,
 } from '../utils.ts';
 
 /**********************************************************************************/
@@ -33,8 +34,6 @@ type CreateMoviePoster = {
   mimeType: string;
   sizeInBytes: number;
 };
-
-const { MOVIE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -219,11 +218,13 @@ export {
   generateMovieDataIncludingPoster,
   generateMoviePostersData,
   generateMoviesData,
+  MOVIE,
   readFile,
   seedGenre,
   seedMovie,
   seedMovies,
   serviceFunctions,
+  USER,
   validationFunctions,
   type Movie,
 };

@@ -7,7 +7,13 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { after, before, suite, test } from 'node:test';
 
+import {
+  ERROR_CODES,
+  HTTP_STATUS_CODES,
+  MESSAGE_QUEUE,
+} from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash } from 'argon2';
+import { getTableName, sql } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import {
   createRequest,
@@ -19,19 +25,14 @@ import {
 } from 'node-mocks-http';
 import pg from 'postgres';
 
-import { getTableName, sql } from 'drizzle-orm';
 import type { Database } from '../src/database/index.ts';
 import { VALIDATION } from '../src/entities/utils.validator.ts';
 import { HttpServer } from '../src/server/index.ts';
 import * as Middlewares from '../src/server/services/middlewares.ts';
 import {
   EnvironmentManager,
-  ERROR_CODES,
   GeneralError,
-  HTTP_STATUS_CODES,
   Logger,
-  MESSAGE_QUEUE,
-  randomAlphaNumericString,
   type DatabaseHandler,
   type DatabaseModel,
   type LoggerHandler,
@@ -66,6 +67,11 @@ const CONSTANTS = {
   LOT_OF_PAGES: {
     CREATE: 2_048,
     SIZE: 8,
+  },
+  ALPHA_NUMERIC_CHARACTERS: {
+    CHARACTERS:
+      'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    LENGTH: 67,
   },
 } as const;
 
@@ -259,6 +265,17 @@ function randomUUID<T extends number = 1>(
   return (amount === 1 ? uuids[0] : uuids) as T extends 1 ? string : string[];
 }
 
+function randomAlphaNumericString(len = 32) {
+  let str = '';
+  for (let i = 0; i < len; ++i) {
+    str += CONSTANTS.ALPHA_NUMERIC_CHARACTERS.CHARACTERS.charAt(
+      Math.floor(Math.random() * CONSTANTS.ALPHA_NUMERIC_CHARACTERS.LENGTH),
+    );
+  }
+
+  return str;
+}
+
 function shuffleArray<T>(array: T[]) {
   for (let i = array.length - 1; i > 0; i--) {
     // Generate a random index between 0 and i (inclusive)
@@ -342,7 +359,7 @@ function emptyFunction() {
 
 function mockLogger() {
   const logger = new Logger();
-  const loggerHandler = logger.getHandler();
+  const loggerHandler = logger.handler;
 
   return {
     logger: {
@@ -370,10 +387,10 @@ function createHttpMocks<T extends Response = Response>(params: {
   return {
     request: createRequest(reqOptions),
     response: createResponse<T>({
-      ...resOptions,
       locals: {
         context: { logger: logger },
       },
+      ...resOptions,
     }),
   } as const;
 }

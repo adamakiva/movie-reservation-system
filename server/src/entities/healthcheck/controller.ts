@@ -1,10 +1,7 @@
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import type { Request } from 'express';
 
-import {
-  type RequestContext,
-  type ResponseWithContext,
-  HTTP_STATUS_CODES,
-} from '../../utils/index.ts';
+import type { RequestContext, ResponseWithContext } from '../../utils/index.ts';
 
 import * as healthCheckValidator from './validator.ts';
 

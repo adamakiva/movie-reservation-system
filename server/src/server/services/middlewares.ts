@@ -1,10 +1,12 @@
+import {
+  ERROR_CODES,
+  HTTP_STATUS_CODES,
+} from '@adamakiva/movie-reservation-system-shared';
 import type { NextFunction, Request, Response } from 'express';
 import pg from 'postgres';
 
 import {
-  ERROR_CODES,
   GeneralError,
-  HTTP_STATUS_CODES,
   type RequestContext,
   type ResponseWithContext,
   type ResponseWithoutContext,

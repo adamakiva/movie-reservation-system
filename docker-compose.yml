@@ -8,7 +8,7 @@ services:
     container_name: mrs-pg
     restart: unless-stopped
     build:
-      target: postgresql
+      target: pg
     user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=admin
@@ -28,12 +28,12 @@ services:
       timeout: 2s
       retries: 5
 
-  mrs-rabbitmq:
+  mrs-rbmq:
     hostname: mrs-rbmq
     container_name: mrs-rbmq
     restart: unless-stopped
     build:
-      target: rabbitmq
+      target: rbmq
     user: ${UID}:${GID}
     environment:
       - RABBITMQ_DEFAULT_USER=admin
@@ -61,11 +61,11 @@ services:
     environment:
       # Server options
       - SERVER_PORT=4334
-      - SERVER_DEBUG_PORT=4335
+      - SERVER_DEBUG=0.0.0.0:4335
       - SERVER_BASE_URL=http://localhost
-      - SERVER_HTTP_ROUTE=api/v0
-      - SERVER_ALLOWED_HOSTS=::,127.0.0.1,localhost
-      - SERVER_ALLOWED_ORIGINS=*
+      - HTTP_ROUTE=api/v0
+      - ALLOWED_HOSTS=::,127.0.0.1,localhost
+      - ALLOWED_ORIGINS=* # TODO Change this
       # Database options
       - DATABASE_URL=postgres://admin:admin@mrs-pg:5432/mrs
       - DATABASE_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
@@ -117,10 +117,13 @@ services:
     depends_on:
       mrs-pg:
         condition: service_healthy
+      mrs-rbmq:
+        condition: service_healthy
 
-  mrs-ticket-worker:
-    hostname: mrs-ticket-worker
-    container_name: mrs-ticket-worker
+  ticket-worker:
+    deploy:
+      mode: replicated
+      replicas: 1
     restart: unless-stopped
     build:
       target: ticket-worker
@@ -143,6 +146,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       mrs-pg:
+        condition: service_healthy
+      mrs-rbmq:
         condition: service_healthy
       mrs-server:
         condition: service_healthy

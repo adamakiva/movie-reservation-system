@@ -13,22 +13,18 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
 } from '../utils.ts';
 
 import {
+  ROLE,
   seedRole,
   seedRoles,
   serviceFunctions,
   validationFunctions,
 } from './utils.ts';
-
-/**********************************************************************************/
-
-const { ROLE } = VALIDATION;
 
 /**********************************************************************************/
 

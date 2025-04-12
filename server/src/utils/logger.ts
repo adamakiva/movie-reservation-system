@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**********************************************************************************/
 
-type LoggerHandler = ReturnType<Logger['getHandler']>;
+type LoggerHandler = Logger['handler'];
 type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ class Logger {
     } as const;
   }
 
-  public getHandler() {
+  public get handler() {
     return this.#handler;
   }
 
@@ -64,5 +64,4 @@ class Logger {
 
 /**********************************************************************************/
 
-export default Logger;
-export type { LoggerHandler, LogMiddleware };
+export { Logger, type LoggerHandler, type LogMiddleware };

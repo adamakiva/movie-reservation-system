@@ -5,29 +5,18 @@
 !**/
 
 # Block previously allowed folders
-**/build/
-**/coverage/
-**/node_modules/
 **/dev-data/
 **/npm-cache/
 
-# Exclude source files
-!*.ts
-!*.cts
-!*.mts
-!server/src/database/migrations/*.sql
-
 # Exclude config files
-!eslint.config.js
-!*.conf
-!*.json
-!*.sh
 !README.md
 !docker-compose.yml
 !Dockerfile
 !.gitignore
 !LICENSE
-!.npmrc
-
-# Exclude assets
-!server/__tests__/**/*.jpg
+!scripts/**/*.sh
+!nginx/**/*.conf
+!config/**/*.sh
+!config/**/*.conf
+!config/**/*.json
+!.vscode/**/*.json

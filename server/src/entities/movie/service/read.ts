@@ -1,13 +1,14 @@
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, asc, eq, gt, or } from 'drizzle-orm';
 
 import {
-  encodeCursor,
   GeneralError,
-  HTTP_STATUS_CODES,
   type PaginatedResult,
   type RequestContext,
   type ResponseWithContext,
 } from '../../../utils/index.ts';
+
+import { encodeCursor } from '../../utils.validator.ts';
 
 import type {
   GetMoviesValidatedData,

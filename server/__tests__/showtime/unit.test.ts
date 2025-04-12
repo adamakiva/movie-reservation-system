@@ -18,11 +18,15 @@ import {
   VALIDATION,
 } from '../utils.ts';
 
-import { generateShowtimesData, validationFunctions } from './utils.ts';
+import {
+  generateShowtimesData,
+  SHOWTIME,
+  validationFunctions,
+} from './utils.ts';
 
 /**********************************************************************************/
 
-const { SHOWTIME, PAGINATION } = VALIDATION;
+const { PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 

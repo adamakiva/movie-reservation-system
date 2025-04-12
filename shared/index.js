@@ -4,6 +4,7 @@ const HTTP_STATUS_CODES = {
   ACCEPTED: 202,
   NO_CONTENT: 204,
   MOVED_PERMANENTLY: 301,
+  FOUND: 302,
   REDIRECT: 304,
   TEMPORARY_REDIRECT: 307,
   PERMANENT_REDIRECT: 308,
@@ -20,7 +21,7 @@ const HTTP_STATUS_CODES = {
   SERVER_ERROR: 500,
   BAD_GATEWAY: 502,
   GATEWAY_TIMEOUT: 504,
-} as const;
+};
 
 const SIGNALS = [
   "SIGHUP",
@@ -34,7 +35,7 @@ const SIGNALS = [
   "SIGSEGV",
   "SIGUSR2",
   "SIGTERM",
-] as const;
+];
 
 const ERROR_CODES = {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
@@ -48,7 +49,7 @@ const ERROR_CODES = {
   // the application should not restart by default
   EXIT_RESTART: 1,
   EXIT_NO_RESTART: 180,
-} as const;
+};
 
 const MESSAGE_QUEUE = {
   TICKET: {
@@ -79,7 +80,7 @@ const MESSAGE_QUEUE = {
       CORRELATION_ID: "cancel",
     },
   },
-} as const;
+};
 
 /**********************************************************************************/
 

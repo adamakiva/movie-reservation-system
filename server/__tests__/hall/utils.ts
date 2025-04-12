@@ -1,15 +1,13 @@
 import * as serviceFunctions from '../../src/entities/hall/service/index.ts';
 import type { Hall } from '../../src/entities/hall/service/utils.ts';
 import * as validationFunctions from '../../src/entities/hall/validator.ts';
+import { HALL } from '../../src/entities/hall/validator.ts';
 
 import {
   randomAlphaNumericString,
   randomNumber,
   type ServerParams,
-  VALIDATION,
 } from '../utils.ts';
-
-const { HALL } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -65,6 +63,7 @@ function generateHallsData(amount = 1) {
 
 export {
   generateHallsData,
+  HALL,
   seedHall,
   seedHalls,
   serviceFunctions,

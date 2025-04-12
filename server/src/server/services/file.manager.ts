@@ -4,19 +4,21 @@ import { join } from 'node:path';
 import type { Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
 import multer from 'multer';
 
-import {
-  GeneralError,
-  HTTP_STATUS_CODES,
-  randomAlphaNumericString,
-  type LoggerHandler,
-} from '../../utils/index.ts';
+import { GeneralError, type LoggerHandler } from '../../utils/index.ts';
 
 /**********************************************************************************/
 
 class FileManager implements multer.StorageEngine {
+  static readonly #ALPHA_NUMERIC_CHARACTERS = {
+    CHARACTERS:
+      'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    LENGTH: 67,
+  } as const;
+
   readonly #generatedNameLength;
   readonly #saveDir;
   readonly #watermark;
@@ -60,6 +62,7 @@ class FileManager implements multer.StorageEngine {
       );
     } catch (err) {
       if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+        // Means that 'absolutePath' does not exist, which should be impossible
         throw new GeneralError(
           HTTP_STATUS_CODES.SERVER_ERROR,
           'Should never happen, contact an administrator',
@@ -150,7 +153,20 @@ class FileManager implements multer.StorageEngine {
   }
 
   #generateFileName() {
-    return randomAlphaNumericString(this.#generatedNameLength);
+    return this.#randomAlphaNumericString(this.#generatedNameLength);
+  }
+
+  #randomAlphaNumericString(len = 32) {
+    let str = '';
+    for (let i = 0; i < len; ++i) {
+      str += FileManager.#ALPHA_NUMERIC_CHARACTERS.CHARACTERS.charAt(
+        Math.floor(
+          Math.random() * FileManager.#ALPHA_NUMERIC_CHARACTERS.LENGTH,
+        ),
+      );
+    }
+
+    return str;
   }
 }
 

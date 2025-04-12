@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import * as serviceFunctions from '../../src/entities/user/service/index.ts';
 import type { User } from '../../src/entities/user/service/utils.ts';
 import * as validationFunctions from '../../src/entities/user/validator.ts';
+import { USER } from '../../src/entities/user/validator.ts';
 
 import { seedRoles } from '../role/utils.ts';
 import {
@@ -12,7 +13,6 @@ import {
   randomAlphaNumericString,
   randomNumber,
   randomUUID,
-  VALIDATION,
   type ServerParams,
 } from '../utils.ts';
 
@@ -22,8 +22,6 @@ type CreateUser = Omit<User, 'id' | 'role'> & {
   password: string;
   roleId: string;
 };
-
-const { USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -155,6 +153,7 @@ export {
   seedUser,
   seedUsers,
   serviceFunctions,
+  USER,
   validationFunctions,
   type User,
 };

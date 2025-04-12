@@ -21,6 +21,7 @@ import {
 
 import {
   generateMovieDataIncludingPoster,
+  MOVIE,
   seedMovie,
   serviceFunctions,
   validationFunctions,
@@ -28,7 +29,7 @@ import {
 
 /**********************************************************************************/
 
-const { MOVIE, PAGINATION } = VALIDATION;
+const { PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 

@@ -24,12 +24,13 @@ import {
   seedUser,
   seedUsers,
   serviceFunctions,
+  USER,
   validationFunctions,
 } from './utils.ts';
 
 /**********************************************************************************/
 
-const { USER, PAGINATION } = VALIDATION;
+const { PAGINATION } = VALIDATION;
 
 /**********************************************************************************/
 

@@ -4,7 +4,9 @@ import { argon2i, hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
 import * as jose from 'jose';
 
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import {
+  GeneralError,
   UnauthorizedError,
   type ResponseWithContext,
 } from '../../utils/index.ts';
@@ -151,10 +153,25 @@ class AuthenticationManager {
         break;
     }
 
-    return await jose.jwtVerify(token, publicKey, {
-      audience: this.#audience,
-      issuer: this.#issuer,
-    });
+    try {
+      return await jose.jwtVerify(token, publicKey, {
+        audience: this.#audience,
+        issuer: this.#issuer,
+      });
+    } catch (err) {
+      if (err instanceof jose.errors.JWTExpired) {
+        throw new UnauthorizedError('expired', err.cause);
+      }
+      if (err instanceof jose.errors.JWSInvalid) {
+        throw new UnauthorizedError('malformed', err.cause);
+      }
+
+      throw new GeneralError(
+        HTTP_STATUS_CODES.UNAUTHORIZED,
+        'Unexpected error:',
+        err,
+      );
+    }
   }
 
   public getUserId(authorizationHeader: string) {
@@ -213,33 +230,22 @@ class AuthenticationManager {
     _res: ResponseWithContext,
     next: NextFunction,
   ) {
-    await this.#checkAuthenticationToken(req.headers.authorization);
+    await this.#validateAuthenticationToken(req.headers.authorization);
 
     next();
   }
 
-  async #checkAuthenticationToken(authorizationHeader?: string) {
-    try {
-      if (!authorizationHeader) {
-        throw new UnauthorizedError('missing');
-      }
-      const token = authorizationHeader.replace('Bearer', '');
+  async #validateAuthenticationToken(authorizationHeader?: string) {
+    if (!authorizationHeader) {
+      throw new UnauthorizedError('missing');
+    }
+    const token = authorizationHeader.replace('Bearer', '');
 
-      const {
-        payload: { sub, exp },
-      } = await this.validateToken(token, 'access');
-      if (!sub || !exp) {
-        throw new UnauthorizedError('malformed');
-      }
-    } catch (err) {
-      if (err instanceof jose.errors.JWTExpired) {
-        throw new UnauthorizedError('expired', err.cause);
-      }
-      if (err instanceof jose.errors.JWSInvalid) {
-        throw new UnauthorizedError('malformed', err.cause);
-      }
-
-      throw err;
+    const {
+      payload: { sub, exp },
+    } = await this.validateToken(token, 'access');
+    if (!sub || !exp) {
+      throw new UnauthorizedError('malformed');
     }
   }
 }

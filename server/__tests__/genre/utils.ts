@@ -1,18 +1,13 @@
 import * as serviceFunctions from '../../src/entities/genre/service/index.ts';
 import type { Genre } from '../../src/entities/genre/service/utils.ts';
 import * as validationFunctions from '../../src/entities/genre/validator.ts';
+import { GENRE } from '../../src/entities/genre/validator.ts';
 
-import {
-  randomAlphaNumericString,
-  VALIDATION,
-  type ServerParams,
-} from '../utils.ts';
+import { randomAlphaNumericString, type ServerParams } from '../utils.ts';
 
 /**********************************************************************************/
 
 type CreateGenre = Omit<Genre, 'id'>;
-
-const { GENRE } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -51,6 +46,7 @@ function generateGenresData(amount = 1) {
 
 export {
   generateGenresData,
+  GENRE,
   seedGenre,
   seedGenres,
   serviceFunctions,

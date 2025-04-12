@@ -24,7 +24,6 @@ class Database {
 
   public constructor(params: {
     url: string;
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     options?: pg.Options<{}>;
     isAliveQuery: string;
     isReadyQuery: string;
@@ -53,10 +52,7 @@ class Database {
     const connection = pg(url, options ?? {});
     this.#handler = drizzle(connection, {
       schema: schemas,
-      logger: new DatabaseLogger(
-        { isAlive: isAliveQuery, isReady: isReadyQuery },
-        logger,
-      ),
+      logger: new DatabaseLogger(new Set([isAliveQuery, isReadyQuery]), logger),
     });
 
     this.#models = {

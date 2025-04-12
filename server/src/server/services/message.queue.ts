@@ -1,4 +1,14 @@
 import {
+  HTTP_STATUS_CODES,
+  type Exchanges,
+  type MESSAGE_QUEUE,
+  type Publishers,
+  type ServerConsumersQueues,
+  type ServerConsumersRoutingKeys,
+  type ServerPublishersQueues,
+  type ServerPublishersRoutingKeys,
+} from '@adamakiva/movie-reservation-system-shared';
+import {
   Connection,
   type ConnectionOptions,
   type Consumer,
@@ -10,48 +20,15 @@ import {
   type ReturnedMessage,
 } from 'rabbitmq-client';
 
-import {
-  GeneralError,
-  HTTP_STATUS_CODES,
-  type LoggerHandler,
-  type MESSAGE_QUEUE,
-} from '../../utils/index.ts';
+import { GeneralError, type LoggerHandler } from '../../utils/index.ts';
 
 /**********************************************************************************/
-
-type Exchanges = ['mrs'];
-type Publishers = ['ticket'];
-type Consumers = ['ticket'];
-type PublishersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Publishers[0]}.reserve`,
-    `${K}.${Publishers[0]}.cancel`,
-  ];
-};
-type PublishersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Publishers[0]}-reserve`,
-    `${K}-${Publishers[0]}-cancel`,
-  ];
-};
-type ConsumersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Consumers[0]}.reserve.reply.to`,
-    `${K}.${Consumers[0]}.cancel.reply.to`,
-  ];
-};
-type ConsumersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Consumers[0]}-reserve-reply-to`,
-    `${K}-${Consumers[0]}-cancel-reply-to`,
-  ];
-};
 
 type PublishOptions<E extends Exchanges[number]> = Omit<
   Envelope,
   'exchange' | 'routingKey' | 'replyTo' | 'correlationId'
 > & {
-  replyTo?: ConsumersQueues[E][number];
+  replyTo?: ServerConsumersQueues[E][number];
   correlationId?:
     | (typeof MESSAGE_QUEUE)['TICKET']['RESERVE']['CORRELATION_ID']
     | (typeof MESSAGE_QUEUE)['TICKET']['CANCEL']['CORRELATION_ID'];
@@ -67,6 +44,10 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
 
   readonly #logger;
 
+  readonly #connectionEventHandlers;
+  readonly #publisherEventHandlers;
+  readonly #consumerEventHandlers;
+
   #isAlive = false;
   #isReady = false;
 
@@ -75,6 +56,19 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
     logger: LoggerHandler;
   }) {
     const { connectionOptions, logger } = params;
+
+    this.#connectionEventHandlers = Object.entries({
+      error: this.#handleErrorEvent.bind(this),
+      connection: this.#handleConnectionEvent.bind(this),
+      'connection.blocked': this.#handleBlockedEvent.bind(this),
+      'connection.unblocked': this.#handleUnblockedEvent.bind(this),
+    });
+    this.#publisherEventHandlers = Object.entries({
+      'basic.return': this.#handleUndeliveredMessageEvent.bind(this),
+    });
+    this.#consumerEventHandlers = Object.entries({
+      error: this.#handleConsumerErrorEvent.bind(this),
+    });
 
     this.#handler = new Connection(connectionOptions)
       .on('error', this.#handleErrorEvent.bind(this))
@@ -96,15 +90,15 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
     > & {
       routing: {
         exchange: E;
-        queue: PublishersQueues[E][number];
-        routingKey: PublishersRoutingKeys[E][number];
+        queue: ServerPublishersQueues[E][number];
+        routingKey: ServerPublishersRoutingKeys[E][number];
       }[];
     };
   }) {
     this.#publishers = {
       ...this.#publishers,
       ...Object.fromEntries(
-        Object.entries(publishers).map(([publisher, publisherOptions]) => {
+        Object.entries(publishers).map(([publisherName, publisherOptions]) => {
           const { routing, ...options } = publisherOptions;
 
           const exchanges: PublisherProps['exchanges'] = [];
@@ -116,22 +110,31 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
             queueBindings.push({ exchange, queue, routingKey });
           });
 
-          const handler = this.#handler
-            .createPublisher({ ...options, exchanges, queues, queueBindings })
-            .on('basic.return', this.#handleUndeliveredMessageEvent.bind(this));
+          const publisher = this.#handler.createPublisher({
+            ...options,
+            exchanges,
+            queues,
+            queueBindings,
+          });
 
-          return [publisher, handler];
+          this.#publisherEventHandlers.forEach(([name, handler]) => {
+            //@ts-expect-error Typescript can't infer the type since Object.entries()
+            // keys are not generic. It works
+            publisher.on(name, handler);
+          });
+
+          return [publisherName, publisher] as const;
         }),
       ),
     };
   }
 
   public createConsumer(
-    consumer: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
+    consumerProps: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
       routing: {
         exchange: E;
-        queue: ConsumersQueues[E][number];
-        routingKey: ConsumersRoutingKeys[E][number];
+        queue: ServerConsumersQueues[E][number];
+        routingKey: ServerConsumersRoutingKeys[E][number];
       };
       handler: ConsumerHandler;
     },
@@ -140,7 +143,7 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       routing: { exchange, queue, routingKey },
       handler,
       ...options
-    } = consumer;
+    } = consumerProps;
     const exchanges: ConsumerProps['exchanges'] = [
       { exchange, passive: true, durable: true },
     ];
@@ -148,52 +151,70 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       { exchange, queue, routingKey },
     ];
 
-    this.#consumers.push(
-      this.#handler
-        .createConsumer(
-          {
-            ...options,
-            exchanges,
-            queue,
-            queueBindings,
-            queueOptions: { passive: true },
-          },
-          handler,
-        )
-        .on('error', this.#handleConsumerErrorEvent.bind(this)),
+    const consumer = this.#handler.createConsumer(
+      {
+        ...options,
+        exchanges,
+        queue,
+        queueBindings,
+        queueOptions: { passive: true },
+      },
+      handler,
     );
+
+    this.#consumerEventHandlers.forEach(([name, handler]) => {
+      //@ts-expect-error Typescript can't infer the type since Object.entries()
+      // keys are not generic. It works
+      consumer.on(name, handler);
+    });
+
+    this.#consumers.push(consumer);
   }
 
   public async close() {
     this.#isAlive = false;
     this.#isReady = false;
 
-    this.#handler
-      .removeListener('error', this.#handleErrorEvent)
-      .removeListener('connection', this.#handleConnectionEvent)
-      .removeListener('connection.blocked', this.#handleBlockedEvent)
-      .removeListener('connection.unblocked', this.#handleUnblockedEvent);
-
-    await Promise.all([
-      Promise.all(
+    try {
+      await Promise.all(
         Object.values(this.#publishers).map(async (publisher) => {
           await publisher.close();
+          this.#publisherEventHandlers.forEach(([name, handler]) => {
+            publisher.removeListener(name, handler);
+          });
         }),
-      ),
-      Promise.all(
+      );
+    } catch (err) {
+      console.error('Failure to shutdown publisher(s):', err);
+    }
+
+    try {
+      await Promise.all(
         this.#consumers.map(async (consumer) => {
           await consumer.close();
+          this.#consumerEventHandlers.forEach(([name, handler]) => {
+            consumer.removeListener(name, handler);
+          });
         }),
-      ),
-    ]);
+      );
+    } catch (err) {
+      console.error('Failure to shutdown consumer(s):', err);
+    }
 
-    await this.#handler.close();
+    try {
+      await this.#handler.close();
+      this.#connectionEventHandlers.forEach(([name, handler]) => {
+        this.#handler.removeListener(name, handler);
+      });
+    } catch (err) {
+      console.error('Failure to close message queue connection:', err);
+    }
   }
 
   public async publish(params: {
     publisher: Publishers[number];
     exchange: E;
-    routingKey: PublishersRoutingKeys[E][number];
+    routingKey: ServerPublishersRoutingKeys[E][number];
     data: Buffer | string | object;
     options: PublishOptions<E>;
   }) {
@@ -231,7 +252,7 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
     this.#isAlive = false;
     this.#isReady = false;
 
-    this.#logger.error('Error during message queue usage. This may help:', err);
+    this.#logger.error('Error during message queue usage:', err);
   }
 
   #handleConnectionEvent() {
@@ -244,7 +265,7 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   #handleBlockedEvent(reason: unknown) {
     this.#isReady = false;
 
-    this.#logger.error(reason, 'Message queue is blocked');
+    this.#logger.error('Message queue is blocked', reason);
   }
 
   #handleUnblockedEvent() {
@@ -254,11 +275,11 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   }
 
   #handleUndeliveredMessageEvent(message: ReturnedMessage) {
-    this.#logger.error('Message was not delivered. This may help:', message);
+    this.#logger.error('Message was not delivered:', message);
   }
 
-  #handleConsumerErrorEvent(error: unknown) {
-    this.#logger.error(error, 'Consumer error');
+  #handleConsumerErrorEvent(err: unknown) {
+    this.#logger.error('Consumer error:', err);
   }
 }
 

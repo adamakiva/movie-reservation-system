@@ -1,23 +1,17 @@
 import * as serviceFunctions from '../../src/entities/showtime/service/index.ts';
 import type { Showtime } from '../../src/entities/showtime/service/utils.ts';
 import * as validationFunctions from '../../src/entities/showtime/validator.ts';
+import { SHOWTIME } from '../../src/entities/showtime/validator.ts';
 
 import { seedHalls } from '../hall/utils.ts';
 import { seedMovies } from '../movie/utils.ts';
-import {
-  clearDatabase,
-  randomNumber,
-  type ServerParams,
-  VALIDATION,
-} from '../utils.ts';
+import { clearDatabase, randomNumber, type ServerParams } from '../utils.ts';
 
 /**********************************************************************************/
 
 type CreateShowtime = {
   at: Date;
 };
-
-const { SHOWTIME } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -110,6 +104,7 @@ export {
   seedShowtime,
   seedShowtimes,
   serviceFunctions,
+  SHOWTIME,
   validationFunctions,
   type Showtime,
 };

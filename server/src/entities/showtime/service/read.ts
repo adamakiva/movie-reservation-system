@@ -1,12 +1,13 @@
 import { and, asc, eq, gt, or, type SQL } from 'drizzle-orm';
 
-import {
-  encodeCursor,
-  type DatabaseHandler,
-  type DatabaseModel,
-  type PaginatedResult,
-  type RequestContext,
+import type {
+  DatabaseHandler,
+  DatabaseModel,
+  PaginatedResult,
+  RequestContext,
 } from '../../../utils/index.ts';
+
+import { encodeCursor } from '../../utils.validator.ts';
 
 import type {
   GetShowtimeValidatedData,

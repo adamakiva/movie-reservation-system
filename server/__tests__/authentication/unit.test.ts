@@ -1,5 +1,8 @@
-import * as serviceFunctions from '../../src/entities/authentication/service/index.ts';
+import * as serviceFunctions from '../../src/entities/authentication/controller.ts';
 import * as validationFunctions from '../../src/entities/authentication/validator.ts';
+
+import { AUTHENTICATION } from '../../src/entities/authentication/validator.ts';
+import { USER } from '../../src/entities/user/validator.ts';
 
 import {
   after,
@@ -15,15 +18,10 @@ import {
   suite,
   terminateServer,
   test,
-  VALIDATION,
   type LoggerHandler,
   type ResponseWithContext,
   type ServerParams,
 } from '../utils.ts';
-
-/**********************************************************************************/
-
-const { AUTHENTICATION, USER } = VALIDATION;
 
 /**********************************************************************************/
 
@@ -211,25 +209,32 @@ await suite('Authentication unit tests', async () => {
   await test('Invalid - Login service: Non-existent user', async (context) => {
     const { authentication, fileManager, database, messageQueue } =
       serverParams;
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
-
-    const loginSpy = context.mock.fn(serviceFunctions.login);
-
-    await assert.rejects(
-      async () => {
-        await loginSpy(
-          {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: {
+          email: `${randomUUID()}@ph.com`,
+          password: randomAlphaNumericString(),
+        },
+      },
+      resOptions: {
+        locals: {
+          context: {
             authentication,
             fileManager,
             database,
             messageQueue,
             logger,
           },
-          {
-            email: `${randomUUID()}@ph.com`,
-            password: randomAlphaNumericString(),
-          },
-        );
+        },
+      },
+    });
+
+    const loginSpy = context.mock.fn(serviceFunctions.login);
+
+    await assert.rejects(
+      async () => {
+        await loginSpy(request, response);
       },
       (err: GeneralError) => {
         assert.strictEqual(err instanceof GeneralError, true);
@@ -244,7 +249,26 @@ await suite('Authentication unit tests', async () => {
   await test('Invalid - Login service: Incorrect password', async (context) => {
     const { authentication, fileManager, database, messageQueue } =
       serverParams;
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { request, response } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: {
+          email: `${randomUUID()}@ph.com`,
+          password: randomAlphaNumericString(),
+        },
+      },
+      resOptions: {
+        locals: {
+          context: {
+            authentication,
+            fileManager,
+            database,
+            messageQueue,
+            logger,
+          },
+        },
+      },
+    });
 
     context.mock.method(database, 'getHandler', () => {
       return {
@@ -271,19 +295,7 @@ await suite('Authentication unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await loginSpy(
-          {
-            authentication,
-            fileManager,
-            database,
-            messageQueue,
-            logger,
-          },
-          {
-            email: `${randomUUID()}@ph.com`,
-            password: randomAlphaNumericString(),
-          },
-        );
+        await loginSpy(request, response);
       },
       (err: GeneralError) => {
         assert.strictEqual(err instanceof GeneralError, true);
@@ -348,42 +360,76 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test('Invalid - Refresh service: Malformed JWT', async (context) => {
+  await test(
+    'Invalid - Refresh service: Malformed JWT',
+    { todo: 'Figure out a way to mock the sync validation check' },
+    async (context) => {
+      const { authentication, fileManager, database, messageQueue } =
+        serverParams;
+      const { request, response } = createHttpMocks<ResponseWithContext>({
+        logger,
+        reqOptions: {
+          body: {
+            refreshToken: 'Bearer ph',
+          },
+        },
+        resOptions: {
+          locals: {
+            context: {
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
+              logger,
+            },
+          },
+        },
+      });
+
+      const refreshAccessTokenSpy = context.mock.fn(
+        serviceFunctions.refreshAccessToken,
+      );
+
+      await assert.rejects(
+        async () => {
+          await refreshAccessTokenSpy(request, response);
+        },
+        (err: GeneralError) => {
+          assert.strictEqual(err instanceof GeneralError, true);
+          assert.strictEqual(
+            err.getClientError(response).code,
+            HTTP_STATUS_CODES.UNAUTHORIZED,
+          );
+          return true;
+        },
+      );
+    },
+  );
+  await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
     const { authentication, fileManager, database, messageQueue } =
       serverParams;
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
-
-    const refreshAccessTokenSpy = context.mock.fn(
-      serviceFunctions.refreshAccessToken,
-    );
-
-    await assert.rejects(
-      async () => {
-        await refreshAccessTokenSpy(
-          {
+    const { request, response } = createHttpMocks<ResponseWithContext>({
+      logger,
+      reqOptions: {
+        body: {
+          refreshToken: await authentication.generateRefreshToken(
+            randomUUID(),
+            Date.now() + 10_000,
+          ),
+        },
+      },
+      resOptions: {
+        locals: {
+          context: {
             authentication,
             fileManager,
             database,
             messageQueue,
             logger,
           },
-          'Bearer ph',
-        );
+        },
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.strictEqual(
-          err.getClientError(response).code,
-          HTTP_STATUS_CODES.UNAUTHORIZED,
-        );
-        return true;
-      },
-    );
-  });
-  await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    });
 
     context.mock.method(authentication, 'validateToken', async () => {
       return await Promise.resolve({
@@ -396,19 +442,7 @@ await suite('Authentication unit tests', async () => {
 
     await assert.rejects(
       async () => {
-        await refreshAccessTokenSpy(
-          {
-            authentication,
-            fileManager,
-            database,
-            messageQueue,
-            logger,
-          },
-          await authentication.generateRefreshToken(
-            randomUUID(),
-            Date.now() + 10_000,
-          ),
-        );
+        await refreshAccessTokenSpy(request, response);
       },
       (err: GeneralError) => {
         assert.strictEqual(err instanceof GeneralError, true);

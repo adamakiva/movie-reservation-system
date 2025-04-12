@@ -1,5 +1,9 @@
 import { createServer, type Server } from 'node:http';
 
+import {
+  ERROR_CODES,
+  type MESSAGE_QUEUE,
+} from '@adamakiva/movie-reservation-system-shared';
 import compress from 'compression';
 import cors from 'cors';
 import express, { type Express } from 'express';
@@ -11,12 +15,10 @@ import {
   cancelShowtimeReservations,
   reserveShowtimeTicket,
 } from '../entities/showtime/service/utils.ts';
-import {
-  ERROR_CODES,
-  type LoggerHandler,
-  type LogMiddleware,
-  type MESSAGE_QUEUE,
-  type RequestContext,
+import type {
+  LoggerHandler,
+  LogMiddleware,
+  RequestContext,
 } from '../utils/index.ts';
 
 import {
@@ -193,7 +195,7 @@ class HttpServer {
       database,
       messageQueue: messageQueue.handler,
       logger,
-    } satisfies RequestContext;
+    } as const satisfies RequestContext;
   }
 
   #initMessageQueue(
@@ -319,12 +321,13 @@ class HttpServer {
       .use(
         this.#routes.http,
         routers.authenticationRouter,
-        routers.roleRouter(this.#authentication),
-        routers.userRouter(this.#authentication),
-        routers.genreRouter(this.#authentication),
-        routers.movieRouter(this.#authentication, this.#fileManager),
-        routers.hallRouter(this.#authentication),
-        routers.showtimeRouter(this.#authentication),
+        this.#authentication.httpAuthenticationMiddleware(),
+        routers.roleRouter,
+        routers.userRouter,
+        routers.genreRouter,
+        routers.movieRouter(this.#fileManager),
+        routers.hallRouter,
+        routers.showtimeRouter,
       )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }

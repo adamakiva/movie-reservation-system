@@ -1,0 +1,15 @@
+# Ignore everything
+*
+
+# Block previously allowed folders
+**/node_modules/
+
+# Exclude source files
+!index.js
+!index.d.ts
+
+# Exclude config files
+!package.json
+!README.md
+!.npmrc
+!.gitignore

@@ -80,9 +80,12 @@ await suite('Role integration tests', async () => {
     }
   });
   await test('Invalid - Create request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles`,
       method: 'POST',
+      headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
       },
@@ -115,9 +118,12 @@ await suite('Role integration tests', async () => {
     }
   });
   await test('Invalid - Update request with excess size', async () => {
+    const { accessToken } = await getAdminTokens(serverParams);
+
     const { status } = await sendHttpRequest({
       route: `${serverParams.routes.http}/roles/${randomUUID()}`,
       method: 'PUT',
+      headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
       },

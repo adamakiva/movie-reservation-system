@@ -1,10 +1,10 @@
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
 
 import {
   type DatabaseHandler,
   type DatabaseModel,
   GeneralError,
-  HTTP_STATUS_CODES,
   type RequestContext,
 } from '../../../utils/index.ts';
 
