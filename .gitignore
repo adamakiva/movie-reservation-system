@@ -20,3 +20,4 @@
 !config/**/*.conf
 !config/**/*.json
 !.vscode/**/*.json
+!.github/workflows/*.yml

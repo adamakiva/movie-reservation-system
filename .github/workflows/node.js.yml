@@ -2,7 +2,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build:
@@ -39,4 +39,3 @@ jobs:
         with:
           files: server/__tests__/junit.xml
           format: junit
-      
