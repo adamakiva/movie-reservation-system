@@ -37,7 +37,7 @@ jobs:
 
       - name: Run tests
         working-directory: server
-        run: npm run test-ci
+        run: npm run test
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
