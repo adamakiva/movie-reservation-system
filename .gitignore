@@ -21,3 +21,4 @@
 !config/**/*.json
 !.vscode/**/*.json
 !.github/workflows/*.yml
+!sonar-project.properties
