@@ -8,10 +8,13 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
 import multer from 'multer';
 
-import { GeneralError, type LoggerHandler } from '../../utils/index.ts';
+import { GeneralError, type Logger } from '../../utils/index.ts';
 
 /**********************************************************************************/
 
+/**
+ * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
+ */
 class FileManager implements multer.StorageEngine {
   static readonly #ALPHA_NUMERIC_CHARACTERS = {
     CHARACTERS:
@@ -19,50 +22,53 @@ class FileManager implements multer.StorageEngine {
     LENGTH: 67,
   } as const;
 
-  readonly #generatedNameLength;
+  readonly #generatedFileNameLength;
   readonly #saveDir;
-  readonly #watermark;
+  readonly #highWatermark;
   readonly #logger;
-  readonly #upload;
+
+  readonly #uploadMiddleware;
 
   public constructor(params: {
-    generatedNameLength: number;
+    generatedFileNameLength: number;
     saveDir: string;
-    watermark: number;
-    logger: LoggerHandler;
+    highWatermark: number;
+    logger: Logger;
     limits?: multer.Options['limits'];
   }) {
-    const { generatedNameLength, saveDir, watermark, logger, limits } = params;
+    const { generatedFileNameLength, saveDir, highWatermark, logger, limits } =
+      params;
 
-    this.#generatedNameLength = generatedNameLength;
+    this.#generatedFileNameLength = generatedFileNameLength;
     this.#saveDir = saveDir;
-    this.#watermark = watermark;
+    this.#highWatermark = highWatermark;
     this.#logger = logger;
 
-    this.#upload = multer({ storage: this, limits });
+    this.#uploadMiddleware = multer({ storage: this, limits });
   }
 
-  public single(...params: Parameters<multer.Multer['single']>) {
-    return this.#upload.single(...params);
+  public singleFile(...params: Parameters<multer.Multer['single']>) {
+    return this.#uploadMiddleware.single(...params);
   }
 
-  public multiple(...params: Parameters<multer.Multer['array']>) {
-    return this.#upload.array(...params);
+  public multipleFiles(...params: Parameters<multer.Multer['array']>) {
+    return this.#uploadMiddleware.array(...params);
   }
 
   public async streamFile(dest: Writable, absolutePath: PathLike) {
     try {
-      // This path is provided by the program, not the end-user
       await pipeline(
+        // This path is provided by the program, not the end-user
         // eslint-disable-next-line @security/detect-non-literal-fs-filename
         createReadStream(absolutePath, {
-          highWaterMark: this.#watermark,
+          highWaterMark: this.#highWatermark,
         }),
         dest,
       );
     } catch (err) {
       if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
         // Means that 'absolutePath' does not exist, which should be impossible
+        // considering the programmer set the value
         throw new GeneralError(
           HTTP_STATUS_CODES.SERVER_ERROR,
           'Should never happen, contact an administrator',
@@ -74,7 +80,7 @@ class FileManager implements multer.StorageEngine {
     }
   }
 
-  public deleteFile(absolutePath: PathLike) {
+  public deleteFile(absolutePath?: PathLike) {
     if (!absolutePath) {
       return Promise.resolve();
     }
@@ -83,8 +89,6 @@ class FileManager implements multer.StorageEngine {
     // eslint-disable-next-line @security/detect-non-literal-fs-filename
     return unlink(absolutePath);
   }
-
-  /********************************************************************************/
 
   public _handleFile(
     ...params: Parameters<multer.StorageEngine['_handleFile']>
@@ -107,7 +111,7 @@ class FileManager implements multer.StorageEngine {
         // This path is provided by the program, not the end-user
         // eslint-disable-next-line @security/detect-non-literal-fs-filename
         const outStream = createWriteStream(file.path, {
-          highWaterMark: this.#watermark,
+          highWaterMark: this.#highWatermark,
         });
 
         return pipeline(fileStreamWithFileType, outStream)
@@ -152,8 +156,10 @@ class FileManager implements multer.StorageEngine {
       });
   }
 
+  /********************************************************************************/
+
   #generateFileName() {
-    return this.#randomAlphaNumericString(this.#generatedNameLength);
+    return this.#randomAlphaNumericString(this.#generatedFileNameLength);
   }
 
   #randomAlphaNumericString(len = 32) {
@@ -172,4 +178,4 @@ class FileManager implements multer.StorageEngine {
 
 /**********************************************************************************/
 
-export default FileManager;
+export { FileManager };

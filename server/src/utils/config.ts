@@ -1,6 +1,6 @@
 import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 
-import type { LoggerHandler } from './logger.ts';
+import type { Logger } from './logger.ts';
 
 /**********************************************************************************/
 
@@ -19,7 +19,7 @@ class EnvironmentManager {
     'AUTHENTICATION_HASH_SECRET',
   ] as const;
 
-  public constructor(logger: LoggerHandler) {
+  public constructor(logger: Logger) {
     this.#logger = logger;
     this.#checkForMissingEnvironmentVariables();
 
@@ -131,4 +131,4 @@ class EnvironmentManager {
 
 /**********************************************************************************/
 
-export default EnvironmentManager;
+export { EnvironmentManager };

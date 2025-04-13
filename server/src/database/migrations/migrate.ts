@@ -4,14 +4,9 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
-import { Logger, type LoggerHandler } from '../../utils/logger.ts';
+import { Logger } from '../../utils/logger.ts';
 
 import * as schemas from '../schemas.ts';
-
-/**********************************************************************************/
-
-type Role = typeof schemas.genreModel.$inferInsert;
-type User = typeof schemas.userModel.$inferInsert;
 
 /**********************************************************************************/
 
@@ -22,8 +17,8 @@ const DEFAULT_ADMIN_LAST_NAME = 'admin';
 
 async function seedInitialData(params: {
   databaseHandler: PostgresJsDatabase<typeof schemas>;
-  role: Role;
-  user: User;
+  role: typeof schemas.genreModel.$inferInsert;
+  user: typeof schemas.userModel.$inferInsert;
 }) {
   const { databaseHandler, role, user } = params;
 
@@ -37,7 +32,7 @@ async function seedInitialData(params: {
     .onConflictDoNothing();
 }
 
-async function migration(databaseUrl: string, logger: LoggerHandler) {
+async function migration(databaseUrl: string, logger: Logger) {
   const connection = pg(databaseUrl);
   const databaseHandler = drizzle(connection, { schema: schemas });
 
@@ -61,14 +56,17 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
         roleId: process.env.ADMIN_ROLE_ID!,
       },
     });
-  } catch (err) {
-    throw new Error(`Migration failed for ${databaseUrl}`, { cause: err });
+  } catch (error) {
+    throw new Error(`Migration failed for ${databaseUrl}`, { cause: error });
   } finally {
     try {
       await connection.end({ timeout: 30 }); // in seconds
-    } catch (err) {
+    } catch (error) {
       // No point in propagating it, because there is nothing to do with it
-      logger.fatal(`Error closing database connection for ${databaseUrl}`, err);
+      logger.fatal(
+        `Error closing database connection for ${databaseUrl}`,
+        error,
+      );
     }
   }
 }
@@ -85,7 +83,7 @@ async function migration(databaseUrl: string, logger: LoggerHandler) {
 //@ts-expect-error On purpose, see the above comment
 // eslint-disable-next-line consistent-return
 function run() {
-  const logger = new Logger().handler;
+  const logger = new Logger();
 
   const environmentVariables = new Map([
     ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],
@@ -111,8 +109,8 @@ function run() {
       databaseUrls.values().map((databaseUrl) => {
         return migration(databaseUrl!, logger);
       }),
-    ).catch((err: unknown) => {
-      logger.fatal('Migration failed:', err);
+    ).catch((error: unknown) => {
+      logger.fatal('Migration failed:', error);
       process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
   }

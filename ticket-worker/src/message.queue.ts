@@ -22,36 +22,15 @@ import {
 class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   readonly #handler;
 
-  #publishers: { [key: string]: Publisher };
-  readonly #consumers: Consumer[];
-
-  readonly #connectionEventHandlers;
-  readonly #publisherEventHandlers;
-  readonly #consumerEventHandlers;
+  #publishers: { [key: string]: Publisher } = {};
+  readonly #consumers: Consumer[] = [];
 
   public constructor(connectionOptions: ConnectionOptions) {
-    this.#connectionEventHandlers = Object.entries({
-      error: this.#handleErrorEvent.bind(this),
-      connection: this.#handleConnectionEvent.bind(this),
-      'connection.blocked': this.#handleBlockedEvent.bind(this),
-      'connection.unblocked': this.#handleUnblockedEvent.bind(this),
-    });
-    this.#publisherEventHandlers = Object.entries({
-      'basic.return': this.#handleUndeliveredMessageEvent.bind(this),
-    });
-    this.#consumerEventHandlers = Object.entries({
-      error: this.#handleConsumerErrorEvent.bind(this),
-    });
-
-    this.#handler = new Connection(connectionOptions);
-    this.#connectionEventHandlers.forEach(([name, handler]) => {
-      //@ts-expect-error Typescript can't infer the type since Object.entries()
-      // keys are not generic. It works
-      this.#handler.on(name, handler);
-    });
-
-    this.#publishers = {};
-    this.#consumers = [];
+    this.#handler = new Connection(connectionOptions)
+      .on('error', this.#handleErrorEvent)
+      .on('connection', this.#handleConnectionEvent)
+      .on('connection.blocked', this.#handleBlockedEvent)
+      .on('connection.unblocked', this.#handleUnblockedEvent);
   }
 
   public createPublishers(publishers: {
@@ -83,18 +62,14 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
             queueBindings.push({ exchange, queue, routingKey });
           });
 
-          const publisher = this.#handler.createPublisher({
-            ...options,
-            exchanges,
-            queues,
-            queueBindings,
-          });
-
-          this.#publisherEventHandlers.forEach(([name, handler]) => {
-            //@ts-expect-error Typescript can't infer the type since Object.entries()
-            // keys are not generic. It works
-            publisher.on(name, handler);
-          });
+          const publisher = this.#handler
+            .createPublisher({
+              ...options,
+              exchanges,
+              queues,
+              queueBindings,
+            })
+            .on('basic.return', this.#handleUndeliveredMessageEvent);
 
           return [publisherName, publisher] as const;
         }),
@@ -127,22 +102,18 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       { exchange, queue, routingKey },
     ] as const;
 
-    const consumer = this.#handler.createConsumer(
-      {
-        ...options,
-        exchanges,
-        queue,
-        queueBindings,
-        queueOptions: { passive: true },
-      },
-      handler,
-    );
-
-    this.#consumerEventHandlers.forEach(([name, handler]) => {
-      //@ts-expect-error Typescript can't infer the type since Object.entries()
-      // keys are not generic. It works
-      consumer.on(name, handler);
-    });
+    const consumer = this.#handler
+      .createConsumer(
+        {
+          ...options,
+          exchanges,
+          queue,
+          queueBindings,
+          queueOptions: { passive: true },
+        },
+        handler,
+      )
+      .on('error', this.#handleConsumerErrorEvent);
 
     this.#consumers.push(consumer);
   }
@@ -152,65 +123,66 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       await Promise.all(
         Object.values(this.#publishers).map(async (publisher) => {
           await publisher.close();
-          this.#publisherEventHandlers.forEach(([name, handler]) => {
-            publisher.removeListener(name, handler);
-          });
+          publisher.removeListener(
+            'basic-return',
+            this.#handleUndeliveredMessageEvent,
+          );
         }),
       );
-    } catch (err) {
-      console.error('Failure to shutdown publisher(s):', err);
+    } catch (error) {
+      console.error('Failure to shutdown publisher(s):', error);
     }
 
     try {
       await Promise.all(
         this.#consumers.map(async (consumer) => {
           await consumer.close();
-          this.#consumerEventHandlers.forEach(([name, handler]) => {
-            consumer.removeListener(name, handler);
-          });
+          consumer.removeListener('error', this.#handleConsumerErrorEvent);
         }),
       );
-    } catch (err) {
-      console.error('Failure to shutdown consumer(s):', err);
+    } catch (error) {
+      console.error('Failure to shutdown consumer(s):', error);
     }
 
     try {
       await this.#handler.close();
-      this.#connectionEventHandlers.forEach(([name, handler]) => {
-        this.#handler.removeListener(name, handler);
-      });
-    } catch (err) {
-      console.error('Failure to close message queue connection:', err);
+      this.#handler
+        .removeListener('connection.unblocked', this.#handleUnblockedEvent)
+        .removeListener('connection.blocked', this.#handleBlockedEvent)
+        .removeListener('connection', this.#handleConnectionEvent)
+        .removeListener('error', this.#handleErrorEvent);
+    } catch (error) {
+      console.error('Failure to close message queue connection:', error);
     }
   }
 
   /********************************************************************************/
 
-  #handleErrorEvent(err: unknown) {
-    console.error('Error during message queue usage:', err);
-  }
+  readonly #handleErrorEvent = (error: unknown) => {
+    console.error('Error during message queue usage:', error);
+  };
 
-  #handleConnectionEvent() {
+  readonly #handleConnectionEvent = () => {
     console.info('Message queue (re)connected');
-  }
+  };
 
-  #handleBlockedEvent(reason: unknown) {
+  readonly #handleBlockedEvent = (reason: unknown) => {
     console.error('Message queue is blocked:', reason);
-  }
+  };
 
-  #handleUnblockedEvent() {
+  readonly #handleUnblockedEvent = () => {
     console.info('Message queue is unblocked');
-  }
+  };
 
-  #handleUndeliveredMessageEvent(message: ReturnedMessage) {
+  readonly #handleUndeliveredMessageEvent = (message: ReturnedMessage) => {
     console.error('Message was not delivered:', message);
-  }
+  };
 
-  #handleConsumerErrorEvent(err: unknown) {
-    console.error('Consumer error:', err);
-  }
+  readonly #handleConsumerErrorEvent = (error: unknown) => {
+    console.error('Consumer error:', error);
+  };
 }
 
 /**********************************************************************************/
 
-export default MessageQueue;
+export { MessageQueue };

@@ -12,7 +12,7 @@ import {
   type Publisher,
 } from 'rabbitmq-client';
 
-import MessageQueue from './message.queue.ts';
+import { MessageQueue } from './message.queue.ts';
 
 /**********************************************************************************/
 
@@ -159,7 +159,7 @@ function createCancelTicketConsumer(
 /**********************************************************************************/
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
-  const globalErrorHandler = function signalHandler() {
+  const globalErrorHandler = () => {
     messageQueue
       .close()
       .catch((err: unknown) => {

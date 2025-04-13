@@ -12,4 +12,4 @@ const router = Router()
 
 /**********************************************************************************/
 
-export default router;
+export { router };

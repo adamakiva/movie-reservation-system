@@ -7,9 +7,9 @@ import type {
   MessageQueue,
 } from '../server/services/index.ts';
 
-import EnvironmentManager from './config.ts';
+import { EnvironmentManager } from './config.ts';
 import { GeneralError, UnauthorizedError } from './errors.ts';
-import { Logger, type LogMiddleware, type LoggerHandler } from './logger.ts';
+import { Logger, type LogMiddleware } from './logger.ts';
 
 /********************************** Http ******************************************/
 
@@ -24,7 +24,7 @@ type RequestContext = {
   database: Database;
   fileManager: FileManager;
   messageQueue: MessageQueue;
-  logger: LoggerHandler;
+  logger: Logger;
 };
 
 /********************************* Database ***************************************/
@@ -58,7 +58,6 @@ export {
   type DatabaseHandler,
   type DatabaseModel,
   type LogMiddleware,
-  type LoggerHandler,
   type PaginatedResult,
   type RequestContext,
   type ResponseWithContext,

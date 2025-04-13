@@ -25,6 +25,8 @@ class AuthenticationManager {
   readonly #refresh;
   readonly #hashSecret;
 
+  readonly #boundHttpAuthenticationMiddleware;
+
   public static async create(params: {
     audience: string;
     issuer: string;
@@ -50,34 +52,12 @@ class AuthenticationManager {
       hashSecret,
     } = params;
 
-    const encoding = { encoding: 'utf-8' } as const;
-
-    const [
-      accessPublicKey,
-      accessPrivateKey,
-      refreshPublicKey,
-      refreshPrivateKey,
-    ] = await Promise.all([
-      // These path are defined by the programmer, not the end user
-      /* eslint-disable @security/detect-non-literal-fs-filename */
-      readFile(`${keysPath}/access_public_key.pem`, encoding),
-      readFile(`${keysPath}/access_private_key.pem`, encoding),
-      readFile(`${keysPath}/refresh_public_key.pem`, encoding),
-      readFile(`${keysPath}/refresh_private_key.pem`, encoding),
-      /* eslint-enable @security/detect-non-literal-fs-filename */
-    ]);
-
     const [
       publicAccessKey,
       privateAccessKey,
       publicRefreshKey,
       privateRefreshKey,
-    ] = await Promise.all([
-      jose.importSPKI(accessPublicKey, algorithm),
-      jose.importPKCS8(accessPrivateKey, algorithm),
-      jose.importSPKI(refreshPublicKey, algorithm),
-      jose.importPKCS8(refreshPrivateKey, algorithm),
-    ]);
+    ] = await AuthenticationManager.#readKeysFromFile(keysPath, algorithm);
 
     return new AuthenticationManager({
       audience,
@@ -99,9 +79,7 @@ class AuthenticationManager {
   }
 
   public httpAuthenticationMiddleware() {
-    // Since the class function is used as a middleware we need to bind `this`
-    // to access the class methods/members
-    return this.#httpAuthenticationMiddleware.bind(this);
+    return this.#boundHttpAuthenticationMiddleware;
   }
 
   public getExpirationTime() {
@@ -223,19 +201,43 @@ class AuthenticationManager {
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
+
+    this.#boundHttpAuthenticationMiddleware =
+      this.#httpAuthenticationMiddleware.bind(this);
+  }
+
+  static async #readKeysFromFile(keysPath: string, algorithm: string) {
+    const encoding = { encoding: 'utf-8' } as const;
+
+    const [
+      accessPublicKey,
+      accessPrivateKey,
+      refreshPublicKey,
+      refreshPrivateKey,
+    ] = await Promise.all([
+      // These path are defined by the programmer, not the end user
+      /* eslint-disable @security/detect-non-literal-fs-filename */
+      readFile(`${keysPath}/access_public_key.pem`, encoding),
+      readFile(`${keysPath}/access_private_key.pem`, encoding),
+      readFile(`${keysPath}/refresh_public_key.pem`, encoding),
+      readFile(`${keysPath}/refresh_private_key.pem`, encoding),
+      /* eslint-enable @security/detect-non-literal-fs-filename */
+    ]);
+
+    return await Promise.all([
+      jose.importSPKI(accessPublicKey, algorithm),
+      jose.importPKCS8(accessPrivateKey, algorithm),
+      jose.importSPKI(refreshPublicKey, algorithm),
+      jose.importPKCS8(refreshPrivateKey, algorithm),
+    ]);
   }
 
   async #httpAuthenticationMiddleware(
-    req: Request,
-    _res: ResponseWithContext,
+    request: Request,
+    _response: ResponseWithContext,
     next: NextFunction,
   ) {
-    await this.#validateAuthenticationToken(req.headers.authorization);
-
-    next();
-  }
-
-  async #validateAuthenticationToken(authorizationHeader?: string) {
+    const authorizationHeader = request.headers.authorization;
     if (!authorizationHeader) {
       throw new UnauthorizedError('missing');
     }
@@ -247,9 +249,11 @@ class AuthenticationManager {
     if (!sub || !exp) {
       throw new UnauthorizedError('malformed');
     }
+
+    next();
   }
 }
 
 /**********************************************************************************/
 
-export default AuthenticationManager;
+export { AuthenticationManager };

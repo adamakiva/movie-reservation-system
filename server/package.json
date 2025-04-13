@@ -5,9 +5,8 @@
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
-    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage",
+    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter junit --test-reporter-destination=__tests__/junit.xml",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
-    "test-ci": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter junit --test-reporter-destination __tests__/junit.xml",
     "lint": "tsc --project tsconfig.json; eslint {src,__tests__}/**/*.ts",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "check-global-updates": "ncu -g",

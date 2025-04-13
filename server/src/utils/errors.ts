@@ -48,7 +48,7 @@ class GeneralError extends Error {
 
   // The unused variable exists to allow overrides of child classes
   // eslint-disable-next-line no-unused-vars
-  public getClientError(_res: Response) {
+  public getClientError(_response: Response) {
     return {
       code: this.#statusCode,
       message: this.#message,
@@ -57,16 +57,16 @@ class GeneralError extends Error {
 
   /********************************************************************************/
 
-  #formatError(err: Error) {
-    const header = `${err.name} - ${err.message}`;
-    const stackTrace = err.stack
-      ? `\nStack trace:\n${err.stack.split('\n').slice(1).join('\n')}`
+  #formatError(error: Error) {
+    const header = `${error.name} - ${error.message}`;
+    const stackTrace = error.stack
+      ? `\nStack trace:\n${error.stack.split('\n').slice(1).join('\n')}`
       : '';
     // The function must have a return type to allow tsc to evaluate the recursion
     // correctly. See: https://github.com/microsoft/TypeScript/issues/43047
     const nestedCause: string =
-      err.cause && err.cause instanceof Error
-        ? `\n[cause]: ${this.#formatError(err.cause)}`
+      error.cause && error.cause instanceof Error
+        ? `\n[cause]: ${this.#formatError(error.cause)}`
         : '';
 
     const formattedError = `${header}${stackTrace}${nestedCause}`;
@@ -113,10 +113,13 @@ class UnauthorizedError extends GeneralError {
     this.#reason = reason;
   }
 
-  public override getClientError(res: Response) {
-    res.setHeader('WWW-Authenticate', this.#getWWWAuthenticateHeaderValue());
+  public override getClientError(response: Response) {
+    response.setHeader(
+      'WWW-Authenticate',
+      this.#getWWWAuthenticateHeaderValue(),
+    );
 
-    return super.getClientError(res);
+    return super.getClientError(response);
   }
 
   /********************************************************************************/

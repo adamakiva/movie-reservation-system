@@ -1,6 +1,6 @@
 import type { Logger as DrizzleLogger } from 'drizzle-orm';
 
-import type { LoggerHandler } from '../utils/index.ts';
+import type { Logger } from '../utils/index.ts';
 
 /**********************************************************************************/
 
@@ -8,7 +8,7 @@ class DatabaseLogger implements DrizzleLogger {
   readonly #queriesToIgnore;
   readonly #logger;
 
-  public constructor(queries: Set<string>, logger: LoggerHandler) {
+  public constructor(queries: Set<string>, logger: Logger) {
     this.#queriesToIgnore = queries;
     this.#logger = logger;
   }
@@ -22,4 +22,4 @@ class DatabaseLogger implements DrizzleLogger {
 
 /**********************************************************************************/
 
-export default DatabaseLogger;
+export { DatabaseLogger };

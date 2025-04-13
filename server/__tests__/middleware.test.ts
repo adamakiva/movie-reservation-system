@@ -13,7 +13,7 @@ import {
   suite,
   terminateServer,
   test,
-  type LoggerHandler,
+  type Logger,
   type ResponseWithContext,
   type ResponseWithoutContext,
   type ServerParams,
@@ -22,10 +22,10 @@ import {
 /**********************************************************************************/
 
 await suite('Middleware tests', async () => {
-  let logger: LoggerHandler = null!;
+  let logger: Logger = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
-    ({ logger } = mockLogger());
+    logger = mockLogger();
     serverParams = await initServer();
   });
   after(() => {

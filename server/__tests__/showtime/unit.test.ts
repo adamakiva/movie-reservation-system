@@ -6,16 +6,16 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   initServer,
-  type LoggerHandler,
   mockLogger,
   randomAlphaNumericString,
   randomUUID,
-  type ResponseWithContext,
-  type ServerParams,
   suite,
   terminateServer,
   test,
   VALIDATION,
+  type Logger,
+  type ResponseWithContext,
+  type ServerParams,
 } from '../utils.ts';
 
 import {
@@ -31,10 +31,10 @@ const { PAGINATION } = VALIDATION;
 /**********************************************************************************/
 
 await suite('Showtime unit tests', async () => {
-  let logger: LoggerHandler = null!;
+  let logger: Logger = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
-    ({ logger } = mockLogger());
+    logger = mockLogger();
     serverParams = await initServer();
   });
   after(() => {

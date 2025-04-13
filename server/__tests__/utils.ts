@@ -5,7 +5,7 @@ import { randomUUID as nodeRandomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
-import { after, before, suite, test } from 'node:test';
+import { after, before, mock, suite, test } from 'node:test';
 
 import {
   ERROR_CODES,
@@ -35,7 +35,6 @@ import {
   Logger,
   type DatabaseHandler,
   type DatabaseModel,
-  type LoggerHandler,
   type ResponseWithContext,
   type ResponseWithoutContext,
 } from '../src/utils/index.ts';
@@ -96,7 +95,8 @@ function terminateServer(serverParams: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
-  const { logger, logMiddleware } = mockLogger();
+  const logger = mockLogger();
+  const logMiddleware = logger.getLogMiddleware();
 
   const environmentManager = new EnvironmentManager(logger);
   const {
@@ -126,9 +126,9 @@ async function createServer() {
       hashSecret: jwt.hash,
     },
     fileManagerParams: {
-      generatedNameLength: 32,
+      generatedFileNameLength: 32,
       saveDir: tmpdir(),
-      watermark: node.defaultHighWaterMark,
+      highWatermark: node.defaultHighWaterMark,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
@@ -186,7 +186,7 @@ async function createServer() {
   } as const;
 }
 
-function getRequestContext(serverParams: ServerParams, logger: LoggerHandler) {
+function getRequestContext(serverParams: ServerParams, logger: Logger) {
   return {
     authentication: serverParams.authentication,
     database: serverParams.database,
@@ -359,26 +359,16 @@ function emptyFunction() {
 
 function mockLogger() {
   const logger = new Logger();
-  const loggerHandler = logger.handler;
 
-  return {
-    logger: {
-      ...loggerHandler,
-      debug: emptyFunction,
-      info: emptyFunction,
-      log: emptyFunction,
-      warn: emptyFunction,
-      error: emptyFunction,
-    },
-    logMiddleware: (_req: Request, _res: Response, next: NextFunction) => {
-      // Disable logging middleware
-      next();
-    },
-  } as const;
+  (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
+    mock.method(logger, level, emptyFunction);
+  });
+
+  return logger;
 }
 
 function createHttpMocks<T extends Response = Response>(params: {
-  logger: LoggerHandler;
+  logger: Logger;
   reqOptions?: RequestOptions;
   resOptions?: ResponseOptions;
 }) {
@@ -426,7 +416,6 @@ export {
   VALIDATION,
   type Database,
   type Logger,
-  type LoggerHandler,
   type MockRequest,
   type MockResponse,
   type NextFunction,

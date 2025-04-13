@@ -20,7 +20,7 @@ import {
   type ReturnedMessage,
 } from 'rabbitmq-client';
 
-import { GeneralError, type LoggerHandler } from '../../utils/index.ts';
+import { GeneralError, type Logger } from '../../utils/index.ts';
 
 /**********************************************************************************/
 
@@ -39,45 +39,25 @@ type PublishOptions<E extends Exchanges[number]> = Omit<
 class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   readonly #handler;
 
-  #publishers: { [key: string]: Publisher };
-  readonly #consumers: Consumer[];
+  #publishers: { [key: string]: Publisher } = {};
+  readonly #consumers: Consumer[] = [];
 
   readonly #logger;
-
-  readonly #connectionEventHandlers;
-  readonly #publisherEventHandlers;
-  readonly #consumerEventHandlers;
 
   #isAlive = false;
   #isReady = false;
 
   public constructor(params: {
     connectionOptions: ConnectionOptions;
-    logger: LoggerHandler;
+    logger: Logger;
   }) {
     const { connectionOptions, logger } = params;
 
-    this.#connectionEventHandlers = Object.entries({
-      error: this.#handleErrorEvent.bind(this),
-      connection: this.#handleConnectionEvent.bind(this),
-      'connection.blocked': this.#handleBlockedEvent.bind(this),
-      'connection.unblocked': this.#handleUnblockedEvent.bind(this),
-    });
-    this.#publisherEventHandlers = Object.entries({
-      'basic.return': this.#handleUndeliveredMessageEvent.bind(this),
-    });
-    this.#consumerEventHandlers = Object.entries({
-      error: this.#handleConsumerErrorEvent.bind(this),
-    });
-
     this.#handler = new Connection(connectionOptions)
-      .on('error', this.#handleErrorEvent.bind(this))
-      .on('connection', this.#handleConnectionEvent.bind(this))
-      .on('connection.blocked', this.#handleBlockedEvent.bind(this))
-      .on('connection.unblocked', this.#handleUnblockedEvent.bind(this));
-
-    this.#publishers = {};
-    this.#consumers = [];
+      .on('error', this.#handleErrorEvent)
+      .on('connection', this.#handleConnectionEvent)
+      .on('connection.blocked', this.#handleBlockedEvent)
+      .on('connection.unblocked', this.#handleUnblockedEvent);
 
     this.#logger = logger;
   }
@@ -110,18 +90,14 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
             queueBindings.push({ exchange, queue, routingKey });
           });
 
-          const publisher = this.#handler.createPublisher({
-            ...options,
-            exchanges,
-            queues,
-            queueBindings,
-          });
-
-          this.#publisherEventHandlers.forEach(([name, handler]) => {
-            //@ts-expect-error Typescript can't infer the type since Object.entries()
-            // keys are not generic. It works
-            publisher.on(name, handler);
-          });
+          const publisher = this.#handler
+            .createPublisher({
+              ...options,
+              exchanges,
+              queues,
+              queueBindings,
+            })
+            .on('basic.return', this.#handleUndeliveredMessageEvent);
 
           return [publisherName, publisher] as const;
         }),
@@ -151,22 +127,18 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       { exchange, queue, routingKey },
     ];
 
-    const consumer = this.#handler.createConsumer(
-      {
-        ...options,
-        exchanges,
-        queue,
-        queueBindings,
-        queueOptions: { passive: true },
-      },
-      handler,
-    );
-
-    this.#consumerEventHandlers.forEach(([name, handler]) => {
-      //@ts-expect-error Typescript can't infer the type since Object.entries()
-      // keys are not generic. It works
-      consumer.on(name, handler);
-    });
+    const consumer = this.#handler
+      .createConsumer(
+        {
+          ...options,
+          exchanges,
+          queue,
+          queueBindings,
+          queueOptions: { passive: true },
+        },
+        handler,
+      )
+      .on('error', this.#handleConsumerErrorEvent);
 
     this.#consumers.push(consumer);
   }
@@ -179,35 +151,36 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       await Promise.all(
         Object.values(this.#publishers).map(async (publisher) => {
           await publisher.close();
-          this.#publisherEventHandlers.forEach(([name, handler]) => {
-            publisher.removeListener(name, handler);
-          });
+          publisher.removeListener(
+            'basic-return',
+            this.#handleUndeliveredMessageEvent,
+          );
         }),
       );
-    } catch (err) {
-      console.error('Failure to shutdown publisher(s):', err);
+    } catch (error) {
+      console.error('Failure to shutdown publisher(s):', error);
     }
 
     try {
       await Promise.all(
         this.#consumers.map(async (consumer) => {
           await consumer.close();
-          this.#consumerEventHandlers.forEach(([name, handler]) => {
-            consumer.removeListener(name, handler);
-          });
+          consumer.removeListener('error', this.#handleConsumerErrorEvent);
         }),
       );
-    } catch (err) {
-      console.error('Failure to shutdown consumer(s):', err);
+    } catch (error) {
+      console.error('Failure to shutdown consumer(s):', error);
     }
 
     try {
       await this.#handler.close();
-      this.#connectionEventHandlers.forEach(([name, handler]) => {
-        this.#handler.removeListener(name, handler);
-      });
-    } catch (err) {
-      console.error('Failure to close message queue connection:', err);
+      this.#handler
+        .removeListener('connection.unblocked', this.#handleUnblockedEvent)
+        .removeListener('connection.blocked', this.#handleBlockedEvent)
+        .removeListener('connection', this.#handleConnectionEvent)
+        .removeListener('error', this.#handleErrorEvent);
+    } catch (error) {
+      console.error('Failure to close message queue connection:', error);
     }
   }
 
@@ -248,41 +221,41 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
 
   /********************************************************************************/
 
-  #handleErrorEvent(err: unknown) {
+  readonly #handleErrorEvent = (err: unknown) => {
     this.#isAlive = false;
     this.#isReady = false;
 
     this.#logger.error('Error during message queue usage:', err);
-  }
+  };
 
-  #handleConnectionEvent() {
+  readonly #handleConnectionEvent = () => {
     this.#isAlive = true;
     this.#isReady = true;
 
     this.#logger.info('Message queue (re)connected');
-  }
+  };
 
-  #handleBlockedEvent(reason: unknown) {
+  readonly #handleBlockedEvent = (reason: unknown) => {
     this.#isReady = false;
 
     this.#logger.error('Message queue is blocked', reason);
-  }
+  };
 
-  #handleUnblockedEvent() {
+  readonly #handleUnblockedEvent = () => {
     this.#isReady = true;
 
     this.#logger.info('Message queue is unblocked');
-  }
+  };
 
-  #handleUndeliveredMessageEvent(message: ReturnedMessage) {
+  readonly #handleUndeliveredMessageEvent = (message: ReturnedMessage) => {
     this.#logger.error('Message was not delivered:', message);
-  }
+  };
 
-  #handleConsumerErrorEvent(err: unknown) {
+  readonly #handleConsumerErrorEvent = (err: unknown) => {
     this.#logger.error('Consumer error:', err);
-  }
+  };
 }
 
 /**********************************************************************************/
 
-export default MessageQueue;
+export { MessageQueue };

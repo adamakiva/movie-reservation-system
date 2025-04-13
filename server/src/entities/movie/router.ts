@@ -14,13 +14,13 @@ function router(fileManager: FileManager) {
     .post(
       '/movies',
       json({ limit: '4mb' }),
-      fileManager.single('poster'),
+      fileManager.singleFile('poster'),
       movieController.createMovie,
     )
     .put(
       '/movies/:movie_id',
       json({ limit: '4mb' }),
-      fileManager.single('poster'),
+      fileManager.multipleFiles('poster'),
       movieController.updateMovie,
     )
     .delete('/movies/:movie_id', movieController.deleteMovie);
@@ -30,4 +30,4 @@ function router(fileManager: FileManager) {
 
 /**********************************************************************************/
 
-export default router;
+export { router };

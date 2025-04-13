@@ -2,9 +2,9 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import pg from 'postgres';
 
-import type { LoggerHandler } from '../utils/index.ts';
+import type { Logger } from '../utils/index.ts';
 
-import DatabaseLogger from './logger.ts';
+import { DatabaseLogger } from './logger.ts';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */
 import * as schemas from './schemas.ts';
 
@@ -27,7 +27,7 @@ class Database {
     options?: pg.Options<{}>;
     isAliveQuery: string;
     isReadyQuery: string;
-    logger: LoggerHandler;
+    logger: Logger;
   }) {
     const { url, options, isAliveQuery, isReadyQuery, logger } = params;
 
@@ -72,11 +72,11 @@ class Database {
   }
 
   public async isAlive() {
-    await this.#handler.execute(sql.raw(this.#isAliveQuery));
+    await this.#execute(this.#isAliveQuery);
   }
 
   public async isReady() {
-    await this.#handler.execute(sql.raw(this.#isReadyQuery));
+    await this.#execute(this.#isReadyQuery);
   }
 
   public getHandler() {
@@ -86,8 +86,14 @@ class Database {
   public getModels() {
     return this.#models;
   }
+
+  /********************************************************************************/
+
+  async #execute(query: string) {
+    await this.#handler.execute(sql.raw(query));
+  }
 }
 
 /**********************************************************************************/
 
-export default Database;
+export { Database };

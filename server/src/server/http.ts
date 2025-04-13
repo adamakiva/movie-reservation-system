@@ -15,11 +15,7 @@ import {
   cancelShowtimeReservations,
   reserveShowtimeTicket,
 } from '../entities/showtime/service/utils.ts';
-import type {
-  LoggerHandler,
-  LogMiddleware,
-  RequestContext,
-} from '../utils/index.ts';
+import type { Logger, LogMiddleware, RequestContext } from '../utils/index.ts';
 
 import {
   AuthenticationManager,
@@ -55,7 +51,7 @@ class HttpServer {
     allowedMethods: Set<string>;
     routes: { http: string };
     logMiddleware: LogMiddleware;
-    logger: LoggerHandler;
+    logger: Logger;
   }) {
     const {
       authenticationParams,
@@ -167,7 +163,7 @@ class HttpServer {
     };
     server: Server;
     routes: { http: string };
-    logger: LoggerHandler;
+    logger: Logger;
   }) {
     const {
       authentication,
@@ -277,37 +273,10 @@ class HttpServer {
     // We chose number 3 to be in line with the rest of the style of
     // the application
     this.#server
-      .once('error', this.#handleErrorEvent.bind(this))
+      .once('error', this.#handleErrorEvent)
       // On purpose since the process is shutting-down anyhow
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      .once('close', this.#handleCloseEvent.bind(this));
-  }
-
-  #handleErrorEvent(err: Error) {
-    this.#logger.fatal(err, 'HTTP Server error');
-
-    // If an http server error happened, we shutdown the application with status
-    // code that indicates that a server restart should happen
-    process.exit(ERROR_CODES.EXIT_RESTART);
-  }
-
-  async #handleCloseEvent() {
-    let exitCode = 0;
-    const results = await Promise.allSettled([
-      this.#database.close(),
-      this.#messageQueue.close(),
-    ]);
-    results.forEach((result) => {
-      if (result.status === 'rejected') {
-        this.#logger.fatal(result.reason, 'Error during server termination');
-        exitCode = ERROR_CODES.EXIT_NO_RESTART;
-      }
-    });
-    if (exitCode) {
-      process.exit(exitCode);
-    }
-
-    process.exitCode = 0;
+      .once('close', this.#handleCloseEvent);
   }
 
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
@@ -331,8 +300,37 @@ class HttpServer {
       )
       .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
+
+  readonly #handleErrorEvent = (err: Error) => {
+    this.#logger.fatal(err, 'HTTP Server error');
+
+    // If an http server error happened, we shutdown the application with status
+    // code that indicates that a server restart should happen
+    process.exit(ERROR_CODES.EXIT_RESTART);
+  };
+
+  readonly #handleCloseEvent = async () => {
+    let exitCode = 0;
+
+    (
+      await Promise.allSettled([
+        this.#database.close(),
+        this.#messageQueue.close(),
+      ])
+    ).forEach((result) => {
+      if (result.status === 'rejected') {
+        this.#logger.fatal(result.reason, 'Error during server termination');
+        exitCode = ERROR_CODES.EXIT_NO_RESTART;
+      }
+    });
+    if (exitCode) {
+      process.exit(exitCode);
+    }
+
+    process.exitCode = 0;
+  };
 }
 
 /**********************************************************************************/
 
-export default HttpServer;
+export { HttpServer };

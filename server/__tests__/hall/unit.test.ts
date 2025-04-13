@@ -14,7 +14,7 @@ import {
   suite,
   terminateServer,
   test,
-  type LoggerHandler,
+  type Logger,
   type ResponseWithContext,
   type ServerParams,
 } from '../utils.ts';
@@ -30,10 +30,10 @@ import {
 /**********************************************************************************/
 
 await suite('Hall unit tests', async () => {
-  let logger: LoggerHandler = null!;
+  let logger: Logger = null!;
   let serverParams: ServerParams = null!;
   before(async () => {
-    ({ logger } = mockLogger());
+    logger = mockLogger();
     serverParams = await initServer();
   });
   after(() => {

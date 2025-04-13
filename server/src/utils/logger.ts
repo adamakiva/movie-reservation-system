@@ -2,61 +2,49 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**********************************************************************************/
 
-type LoggerHandler = Logger['handler'];
 type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
 
 /**********************************************************************************/
 
 class Logger {
-  readonly #handler;
+  readonly #boundLogMiddleware;
 
   public constructor() {
-    this.#handler = {
-      debug: this.#debug.bind(this),
-      info: this.#info.bind(this),
-      log: this.#log.bind(this),
-      warn: this.#warn.bind(this),
-      error: this.#error.bind(this),
-      fatal: this.#fatal.bind(this),
-    } as const;
+    this.#boundLogMiddleware = this.#logMiddleware.bind(this);
   }
 
-  public get handler() {
-    return this.#handler;
+  public debug(...args: unknown[]) {
+    console.debug(...args);
+  }
+
+  public info(...args: unknown[]) {
+    console.info(...args);
+  }
+
+  public log(...args: unknown[]) {
+    console.log(...args);
+  }
+
+  public warn(...args: unknown[]) {
+    console.warn(...args);
+  }
+
+  public error(...args: unknown[]) {
+    console.error(...args);
+  }
+
+  public fatal(...args: unknown[]) {
+    console.error(...args);
   }
 
   public getLogMiddleware() {
-    return this.#logMiddleware.bind(this);
+    return this.#boundLogMiddleware;
   }
 
   /********************************************************************************/
 
-  #debug(...args: unknown[]) {
-    console.debug(...args);
-  }
-
-  #info(...args: unknown[]) {
-    console.info(...args);
-  }
-
-  #log(...args: unknown[]) {
-    console.log(...args);
-  }
-
-  #warn(...args: unknown[]) {
-    console.warn(...args);
-  }
-
-  #error(...args: unknown[]) {
-    console.error(...args);
-  }
-
-  #fatal(...args: unknown[]) {
-    console.error(...args);
-  }
-
-  #logMiddleware(_req: Request, _res: Response, next: NextFunction) {
-    this.#log('PH');
+  #logMiddleware(_request: Request, _response: Response, next: NextFunction) {
+    this.log('PH');
 
     next();
   }
@@ -64,4 +52,4 @@ class Logger {
 
 /**********************************************************************************/
 
-export { Logger, type LoggerHandler, type LogMiddleware };
+export { Logger, type LogMiddleware };

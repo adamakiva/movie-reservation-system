@@ -1,23 +1,24 @@
+import { EventEmitter } from 'node:events';
+import { globalAgent } from 'node:http';
+import { join, resolve } from 'node:path';
+
 import {
   ERROR_CODES,
   MESSAGE_QUEUE,
   SIGNALS,
 } from '@adamakiva/movie-reservation-system-shared';
-import { EventEmitter } from 'node:events';
-import { globalAgent } from 'node:http';
-import { join, resolve } from 'node:path';
 
 import { HttpServer } from './server/index.ts';
-import {
-  EnvironmentManager,
-  Logger,
-  type LoggerHandler,
-} from './utils/index.ts';
+import { EnvironmentManager, Logger } from './utils/index.ts';
 
 /**********************************************************************************/
 
 async function startServer() {
-  const { logger, logMiddleware } = createLogger();
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
+
+  const logger = new Logger();
+  const logMiddleware = logger.getLogMiddleware();
 
   const environmentManager = new EnvironmentManager(logger);
   const {
@@ -27,9 +28,6 @@ async function startServer() {
     database,
     messageQueue,
   } = environmentManager.getEnvVariables();
-
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
 
   // See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
   globalAgent.maxSockets = node.maxSockets;
@@ -51,9 +49,9 @@ async function startServer() {
       hashSecret: jwt.hash,
     },
     fileManagerParams: {
-      generatedNameLength: 32,
+      generatedFileNameLength: 32,
       saveDir: join(import.meta.dirname, '..', 'posters'),
-      watermark: node.defaultHighWaterMark,
+      highWatermark: node.defaultHighWaterMark,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
@@ -78,7 +76,7 @@ async function startServer() {
         },
       },
       // Alive vs Readiness check boils down to the following:
-      // Should we restart the pod (isAlive) OR redirect the traffic to a different pod (isReady)
+      // Should we restart the pod (isAlive) OR redirect the traffic to a different instance (isReady)
       isAliveQuery: 'SELECT NOW()',
       isReadyQuery: 'SELECT NOW()',
     },
@@ -101,16 +99,7 @@ async function startServer() {
 
 /**********************************************************************************/
 
-function createLogger() {
-  const logger = new Logger();
-
-  return {
-    logger: logger.handler,
-    logMiddleware: logger.getLogMiddleware(),
-  } as const;
-}
-
-function attachProcessHandlers(server: HttpServer, logger: LoggerHandler) {
+function attachProcessHandlers(server: HttpServer, logger: Logger) {
   process
     .on('warning', logger.warn)
     .once('unhandledRejection', (reason: unknown) => {
@@ -128,7 +117,7 @@ function attachProcessHandlers(server: HttpServer, logger: LoggerHandler) {
       process.exit(ERROR_CODES.EXIT_RESTART);
     });
 
-  const signalHandler = function signalHandler() {
+  const signalHandler = () => {
     server.close();
 
     process.exit(ERROR_CODES.EXIT_NO_RESTART);
