@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         working-directory: server
         run: npm ci
+        env:
+          NPM_GITHUB_TOKEN: ${{ secrets.NPM_GITHUB_TOKEN }}
+
 
       - name: Run linter
         working-directory: server
