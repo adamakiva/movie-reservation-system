@@ -52,23 +52,36 @@ const VALIDATION = {
 
 const { PAGINATION } = VALIDATION;
 
+/****************************** Schemas *******************************************/
+
+const CURSOR_SCHEMA = zod.object({
+  id: zod
+    .string({
+      invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
+    })
+    .uuid(PAGINATION.CURSOR.ERROR_MESSAGE),
+  createdAt: zod.date({
+    invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
+  }),
+});
+
 /**********************************************************************************/
 
 function parseValidationResult<I, O>(
-  res: SafeParseReturnType<I, O>,
+  result: SafeParseReturnType<I, O>,
   statusCode: number = HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
 ) {
-  if (res.success) {
-    return res.data;
+  if (result.success) {
+    return result.data;
   }
 
-  const errorMessages = res.error.errors
+  const errorMessages = result.error.errors
     .map((err) => {
       return err.message;
     })
     .join(', ');
 
-  throw new GeneralError(statusCode, errorMessages, res.error.cause);
+  throw new GeneralError(statusCode, errorMessages, result.error.cause);
 }
 
 function coerceNumber(
@@ -113,19 +126,6 @@ function decodeCursor(cursor: string) {
     createdAt: new Date(decodedCursor[1]!),
   } as const;
 }
-
-/****************************** Schemas *******************************************/
-
-const CURSOR_SCHEMA = zod.object({
-  id: zod
-    .string({
-      invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
-    })
-    .uuid(PAGINATION.CURSOR.ERROR_MESSAGE),
-  createdAt: zod.date({
-    invalid_type_error: PAGINATION.CURSOR.ERROR_MESSAGE,
-  }),
-});
 
 /**********************************************************************************/
 

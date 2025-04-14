@@ -21,6 +21,7 @@ async function updateMovie(
   movieToUpdate: UpdateMovieValidatedData,
 ): Promise<Movie> {
   const { database, fileManager, logger } = context;
+
   const handler = database.getHandler();
   const {
     movie: movieModel,
@@ -32,6 +33,7 @@ async function updateMovie(
     handler,
     models: { movie: movieModel, moviePoster: moviePosterModel },
     movieToUpdate,
+    now: new Date(),
   });
 
   try {
@@ -70,14 +72,15 @@ function buildUpdateMovieCTEs(params: {
     moviePoster: DatabaseModel<'moviePoster'>;
   };
   movieToUpdate: UpdateMovieValidatedData;
+  now: Date;
 }) {
   const {
     handler,
     models: { movie: movieModel, moviePoster: moviePosterModel },
     movieToUpdate,
+    now,
   } = params;
   const { movieId, poster, ...fieldsToUpdate } = movieToUpdate;
-  const now = new Date();
 
   const updateMovieSubQuery = handler.$with('update_movie').as(
     handler
@@ -179,6 +182,7 @@ async function updateMovieInDatabase(params: {
   movieId: string;
 }) {
   const { handler, subQueries, genreModel, movieId } = params;
+
   const sanitizedSubQueries = Object.values(params.subQueries);
 
   const [updatedMovie] = await handler

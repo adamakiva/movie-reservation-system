@@ -96,17 +96,17 @@ const AUTHENTICATION_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateLogin(req: Request) {
+function validateLogin(request: Request) {
   const validatedResult = parseValidationResult(
-    AUTHENTICATION_SCHEMAS.LOGIN.safeParse(req.body),
+    AUTHENTICATION_SCHEMAS.LOGIN.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateRefreshAccessToken(req: Request) {
+function validateRefreshAccessToken(request: Request) {
   const validatedResult = parseValidationResult(
-    AUTHENTICATION_SCHEMAS.REFRESH.safeParse(req.body),
+    AUTHENTICATION_SCHEMAS.REFRESH.safeParse(request.body),
   );
 
   return validatedResult;

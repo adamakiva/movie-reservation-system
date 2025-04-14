@@ -24,6 +24,7 @@ async function createShowtime(
   showtimeToCreate: CreateShowtimeValidatedData,
 ): Promise<Showtime> {
   const { database } = context;
+
   const handler = database.getHandler();
   const {
     showtime: showtimeModel,
@@ -72,8 +73,6 @@ async function reserveShowtimeTicket(params: {
     showtimeTicket,
   } = params;
 
-  const userId = authentication.getUserId(req.headers.authorization!);
-
   const handler = database.getHandler();
   const {
     hall: hallModel,
@@ -82,12 +81,13 @@ async function reserveShowtimeTicket(params: {
     movie: movieModel,
     user: userModel,
   } = database.getModels();
-
+  const userId = authentication.getUserId(req.headers.authorization!);
   const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
     handler,
     userShowtimeModel,
     showtimeTicket: { ...showtimeTicket, userId },
   });
+
   await handler.transaction(async (transaction) => {
     await validateMovieReservation({
       handler: transaction,

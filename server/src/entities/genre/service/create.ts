@@ -13,6 +13,7 @@ async function createGenre(
   genreToCreate: CreateGenreValidatedData,
 ): Promise<Genre> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { genre: genreModel } = database.getModels();
 

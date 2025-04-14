@@ -21,12 +21,13 @@ async function deleteShowtime(
   showtimeId: DeleteShowtimeValidatedData,
 ): Promise<void> {
   const { database, messageQueue } = context;
+
   const handler = database.getHandler();
   const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
     database.getModels();
 
   await handler.transaction(async (transaction) => {
-    // When removing a showtime we need to cancel all reservations
+    // When removing a showtime we need to cancel all relevant reservations
     const userIds = (
       await transaction
         .select({ userId: userShowtimeModel.userId })
@@ -64,6 +65,7 @@ async function cancelUserShowtimeReservation(params: {
     context: { authentication, database, messageQueue },
     showtimeId,
   } = params;
+
   const handler = database.getHandler();
   const { showtime: showtimeModel } = database.getModels();
 

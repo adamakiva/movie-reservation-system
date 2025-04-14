@@ -8,6 +8,7 @@ import type { Role } from './utils.ts';
 
 async function getRoles(context: RequestContext): Promise<Role[]> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 

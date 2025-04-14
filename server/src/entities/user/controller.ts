@@ -8,50 +8,50 @@ import * as userValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getUsers(req: Request, res: ResponseWithContext) {
-  const pagination = userValidator.validateGetUsers(req);
+async function getUsers(request: Request, response: ResponseWithContext) {
+  const pagination = userValidator.validateGetUsers(request);
 
-  const users = await userService.getUsers(res.locals.context, pagination);
+  const users = await userService.getUsers(response.locals.context, pagination);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(users);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(users);
 }
 
-async function getUser(req: Request, res: ResponseWithContext) {
-  const userId = userValidator.validateGetUser(req);
+async function getUser(request: Request, response: ResponseWithContext) {
+  const userId = userValidator.validateGetUser(request);
 
-  const user = await userService.getUser(res.locals.context, userId);
+  const user = await userService.getUser(response.locals.context, userId);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(user);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(user);
 }
 
-async function createUser(req: Request, res: ResponseWithContext) {
-  const userToCreate = userValidator.validateCreateUser(req);
+async function createUser(request: Request, response: ResponseWithContext) {
+  const userToCreate = userValidator.validateCreateUser(request);
 
   const createdUser = await userService.createUser(
-    res.locals.context,
+    response.locals.context,
     userToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdUser);
+  response.status(HTTP_STATUS_CODES.CREATED).json(createdUser);
 }
 
-async function updateUser(req: Request, res: ResponseWithContext) {
-  const userToUpdate = userValidator.validateUpdateUser(req);
+async function updateUser(request: Request, response: ResponseWithContext) {
+  const userToUpdate = userValidator.validateUpdateUser(request);
 
   const updatedUser = await userService.updateUser(
-    res.locals.context,
+    response.locals.context,
     userToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedUser);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedUser);
 }
 
-async function deleteUser(req: Request, res: ResponseWithContext) {
-  const userId = userValidator.validateDeleteUser(req);
+async function deleteUser(request: Request, response: ResponseWithContext) {
+  const userId = userValidator.validateDeleteUser(request);
 
-  await userService.deleteUser(res.locals.context, userId);
+  await userService.deleteUser(response.locals.context, userId);
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

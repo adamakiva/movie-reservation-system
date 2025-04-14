@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 
 import {
   ERROR_CODES,
@@ -7,7 +8,6 @@ import {
 import compress from 'compression';
 import cors from 'cors';
 import express, { type Express } from 'express';
-import type { AddressInfo } from 'node:net';
 
 import { Database } from '../database/index.ts';
 import * as routers from '../entities/index.ts';
@@ -129,10 +129,6 @@ class HttpServer {
     return actualPort;
   }
 
-  public close() {
-    this.#server.close();
-  }
-
   public getAuthenticationManager() {
     return this.#authentication;
   }
@@ -147,6 +143,10 @@ class HttpServer {
 
   public getMessageQueue() {
     return this.#messageQueue;
+  }
+
+  public close() {
+    this.#server.close();
   }
 
   /********************************************************************************/
@@ -264,14 +264,6 @@ class HttpServer {
   }
 
   #attachServerEventHandlers() {
-    // When a function is passed as a callback (even a method), the `this`
-    // context is lost (if it's not an arrow function). There are a couple
-    // of options to resolve said issue:
-    // 1. An arrow function
-    // 2. Inline implementation as an anonymous arrow function
-    // 3. Bind `this` context to the called function
-    // We chose number 3 to be in line with the rest of the style of
-    // the application
     this.#server
       .once('error', this.#handleErrorEvent)
       // On purpose since the process is shutting-down anyhow
@@ -298,7 +290,7 @@ class HttpServer {
         routers.hallRouter,
         routers.showtimeRouter,
       )
-      .use(Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
+      .use('/', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 
   readonly #handleErrorEvent = (err: Error) => {

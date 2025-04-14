@@ -11,10 +11,10 @@ services:
       target: pg
     user: ${UID}:${GID}
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DATABASES=mrs,mrs_test
-      - PSQL_HISTORY=/var/lib/postgresql/data/.psql_history
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-admin}
+      - POSTGRES_DATABASES=${POSTGRES_DATABASES:-mrs,mrs_test}
+      - PSQL_HISTORY=${PSQL_HISTORY:-/var/lib/postgresql/data/.psql_history}
     volumes:
       - ./dev-data/pg:/var/lib/postgresql/data:rw
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
@@ -36,9 +36,9 @@ services:
       target: rbmq
     user: ${UID}:${GID}
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/rbmq.definitions.json"
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:- -rabbitmq_management load_definitions "/etc/rabbitmq/rbmq.definitions.json"}
     volumes:
       - ./dev-data/rbmq:/var/lib/rabbitmq:rw
       - /etc/timezone:/etc/timezone:ro
@@ -60,39 +60,39 @@ services:
     init: true
     environment:
       # Server options
-      - SERVER_PORT=4334
-      - SERVER_DEBUG=0.0.0.0:4335
-      - SERVER_BASE_URL=http://localhost
-      - HTTP_ROUTE=api/v0
-      - ALLOWED_HOSTS=::,127.0.0.1,localhost
-      - ALLOWED_ORIGINS=* # TODO Change this
+      - SERVER_PORT=${SERVER_PORT:-4334}
+      - SERVER_DEBUG=${SERVER_DEBUG:-0.0.0.0:4335}
+      - SERVER_BASE_URL=${SERVER_BASE_URL:-http://localhost}
+      - HTTP_ROUTE=${HTTP_ROUTE:-api/v0}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-::,127.0.0.1,localhost}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*} # TODO Change this
       # Database options
-      - DATABASE_URL=postgres://admin:admin@mrs-pg:5432/mrs
-      - DATABASE_TEST_URL=postgres://admin:admin@mrs-pg:5432/mrs_test
-      - DATABASE_MAX_CONNECTIONS=32
-      - DATABASE_STATEMENT_TIMEOUT=30000
-      - DATABASE_TRANSACTION_TIMEOUT=60000
+      - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@mrs-pg:5432/mrs}
+      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@mrs-pg:5432/mrs_test}
+      - DATABASE_MAX_CONNECTIONS=${DATABASE_MAX_CONNECTIONS:-32}
+      - DATABASE_STATEMENT_TIMEOUT=${DATABASE_STATEMENT_TIMEOUT:-30000}
+      - DATABASE_TRANSACTION_TIMEOUT=${DATABASE_TRANSACTION_TIMEOUT:-60000}
       # Message queue options
-      - MESSAGE_QUEUE_URL=amqp://admin:admin@mrs-rbmq:5672
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@mrs-rbmq:5672}
       # Authentication options
-      - AUTHENTICATION_ACCESS_TOKEN_EXPIRATION=900 # 15 minutes
-      - AUTHENTICATION_REFRESH_TOKEN_EXPIRATION=2629746 # A month
-      - AUTHENTICATION_HASH_SECRET=00c70f6848e9466beec4148b0b3cae89
+      - AUTHENTICATION_ACCESS_TOKEN_EXPIRATION=${AUTHENTICATION_ACCESS_TOKEN_EXPIRATION:-900} # 15 minutes
+      - AUTHENTICATION_REFRESH_TOKEN_EXPIRATION=${AUTHENTICATION_REFRESH_TOKEN_EXPIRATION:-2629746} # A month
+      - AUTHENTICATION_HASH_SECRET=${AUTHENTICATION_HASH_SECRET:-00c70f6848e9466beec4148b0b3cae89}
       # Seed admin user data
-      - ADMIN_ROLE_ID=4d9097e1-3821-46f0-b19f-a75c02de9cb6
-      - ADMIN_ROLE_NAME=admin
-      - ADMIN_EMAIL=admin@admin.com
-      - ADMIN_PASSWORD=bla123
+      - ADMIN_ROLE_ID=${ADMIN_ROLE_ID:-4d9097e1-3821-46f0-b19f-a75c02de9cb6}
+      - ADMIN_ROLE_NAME=${ADMIN_ROLE_NAME:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@admin.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bla123}
       # Node flags and options
-      - NODE_ENV=production
-      - NODE_MAX_SOCKETS=256
-      - NODE_MAX_TOTAL_SOCKETS=2048
-      - NODE_DEFAULT_HIGH_WATERMARK=262144  # 256kb
+      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_MAX_SOCKETS=${NODE_MAX_SOCKETS:-256}
+      - NODE_MAX_TOTAL_SOCKETS=${NODE_MAX_TOTAL_SOCKETS:-2048}
+      - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
       # Argon2 uses addons so the flag --no-addons is not present. It should be
       # present if the application does not require it
-      - NODE_OPTIONS=--no-warnings --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536
+      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
       # libuv options
-      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
+      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
     volumes:
       - ./server:/home/node/mrs:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
@@ -132,12 +132,12 @@ services:
     init: true
     environment:
       # Message queue options
-      - MESSAGE_QUEUE_URL=amqp://admin:admin@mrs-rbmq:5672
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@mrs-rbmq:5672}
       # Node flags and options
-      - NODE_ENV=production
-      - NODE_OPTIONS=--no-warnings --no-addons --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536
+      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --no-addons --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
       # libuv options
-      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE}
+      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
     volumes:
       - ./ticket-worker:/home/node/ticket-worker:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
@@ -145,11 +145,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
-      mrs-pg:
-        condition: service_healthy
       mrs-rbmq:
-        condition: service_healthy
-      mrs-server:
         condition: service_healthy
 
   mrs-nginx:

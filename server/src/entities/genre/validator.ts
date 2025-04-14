@@ -117,20 +117,20 @@ const GENRE_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateCreateGenre(req: Request) {
+function validateCreateGenre(request: Request) {
   const validatedResult = parseValidationResult(
-    GENRE_SCHEMAS.CREATE.safeParse(req.body),
+    GENRE_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateUpdateGenre(req: Request) {
+function validateUpdateGenre(request: Request) {
   const { name } = parseValidationResult(
-    GENRE_SCHEMAS.UPDATE.BODY.safeParse(req.body),
+    GENRE_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { genre_id: genreId } = parseValidationResult(
-    GENRE_SCHEMAS.UPDATE.PARAMS.safeParse(req.params),
+    GENRE_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
 
   return {
@@ -139,9 +139,9 @@ function validateUpdateGenre(req: Request) {
   } as const;
 }
 
-function validateDeleteGenre(req: Request) {
+function validateDeleteGenre(request: Request) {
   const { genre_id: genreId } = parseValidationResult(
-    GENRE_SCHEMAS.DELETE.safeParse(req.params),
+    GENRE_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return genreId;

@@ -22,9 +22,10 @@ async function getUsers(
   pagination: GetUsersValidatedData,
 ): Promise<PaginatedResult<{ users: User[] }>> {
   const { database } = context;
+  const { cursor, pageSize } = pagination;
+
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
-  const { cursor, pageSize } = pagination;
 
   const usersPage = await handler
     .select({
@@ -64,11 +65,6 @@ async function getUser(
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
 
-  // A general note. I've checked performance stuff, and on pk limit 1 has
-  // 0 effect, it is implied and will stop the search after the first result is
-  // found. In general limit should be used with order by otherwise the results
-  // are inconsistent (as a result of sql not guaranteeing return order for
-  // query results)
   const [user] = await handler
     .select({
       id: userModel.id,

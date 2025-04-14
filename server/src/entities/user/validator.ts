@@ -328,36 +328,36 @@ const USER_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateGetUsers(req: Request) {
+function validateGetUsers(request: Request) {
   const validatedResult = parseValidationResult(
-    USER_SCHEMAS.READ.MANY.safeParse(req.query),
+    USER_SCHEMAS.READ.MANY.safeParse(request.query),
   );
 
   return validatedResult;
 }
 
-function validateGetUser(req: Request) {
+function validateGetUser(request: Request) {
   const { user_id: userId } = parseValidationResult(
-    USER_SCHEMAS.READ.SINGLE.safeParse(req.params),
+    USER_SCHEMAS.READ.SINGLE.safeParse(request.params),
   );
 
   return userId;
 }
 
-function validateCreateUser(req: Request) {
+function validateCreateUser(request: Request) {
   const validatedResult = parseValidationResult(
-    USER_SCHEMAS.CREATE.safeParse(req.body),
+    USER_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateUpdateUser(req: Request) {
+function validateUpdateUser(request: Request) {
   const userToUpdate = parseValidationResult(
-    USER_SCHEMAS.UPDATE.BODY.safeParse(req.body),
+    USER_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { user_id: userId } = parseValidationResult(
-    USER_SCHEMAS.UPDATE.PARAMS.safeParse(req.params),
+    USER_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
 
   return {
@@ -366,9 +366,9 @@ function validateUpdateUser(req: Request) {
   } as const;
 }
 
-function validateDeleteUser(req: Request) {
+function validateDeleteUser(request: Request) {
   const { user_id: userId } = parseValidationResult(
-    USER_SCHEMAS.DELETE.safeParse(req.params),
+    USER_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return userId;

@@ -111,20 +111,20 @@ const ROLE_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateCreateRole(req: Request) {
+function validateCreateRole(request: Request) {
   const validatedResult = parseValidationResult(
-    ROLE_SCHEMAS.CREATE.safeParse(req.body),
+    ROLE_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateUpdateRole(req: Request) {
+function validateUpdateRole(request: Request) {
   const { name } = parseValidationResult(
-    ROLE_SCHEMAS.UPDATE.BODY.safeParse(req.body),
+    ROLE_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { role_id: roleId } = parseValidationResult(
-    ROLE_SCHEMAS.UPDATE.PARAMS.safeParse(req.params),
+    ROLE_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
 
   return {
@@ -133,9 +133,9 @@ function validateUpdateRole(req: Request) {
   } as const;
 }
 
-function validateDeleteRole(req: Request) {
+function validateDeleteRole(request: Request) {
   const { role_id: roleId } = parseValidationResult(
-    ROLE_SCHEMAS.DELETE.safeParse(req.params),
+    ROLE_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return roleId;

@@ -13,6 +13,7 @@ async function createHall(
   hallToCreate: CreateHallValidatedData,
 ): Promise<Hall> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { hall: hallModel } = database.getModels();
 

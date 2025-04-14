@@ -8,40 +8,40 @@ import * as hallValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getHalls(_req: Request, res: ResponseWithContext) {
-  const halls = await hallService.getHalls(res.locals.context);
+async function getHalls(_: Request, response: ResponseWithContext) {
+  const halls = await hallService.getHalls(response.locals.context);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(halls);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(halls);
 }
 
-async function createHall(req: Request, res: ResponseWithContext) {
+async function createHall(req: Request, response: ResponseWithContext) {
   const hallToCreate = hallValidator.validateCreateHall(req);
 
   const createdHall = await hallService.createHall(
-    res.locals.context,
+    response.locals.context,
     hallToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdHall);
+  response.status(HTTP_STATUS_CODES.CREATED).json(createdHall);
 }
 
-async function updateHall(req: Request, res: ResponseWithContext) {
+async function updateHall(req: Request, response: ResponseWithContext) {
   const hallToUpdate = hallValidator.validateUpdateHall(req);
 
   const updatedHall = await hallService.updateHall(
-    res.locals.context,
+    response.locals.context,
     hallToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedHall);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedHall);
 }
 
-async function deleteHall(req: Request, res: ResponseWithContext) {
+async function deleteHall(req: Request, response: ResponseWithContext) {
   const hallId = hallValidator.validateDeleteHall(req);
 
-  await hallService.deleteHall(res.locals.context, hallId);
+  await hallService.deleteHall(response.locals.context, hallId);
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

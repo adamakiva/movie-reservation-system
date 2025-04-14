@@ -800,7 +800,7 @@ await suite('Showtime integration tests', async () => {
       headers: { Authorization: accessToken },
       payload: {
         at: new Date(SHOWTIME.AT.MIN_VALUE.VALUE() + 1),
-        movieId: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+        movieId: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
         hallId: randomUUID(),
       },
     });

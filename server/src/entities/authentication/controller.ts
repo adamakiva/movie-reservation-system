@@ -4,26 +4,19 @@ import type { Request } from 'express';
 
 import {
   GeneralError,
+  UnauthorizedError,
   type RequestContext,
   type ResponseWithContext,
-  UnauthorizedError,
 } from '../../utils/index.ts';
 
 import * as authenticationValidator from './validator.ts';
 
 /**********************************************************************************/
 
-type Credentials = {
-  email: string;
-  password: string;
-};
+async function login(request: Request, response: ResponseWithContext) {
+  const credentials = authenticationValidator.validateLogin(request);
 
-/**********************************************************************************/
-
-async function login(req: Request, res: ResponseWithContext) {
-  const credentials = authenticationValidator.validateLogin(req);
-
-  const { authentication, database } = res.locals.context;
+  const { authentication, database } = response.locals.context;
 
   const userId = await validateCredentials({
     authentication,
@@ -33,14 +26,17 @@ async function login(req: Request, res: ResponseWithContext) {
 
   const result = await generateTokens(authentication, userId);
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(result);
+  response.status(HTTP_STATUS_CODES.CREATED).json(result);
 }
 
-async function refreshAccessToken(req: Request, res: ResponseWithContext) {
+async function refreshAccessToken(
+  request: Request,
+  response: ResponseWithContext,
+) {
   const { refreshToken } =
-    authenticationValidator.validateRefreshAccessToken(req);
+    authenticationValidator.validateRefreshAccessToken(request);
 
-  const { authentication } = res.locals.context;
+  const { authentication } = response.locals.context;
   const { accessTokenExpirationTime } = authentication.getExpirationTime();
 
   const {
@@ -55,7 +51,7 @@ async function refreshAccessToken(req: Request, res: ResponseWithContext) {
     accessTokenExpirationTime,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(accessToken);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(accessToken);
 }
 
 /**********************************************************************************/
@@ -63,7 +59,7 @@ async function refreshAccessToken(req: Request, res: ResponseWithContext) {
 async function validateCredentials(params: {
   authentication: RequestContext['authentication'];
   database: RequestContext['database'];
-  credentials: Credentials;
+  credentials: { email: string; password: string };
 }) {
   const {
     authentication,

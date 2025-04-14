@@ -12,6 +12,7 @@ async function deleteHall(
   hallId: DeleteHallValidatedData,
 ): Promise<void> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { hall: hallModel, showtime: showtimeModel } = database.getModels();
 

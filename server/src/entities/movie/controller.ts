@@ -8,57 +8,60 @@ import * as movieValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getMovies(req: Request, res: ResponseWithContext) {
-  const pagination = movieValidator.validateGetMovies(req);
+async function getMovies(request: Request, response: ResponseWithContext) {
+  const pagination = movieValidator.validateGetMovies(request);
 
-  const movies = await movieService.getMovies(res.locals.context, pagination);
+  const movies = await movieService.getMovies(
+    response.locals.context,
+    pagination,
+  );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(movies);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(movies);
 }
 
-async function getMovie(req: Request, res: ResponseWithContext) {
-  const movieId = movieValidator.validateGetMovie(req);
+async function getMovie(request: Request, response: ResponseWithContext) {
+  const movieId = movieValidator.validateGetMovie(request);
 
-  const movie = await movieService.getMovie(res.locals.context, movieId);
+  const movie = await movieService.getMovie(response.locals.context, movieId);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(movie);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(movie);
 }
 
-async function getMoviePoster(req: Request, res: ResponseWithContext) {
-  const movieId = movieValidator.validateGetMoviePoster(req);
+async function getMoviePoster(request: Request, response: ResponseWithContext) {
+  const movieId = movieValidator.validateGetMoviePoster(request);
 
   // The response is streamed so it is handled in the lower level
-  await movieService.getMoviePoster(res, movieId);
+  await movieService.getMoviePoster(response, movieId);
 }
 
-async function createMovie(req: Request, res: ResponseWithContext) {
-  const movieToCreate = movieValidator.validateCreateMovie(req);
+async function createMovie(request: Request, response: ResponseWithContext) {
+  const movieToCreate = movieValidator.validateCreateMovie(request);
 
   const createdMovie = await movieService.createMovie(
-    res.locals.context,
+    response.locals.context,
     movieToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdMovie);
+  response.status(HTTP_STATUS_CODES.CREATED).json(createdMovie);
 }
 
-async function updateMovie(req: Request, res: ResponseWithContext) {
-  const movieToUpdate = movieValidator.validateUpdateMovie(req);
+async function updateMovie(request: Request, response: ResponseWithContext) {
+  const movieToUpdate = movieValidator.validateUpdateMovie(request);
 
   const updatedMovie = await movieService.updateMovie(
-    res.locals.context,
+    response.locals.context,
     movieToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedMovie);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedMovie);
 }
 
-async function deleteMovie(req: Request, res: ResponseWithContext) {
-  const movieId = movieValidator.validateDeleteMovie(req);
+async function deleteMovie(request: Request, response: ResponseWithContext) {
+  const movieId = movieValidator.validateDeleteMovie(request);
 
-  await movieService.deleteMovie(res.locals.context, movieId);
+  await movieService.deleteMovie(response.locals.context, movieId);
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

@@ -13,6 +13,7 @@ async function createRole(
   roleToCreate: CreateRoleValidatedData,
 ): Promise<Role> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 

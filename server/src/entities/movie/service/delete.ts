@@ -12,6 +12,7 @@ async function deleteMovie(
   movieId: DeleteMovieValidatedData,
 ): Promise<void> {
   const { database, fileManager, logger } = context;
+
   const handler = database.getHandler();
   const {
     movie: movieModel,

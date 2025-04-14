@@ -23,6 +23,8 @@ async function getShowtimes(
   pagination: GetShowtimeValidatedData,
 ): Promise<PaginatedResult<{ showtimes: Showtime[] }>> {
   const { database } = context;
+  const { movieId, hallId } = pagination;
+
   const handler = database.getHandler();
   const {
     showtime: showtimeModel,
@@ -30,7 +32,6 @@ async function getShowtimes(
     hall: hallModel,
     userShowtime: userShowtimeModel,
   } = database.getModels();
-  const { movieId, hallId } = pagination;
 
   const filters = buildFilters({ movieId, hallId }, showtimeModel);
 
@@ -77,6 +78,8 @@ async function getUserShowtimes(
   pagination: GetUserShowtimesValidatedData,
 ): Promise<PaginatedResult<{ userShowtimes: unknown }>> {
   const { database } = context;
+  const { userId, cursor, pageSize } = pagination;
+
   const handler = database.getHandler();
   const {
     showtime: showtimeModel,
@@ -84,7 +87,6 @@ async function getUserShowtimes(
     hall: hallModel,
     userShowtime,
   } = database.getModels();
-  const { userId, cursor, pageSize } = pagination;
 
   const userShowtimesPage = await handler
     .select({

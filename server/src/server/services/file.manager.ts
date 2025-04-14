@@ -6,7 +6,7 @@ import { pipeline } from 'node:stream/promises';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
-import multer from 'multer';
+import multer, { type Multer, type Options, type StorageEngine } from 'multer';
 
 import { GeneralError, type Logger } from '../../utils/index.ts';
 
@@ -15,8 +15,8 @@ import { GeneralError, type Logger } from '../../utils/index.ts';
 /**
  * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
  */
-class FileManager implements multer.StorageEngine {
-  static readonly #ALPHA_NUMERIC_CHARACTERS = {
+class FileManager implements StorageEngine {
+  static readonly #ALPHA_NUMERIC = {
     CHARACTERS:
       'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     LENGTH: 67,
@@ -34,7 +34,7 @@ class FileManager implements multer.StorageEngine {
     saveDir: string;
     highWatermark: number;
     logger: Logger;
-    limits?: multer.Options['limits'];
+    limits?: Options['limits'];
   }) {
     const { generatedFileNameLength, saveDir, highWatermark, logger, limits } =
       params;
@@ -47,11 +47,11 @@ class FileManager implements multer.StorageEngine {
     this.#uploadMiddleware = multer({ storage: this, limits });
   }
 
-  public singleFile(...params: Parameters<multer.Multer['single']>) {
+  public singleFile(...params: Parameters<Multer['single']>) {
     return this.#uploadMiddleware.single(...params);
   }
 
-  public multipleFiles(...params: Parameters<multer.Multer['array']>) {
+  public multipleFiles(...params: Parameters<Multer['array']>) {
     return this.#uploadMiddleware.array(...params);
   }
 
@@ -90,9 +90,7 @@ class FileManager implements multer.StorageEngine {
     return unlink(absolutePath);
   }
 
-  public _handleFile(
-    ...params: Parameters<multer.StorageEngine['_handleFile']>
-  ) {
+  public _handleFile(...params: Parameters<StorageEngine['_handleFile']>) {
     const [, file, callback] = params;
 
     fileTypeStream(file.stream)
@@ -138,9 +136,7 @@ class FileManager implements multer.StorageEngine {
       });
   }
 
-  public _removeFile(
-    ...params: Parameters<multer.StorageEngine['_removeFile']>
-  ) {
+  public _removeFile(...params: Parameters<StorageEngine['_removeFile']>) {
     const [, file, callback] = params;
 
     this.deleteFile(file.path)
@@ -165,10 +161,8 @@ class FileManager implements multer.StorageEngine {
   #randomAlphaNumericString(len = 32) {
     let str = '';
     for (let i = 0; i < len; ++i) {
-      str += FileManager.#ALPHA_NUMERIC_CHARACTERS.CHARACTERS.charAt(
-        Math.floor(
-          Math.random() * FileManager.#ALPHA_NUMERIC_CHARACTERS.LENGTH,
-        ),
+      str += FileManager.#ALPHA_NUMERIC.CHARACTERS.charAt(
+        Math.floor(Math.random() * FileManager.#ALPHA_NUMERIC.LENGTH),
       );
     }
 

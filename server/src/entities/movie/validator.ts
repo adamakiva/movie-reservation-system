@@ -463,49 +463,49 @@ const MOVIE_POSTER_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateGetMovies(req: Request) {
+function validateGetMovies(request: Request) {
   const validatedResult = parseValidationResult(
-    MOVIE_SCHEMAS.READ.MANY.safeParse(req.query),
+    MOVIE_SCHEMAS.READ.MANY.safeParse(request.query),
   );
 
   return validatedResult;
 }
 
-function validateGetMovie(req: Request) {
+function validateGetMovie(request: Request) {
   const { movie_id: movieId } = parseValidationResult(
-    MOVIE_SCHEMAS.READ.SINGLE.safeParse(req.params),
+    MOVIE_SCHEMAS.READ.SINGLE.safeParse(request.params),
   );
 
   return movieId;
 }
 
-function validateGetMoviePoster(req: Request) {
+function validateGetMoviePoster(request: Request) {
   const { movie_id: movieId } = parseValidationResult(
-    MOVIE_POSTER_SCHEMAS.READ.safeParse(req.params),
+    MOVIE_POSTER_SCHEMAS.READ.safeParse(request.params),
   );
 
   return movieId;
 }
 
-function validateCreateMovie(req: Request) {
+function validateCreateMovie(request: Request) {
   const validatedResult = parseValidationResult(
     MOVIE_SCHEMAS.CREATE.safeParse({
-      ...req.body,
-      poster: req.file,
+      ...request.body,
+      poster: request.file,
     }),
   );
 
   return validatedResult;
 }
 
-function validateUpdateMovie(req: Request) {
+function validateUpdateMovie(request: Request) {
   const movieToUpdate = parseValidationResult(
     MOVIE_SCHEMAS.UPDATE.BODY.safeParse(
-      req.file ? { ...req.body, poster: req.file } : req.body,
+      request.file ? { ...request.body, poster: request.file } : request.body,
     ),
   );
   const { movie_id: movieId } = parseValidationResult(
-    MOVIE_SCHEMAS.UPDATE.PARAMS.safeParse(req.params),
+    MOVIE_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
 
   return {
@@ -514,9 +514,9 @@ function validateUpdateMovie(req: Request) {
   } as const;
 }
 
-function validateDeleteMovie(req: Request) {
+function validateDeleteMovie(request: Request) {
   const { movie_id: movieId } = parseValidationResult(
-    MOVIE_SCHEMAS.DELETE.safeParse(req.params),
+    MOVIE_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return movieId;

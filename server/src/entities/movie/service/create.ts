@@ -19,6 +19,7 @@ async function createMovie(
   movieToCreate: CreateMovieValidatedData,
 ): Promise<Movie> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { movie, moviePoster, genre: genreModel } = database.getModels();
 
@@ -90,7 +91,7 @@ function createMovieCTEs(params: {
   return {
     insertMovieSubQuery,
     insertMoviePosterSubQuery,
-  };
+  } as const;
 }
 
 /**********************************************************************************/

@@ -21,10 +21,10 @@ async function createUser(
   const { authentication, database } = context;
   const { password, ...userData } = userToCreate;
 
-  const hash = await authentication.hashPassword(password);
-
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
+
+  const hash = await authentication.hashPassword(password);
 
   const createUserSubQuery = buildCreateUserCTEs({
     handler,

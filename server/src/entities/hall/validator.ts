@@ -196,20 +196,20 @@ const HALL_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateCreateHall(req: Request) {
+function validateCreateHall(request: Request) {
   const validatedResult = parseValidationResult(
-    HALL_SCHEMAS.CREATE.safeParse(req.body),
+    HALL_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateUpdateHall(req: Request) {
+function validateUpdateHall(request: Request) {
   const validatedResult = parseValidationResult(
-    HALL_SCHEMAS.UPDATE.BODY.safeParse(req.body),
+    HALL_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { hall_id: hallId } = parseValidationResult(
-    HALL_SCHEMAS.UPDATE.PARAMS.safeParse(req.params),
+    HALL_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
 
   return {
@@ -218,9 +218,9 @@ function validateUpdateHall(req: Request) {
   } as const;
 }
 
-function validateDeleteHall(req: Request) {
+function validateDeleteHall(request: Request) {
   const { hall_id: hallId } = parseValidationResult(
-    HALL_SCHEMAS.DELETE.safeParse(req.params),
+    HALL_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return hallId;

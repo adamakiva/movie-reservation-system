@@ -7,32 +7,38 @@ import * as healthCheckValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function livenessHealthCheck(req: Request, res: ResponseWithContext) {
-  healthCheckValidator.validateHealthCheck(req, res);
+async function livenessHealthCheck(
+  request: Request,
+  response: ResponseWithContext,
+) {
+  healthCheckValidator.validateHealthCheck(request, response);
 
-  const notAliveMessage = await isAlive(res.locals.context);
+  const notAliveMessage = await isAlive(response.locals.context);
   if (notAliveMessage) {
-    res
+    response
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
       .json(`Application is not alive: ${notAliveMessage}`);
     return;
   }
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
-async function readinessHealthCheck(req: Request, res: ResponseWithContext) {
-  healthCheckValidator.validateHealthCheck(req, res);
+async function readinessHealthCheck(
+  request: Request,
+  response: ResponseWithContext,
+) {
+  healthCheckValidator.validateHealthCheck(request, response);
 
-  const notReadyMsg = await isReady(res.locals.context);
+  const notReadyMsg = await isReady(response.locals.context);
   if (notReadyMsg) {
-    res
+    response
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
       .json(`Application is not ready: ${notReadyMsg}`);
     return;
   }
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

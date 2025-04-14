@@ -24,9 +24,10 @@ async function getMovies(
   pagination: GetMoviesValidatedData,
 ): Promise<PaginatedResult<{ movies: Movie[] }>> {
   const { database } = context;
+  const { cursor, pageSize } = pagination;
+
   const handler = database.getHandler();
   const { movie: movieModel, genre: genreModel } = database.getModels();
-  const { cursor, pageSize } = pagination;
 
   const moviesPage = await handler
     .select({
@@ -63,6 +64,7 @@ async function getMovie(
   movieId: GetMovieValidatedData,
 ): Promise<Movie> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { movie: movieModel, genre: genreModel } = database.getModels();
 
@@ -92,6 +94,7 @@ async function getMoviePoster(
   movieId: GetMovieValidatedData,
 ): Promise<void> {
   const { database } = res.locals.context;
+
   const handler = database.getHandler();
   const { moviePoster: moviePosterModel } = database.getModels();
 

@@ -221,7 +221,7 @@ await suite('Movie integration tests', async () => {
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
-        firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES_IN_BYTES),
+        firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES),
         lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
         email: `${randomAlphaNumericString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
         password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
@@ -277,7 +277,7 @@ await suite('Movie integration tests', async () => {
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
-        firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES_IN_BYTES),
+        firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES),
       },
     });
 

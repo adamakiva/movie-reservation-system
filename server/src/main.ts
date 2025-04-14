@@ -18,7 +18,6 @@ async function startServer() {
   EventEmitter.captureRejections = true;
 
   const logger = new Logger();
-  const logMiddleware = logger.getLogMiddleware();
 
   const environmentManager = new EnvironmentManager(logger);
   const {
@@ -88,7 +87,7 @@ async function startServer() {
     routes: {
       http: `/${serverEnv.httpRoute}`,
     },
-    logMiddleware,
+    logMiddleware: logger.getLogMiddleware(),
     logger,
   });
 

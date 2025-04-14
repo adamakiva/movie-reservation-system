@@ -359,36 +359,36 @@ const SHOWTIME_SCHEMAS = {
 
 /**********************************************************************************/
 
-function validateGetShowtimes(req: Request) {
+function validateGetShowtimes(request: Request) {
   const validatedResult = parseValidationResult(
-    SHOWTIME_SCHEMAS.READ.safeParse(req.query),
+    SHOWTIME_SCHEMAS.READ.safeParse(request.query),
   );
 
   return validatedResult;
 }
 
-function validateCreateShowtime(req: Request) {
+function validateCreateShowtime(request: Request) {
   const validatedResult = parseValidationResult(
-    SHOWTIME_SCHEMAS.CREATE.safeParse(req.body),
+    SHOWTIME_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
 }
 
-function validateDeleteShowtime(req: Request) {
+function validateDeleteShowtime(request: Request) {
   const { showtime_id: showtimeId } = parseValidationResult(
-    SHOWTIME_SCHEMAS.DELETE.safeParse(req.params),
+    SHOWTIME_SCHEMAS.DELETE.safeParse(request.params),
   );
 
   return showtimeId;
 }
 
-function validateReserveShowtimeTicket(req: Request) {
+function validateReserveShowtimeTicket(request: Request) {
   const {
     showtime_id: showtimeId,
     row,
     column,
-  } = parseValidationResult(SHOWTIME_SCHEMAS.RESERVER.safeParse(req.body));
+  } = parseValidationResult(SHOWTIME_SCHEMAS.RESERVER.safeParse(request.body));
 
   return {
     showtimeId,
@@ -397,20 +397,20 @@ function validateReserveShowtimeTicket(req: Request) {
   } as const;
 }
 
-function validateCancelUserShowtimeReservation(req: Request) {
+function validateCancelUserShowtimeReservation(request: Request) {
   const { showtime_id: showtimeId } = parseValidationResult(
-    SHOWTIME_SCHEMAS.CANCEL.safeParse(req.params),
+    SHOWTIME_SCHEMAS.CANCEL.safeParse(request.params),
   );
 
   return showtimeId;
 }
 
-function validateGetUserShowtimes(req: Request) {
+function validateGetUserShowtimes(request: Request) {
   const { user_id: userId } = parseValidationResult(
-    SHOWTIME_SCHEMAS.USER.READ.PARAMS.safeParse(req.params),
+    SHOWTIME_SCHEMAS.USER.READ.PARAMS.safeParse(request.params),
   );
   const { cursor, pageSize } = parseValidationResult(
-    SHOWTIME_SCHEMAS.USER.READ.QUERY.safeParse(req.query),
+    SHOWTIME_SCHEMAS.USER.READ.QUERY.safeParse(request.query),
   );
 
   return {

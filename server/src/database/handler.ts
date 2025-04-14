@@ -52,7 +52,10 @@ class Database {
     const connection = pg(url, options ?? {});
     this.#handler = drizzle(connection, {
       schema: schemas,
-      logger: new DatabaseLogger(new Set([isAliveQuery, isReadyQuery]), logger),
+      logger: new DatabaseLogger(
+        new Set([isAliveQuery, isReadyQuery] as const),
+        logger,
+      ),
     });
 
     this.#models = {

@@ -5,9 +5,8 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
-DATABASE_FOLDER="$ROOT_DIR"/dev-data;
+DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data;
 MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
-TESTS_COVERAGE_FOLDER="$ROOT_DIR"/server/__tests__/coverage;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
 
@@ -27,7 +26,7 @@ check_prerequisites() {
 remove() {
     check_prerequisites &&
     UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose down || exit 1;
-    rm -rf "$TESTS_COVERAGE_FOLDER" "$DATABASE_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
+    rm -rf "$DATABASE_DATA_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
 }
 
 main() {

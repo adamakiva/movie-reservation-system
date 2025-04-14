@@ -16,9 +16,10 @@ async function updateRole(
   roleToUpdate: UpdateRoleValidatedData,
 ): Promise<Role> {
   const { database } = context;
+  const { roleId, ...fieldsToUpdate } = roleToUpdate;
+
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
-  const { roleId, ...fieldsToUpdate } = roleToUpdate;
 
   try {
     const [updatedRole] = await handler

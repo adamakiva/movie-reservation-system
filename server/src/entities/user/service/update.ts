@@ -23,12 +23,12 @@ async function updateUser(
   const { authentication, database } = context;
   const { password, ...fieldsToUpdate } = userToUpdate;
 
+  const handler = database.getHandler();
+  const { user: userModel, role: roleModel } = database.getModels();
+
   const hash = password
     ? await authentication.hashPassword(password)
     : undefined;
-
-  const handler = database.getHandler();
-  const { user: userModel, role: roleModel } = database.getModels();
 
   const updateUserSubQuery = buildUpdateUserCTE({
     handler,
@@ -77,6 +77,7 @@ function buildUpdateUserCTE(params: {
   };
 }) {
   const { handler, userModel, userToUpdate } = params;
+
   const { userId, ...fieldsToUpdate } = userToUpdate;
 
   const updateUserSubQuery = handler.$with('update_user').as(

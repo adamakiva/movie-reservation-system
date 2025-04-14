@@ -16,9 +16,10 @@ async function updateHall(
   hallToUpdate: UpdateHallValidatedData,
 ): Promise<Hall> {
   const { database } = context;
+  const { hallId, ...fieldsToUpdate } = hallToUpdate;
+
   const handler = database.getHandler();
   const { hall: hallModel } = database.getModels();
-  const { hallId, ...fieldsToUpdate } = hallToUpdate;
 
   try {
     const [updatedHall] = await handler

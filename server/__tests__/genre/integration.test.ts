@@ -92,7 +92,7 @@ await suite('Genre integration tests', async () => {
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
-        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
       },
     });
 
@@ -130,7 +130,7 @@ await suite('Genre integration tests', async () => {
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
-        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE_IN_BYTES),
+        name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
       },
     });
 

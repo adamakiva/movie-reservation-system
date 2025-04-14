@@ -8,6 +8,7 @@ import type { Hall } from './utils.ts';
 
 async function getHalls(context: RequestContext): Promise<Hall[]> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { hall: hallModel } = database.getModels();
 

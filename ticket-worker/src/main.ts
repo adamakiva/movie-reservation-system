@@ -159,7 +159,7 @@ function createCancelTicketConsumer(
 /**********************************************************************************/
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
-  const globalErrorHandler = () => {
+  const errorHandler = () => {
     messageQueue
       .close()
       .catch((err: unknown) => {
@@ -174,15 +174,15 @@ function attachProcessHandlers(messageQueue: MessageQueue) {
     .on('warning', console.warn)
     .once('unhandledRejection', (reason) => {
       console.error(`Unhandled rejection:`, reason);
-      globalErrorHandler();
+      errorHandler();
     })
     .once('uncaughtException', (err) => {
       console.error(`Unhandled exception:`, err);
-      globalErrorHandler();
+      errorHandler();
     });
 
   SIGNALS.forEach((signal) => {
-    process.once(signal, globalErrorHandler);
+    process.once(signal, errorHandler);
   });
 }
 

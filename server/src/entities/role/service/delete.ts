@@ -12,6 +12,7 @@ async function deleteRole(
   roleId: DeleteRoleValidatedData,
 ): Promise<void> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { role: roleModel, user: userModel } = database.getModels();
 

@@ -48,13 +48,12 @@ process.on('warning', (warn) => {
   process.exit(1);
 });
 
-// In order to reuse the environment manager class, we swap the only different
-// value
+// In order to reuse the environment manager class, we swap the relevant values
 process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
 const CONSTANTS = {
-  ONE_MEGABYTE_IN_BYTES: 1_000_000,
-  EIGHT_MEGABYTES_IN_BYTES: 8_000_000,
+  ONE_MEGABYTE: 1_000_000,
+  EIGHT_MEGABYTES: 8_000_000,
   SINGLE_PAGE: {
     CREATE: 32,
     SIZE: 32,
@@ -67,7 +66,7 @@ const CONSTANTS = {
     CREATE: 2_048,
     SIZE: 8,
   },
-  ALPHA_NUMERIC_CHARACTERS: {
+  ALPHA_NUMERIC: {
     CHARACTERS:
       'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     LENGTH: 67,
@@ -95,8 +94,10 @@ function terminateServer(serverParams: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
+
   const logger = mockLogger();
-  const logMiddleware = logger.getLogMiddleware();
 
   const environmentManager = new EnvironmentManager(logger);
   const {
@@ -106,9 +107,6 @@ async function createServer() {
     database,
     messageQueue,
   } = environmentManager.getEnvVariables();
-
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
 
   const server = await HttpServer.create({
     authenticationParams: {
@@ -165,7 +163,7 @@ async function createServer() {
     routes: {
       http: `/${serverEnv.httpRoute}`,
     },
-    logMiddleware,
+    logMiddleware: logger.getLogMiddleware(),
     logger,
   });
 
@@ -178,19 +176,10 @@ async function createServer() {
     fileManager: server.getFileManager(),
     database: server.getDatabase(),
     messageQueue: server.getMessageQueue(),
-    environmentManager,
     routes: {
       base: baseUrl,
       http: `${baseUrl}/${serverEnv.httpRoute}`,
     },
-  } as const;
-}
-
-function getRequestContext(serverParams: ServerParams, logger: Logger) {
-  return {
-    authentication: serverParams.authentication,
-    database: serverParams.database,
-    logger: logger,
   } as const;
 }
 
@@ -268,26 +257,12 @@ function randomUUID<T extends number = 1>(
 function randomAlphaNumericString(len = 32) {
   let str = '';
   for (let i = 0; i < len; ++i) {
-    str += CONSTANTS.ALPHA_NUMERIC_CHARACTERS.CHARACTERS.charAt(
-      Math.floor(Math.random() * CONSTANTS.ALPHA_NUMERIC_CHARACTERS.LENGTH),
+    str += CONSTANTS.ALPHA_NUMERIC.CHARACTERS.charAt(
+      Math.floor(Math.random() * CONSTANTS.ALPHA_NUMERIC.LENGTH),
     );
   }
 
   return str;
-}
-
-function shuffleArray<T>(array: T[]) {
-  for (let i = array.length - 1; i > 0; i--) {
-    // Generate a random index between 0 and i (inclusive)
-    const randomIndex = Math.floor(Math.random() * (i + 1));
-
-    // Swap elements at i and randomIndex
-    const tmp = array[i];
-    array[i] = array[randomIndex]!;
-    array[randomIndex] = tmp!;
-  }
-
-  return array;
 }
 
 /******************************* API calls ****************************************/
@@ -399,7 +374,6 @@ export {
   generateTokens,
   getAdminRole,
   getAdminTokens,
-  getRequestContext,
   HTTP_STATUS_CODES,
   initServer,
   Middlewares,
@@ -409,7 +383,6 @@ export {
   randomNumber,
   randomUUID,
   sendHttpRequest,
-  shuffleArray,
   suite,
   terminateServer,
   test,

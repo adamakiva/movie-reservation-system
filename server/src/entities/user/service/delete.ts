@@ -12,6 +12,7 @@ async function deleteUser(
   userId: DeleteUserValidatedData,
 ): Promise<void> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { user: userModel, userShowtime: userShowtimeModel } =
     database.getModels();

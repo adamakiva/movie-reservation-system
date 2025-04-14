@@ -8,73 +8,80 @@ import * as showtimeValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getShowtimes(req: Request, res: ResponseWithContext) {
-  const pagination = showtimeValidator.validateGetShowtimes(req);
+async function getShowtimes(request: Request, response: ResponseWithContext) {
+  const pagination = showtimeValidator.validateGetShowtimes(request);
 
   const showtimes = await showtimeService.getShowtimes(
-    res.locals.context,
+    response.locals.context,
     pagination,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(showtimes);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(showtimes);
 }
 
-async function createShowtime(req: Request, res: ResponseWithContext) {
-  const showtimeToCreate = showtimeValidator.validateCreateShowtime(req);
+async function createShowtime(request: Request, response: ResponseWithContext) {
+  const showtimeToCreate = showtimeValidator.validateCreateShowtime(request);
 
   const createdShowtime = await showtimeService.createShowtime(
-    res.locals.context,
+    response.locals.context,
     showtimeToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdShowtime);
+  response.status(HTTP_STATUS_CODES.CREATED).json(createdShowtime);
 }
 
-async function deleteShowtime(req: Request, res: ResponseWithContext) {
-  const showtimeId = showtimeValidator.validateDeleteShowtime(req);
+async function deleteShowtime(request: Request, response: ResponseWithContext) {
+  const showtimeId = showtimeValidator.validateDeleteShowtime(request);
 
-  await showtimeService.deleteShowtime(res.locals.context, showtimeId);
+  await showtimeService.deleteShowtime(response.locals.context, showtimeId);
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
-async function reserveShowtimeTicket(req: Request, res: ResponseWithContext) {
-  const showtimeTicket = showtimeValidator.validateReserveShowtimeTicket(req);
+async function reserveShowtimeTicket(
+  request: Request,
+  response: ResponseWithContext,
+) {
+  const showtimeTicket =
+    showtimeValidator.validateReserveShowtimeTicket(request);
 
   await showtimeService.reserveShowtimeTicket({
-    req,
-    context: res.locals.context,
+    request,
+    context: response.locals.context,
     showtimeTicket,
   });
 
-  res.status(HTTP_STATUS_CODES.ACCEPTED).end();
+  response.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
 async function cancelUserShowtimeReservation(
-  req: Request,
-  res: ResponseWithContext,
+  request: Request,
+  response: ResponseWithContext,
 ) {
   const showtimeId =
-    showtimeValidator.validateCancelUserShowtimeReservation(req);
+    showtimeValidator.validateCancelUserShowtimeReservation(request);
 
   await showtimeService.cancelUserShowtimeReservation({
-    req,
-    context: res.locals.context,
+    request,
+    context: response.locals.context,
     showtimeId,
   });
 
-  res.status(HTTP_STATUS_CODES.ACCEPTED).end();
+  response.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
-async function getUserShowtimes(req: Request, res: ResponseWithContext) {
-  const pagination = showtimeValidator.validateGetUserShowtimes(req);
+async function getUserShowtimes(
+  request: Request,
+  response: ResponseWithContext,
+) {
+  const pagination = showtimeValidator.validateGetUserShowtimes(request);
 
   const userShowtimes = await showtimeService.getUserShowtimes(
-    res.locals.context,
+    response.locals.context,
     pagination,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(userShowtimes);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(userShowtimes);
 }
 
 /**********************************************************************************/

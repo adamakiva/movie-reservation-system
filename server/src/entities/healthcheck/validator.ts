@@ -51,10 +51,10 @@ const HEALTHCHECK_SCHEMA = zod
 
 /**********************************************************************************/
 
-function validateHealthCheck(req: Request, res: ResponseWithContext) {
+function validateHealthCheck(request: Request, response: ResponseWithContext) {
   try {
     const validatedResult = parseValidationResult(
-      HEALTHCHECK_SCHEMA.safeParse(req.method),
+      HEALTHCHECK_SCHEMA.safeParse(request.method),
       HTTP_STATUS_CODES.NOT_ALLOWED,
     );
 
@@ -62,7 +62,10 @@ function validateHealthCheck(req: Request, res: ResponseWithContext) {
   } catch (err) {
     // When returning 405 you **must** supply the Allow header.
     // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
-    res.set('Allow', Array.from(HEALTHCHECK.HTTP_METHODS.NAMES).join(', '));
+    response.set(
+      'Allow',
+      Array.from(HEALTHCHECK.HTTP_METHODS.NAMES).join(', '),
+    );
 
     throw err;
   }

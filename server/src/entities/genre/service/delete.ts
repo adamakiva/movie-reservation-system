@@ -12,6 +12,7 @@ async function deleteGenre(
   genreId: DeleteGenreValidatedData,
 ): Promise<void> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { genre: genreModel, movie: movieModel } = database.getModels();
 

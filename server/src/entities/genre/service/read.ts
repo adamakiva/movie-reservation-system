@@ -8,6 +8,7 @@ import type { Genre } from './utils.ts';
 
 async function getGenres(context: RequestContext): Promise<Genre[]> {
   const { database } = context;
+
   const handler = database.getHandler();
   const { genre: genreModel } = database.getModels();
 

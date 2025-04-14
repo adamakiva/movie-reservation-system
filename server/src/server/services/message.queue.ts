@@ -38,20 +38,22 @@ type PublishOptions<E extends Exchanges[number]> = Omit<
 
 class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   readonly #handler;
-
-  #publishers: { [key: string]: Publisher } = {};
-  readonly #consumers: Consumer[] = [];
-
   readonly #logger;
 
-  #isAlive = false;
-  #isReady = false;
+  #publishers: { [key: string]: Publisher };
+  readonly #consumers: Consumer[];
+
+  #isAlive;
+  #isReady;
 
   public constructor(params: {
     connectionOptions: ConnectionOptions;
     logger: Logger;
   }) {
     const { connectionOptions, logger } = params;
+
+    this.#isAlive = false;
+    this.#isReady = false;
 
     this.#handler = new Connection(connectionOptions)
       .on('error', this.#handleErrorEvent)
@@ -60,6 +62,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .on('connection.unblocked', this.#handleUnblockedEvent);
 
     this.#logger = logger;
+
+    this.#publishers = {};
+    this.#consumers = [];
   }
 
   public createPublishers(publishers: {
@@ -120,68 +125,28 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       handler,
       ...options
     } = consumerProps;
+
     const exchanges: ConsumerProps['exchanges'] = [
       { exchange, passive: true, durable: true },
-    ];
+    ] as const;
     const queueBindings: ConsumerProps['queueBindings'] = [
       { exchange, queue, routingKey },
-    ];
+    ] as const;
 
-    const consumer = this.#handler
-      .createConsumer(
-        {
-          ...options,
-          exchanges,
-          queue,
-          queueBindings,
-          queueOptions: { passive: true },
-        },
-        handler,
-      )
-      .on('error', this.#handleConsumerErrorEvent);
-
-    this.#consumers.push(consumer);
-  }
-
-  public async close() {
-    this.#isAlive = false;
-    this.#isReady = false;
-
-    try {
-      await Promise.all(
-        Object.values(this.#publishers).map(async (publisher) => {
-          await publisher.close();
-          publisher.removeListener(
-            'basic-return',
-            this.#handleUndeliveredMessageEvent,
-          );
-        }),
-      );
-    } catch (error) {
-      console.error('Failure to shutdown publisher(s):', error);
-    }
-
-    try {
-      await Promise.all(
-        this.#consumers.map(async (consumer) => {
-          await consumer.close();
-          consumer.removeListener('error', this.#handleConsumerErrorEvent);
-        }),
-      );
-    } catch (error) {
-      console.error('Failure to shutdown consumer(s):', error);
-    }
-
-    try {
-      await this.#handler.close();
+    this.#consumers.push(
       this.#handler
-        .removeListener('connection.unblocked', this.#handleUnblockedEvent)
-        .removeListener('connection.blocked', this.#handleBlockedEvent)
-        .removeListener('connection', this.#handleConnectionEvent)
-        .removeListener('error', this.#handleErrorEvent);
-    } catch (error) {
-      console.error('Failure to close message queue connection:', error);
-    }
+        .createConsumer(
+          {
+            ...options,
+            exchanges,
+            queue,
+            queueBindings,
+            queueOptions: { passive: true },
+          },
+          handler,
+        )
+        .on('error', this.#handleConsumerErrorEvent),
+    );
   }
 
   public async publish(params: {
@@ -219,7 +184,60 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
     }
   }
 
+  public async close() {
+    this.#isAlive = false;
+    this.#isReady = false;
+
+    await this.#closeConnections();
+    this.#removeEventListeners();
+  }
+
   /********************************************************************************/
+
+  async #closeConnections() {
+    try {
+      await Promise.all(
+        Object.values(this.#publishers).map(async (publisher) => {
+          await publisher.close();
+        }),
+      );
+    } catch (error) {
+      console.error('Failure to shutdown publisher(s):', error);
+    }
+
+    try {
+      await Promise.all(
+        this.#consumers.map(async (consumer) => {
+          await consumer.close();
+        }),
+      );
+    } catch (error) {
+      console.error('Failure to shutdown consumer(s):', error);
+    }
+
+    try {
+      await this.#handler.close();
+    } catch (error) {
+      console.error('Failure to close message queue connection:', error);
+    }
+  }
+
+  #removeEventListeners() {
+    Object.values(this.#publishers).forEach((publisher) => {
+      publisher.removeListener(
+        'basic-return',
+        this.#handleUndeliveredMessageEvent,
+      );
+    });
+    this.#consumers.forEach((consumer) => {
+      consumer.removeListener('error', this.#handleConsumerErrorEvent);
+    });
+    this.#handler
+      .removeListener('connection.unblocked', this.#handleUnblockedEvent)
+      .removeListener('connection.blocked', this.#handleBlockedEvent)
+      .removeListener('connection', this.#handleConnectionEvent)
+      .removeListener('error', this.#handleErrorEvent);
+  }
 
   readonly #handleErrorEvent = (err: unknown) => {
     this.#isAlive = false;

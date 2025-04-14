@@ -8,40 +8,40 @@ import * as genreValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getGenres(_req: Request, res: ResponseWithContext) {
-  const genres = await genreService.getGenres(res.locals.context);
+async function getGenres(_: Request, response: ResponseWithContext) {
+  const genres = await genreService.getGenres(response.locals.context);
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(genres);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(genres);
 }
 
-async function createGenre(req: Request, res: ResponseWithContext) {
-  const genreToCreate = genreValidator.validateCreateGenre(req);
+async function createGenre(request: Request, response: ResponseWithContext) {
+  const genreToCreate = genreValidator.validateCreateGenre(request);
 
   const createdGenre = await genreService.createGenre(
-    res.locals.context,
+    response.locals.context,
     genreToCreate,
   );
 
-  res.status(HTTP_STATUS_CODES.CREATED).json(createdGenre);
+  response.status(HTTP_STATUS_CODES.CREATED).json(createdGenre);
 }
 
-async function updateGenre(req: Request, res: ResponseWithContext) {
-  const genreToUpdate = genreValidator.validateUpdateGenre(req);
+async function updateGenre(request: Request, response: ResponseWithContext) {
+  const genreToUpdate = genreValidator.validateUpdateGenre(request);
 
   const updatedGenre = await genreService.updateGenre(
-    res.locals.context,
+    response.locals.context,
     genreToUpdate,
   );
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).json(updatedGenre);
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedGenre);
 }
 
-async function deleteGenre(req: Request, res: ResponseWithContext) {
-  const genreId = genreValidator.validateDeleteGenre(req);
+async function deleteGenre(request: Request, response: ResponseWithContext) {
+  const genreId = genreValidator.validateDeleteGenre(request);
 
-  await genreService.deleteGenre(res.locals.context, genreId);
+  await genreService.deleteGenre(response.locals.context, genreId);
 
-  res.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
 /**********************************************************************************/

@@ -102,31 +102,37 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       { exchange, queue, routingKey },
     ] as const;
 
-    const consumer = this.#handler
-      .createConsumer(
-        {
-          ...options,
-          exchanges,
-          queue,
-          queueBindings,
-          queueOptions: { passive: true },
-        },
-        handler,
-      )
-      .on('error', this.#handleConsumerErrorEvent);
-
-    this.#consumers.push(consumer);
+    this.#consumers.push(
+      this.#handler
+        .createConsumer(
+          {
+            ...options,
+            exchanges,
+            queue,
+            queueBindings,
+            queueOptions: { passive: true },
+          },
+          handler,
+        )
+        .on('error', this.#handleConsumerErrorEvent),
+    );
   }
 
   public async close() {
     try {
+      await this.#closeConnections();
+    } finally {
+      this.#removeEventListeners();
+    }
+  }
+
+  /********************************************************************************/
+
+  async #closeConnections() {
+    try {
       await Promise.all(
         Object.values(this.#publishers).map(async (publisher) => {
           await publisher.close();
-          publisher.removeListener(
-            'basic-return',
-            this.#handleUndeliveredMessageEvent,
-          );
         }),
       );
     } catch (error) {
@@ -137,7 +143,6 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       await Promise.all(
         this.#consumers.map(async (consumer) => {
           await consumer.close();
-          consumer.removeListener('error', this.#handleConsumerErrorEvent);
         }),
       );
     } catch (error) {
@@ -146,17 +151,27 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
 
     try {
       await this.#handler.close();
-      this.#handler
-        .removeListener('connection.unblocked', this.#handleUnblockedEvent)
-        .removeListener('connection.blocked', this.#handleBlockedEvent)
-        .removeListener('connection', this.#handleConnectionEvent)
-        .removeListener('error', this.#handleErrorEvent);
     } catch (error) {
       console.error('Failure to close message queue connection:', error);
     }
   }
 
-  /********************************************************************************/
+  #removeEventListeners() {
+    Object.values(this.#publishers).forEach((publisher) => {
+      publisher.removeListener(
+        'basic-return',
+        this.#handleUndeliveredMessageEvent,
+      );
+    });
+    this.#consumers.forEach((consumer) => {
+      consumer.removeListener('error', this.#handleConsumerErrorEvent);
+    });
+    this.#handler
+      .removeListener('connection.unblocked', this.#handleUnblockedEvent)
+      .removeListener('connection.blocked', this.#handleBlockedEvent)
+      .removeListener('connection', this.#handleConnectionEvent)
+      .removeListener('error', this.#handleErrorEvent);
+  }
 
   readonly #handleErrorEvent = (error: unknown) => {
     console.error('Error during message queue usage:', error);
