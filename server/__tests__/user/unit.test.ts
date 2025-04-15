@@ -1018,7 +1018,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
@@ -1683,7 +1683,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
@@ -1720,7 +1720,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

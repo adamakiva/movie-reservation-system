@@ -118,7 +118,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages without filters', async () => {
@@ -171,7 +171,7 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages without filters', async () => {
@@ -224,7 +224,7 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a single page with movie filter', async () => {
@@ -279,7 +279,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages with movie filter', async () => {
@@ -343,7 +343,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages with movie filter', async () => {
@@ -407,7 +407,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a single page with hall filter', async () => {
@@ -462,7 +462,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages with hall filter', async () => {
@@ -526,7 +526,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages with hall filter', async () => {
@@ -590,7 +590,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a single page with all filters', async () => {
@@ -650,7 +650,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages with all filters', async () => {
@@ -719,7 +719,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages with all filters', async () => {
@@ -788,7 +788,7 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -840,7 +840,7 @@ await suite('Showtime integration tests', async () => {
         { movieTitle: createdMovie.title, hallName: createdHall.name },
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete existent', async () => {
@@ -877,7 +877,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete non-existent', async () => {

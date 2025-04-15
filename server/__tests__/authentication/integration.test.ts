@@ -69,7 +69,7 @@ await suite('Authentication integration tests', async () => {
         );
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Refresh', async () => {
@@ -110,7 +110,7 @@ await suite('Authentication integration tests', async () => {
         );
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
 });

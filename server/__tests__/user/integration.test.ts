@@ -83,7 +83,7 @@ await suite('User integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages', async () => {
@@ -135,7 +135,7 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages', async () => {
@@ -184,7 +184,7 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -228,7 +228,7 @@ await suite('User integration tests', async () => {
         role: roleName,
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -275,7 +275,7 @@ await suite('User integration tests', async () => {
         password: updatedUserData.password,
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete existent user', async () => {
@@ -305,7 +305,7 @@ await suite('User integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete non-existent user', async () => {

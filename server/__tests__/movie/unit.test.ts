@@ -2100,7 +2100,7 @@ await suite('Movie unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

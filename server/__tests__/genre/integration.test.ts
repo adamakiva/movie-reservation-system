@@ -57,7 +57,7 @@ await suite('Genre integration tests', async () => {
         assert.deepStrictEqual(genre, matchingGenre);
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot', async () => {
@@ -81,7 +81,7 @@ await suite('Genre integration tests', async () => {
         assert.deepStrictEqual(genre, matchingGenre);
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -119,7 +119,7 @@ await suite('Genre integration tests', async () => {
         fields,
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -163,7 +163,7 @@ await suite('Genre integration tests', async () => {
         updatedGenre,
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete existent genre', async () => {
@@ -195,7 +195,7 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete non-existent genre', async () => {

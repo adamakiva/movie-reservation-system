@@ -3,9 +3,9 @@
 # of managing these values
 
 services:
-  mrs-pg:
-    hostname: mrs-pg
-    container_name: mrs-pg
+  movie-reservation-system-pg:
+    hostname: movie-reservation-system-pg
+    container_name: movie-reservation-system-pg
     restart: unless-stopped
     build:
       target: pg
@@ -28,9 +28,9 @@ services:
       timeout: 2s
       retries: 5
 
-  mrs-rbmq:
-    hostname: mrs-rbmq
-    container_name: mrs-rbmq
+  movie-reservation-system-rbmq:
+    hostname: movie-reservation-system-rbmq
+    container_name: movie-reservation-system-rbmq
     restart: unless-stopped
     build:
       target: rbmq
@@ -49,9 +49,9 @@ services:
       timeout: 5s
       retries: 5
 
-  mrs-server:
-    hostname: mrs-server
-    container_name: mrs-server
+  movie-reservation-system-server:
+    hostname: movie-reservation-system-server
+    container_name: movie-reservation-system-server
     restart: unless-stopped
     build:
       target: server
@@ -67,13 +67,13 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-::,127.0.0.1,localhost}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*} # TODO Change this
       # Database options
-      - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@mrs-pg:5432/mrs}
-      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@mrs-pg:5432/mrs_test}
+      - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs}
+      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs_test}
       - DATABASE_MAX_CONNECTIONS=${DATABASE_MAX_CONNECTIONS:-32}
       - DATABASE_STATEMENT_TIMEOUT=${DATABASE_STATEMENT_TIMEOUT:-30000}
       - DATABASE_TRANSACTION_TIMEOUT=${DATABASE_TRANSACTION_TIMEOUT:-60000}
       # Message queue options
-      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@mrs-rbmq:5672}
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rbmq:5672}
       # Authentication options
       - AUTHENTICATION_ACCESS_TOKEN_EXPIRATION=${AUTHENTICATION_ACCESS_TOKEN_EXPIRATION:-900} # 15 minutes
       - AUTHENTICATION_REFRESH_TOKEN_EXPIRATION=${AUTHENTICATION_REFRESH_TOKEN_EXPIRATION:-2629746} # A month
@@ -90,9 +90,12 @@ services:
       - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
       # Argon2 uses addons so the flag --no-addons is not present. It should be
       # present if the application does not require it
-      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
+      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --experimental-transform-types --stack-trace-limit=32 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
+      # Clinic options
+      - NO_INSIGHT=true
+      - CLINIC_SERVER_PORT=${CLINIC_SERVER_PORT:-4336}
     volumes:
       - ./server:/home/node/mrs:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
@@ -115,9 +118,9 @@ services:
       retries: 5
       start_period: 30s
     depends_on:
-      mrs-pg:
+      movie-reservation-system-pg:
         condition: service_healthy
-      mrs-rbmq:
+      movie-reservation-system-rbmq:
         condition: service_healthy
 
   ticket-worker:
@@ -132,10 +135,10 @@ services:
     init: true
     environment:
       # Message queue options
-      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@mrs-rbmq:5672}
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rbmq:5672}
       # Node flags and options
       - NODE_ENV=${NODE_ENV:-production}
-      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --no-addons --experimental-transform-types --stack-trace-limit=32 --disable-proto=throw --trace-exit --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
+      - NODE_OPTIONS=${NODE_OPTIONS:- --no-warnings --experimental-transform-types --stack-trace-limit=32 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --max-old-space-size=1536}
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
     volumes:
@@ -145,12 +148,12 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
-      mrs-rbmq:
+      movie-reservation-system-rbmq:
         condition: service_healthy
 
-  mrs-nginx:
-    hostname: mrs-nginx
-    container_name: mrs-nginx
+  movie-reservation-system-nginx:
+    hostname: movie-reservation-system-nginx
+    container_name: movie-reservation-system-nginx
     restart: unless-stopped
     build:
       target: nginx
@@ -160,5 +163,5 @@ services:
     ports:
       - 4336:80
     depends_on:
-      mrs-server:
+      movie-reservation-system-server:
         condition: service_healthy

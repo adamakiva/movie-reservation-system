@@ -48,9 +48,6 @@ process.on('warning', (warn) => {
   process.exit(1);
 });
 
-// In order to reuse the environment manager class, we swap the relevant values
-process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
-
 const CONSTANTS = {
   ONE_MEGABYTE: 1_000_000,
   EIGHT_MEGABYTES: 8_000_000,
@@ -94,6 +91,9 @@ function terminateServer(serverParams: ServerParams) {
 /**********************************************************************************/
 
 async function createServer() {
+  // In order to reuse the environment manager class, we swap the relevant values
+  process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
+
   // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
   EventEmitter.captureRejections = true;
 
@@ -190,8 +190,7 @@ function getAdminRole() {
   } as const;
 }
 
-async function clearDatabase(serverParams: ServerParams) {
-  const { database } = serverParams;
+async function clearDatabase(database: Database) {
   const handler = database.getHandler();
   const models = database.getModels();
 

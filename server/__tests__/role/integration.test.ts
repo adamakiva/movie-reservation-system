@@ -52,7 +52,7 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot', async () => {
@@ -76,7 +76,7 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -114,7 +114,7 @@ await suite('Role integration tests', async () => {
         fields,
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -158,7 +158,7 @@ await suite('Role integration tests', async () => {
         updatedRole,
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete existent role', async () => {
@@ -190,7 +190,7 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(responseBody, '');
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete non-existent role', async () => {

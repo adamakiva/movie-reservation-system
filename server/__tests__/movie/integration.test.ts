@@ -89,7 +89,7 @@ await suite('Movie integration tests', async () => {
       assert.strictEqual(responseBody.page.hasNext, false);
       assert.strictEqual(responseBody.page.cursor, null);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read many pages', async () => {
@@ -141,7 +141,7 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read a lot pages', async () => {
@@ -193,7 +193,7 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Read movie poster', async () => {
@@ -210,7 +210,7 @@ await suite('Movie integration tests', async () => {
 
       await compareFiles(res, createdMoviePoster.absolutePath);
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
@@ -266,7 +266,7 @@ await suite('Movie integration tests', async () => {
         genre: genreName,
       });
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
@@ -327,7 +327,7 @@ await suite('Movie integration tests', async () => {
         updatedMovie,
       );
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete existent movie', async () => {
@@ -370,7 +370,7 @@ await suite('Movie integration tests', async () => {
       const responseBody = await res.text();
       assert.strictEqual(responseBody, '');
     } finally {
-      await clearDatabase(serverParams);
+      await clearDatabase(serverParams.database);
     }
   });
   await test('Valid - Delete non-existent movie', async () => {

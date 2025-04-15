@@ -1,3 +1,3 @@
 #!/bin/sh
 
-npm install --include=dev && node --watch --experimental-transform-types ./src/main.ts;
+npm install --include=dev && node --watch ./src/main.ts;
