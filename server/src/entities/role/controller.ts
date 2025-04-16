@@ -14,8 +14,8 @@ async function getRoles(_: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.SUCCESS).json(roles);
 }
 
-async function createRole(req: Request, response: ResponseWithContext) {
-  const roleToCreate = roleValidator.validateCreateRole(req);
+async function createRole(request: Request, response: ResponseWithContext) {
+  const roleToCreate = roleValidator.validateCreateRole(request);
 
   const createdRole = await roleService.createRole(
     response.locals.context,
@@ -25,8 +25,8 @@ async function createRole(req: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.CREATED).json(createdRole);
 }
 
-async function updateRole(req: Request, response: ResponseWithContext) {
-  const roleToUpdate = roleValidator.validateUpdateRole(req);
+async function updateRole(request: Request, response: ResponseWithContext) {
+  const roleToUpdate = roleValidator.validateUpdateRole(request);
 
   const updatedRole = await roleService.updateRole(
     response.locals.context,
@@ -36,8 +36,8 @@ async function updateRole(req: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedRole);
 }
 
-async function deleteRole(req: Request, response: ResponseWithContext) {
-  const roleId = roleValidator.validateDeleteRole(req);
+async function deleteRole(request: Request, response: ResponseWithContext) {
+  const roleId = roleValidator.validateDeleteRole(request);
 
   await roleService.deleteRole(response.locals.context, roleId);
 

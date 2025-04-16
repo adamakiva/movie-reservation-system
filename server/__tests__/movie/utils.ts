@@ -131,10 +131,10 @@ async function seedMovies(
       createdMovies,
       createdMoviePosters: createdEntities.createdMoviePosters,
     };
-  } catch (err) {
-    await clearDatabase(serverParams);
+  } catch (error) {
+    await clearDatabase(serverParams.database);
 
-    throw err;
+    throw error;
   }
 }
 
@@ -201,14 +201,11 @@ async function generateMoviePostersData() {
   return moviePosters;
 }
 
-async function compareFiles(dest: Response, src: PathLike) {
-  const [responseBody, expectedFile] = await Promise.all([
-    dest.bytes(),
-    // eslint-disable-next-line @security/detect-non-literal-fs-filename
-    readFile(src),
-  ]);
+async function compareFiles(dest: Uint8Array, src: PathLike) {
+  // eslint-disable-next-line @security/detect-non-literal-fs-filename
+  const expectedFile = await readFile(src);
 
-  assert.strictEqual(expectedFile.compare(responseBody) === 0, true);
+  assert.strictEqual(expectedFile.compare(dest) === 0, true);
 }
 
 /**********************************************************************************/

@@ -52,9 +52,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
         });
@@ -80,9 +80,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -108,9 +108,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -135,9 +135,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
         });
@@ -165,9 +165,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -195,9 +195,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateLoginSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -236,10 +236,10 @@ await suite('Authentication unit tests', async () => {
       async () => {
         await loginSpy(request, response);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError(response).code,
+          error.getClientError(response).code,
           HTTP_STATUS_CODES.BAD_REQUEST,
         );
         return true;
@@ -297,10 +297,10 @@ await suite('Authentication unit tests', async () => {
       async () => {
         await loginSpy(request, response);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError(response).code,
+          error.getClientError(response).code,
           HTTP_STATUS_CODES.BAD_REQUEST,
         );
         return true;
@@ -320,9 +320,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateRefreshAccessTokenSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: AUTHENTICATION.REFRESH.TOKEN.REQUIRED_ERROR_MESSAGE,
         });
@@ -349,9 +349,9 @@ await suite('Authentication unit tests', async () => {
       () => {
         validateRefreshAccessTokenSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: AUTHENTICATION.REFRESH.TOKEN.ERROR_MESSAGE,
         });
@@ -394,10 +394,10 @@ await suite('Authentication unit tests', async () => {
         async () => {
           await refreshAccessTokenSpy(request, response);
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
           assert.strictEqual(
-            err.getClientError(response).code,
+            error.getClientError(response).code,
             HTTP_STATUS_CODES.UNAUTHORIZED,
           );
           return true;
@@ -444,10 +444,10 @@ await suite('Authentication unit tests', async () => {
       async () => {
         await refreshAccessTokenSpy(request, response);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError(response).code,
+          error.getClientError(response).code,
           HTTP_STATUS_CODES.UNAUTHORIZED,
         );
         return true;

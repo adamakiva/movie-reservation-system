@@ -56,12 +56,12 @@ async function deleteShowtime(
 }
 
 async function cancelUserShowtimeReservation(params: {
-  req: Request;
+  request: Request;
   context: RequestContext;
   showtimeId: CancelUserShowtimeValidatedData;
 }) {
   const {
-    req,
+    request,
     context: { authentication, database, messageQueue },
     showtimeId,
   } = params;
@@ -69,7 +69,7 @@ async function cancelUserShowtimeReservation(params: {
   const handler = database.getHandler();
   const { showtime: showtimeModel } = database.getModels();
 
-  const userId = authentication.getUserId(req.headers.authorization!);
+  const userId = authentication.getUserId(request.headers.authorization!);
 
   await handler.transaction(async (transaction) => {
     await cancelShowtimeReservation({

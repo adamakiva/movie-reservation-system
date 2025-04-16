@@ -56,11 +56,11 @@ async function updateUser(
     }
 
     return updatedUser;
-  } catch (err) {
+  } catch (error) {
     // The fields are asserted because if their error type matches, they will
     // be defined
     throw handleUserUpdateError({
-      err,
+      error,
       email: userToUpdate.email!,
       role: userToUpdate.roleId!,
     });

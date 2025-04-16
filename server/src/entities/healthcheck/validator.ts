@@ -59,7 +59,7 @@ function validateHealthCheck(request: Request, response: ResponseWithContext) {
     );
 
     return validatedResult;
-  } catch (err) {
+  } catch (error) {
     // When returning 405 you **must** supply the Allow header.
     // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
     response.set(
@@ -67,7 +67,7 @@ function validateHealthCheck(request: Request, response: ResponseWithContext) {
       Array.from(HEALTHCHECK.HTTP_METHODS.NAMES).join(', '),
     );
 
-    throw err;
+    throw error;
   }
 }
 

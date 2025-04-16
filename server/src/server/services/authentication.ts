@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
 import * as jose from 'jose';
 
-import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import {
   GeneralError,
   UnauthorizedError,
@@ -136,18 +136,18 @@ class AuthenticationManager {
         audience: this.#audience,
         issuer: this.#issuer,
       });
-    } catch (err) {
-      if (err instanceof jose.errors.JWTExpired) {
-        throw new UnauthorizedError('expired', err.cause);
+    } catch (error) {
+      if (error instanceof jose.errors.JWTExpired) {
+        throw new UnauthorizedError('expired', error.cause);
       }
-      if (err instanceof jose.errors.JWSInvalid) {
-        throw new UnauthorizedError('malformed', err.cause);
+      if (error instanceof jose.errors.JWSInvalid) {
+        throw new UnauthorizedError('malformed', error.cause);
       }
 
       throw new GeneralError(
         HTTP_STATUS_CODES.UNAUTHORIZED,
         'Unexpected error:',
-        err,
+        error,
       );
     }
   }
@@ -231,6 +231,8 @@ class AuthenticationManager {
       jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
   }
+
+  /********************************************************************************/
 
   async #httpAuthenticationMiddleware(
     request: Request,

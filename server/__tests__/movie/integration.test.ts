@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import {
@@ -17,6 +16,7 @@ import {
   suite,
   terminateServer,
   test,
+  type PaginatedResult,
   type ServerParams,
 } from '../utils.ts';
 
@@ -60,17 +60,22 @@ await suite('Movie integration tests', async () => {
       const query = new URLSearchParams({
         'page-size': String(SINGLE_PAGE.SIZE),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { movies: fetchedMovies, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ movies: Movie[] }>
+      >({
         route: `${serverParams.routes.http}/movies?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedMovies), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.movies), true);
-
-      const fetchedMovies = responseBody.movies as Movie[];
       for (let i = createdMovies.length - 1; i >= 0; --i) {
         const matchingMovieIndex = fetchedMovies.findIndex((u) => {
           return u.id === createdMovies[i]!.id;
@@ -85,9 +90,9 @@ await suite('Movie integration tests', async () => {
       }
       assert.strictEqual(createdMovies.length, 0);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -111,17 +116,22 @@ await suite('Movie integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { movies: fetchedMovies, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ movies: Movie[] }>
+        >({
           route: `${serverParams.routes.http}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedMovies), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.movies), true);
-
-        const fetchedMovies = responseBody.movies as Movie[];
         for (let i = createdMovies.length - 1; i >= 0; --i) {
           const matchingMovieIndex = fetchedMovies.findIndex((u) => {
             return u.id === createdMovies[i]!.id;
@@ -135,8 +145,10 @@ await suite('Movie integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
@@ -163,17 +175,22 @@ await suite('Movie integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { movies: fetchedMovies, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ movies: Movie[] }>
+        >({
           route: `${serverParams.routes.http}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedMovies), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.movies), true);
-
-        const fetchedMovies = responseBody.movies as Movie[];
         for (let i = createdMovies.length - 1; i >= 0; --i) {
           const matchingMovieIndex = fetchedMovies.findIndex((u) => {
             return u.id === createdMovies[i]!.id;
@@ -187,8 +204,10 @@ await suite('Movie integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
@@ -201,14 +220,19 @@ await suite('Movie integration tests', async () => {
     const { createdMovie, createdMoviePoster } = await seedMovie(serverParams);
 
     try {
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody } = await sendHttpRequest<
+        'GET',
+        'bytes',
+        ReadableStream<Uint8Array>
+      >({
         route: `${serverParams.routes.http}/movies/poster/${createdMovie.id}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'bytes',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      await compareFiles(res, createdMoviePoster.absolutePath);
+      await compareFiles(responseBody, createdMoviePoster.absolutePath);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -216,7 +240,7 @@ await suite('Movie integration tests', async () => {
   await test('Invalid - Create request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST'>({
       route: `${serverParams.routes.http}/movies`,
       method: 'POST',
       headers: { Authorization: accessToken },
@@ -227,9 +251,10 @@ await suite('Movie integration tests', async () => {
         password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: randomUUID(),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -250,15 +275,18 @@ await suite('Movie integration tests', async () => {
         `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
       );
 
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id, ...createdMovie },
+      } = await sendHttpRequest<'POST', 'json', Movie>({
         route: `${serverParams.routes.http}/movies`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: formData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-      const { id, ...createdMovie } = (await res.json()) as Movie;
       const { genreId: _, ...expectedMovie } = movieData;
 
       assert.deepStrictEqual(createdMovie, {
@@ -272,16 +300,17 @@ await suite('Movie integration tests', async () => {
   await test('Invalid - Update request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'PUT'>({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.EIGHT_MEGABYTES),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -308,15 +337,19 @@ await suite('Movie integration tests', async () => {
         `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
       );
 
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody: updatedMovie } = await sendHttpRequest<
+        'PUT',
+        'json',
+        Movie
+      >({
         route: `${serverParams.routes.http}/movies/${createdMovie.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedMovieData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const updatedMovie = await res.json();
       const { genreId, ...updatedMovieFields } = updatedMovieData;
       assert.deepStrictEqual(
         {
@@ -350,25 +383,28 @@ await suite('Movie integration tests', async () => {
         `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE - 1)}.jpg`,
       );
 
-      let res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id },
+      } = await sendHttpRequest<'POST', 'json', Movie>({
         route: `${serverParams.routes.http}/movies`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: formData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
+      movieId = id;
 
-      ({ id: movieId } = (await res.json()) as Movie);
-
-      res = await sendHttpRequest({
+      const result = await sendHttpRequest<'DELETE', 'text', string>({
         route: `${serverParams.routes.http}/movies/${movieId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
+        responseType: 'text',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
 
-      const responseBody = await res.text();
-      assert.strictEqual(responseBody, '');
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(result.responseBody, '');
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -376,15 +412,18 @@ await suite('Movie integration tests', async () => {
   await test('Valid - Delete non-existent movie', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const res = await sendHttpRequest({
+    const { statusCode, responseBody } = await sendHttpRequest<
+      'DELETE',
+      'text',
+      string
+    >({
       route: `${serverParams.routes.http}/movies/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
+      responseType: 'text',
     });
 
-    const responseBody = await res.text();
-
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.NO_CONTENT);
     assert.strictEqual(responseBody, '');
   });
 });

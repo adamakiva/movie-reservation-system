@@ -99,10 +99,10 @@ async function seedUsers(
       createdUsers,
       createdRoles,
     };
-  } catch (err) {
-    await clearDatabase(serverParams);
+  } catch (error) {
+    await clearDatabase(serverParams.database);
 
-    throw err;
+    throw error;
   }
 }
 

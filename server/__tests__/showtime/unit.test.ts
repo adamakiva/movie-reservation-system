@@ -59,9 +59,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -88,9 +88,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -117,9 +117,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -146,9 +146,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -173,9 +173,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -204,9 +204,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -235,9 +235,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -262,9 +262,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -291,9 +291,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -320,9 +320,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -347,9 +347,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateGetShowtimesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -377,9 +377,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -408,9 +408,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -439,9 +439,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -470,9 +470,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -500,9 +500,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -531,9 +531,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -562,9 +562,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.MOVIE_ID.ERROR_MESSAGE,
         });
@@ -592,9 +592,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -623,9 +623,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -654,9 +654,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateCreateShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.HALL_ID.ERROR_MESSAGE,
         });
@@ -678,9 +678,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -703,9 +703,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.ERROR_MESSAGE,
         });
@@ -728,9 +728,9 @@ await suite('Showtime unit tests', async () => {
       () => {
         validateDeleteShowtimeSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: SHOWTIME.ID.ERROR_MESSAGE,
         });

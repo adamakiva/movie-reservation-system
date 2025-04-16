@@ -76,8 +76,8 @@ function parseValidationResult<I, O>(
   }
 
   const errorMessages = result.error.errors
-    .map((err) => {
-      return err.message;
+    .map((error) => {
+      return error.message;
     })
     .join(', ');
 

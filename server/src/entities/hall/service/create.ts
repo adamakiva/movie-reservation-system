@@ -29,8 +29,8 @@ async function createHall(
       });
 
     return createdHall!;
-  } catch (err) {
-    throw handlePossibleDuplicationError(err, hallToCreate.name);
+  } catch (error) {
+    throw handlePossibleDuplicationError(error, hallToCreate.name);
   }
 }
 

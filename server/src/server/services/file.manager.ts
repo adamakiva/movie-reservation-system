@@ -16,18 +16,18 @@ import { GeneralError, type Logger } from '../../utils/index.ts';
  * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
  */
 class FileManager implements StorageEngine {
-  static readonly #ALPHA_NUMERIC = {
-    CHARACTERS:
-      'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-    LENGTH: 67,
-  } as const;
-
   readonly #generatedFileNameLength;
   readonly #saveDir;
   readonly #highWatermark;
   readonly #logger;
 
   readonly #uploadMiddleware;
+
+  static readonly #ALPHA_NUMERIC = {
+    CHARACTERS:
+      'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+    LENGTH: 67,
+  } as const;
 
   public constructor(params: {
     generatedFileNameLength: number;
@@ -65,18 +65,22 @@ class FileManager implements StorageEngine {
         }),
         dest,
       );
-    } catch (err) {
-      if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        error.code === 'ENOENT'
+      ) {
         // Means that 'absolutePath' does not exist, which should be impossible
         // considering the programmer set the value
         throw new GeneralError(
           HTTP_STATUS_CODES.SERVER_ERROR,
           'Should never happen, contact an administrator',
-          err.cause,
+          error.cause,
         );
       }
 
-      throw err;
+      throw error;
     }
   }
 
@@ -123,16 +127,16 @@ class FileManager implements StorageEngine {
               size: outStream.bytesWritten,
             });
           })
-          .catch((err: unknown) => {
+          .catch((error: unknown) => {
             throw new GeneralError(
               HTTP_STATUS_CODES.SERVER_ERROR,
               `Failure to stream user file to destination: '${file.path}'`,
-              (err as Error).cause,
+              (error as Error).cause,
             );
           });
       })
-      .catch((err: unknown) => {
-        callback(err as Error | null);
+      .catch((error: unknown) => {
+        callback(error as Error | null);
       });
   }
 
@@ -143,12 +147,12 @@ class FileManager implements StorageEngine {
       .then(() => {
         callback(null);
       })
-      .catch((err: unknown) => {
+      .catch((error: unknown) => {
         this.#logger.warn(
           `Failure to delete file: ${file.path}`,
-          (err as Error).cause,
+          (error as Error).cause,
         );
-        callback(err as Error | null);
+        callback(error as Error | null);
       });
   }
 

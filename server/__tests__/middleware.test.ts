@@ -128,9 +128,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Missing authorization header',
         });
@@ -159,9 +159,9 @@ await suite('Middleware tests', async () => {
           context.mock.fn(),
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNAUTHORIZED,
           message: 'Malformed JWT token',
         });
@@ -231,11 +231,11 @@ await suite('Middleware tests', async () => {
       logger: logger,
     });
 
-    const err = new PostgresError('Expected error');
-    err.code = ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION;
+    const error = new PostgresError('Expected error');
+    error.code = ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION;
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, context.mock.fn());
+    errorHandlerSpy(error, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
@@ -248,11 +248,11 @@ await suite('Middleware tests', async () => {
       logger: logger,
     });
 
-    const err = new PostgresError('Expected error');
-    err.code = ERROR_CODES.POSTGRES.UNIQUE_VIOLATION;
+    const error = new PostgresError('Expected error');
+    error.code = ERROR_CODES.POSTGRES.UNIQUE_VIOLATION;
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, context.mock.fn());
+    errorHandlerSpy(error, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
@@ -265,11 +265,11 @@ await suite('Middleware tests', async () => {
       logger: logger,
     });
 
-    const err = new PostgresError('Expected error');
-    err.code = ERROR_CODES.POSTGRES.TOO_MANY_CONNECTIONS;
+    const error = new PostgresError('Expected error');
+    error.code = ERROR_CODES.POSTGRES.TOO_MANY_CONNECTIONS;
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, context.mock.fn());
+    errorHandlerSpy(error, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });
@@ -282,10 +282,10 @@ await suite('Middleware tests', async () => {
       logger: logger,
     });
 
-    const err = new Error('Expected error');
+    const error = new Error('Expected error');
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);
-    errorHandlerSpy(err, request, response, context.mock.fn());
+    errorHandlerSpy(error, request, response, context.mock.fn());
 
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.SERVER_ERROR);
   });

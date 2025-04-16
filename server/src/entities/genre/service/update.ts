@@ -35,10 +35,10 @@ async function updateGenre(
     }
 
     return updatedGenre;
-  } catch (err) {
+  } catch (error) {
     // If there is a conflict it is due to the name update, hence, the name
     // field must exist
-    throw handlePossibleDuplicationError(err, fieldsToUpdate.name!);
+    throw handlePossibleDuplicationError(error, fieldsToUpdate.name!);
   }
 }
 

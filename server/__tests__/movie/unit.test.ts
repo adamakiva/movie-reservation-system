@@ -57,9 +57,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -84,9 +84,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -111,9 +111,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -161,10 +161,10 @@ await suite('Movie unit tests', async () => {
           randomUUID(),
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError(response).code,
+          error.getClientError(response).code,
           HTTP_STATUS_CODES.NOT_FOUND,
         );
         return true;
@@ -187,9 +187,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -218,9 +218,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -249,9 +249,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -276,9 +276,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -305,9 +305,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -334,9 +334,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -361,9 +361,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateGetMoviesSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -394,9 +394,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.REQUIRED_ERROR_MESSAGE,
         });
@@ -427,9 +427,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -460,9 +460,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -493,9 +493,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -526,9 +526,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.REQUIRED_ERROR_MESSAGE,
         });
@@ -559,9 +559,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -594,9 +594,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -629,9 +629,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -658,9 +658,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.REQUIRED_ERROR_MESSAGE,
         });
@@ -691,9 +691,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
@@ -724,9 +724,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -759,9 +759,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -794,9 +794,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -827,9 +827,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -860,9 +860,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -893,9 +893,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
         });
@@ -926,9 +926,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -959,9 +959,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -992,9 +992,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1025,9 +1025,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1058,9 +1058,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1091,9 +1091,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1124,9 +1124,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1157,9 +1157,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1190,9 +1190,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -1223,9 +1223,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateCreateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -1259,9 +1259,9 @@ await suite('Movie unit tests', async () => {
           },
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Genre '${genreId}' does not exist`,
         });
@@ -1286,9 +1286,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -1311,9 +1311,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1339,9 +1339,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -1367,9 +1367,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -1395,9 +1395,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1426,9 +1426,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1457,9 +1457,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.TITLE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1485,9 +1485,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1518,9 +1518,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1551,9 +1551,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.DESCRIPTION.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1583,9 +1583,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.REQUIRED_ERROR_MESSAGE,
         });
@@ -1615,9 +1615,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1649,9 +1649,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1683,9 +1683,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.ABSOLUTE_FILE_PATH.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1715,9 +1715,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1747,9 +1747,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.MIME_TYPE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1779,9 +1779,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.REQUIRED_ERROR_MESSAGE,
         });
@@ -1811,9 +1811,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1843,9 +1843,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1875,9 +1875,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.POSTER.FILE_SIZE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1903,9 +1903,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -1934,9 +1934,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MIN_VALUE.ERROR_MESSAGE,
         });
@@ -1965,9 +1965,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.PRICE.MAX_VALUE.ERROR_MESSAGE,
         });
@@ -1993,9 +1993,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -2024,9 +2024,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateUpdateMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.GENRE_ID.ERROR_MESSAGE,
         });
@@ -2055,9 +2055,9 @@ await suite('Movie unit tests', async () => {
           },
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Movie '${movieId}' does not exist`,
         });
@@ -2089,9 +2089,9 @@ await suite('Movie unit tests', async () => {
             },
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.NOT_FOUND,
             message: `Genre '${updatedGenreId}' does not exist`,
           });
@@ -2116,9 +2116,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -2141,9 +2141,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });
@@ -2166,9 +2166,9 @@ await suite('Movie unit tests', async () => {
       () => {
         validateDeleteMovieSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: MOVIE.ID.ERROR_MESSAGE,
         });

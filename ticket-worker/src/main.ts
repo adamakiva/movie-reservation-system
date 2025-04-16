@@ -162,8 +162,8 @@ function attachProcessHandlers(messageQueue: MessageQueue) {
   const errorHandler = () => {
     messageQueue
       .close()
-      .catch((err: unknown) => {
-        console.error(err);
+      .catch((error: unknown) => {
+        console.error(error);
       })
       .finally(() => {
         process.exit(ERROR_CODES.EXIT_NO_RESTART);
@@ -176,8 +176,8 @@ function attachProcessHandlers(messageQueue: MessageQueue) {
       console.error(`Unhandled rejection:`, reason);
       errorHandler();
     })
-    .once('uncaughtException', (err) => {
-      console.error(`Unhandled exception:`, err);
+    .once('uncaughtException', (error) => {
+      console.error(`Unhandled exception:`, error);
       errorHandler();
     });
 

@@ -1,4 +1,4 @@
-import { kill } from 'node:process';
+import { kill, memoryUsage } from 'node:process';
 
 import autocannon, { type Request } from 'autocannon';
 
@@ -81,16 +81,18 @@ async function generateAccessToken(route: string) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  const res = await sendHttpRequest({
+  const {
+    responseBody: { accessToken },
+  } = await sendHttpRequest<
+    'POST',
+    'json',
+    { accessToken: string; refreshToken: string }
+  >({
     route,
     method: 'POST',
     payload: { email, password },
+    responseType: 'json',
   });
-
-  const { accessToken } = (await res.json()) as {
-    accessToken: string;
-    refreshToken: string;
-  };
 
   return accessToken;
 }
@@ -101,6 +103,7 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       //@ts-expect-error Missing the function declaration in the definitelyTyped
       // package
       setupRequest: (request: Request) => {
+        console.log(memoryUsage());
         return {
           ...request,
           method: 'GET',

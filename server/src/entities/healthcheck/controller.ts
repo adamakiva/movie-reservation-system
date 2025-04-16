@@ -49,14 +49,14 @@ async function isAlive(context: RequestContext) {
   let notAliveMessage = '';
   try {
     await database.isAlive();
-  } catch (err) {
-    logger.error(err);
+  } catch (error) {
+    logger.error(error);
     notAliveMessage += '\nDatabase is not alive';
   }
   try {
     messageQueue.isAlive();
-  } catch (err) {
-    logger.error(err);
+  } catch (error) {
+    logger.error(error);
     notAliveMessage += '\nMessage queue is not alive';
   }
 
@@ -69,14 +69,14 @@ async function isReady(context: RequestContext) {
   let notReadyMsg = '';
   try {
     await database.isReady();
-  } catch (err) {
-    logger.error(err);
+  } catch (error) {
+    logger.error(error);
     notReadyMsg += '\nDatabase is not ready';
   }
   try {
     messageQueue.isReady();
-  } catch (err) {
-    logger.error(err);
+  } catch (error) {
+    logger.error(error);
     notReadyMsg += '\nMessage queue is not ready';
   }
 

@@ -75,10 +75,10 @@ async function seedShowtimes(
       createdHalls,
       createdGenres,
     };
-  } catch (err) {
-    await clearDatabase(serverParams);
+  } catch (error) {
+    await clearDatabase(serverParams.database);
 
-    throw err;
+    throw error;
   }
 }
 

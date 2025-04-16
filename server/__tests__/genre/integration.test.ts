@@ -41,14 +41,18 @@ await suite('Genre integration tests', async () => {
     const createdGenres = await seedGenres(serverParams, 32);
 
     try {
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody: fetchedGenres } = await sendHttpRequest<
+        'GET',
+        'json',
+        Genre[]
+      >({
         route: `${serverParams.routes.http}/genres`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const fetchedGenres = (await res.json()) as Genre[];
       createdGenres.forEach((genre) => {
         const matchingGenre = fetchedGenres.find((fetchedGenre) => {
           return fetchedGenre.id === genre.id;
@@ -65,14 +69,18 @@ await suite('Genre integration tests', async () => {
     const createdGenres = await seedGenres(serverParams, 8_192);
 
     try {
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody: fetchedGenres } = await sendHttpRequest<
+        'GET',
+        'json',
+        Genre[]
+      >({
         route: `${serverParams.routes.http}/genres`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const fetchedGenres = (await res.json()) as Genre[];
       createdGenres.forEach((genre) => {
         const matchingGenre = fetchedGenres.find((fetchedGenre) => {
           return fetchedGenre.id === genre.id;
@@ -87,16 +95,17 @@ await suite('Genre integration tests', async () => {
   await test('Invalid - Create request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST'>({
       route: `${serverParams.routes.http}/genres`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -104,15 +113,18 @@ await suite('Genre integration tests', async () => {
     const genreData = generateGenresData()[0]!;
 
     try {
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id, ...fields },
+      } = await sendHttpRequest<'POST', 'json', Genre>({
         route: `${serverParams.routes.http}/genres`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: genreData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-      const { id, ...fields } = (await res.json()) as Genre;
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
         { ...genreData, name: genreData.name.toLowerCase() },
@@ -125,16 +137,17 @@ await suite('Genre integration tests', async () => {
   await test('Invalid - Update request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'PUT'>({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
         name: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -143,15 +156,19 @@ await suite('Genre integration tests', async () => {
     const updatedGenreData = generateGenresData()[0]!;
 
     try {
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody: updatedGenre } = await sendHttpRequest<
+        'PUT',
+        'json',
+        Genre
+      >({
         route: `${serverParams.routes.http}/genres/${createdGenre.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedGenreData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const updatedGenre = await res.json();
       assert.deepStrictEqual(
         {
           ...createdGenre,
@@ -174,26 +191,28 @@ await suite('Genre integration tests', async () => {
     const genreData = generateGenresData()[0]!;
 
     try {
-      let res = await sendHttpRequest({
+      const createGenreResponse = await sendHttpRequest<'POST', 'json', Genre>({
         route: `${serverParams.routes.http}/genres`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: genreData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(
+        createGenreResponse.statusCode,
+        HTTP_STATUS_CODES.CREATED,
+      );
+      genreId = createGenreResponse.responseBody.id;
 
-      ({ id: genreId } = (await res.json()) as Genre);
-
-      res = await sendHttpRequest({
+      const result = await sendHttpRequest<'DELETE', 'text', string>({
         route: `${serverParams.routes.http}/genres/${genreId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
+        responseType: 'text',
       });
 
-      const responseBody = await res.text();
-
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-      assert.strictEqual(responseBody, '');
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(result.responseBody, '');
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -201,15 +220,18 @@ await suite('Genre integration tests', async () => {
   await test('Valid - Delete non-existent genre', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const res = await sendHttpRequest({
+    const { statusCode, responseBody } = await sendHttpRequest<
+      'DELETE',
+      'text',
+      string
+    >({
       route: `${serverParams.routes.http}/genres/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
+      responseType: 'text',
     });
 
-    const responseBody = await res.text();
-
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.NO_CONTENT);
     assert.strictEqual(responseBody, '');
   });
 });

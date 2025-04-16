@@ -57,9 +57,9 @@ async function updateMovie(
       genreModel,
       movieId: movieToUpdate.movieId,
     });
-  } catch (err) {
+  } catch (error) {
     // Genre type is asserted because if the error type match, it will be defined
-    throw handlePossibleMissingGenreError(err, movieToUpdate.genreId!);
+    throw handlePossibleMissingGenreError(error, movieToUpdate.genreId!);
   }
 }
 
@@ -164,10 +164,10 @@ async function updateMovieIncludingPosterInDatabase(params: {
       movieId,
     });
 
-    fileManager.deleteFile(outdatedFileAbsolutePath).catch((err: unknown) => {
+    fileManager.deleteFile(outdatedFileAbsolutePath).catch((error: unknown) => {
       logger.warn(
         `Failure to delete old file: ${outdatedFileAbsolutePath}`,
-        (err as Error).cause,
+        (error as Error).cause,
       );
     });
 

@@ -37,13 +37,14 @@ await suite('Authentication integration tests', async () => {
     const { id: roleId } = await seedRole(serverParams);
     const userData = generateUsersData(1)[0]!;
 
-    const res = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST', 'json'>({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: { ...userData, roleId },
+      responseType: 'json',
     });
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
     try {
       const tokens = await generateTokens({
@@ -78,13 +79,14 @@ await suite('Authentication integration tests', async () => {
     const { id: roleId } = await seedRole(serverParams);
     const userData = generateUsersData(1)[0]!;
 
-    const res = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST', 'json'>({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: { ...userData, roleId },
+      responseType: 'json',
     });
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
     try {
       const { refreshToken } = await generateTokens({
@@ -93,19 +95,18 @@ await suite('Authentication integration tests', async () => {
         password: userData.password,
       });
 
-      const res = await sendHttpRequest({
+      const result = await sendHttpRequest<'PUT', 'json', string>({
         route: `${serverParams.routes.http}/refresh`,
         method: 'PUT',
         payload: { refreshToken: refreshToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const refreshedAccessToken = await res.json();
-
-      assert.strictEqual(typeof refreshedAccessToken === 'string', true);
+      assert.strictEqual(typeof result.responseBody === 'string', true);
       await assert.doesNotReject(async () => {
         await serverParams.authentication.validateToken(
-          refreshedAccessToken,
+          result.responseBody,
           'access',
         );
       });

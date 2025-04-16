@@ -24,8 +24,8 @@ async function createRole(
       .returning({ id: roleModel.id, name: roleModel.name });
 
     return createdRole!;
-  } catch (err) {
-    throw handlePossibleDuplicationError(err, roleToCreate.name);
+  } catch (error) {
+    throw handlePossibleDuplicationError(error, roleToCreate.name);
   }
 }
 

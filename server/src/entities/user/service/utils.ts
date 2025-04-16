@@ -31,36 +31,36 @@ type User = {
 };
 
 function handleUserCreationError(params: {
-  err: unknown;
+  error: unknown;
   email: string;
   role: string;
 }) {
-  const { err, email, role } = params;
+  const { error, email, role } = params;
 
-  if (!(err instanceof pg.PostgresError)) {
-    return err;
+  if (!(error instanceof pg.PostgresError)) {
+    return error;
   }
 
-  switch (err.code) {
+  switch (error.code) {
     case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
       return new GeneralError(
         HTTP_STATUS_CODES.CONFLICT,
         `User '${email}' already exists`,
-        err.cause,
+        error.cause,
       );
     case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-      return handleForeignKeyNotFoundError({ err, role });
+      return handleForeignKeyNotFoundError({ error, role });
     default:
       return new GeneralError(
         HTTP_STATUS_CODES.SERVER_ERROR,
         'Should not be possible',
-        err.cause,
+        error.cause,
       );
   }
 }
 
 function handleUserUpdateError(params: {
-  err: unknown;
+  error: unknown;
   email: string;
   role: string;
 }) {
@@ -68,25 +68,25 @@ function handleUserUpdateError(params: {
 }
 
 function handleForeignKeyNotFoundError(params: {
-  err: pg.PostgresError;
+  error: pg.PostgresError;
   role: string;
 }) {
-  const { err, role } = params;
+  const { error, role } = params;
 
   // Name matching the database schema definition (user schema)
   // @see file:///./../../../database/schemas.ts
-  if (err.constraint_name === 'user_role_id_fk') {
+  if (error.constraint_name === 'user_role_id_fk') {
     return new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Role '${role}' does not exist`,
-      err.cause,
+      error.cause,
     );
   }
 
   return new GeneralError(
     HTTP_STATUS_CODES.SERVER_ERROR,
     'Should not be possible',
-    err.cause,
+    error.cause,
   );
 }
 

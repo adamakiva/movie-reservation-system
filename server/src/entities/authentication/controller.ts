@@ -114,15 +114,15 @@ async function validatePassword(params: {
         'Email and/or password are incorrect',
       );
     }
-  } catch (err) {
-    if (err instanceof GeneralError) {
-      throw err;
+  } catch (error) {
+    if (error instanceof GeneralError) {
+      throw error;
     }
 
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Email and/or password are incorrect',
-      (err as { cause?: unknown }).cause,
+      (error as { cause?: unknown }).cause,
     );
   }
 }

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import assert from 'node:assert/strict';
@@ -35,6 +37,7 @@ import {
   Logger,
   type DatabaseHandler,
   type DatabaseModel,
+  type PaginatedResult,
   type ResponseWithContext,
   type ResponseWithoutContext,
 } from '../src/utils/index.ts';
@@ -75,6 +78,16 @@ const { PostgresError } = pg;
 /**********************************************************************************/
 
 type ServerParams = Awaited<ReturnType<typeof initServer>>;
+
+type ResponseType<
+  RT extends 'bytes' | 'json' | 'text' = 'bytes',
+  R = any,
+> = RT extends 'bytes'
+  ? // See: https://stackoverflow.com/a/66629140
+    { statusCode: number; responseBody: Uint8Array }
+  : RT extends 'text'
+    ? { statusCode: number; responseBody: string }
+    : { statusCode: number; responseBody: R };
 
 /***************************** Server setup ***************************************/
 /**********************************************************************************/
@@ -267,37 +280,63 @@ function randomAlphaNumericString(len = 32) {
 /******************************* API calls ****************************************/
 /**********************************************************************************/
 
-function sendHttpRequest<
-  T extends 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+async function sendHttpRequest<
+  M extends 'HEAD' | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
+  RT extends 'bytes' | 'json' | 'text' = 'bytes',
+  R = any,
 >(params: {
   route: string;
-  method: T;
-  payload?: T extends 'HEAD' | 'GET' | 'DELETE' ? never : unknown;
+  method: M;
+  payload?: M extends 'HEAD' | 'GET' | 'DELETE' ? never : unknown;
   headers?: HeadersInit;
-}) {
-  const { route, method, payload, headers } = params;
+  responseType: RT;
+}): Promise<ResponseType<RT, R>> {
+  const { route, method, payload, responseType } = params;
 
-  let fetchOptions: RequestInit = {
+  const headers = !(payload instanceof FormData)
+    ? { ...params.headers, 'Content-Type': 'application/json' }
+    : { ...params.headers };
+
+  const fetchOptions: RequestInit = {
     method,
     cache: 'no-store',
     mode: 'same-origin',
-    body: JSON.stringify(payload),
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    redirect: 'follow',
+    body: payload instanceof FormData ? payload : JSON.stringify(payload),
+    headers,
+    redirect: 'manual',
+    window: null,
   };
-  if (payload instanceof FormData) {
-    fetchOptions = {
-      ...fetchOptions,
-      body: payload,
-      headers: { ...headers },
-    };
+
+  const fetchResponse = await fetch(route, fetchOptions);
+  const statusCode = fetchResponse.status;
+
+  if (!fetchResponse.ok) {
+    return {
+      statusCode,
+      responseBody: fetchResponse.body,
+    } as ResponseType<RT, R>;
   }
 
-  return fetch(route, fetchOptions);
+  switch (responseType) {
+    case 'bytes':
+      return {
+        statusCode,
+        responseBody: await fetchResponse[responseType as 'bytes'](),
+      } as ResponseType<RT, R>;
+    case 'json':
+    case 'text':
+      return {
+        statusCode: fetchResponse.status,
+        responseBody:
+          await fetchResponse[
+            // False-positive, we deduct an option from the generic param
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+            responseType as 'json' | 'text'
+          ](),
+      } as ResponseType<RT, R>;
+    default:
+      throw new Error('Should never happen');
+  }
 }
 
 async function generateTokens(params: {
@@ -307,14 +346,15 @@ async function generateTokens(params: {
 }) {
   const { serverParams, email, password } = params;
 
-  const res = await sendHttpRequest({
+  const { statusCode, responseBody } = await sendHttpRequest<'POST', 'json'>({
     route: `${serverParams.routes.http}/login`,
     method: 'POST',
     payload: { email, password },
+    responseType: 'json',
   });
-  assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+  assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-  return await res.json();
+  return await responseBody;
 }
 
 async function getAdminTokens(serverParams: ServerParams) {
@@ -391,6 +431,7 @@ export {
   type MockRequest,
   type MockResponse,
   type NextFunction,
+  type PaginatedResult,
   type Request,
   type ResponseWithContext,
   type ResponseWithoutContext,

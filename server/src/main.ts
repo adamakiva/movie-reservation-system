@@ -108,8 +108,8 @@ function attachProcessHandlers(server: HttpServer, logger: Logger) {
       // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
       process.exit(ERROR_CODES.EXIT_RESTART);
     })
-    .once('uncaughtException', (err: unknown) => {
-      logger.fatal(`Unhandled exception:`, err);
+    .once('uncaughtException', (error: unknown) => {
+      logger.fatal(`Unhandled exception:`, error);
       server.close();
 
       // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling

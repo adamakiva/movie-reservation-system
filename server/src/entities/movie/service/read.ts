@@ -90,10 +90,10 @@ async function getMovie(
 }
 
 async function getMoviePoster(
-  res: ResponseWithContext,
+  response: ResponseWithContext,
   movieId: GetMovieValidatedData,
 ): Promise<void> {
-  const { database } = res.locals.context;
+  const { database } = response.locals.context;
 
   const handler = database.getHandler();
   const { moviePoster: moviePosterModel } = database.getModels();
@@ -114,7 +114,7 @@ async function getMoviePoster(
   }
   const { absolutePath, mimeType, sizeInBytes } = moviePoster;
 
-  await streamMoviePosterResponse(res, {
+  await streamMoviePosterResponse(response, {
     absolutePath,
     sizeInBytes,
     // Pay attention if the mime type needs the addition of charset, and if so
@@ -160,17 +160,19 @@ function sanitizeMovie(
 }
 
 async function streamMoviePosterResponse(
-  res: ResponseWithContext,
+  response: ResponseWithContext,
   movieMetadata: MoviePoster,
 ) {
   const { absolutePath, contentType, sizeInBytes } = movieMetadata;
 
-  res.status(HTTP_STATUS_CODES.SUCCESS).writeHead(HTTP_STATUS_CODES.SUCCESS, {
-    'content-type': contentType,
-    'content-length': sizeInBytes,
-  });
+  response
+    .status(HTTP_STATUS_CODES.SUCCESS)
+    .writeHead(HTTP_STATUS_CODES.SUCCESS, {
+      'content-type': contentType,
+      'content-length': sizeInBytes,
+    });
 
-  await res.locals.context.fileManager.streamFile(res, absolutePath);
+  await response.locals.context.fileManager.streamFile(response, absolutePath);
 }
 
 /**********************************************************************************/

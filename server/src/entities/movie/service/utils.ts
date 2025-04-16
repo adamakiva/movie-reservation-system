@@ -37,18 +37,18 @@ type MoviePoster = {
 
 /**********************************************************************************/
 
-function handlePossibleMissingGenreError(err: unknown, genre: string) {
+function handlePossibleMissingGenreError(error: unknown, genre: string) {
   if (
-    !(err instanceof pg.PostgresError) ||
-    err.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
+    !(error instanceof pg.PostgresError) ||
+    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
-    return err;
+    return error;
   }
 
   return new GeneralError(
     HTTP_STATUS_CODES.NOT_FOUND,
     `Genre '${genre}' does not exist`,
-    err.cause,
+    error.cause,
   );
 }
 

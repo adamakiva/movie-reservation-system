@@ -43,8 +43,8 @@ async function createMovie(
       .innerJoin(genreModel, eq(genreModel.id, insertMovieSubQuery.genreId));
 
     return createdMovie!;
-  } catch (err) {
-    throw handlePossibleMissingGenreError(err, movieToCreate.genreId);
+  } catch (error) {
+    throw handlePossibleMissingGenreError(error, movieToCreate.genreId);
   }
 }
 

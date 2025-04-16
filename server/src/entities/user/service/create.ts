@@ -46,9 +46,9 @@ async function createUser(
       .innerJoin(roleModel, eq(roleModel.id, userToCreate.roleId));
 
     return createdUser!;
-  } catch (err) {
+  } catch (error) {
     throw handleUserCreationError({
-      err,
+      error,
       email: userToCreate.email,
       role: userToCreate.roleId,
     });

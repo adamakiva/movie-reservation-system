@@ -14,8 +14,8 @@ async function getHalls(_: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.SUCCESS).json(halls);
 }
 
-async function createHall(req: Request, response: ResponseWithContext) {
-  const hallToCreate = hallValidator.validateCreateHall(req);
+async function createHall(request: Request, response: ResponseWithContext) {
+  const hallToCreate = hallValidator.validateCreateHall(request);
 
   const createdHall = await hallService.createHall(
     response.locals.context,
@@ -25,8 +25,8 @@ async function createHall(req: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.CREATED).json(createdHall);
 }
 
-async function updateHall(req: Request, response: ResponseWithContext) {
-  const hallToUpdate = hallValidator.validateUpdateHall(req);
+async function updateHall(request: Request, response: ResponseWithContext) {
+  const hallToUpdate = hallValidator.validateUpdateHall(request);
 
   const updatedHall = await hallService.updateHall(
     response.locals.context,
@@ -36,8 +36,8 @@ async function updateHall(req: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedHall);
 }
 
-async function deleteHall(req: Request, response: ResponseWithContext) {
-  const hallId = hallValidator.validateDeleteHall(req);
+async function deleteHall(request: Request, response: ResponseWithContext) {
+  const hallId = hallValidator.validateDeleteHall(request);
 
   await hallService.deleteHall(response.locals.context, hallId);
 

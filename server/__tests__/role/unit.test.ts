@@ -52,9 +52,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -81,9 +81,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -110,9 +110,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -139,9 +139,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateCreateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -170,9 +170,9 @@ await suite('Role unit tests', async () => {
             roleToCreate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Role '${roleName}' already exists`,
           });
@@ -202,9 +202,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -231,9 +231,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -263,9 +263,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -295,9 +295,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -327,9 +327,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -359,9 +359,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -391,9 +391,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateUpdateRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -425,9 +425,9 @@ await suite('Role unit tests', async () => {
             roleToUpdate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Role '${createdRoles[1]!.name}' already exists`,
           });
@@ -452,9 +452,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -481,9 +481,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });
@@ -510,9 +510,9 @@ await suite('Role unit tests', async () => {
       () => {
         validateDeleteRoleSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: ROLE.ID.ERROR_MESSAGE,
         });

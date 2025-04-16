@@ -10,67 +10,6 @@ import * as schemas from '../schemas.ts';
 
 /**********************************************************************************/
 
-const DEFAULT_ADMIN_FIRST_NAME = 'admin';
-const DEFAULT_ADMIN_LAST_NAME = 'admin';
-
-/**********************************************************************************/
-
-async function seedInitialData(params: {
-  databaseHandler: PostgresJsDatabase<typeof schemas>;
-  role: typeof schemas.genreModel.$inferInsert;
-  user: typeof schemas.userModel.$inferInsert;
-}) {
-  const { databaseHandler, role, user } = params;
-
-  await databaseHandler
-    .insert(schemas.roleModel)
-    .values(role)
-    .onConflictDoNothing();
-  await databaseHandler
-    .insert(schemas.userModel)
-    .values(user)
-    .onConflictDoNothing();
-}
-
-async function migration(databaseUrl: string, logger: Logger) {
-  const connection = pg(databaseUrl);
-  const databaseHandler = drizzle(connection, { schema: schemas });
-
-  try {
-    await migrate(databaseHandler, { migrationsFolder: import.meta.dirname });
-
-    await seedInitialData({
-      databaseHandler,
-      role: {
-        id: process.env.ADMIN_ROLE_ID!,
-        name: process.env.ADMIN_ROLE_NAME!,
-      },
-      user: {
-        firstName: DEFAULT_ADMIN_FIRST_NAME,
-        lastName: DEFAULT_ADMIN_LAST_NAME,
-        email: process.env.ADMIN_EMAIL!,
-        hash: await hash(process.env.ADMIN_PASSWORD!, {
-          type: argon2i,
-          secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
-        }),
-        roleId: process.env.ADMIN_ROLE_ID!,
-      },
-    });
-  } catch (error) {
-    throw new Error(`Migration failed for ${databaseUrl}`, { cause: error });
-  } finally {
-    try {
-      await connection.end({ timeout: 30 }); // in seconds
-    } catch (error) {
-      // No point in propagating it, because there is nothing to do with it
-      logger.fatal(
-        `Error closing database connection for ${databaseUrl}`,
-        error,
-      );
-    }
-  }
-}
-
 /**
  * This function may return a promise or not, depending on whether the required
  * environment variables exist.
@@ -117,6 +56,62 @@ function run() {
 
   logger.fatal(errorMessages.join('\n'));
   process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
+}
+
+async function migration(databaseUrl: string, logger: Logger) {
+  const connection = pg(databaseUrl);
+  const databaseHandler = drizzle(connection, { schema: schemas });
+
+  try {
+    await migrate(databaseHandler, { migrationsFolder: import.meta.dirname });
+
+    await seedInitialData({
+      databaseHandler,
+      role: {
+        id: process.env.ADMIN_ROLE_ID!,
+        name: process.env.ADMIN_ROLE_NAME!,
+      },
+      user: {
+        firstName: 'admin',
+        lastName: 'admin',
+        email: process.env.ADMIN_EMAIL!,
+        hash: await hash(process.env.ADMIN_PASSWORD!, {
+          type: argon2i,
+          secret: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
+        }),
+        roleId: process.env.ADMIN_ROLE_ID!,
+      },
+    });
+  } catch (error) {
+    throw new Error(`Migration failed for ${databaseUrl}`, { cause: error });
+  } finally {
+    try {
+      await connection.end({ timeout: 30 }); // in seconds
+    } catch (error) {
+      // No point in propagating it, because there is nothing to do with it
+      logger.fatal(
+        `Error closing database connection for ${databaseUrl}`,
+        error,
+      );
+    }
+  }
+}
+
+async function seedInitialData(params: {
+  databaseHandler: PostgresJsDatabase<typeof schemas>;
+  role: typeof schemas.genreModel.$inferInsert;
+  user: typeof schemas.userModel.$inferInsert;
+}) {
+  const { databaseHandler, role, user } = params;
+
+  await databaseHandler
+    .insert(schemas.roleModel)
+    .values(role)
+    .onConflictDoNothing();
+  await databaseHandler
+    .insert(schemas.userModel)
+    .values(user)
+    .onConflictDoNothing();
 }
 
 /**********************************************************************************/

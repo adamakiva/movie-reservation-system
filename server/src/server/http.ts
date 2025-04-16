@@ -293,8 +293,10 @@ class HttpServer {
       .use('/', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
 
-  readonly #handleErrorEvent = (err: Error) => {
-    this.#logger.fatal(err, 'HTTP Server error');
+  /********************************************************************************/
+
+  readonly #handleErrorEvent = (error: Error) => {
+    this.#logger.fatal(error, 'HTTP Server error');
 
     // If an http server error happened, we shutdown the application with status
     // code that indicates that a server restart should happen

@@ -15,11 +15,15 @@ import {
 /**********************************************************************************/
 
 function checkMethod(allowedMethods: Set<string>) {
-  return (req: Request, res: ResponseWithoutContext, next: NextFunction) => {
-    if (!allowedMethods.has(req.method.toUpperCase())) {
+  return (
+    request: Request,
+    response: ResponseWithoutContext,
+    next: NextFunction,
+  ) => {
+    if (!allowedMethods.has(request.method.toUpperCase())) {
       // Reason for explicitly adding the header:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
-      res
+      response
         .set('Allow', Array.from(allowedMethods).join(', '))
         .status(HTTP_STATUS_CODES.NOT_ALLOWED)
         .end();
@@ -31,98 +35,102 @@ function checkMethod(allowedMethods: Set<string>) {
 }
 
 function attachRequestContext(context: RequestContext) {
-  return (_req: Request, res: Response, next: NextFunction) => {
-    res.locals.context = context;
+  return (_req: Request, response: Response, next: NextFunction) => {
+    response.locals.context = context;
 
     next();
   };
 }
 
-function handleNonExistentRoute(req: Request, res: ResponseWithoutContext) {
-  res
+function handleNonExistentRoute(
+  request: Request,
+  response: ResponseWithoutContext,
+) {
+  response
     .status(HTTP_STATUS_CODES.NOT_FOUND)
-    .json(`The route '${req.url}' does not exist`);
+    .json(`The route '${request.url}' does not exist`);
 }
 
 function errorHandler(
-  err: unknown,
+  error: unknown,
   _: Request,
-  res: ResponseWithContext,
+  response: ResponseWithContext,
   next: NextFunction,
 ) {
-  if (res.headersSent) {
-    next(err);
+  if (response.headersSent) {
+    next(error);
     return;
   }
 
-  if (err instanceof GeneralError) {
-    const { code, message } = err.getClientError(res);
+  if (error instanceof GeneralError) {
+    const { code, message } = error.getClientError(response);
 
-    res.locals.context.logger.warn(err);
-    res.status(code).json(message);
+    response.locals.context.logger.warn(error);
+    response.status(code).json(message);
     return;
   }
   if (
-    err instanceof Object &&
-    'type' in err &&
-    err.type === 'entity.too.large'
+    error instanceof Object &&
+    'type' in error &&
+    error.type === 'entity.too.large'
   ) {
-    res
+    response
       .status(HTTP_STATUS_CODES.CONTENT_TOO_LARGE)
       .json('Request entity too large');
     return;
   }
-  if (err instanceof pg.PostgresError) {
-    handlePostgresError(err, res);
+  if (error instanceof pg.PostgresError) {
+    handlePostgresError(error, response);
     return;
   }
 
-  handleUnexpectedError(err, res);
+  handleUnexpectedError(error, response);
 }
 
-/**********************************************************************************/
-
-function handlePostgresError(err: pg.PostgresError, res: ResponseWithContext) {
+function handlePostgresError(
+  error: pg.PostgresError,
+  response: ResponseWithContext,
+) {
   const { FOREIGN_KEY_VIOLATION, UNIQUE_VIOLATION, TOO_MANY_CONNECTIONS } =
     ERROR_CODES.POSTGRES;
-  const { logger } = res.locals.context;
+  const { logger } = response.locals.context;
 
-  switch (err.code) {
+  switch (error.code) {
     case FOREIGN_KEY_VIOLATION:
     case UNIQUE_VIOLATION:
       logger.fatal(
         'Should have been handled by the code and never get here. Check the' +
           ' code implementation:\n',
-        err,
+        error,
       );
       break;
     case TOO_MANY_CONNECTIONS:
       logger.fatal(
         'Exceeded database maximum connections.\nThis Should never happen,' +
           ' check the server and database logs to understand why it happened:\n',
-        err,
+        error,
       );
       break;
     default:
-      logger.fatal('Unexpected database error:\n', err);
+      logger.fatal('Unexpected database error:\n', error);
       break;
   }
 
-  res
+  response
     .status(HTTP_STATUS_CODES.SERVER_ERROR)
     .json('Unexpected error, please try again');
 }
 
-function handleUnexpectedError(err: unknown, res: ResponseWithContext) {
-  const { logger } = res.locals.context;
+function handleUnexpectedError(error: unknown, response: ResponseWithContext) {
+  const { logger } = response.locals.context;
 
-  if (err instanceof Error) {
-    logger.fatal('Unhandled exception:\n', err);
+  if (error instanceof Error) {
+    logger.fatal('Unhandled exception:\n', error);
   } else {
-    logger.fatal('Caught a non-error object.\nThis should never happen', err);
+    logger.fatal('Caught a non-error object.\nThis should never happen', error);
   }
 
-  res
+  response
     .status(HTTP_STATUS_CODES.SERVER_ERROR)
     .json('Unexpected error, please try again');
 }

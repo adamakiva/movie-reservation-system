@@ -89,6 +89,7 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
           const exchanges: PublisherProps['exchanges'] = [];
           const queues: PublisherProps['queues'] = [];
           const queueBindings: PublisherProps['queueBindings'] = [];
+
           routing.forEach(({ exchange, queue, routingKey }) => {
             exchanges.push({ exchange, passive: true, durable: true });
             queues.push({ queue, passive: true });
@@ -126,21 +127,14 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       ...options
     } = consumerProps;
 
-    const exchanges: ConsumerProps['exchanges'] = [
-      { exchange, passive: true, durable: true },
-    ] as const;
-    const queueBindings: ConsumerProps['queueBindings'] = [
-      { exchange, queue, routingKey },
-    ] as const;
-
     this.#consumers.push(
       this.#handler
         .createConsumer(
           {
             ...options,
-            exchanges,
+            exchanges: [{ exchange, passive: true, durable: true }],
             queue,
-            queueBindings,
+            queueBindings: [{ exchange, queue, routingKey }],
             queueOptions: { passive: true },
           },
           handler,
@@ -239,11 +233,13 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .removeListener('error', this.#handleErrorEvent);
   }
 
-  readonly #handleErrorEvent = (err: unknown) => {
+  /********************************************************************************/
+
+  readonly #handleErrorEvent = (error: unknown) => {
     this.#isAlive = false;
     this.#isReady = false;
 
-    this.#logger.error('Error during message queue usage:', err);
+    this.#logger.error('Error during message queue usage:', error);
   };
 
   readonly #handleConnectionEvent = () => {
@@ -269,8 +265,8 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
     this.#logger.error('Message was not delivered:', message);
   };
 
-  readonly #handleConsumerErrorEvent = (err: unknown) => {
-    this.#logger.error('Consumer error:', err);
+  readonly #handleConsumerErrorEvent = (error: unknown) => {
+    this.#logger.error('Consumer error:', error);
   };
 }
 

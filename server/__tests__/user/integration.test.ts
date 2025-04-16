@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import {
@@ -18,6 +17,7 @@ import {
   suite,
   terminateServer,
   test,
+  type PaginatedResult,
   type ServerParams,
 } from '../utils.ts';
 
@@ -54,17 +54,22 @@ await suite('User integration tests', async () => {
       const query = new URLSearchParams({
         'page-size': String(SINGLE_PAGE.SIZE + 1),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { users: fetchedUsers, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ users: User[] }>
+      >({
         route: `${serverParams.routes.http}/users?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedUsers), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.users), true);
-
-      const fetchedUsers = responseBody.users as User[];
       for (let i = createdUsers.length - 1; i >= 0; --i) {
         const matchingUserIndex = fetchedUsers.findIndex((u) => {
           return u.id === createdUsers[i]!.id;
@@ -79,9 +84,9 @@ await suite('User integration tests', async () => {
       }
       assert.strictEqual(createdUsers.length, 0);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -105,17 +110,22 @@ await suite('User integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { users: fetchedUsers, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ users: User[] }>
+        >({
           route: `${serverParams.routes.http}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedUsers), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.users), true);
-
-        const fetchedUsers = responseBody.users as User[];
         for (let i = createdUsers.length - 1; i >= 0; --i) {
           const matchingUserIndex = fetchedUsers.findIndex((u) => {
             return u.id === createdUsers[i]!.id;
@@ -129,8 +139,10 @@ await suite('User integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
@@ -154,17 +166,22 @@ await suite('User integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { users: fetchedUsers, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ users: User[] }>
+        >({
           route: `${serverParams.routes.http}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedUsers), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.users), true);
-
-        const fetchedUsers = responseBody.users as User[];
         for (let i = createdUsers.length - 1; i >= 0; --i) {
           const matchingUserIndex = fetchedUsers.findIndex((u) => {
             return u.id === createdUsers[i]!.id;
@@ -178,8 +195,10 @@ await suite('User integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
@@ -190,7 +209,7 @@ await suite('User integration tests', async () => {
   await test('Invalid - Create request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST'>({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
@@ -201,9 +220,10 @@ await suite('User integration tests', async () => {
         password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
         roleId: randomUUID(),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -212,15 +232,18 @@ await suite('User integration tests', async () => {
     try {
       const userData = generateRandomUserData(roleId);
 
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id, ...createdUser },
+      } = await sendHttpRequest<'POST', 'json', User>({
         route: `${serverParams.routes.http}/users`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: userData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-      const { id, ...createdUser } = (await res.json()) as User;
       const { roleId: _1, password: _2, ...expectedUser } = userData;
 
       assert.deepStrictEqual(createdUser, {
@@ -234,16 +257,17 @@ await suite('User integration tests', async () => {
   await test('Invalid - Update request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'PUT'>({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
         firstName: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -252,15 +276,19 @@ await suite('User integration tests', async () => {
     try {
       const updatedUserData = generateRandomUserData(createdRole.id);
 
-      const res = await sendHttpRequest({
+      const { statusCode, responseBody: updatedUser } = await sendHttpRequest<
+        'PUT',
+        'json',
+        User
+      >({
         route: `${serverParams.routes.http}/users/${createdUser.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedUserData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      const updatedUser = await res.json();
       const { password, roleId, ...updatedUserFields } = updatedUserData;
       assert.deepStrictEqual(
         {
@@ -284,26 +312,28 @@ await suite('User integration tests', async () => {
     const { id: roleId } = getAdminRole();
 
     try {
-      let res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id },
+      } = await sendHttpRequest<'POST', 'json', User>({
         route: `${serverParams.routes.http}/users`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: generateRandomUserData(roleId),
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
+      userId = id;
 
-      ({ id: userId } = (await res.json()) as User);
-
-      res = await sendHttpRequest({
+      const result = await sendHttpRequest<'DELETE', 'text', string>({
         route: `${serverParams.routes.http}/users/${userId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
+        responseType: 'text',
       });
 
-      const responseBody = await res.text();
-
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-      assert.strictEqual(responseBody, '');
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(result.responseBody, '');
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -311,15 +341,18 @@ await suite('User integration tests', async () => {
   await test('Valid - Delete non-existent user', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const res = await sendHttpRequest({
+    const { statusCode, responseBody } = await sendHttpRequest<
+      'DELETE',
+      'text',
+      string
+    >({
       route: `${serverParams.routes.http}/users/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
+      responseType: 'text',
     });
 
-    const responseBody = await res.text();
-
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.NO_CONTENT);
     assert.strictEqual(responseBody, '');
   });
 });

@@ -8,7 +8,7 @@ class EnvironmentManager {
   readonly #logger;
   readonly #environmentVariables;
 
-  static readonly #REQUIRED_ENVIRONMENT_VARIABLES = [
+  static readonly #REQUIRED_ENVIRONMENT_VARIABLES = new Set([
     'SERVER_PORT',
     'SERVER_BASE_URL',
     'HTTP_ROUTE',
@@ -17,7 +17,7 @@ class EnvironmentManager {
     'DATABASE_URL',
     'MESSAGE_QUEUE_URL',
     'AUTHENTICATION_HASH_SECRET',
-  ] as const;
+  ] as const);
 
   public constructor(logger: Logger) {
     this.#logger = logger;

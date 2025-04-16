@@ -117,84 +117,84 @@ function cancelShowtimeReservations(database: RequestContext['database']) {
 }
 
 function handlePossibleShowtimeCreationError(params: {
-  err: unknown;
+  error: unknown;
   at: Date;
   movie: string;
   hall: string;
 }) {
-  const { err, at, hall, movie } = params;
+  const { error, at, hall, movie } = params;
 
-  if (!(err instanceof pg.PostgresError)) {
-    return err;
+  if (!(error instanceof pg.PostgresError)) {
+    return error;
   }
 
-  switch (err.code) {
+  switch (error.code) {
     case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
       return new GeneralError(
         HTTP_STATUS_CODES.CONFLICT,
         `A showtime at '${at.toISOString()}' in '${hall}' already exists`,
-        err.cause,
+        error.cause,
       );
     case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-      return handleForeignKeyNotFoundError({ err, movie, hall });
+      return handleForeignKeyNotFoundError({ error, movie, hall });
     default:
       return new GeneralError(
         HTTP_STATUS_CODES.SERVER_ERROR,
         'Should not be possible',
-        err.cause,
+        error.cause,
       );
   }
 }
 
 function handleForeignKeyNotFoundError(params: {
-  err: pg.PostgresError;
+  error: pg.PostgresError;
   movie: string;
   hall: string;
 }) {
-  const { err, movie, hall } = params;
+  const { error, movie, hall } = params;
 
   // Name matching the database schema definition (showtime schema)
   // @see file:///./../../../database/schemas.ts
-  if (err.constraint_name === 'showtime_movie_id_fk') {
+  if (error.constraint_name === 'showtime_movie_id_fk') {
     return new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Movie '${movie}' does not exist`,
-      err.cause,
+      error.cause,
     );
   }
-  if (err.constraint_name === 'showtime_hall_id_fk') {
+  if (error.constraint_name === 'showtime_hall_id_fk') {
     return new GeneralError(
       HTTP_STATUS_CODES.NOT_FOUND,
       `Hall '${hall}' does not exist`,
-      err.cause,
+      error.cause,
     );
   }
 
   return new GeneralError(
     HTTP_STATUS_CODES.SERVER_ERROR,
     'Should not be possible',
-    err.cause,
+    error.cause,
   );
 }
 
 function handlePossibleTicketDuplicationError(params: {
-  err: unknown;
+  error: unknown;
   row: number;
   column: number;
 }) {
-  const { err, row, column } = params;
+  const { error, row, column } = params;
 
   if (
-    !(err instanceof pg.PostgresError) ||
-    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+    !(error instanceof pg.PostgresError) ||
+    error.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   ) {
-    return err;
+    return error;
   }
 
   return new GeneralError(
     HTTP_STATUS_CODES.CONFLICT,
     `Seat at '[${row},${column}]' is already taken`,
-    err.cause,
+    error.cause,
   );
 }
 

@@ -52,9 +52,9 @@ async function createShowtime(
       .innerJoin(hallModel, eq(hallModel.id, createShowtimeSubQuery.hallId));
 
     return { ...createdShowtime!, reservations: [] };
-  } catch (err) {
+  } catch (error) {
     throw handlePossibleShowtimeCreationError({
-      err,
+      error,
       at: showtimeToCreate.at,
       hall: showtimeToCreate.hallId,
       movie: showtimeToCreate.movieId,
@@ -63,12 +63,12 @@ async function createShowtime(
 }
 
 async function reserveShowtimeTicket(params: {
-  req: Request;
+  request: Request;
   context: RequestContext;
   showtimeTicket: ReserveShowtimeTicketValidatedData;
 }): Promise<void> {
   const {
-    req,
+    request,
     context: { database, authentication, messageQueue },
     showtimeTicket,
   } = params;
@@ -81,7 +81,7 @@ async function reserveShowtimeTicket(params: {
     movie: movieModel,
     user: userModel,
   } = database.getModels();
-  const userId = authentication.getUserId(req.headers.authorization!);
+  const userId = authentication.getUserId(request.headers.authorization!);
   const createUserShowtimeSubQuery = buildInsertUserShowtimeCTE({
     handler,
     userShowtimeModel,
@@ -160,9 +160,9 @@ async function reserveShowtimeTicket(params: {
           contentType: 'application/json',
         },
       });
-    } catch (err) {
+    } catch (error) {
       throw handlePossibleTicketDuplicationError({
-        err,
+        error,
         row: showtimeTicket.row,
         column: showtimeTicket.column,
       });

@@ -65,9 +65,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -102,9 +102,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -139,9 +139,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -176,9 +176,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -209,9 +209,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.REQUIRED_ERROR_MESSAGE,
         });
@@ -243,9 +243,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -277,9 +277,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -311,9 +311,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -344,9 +344,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.REQUIRED_ERROR_MESSAGE,
         });
@@ -378,9 +378,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -412,9 +412,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -446,9 +446,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateCreateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -488,9 +488,9 @@ await suite('Hall unit tests', async () => {
             hallToCreate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${hallName}' already exists`,
           });
@@ -520,9 +520,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -549,9 +549,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -581,9 +581,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -613,9 +613,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -645,9 +645,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -677,9 +677,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -709,9 +709,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -741,9 +741,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -773,9 +773,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -805,9 +805,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ROWS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -837,9 +837,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -869,9 +869,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -901,9 +901,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateUpdateHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.COLUMNS.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -935,9 +935,9 @@ await suite('Hall unit tests', async () => {
             hallToUpdate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Hall '${createdHalls[1]!.name}' already exists`,
           });
@@ -962,9 +962,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -991,9 +991,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });
@@ -1020,9 +1020,9 @@ await suite('Hall unit tests', async () => {
       () => {
         validateDeleteHallSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: HALL.ID.ERROR_MESSAGE,
         });

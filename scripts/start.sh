@@ -10,7 +10,7 @@ MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
 NPM_SERVER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/server;
 NPM_TICKET_WORKER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/ticket-worker;
 KEYS_FOLDER="$ROOT_DIR"/server/keys;
-ERR_LOG_FILE=err_logs.txt;
+ERR_LOG_FILE="$ROOT_DIR"/error_logs.txt;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
 

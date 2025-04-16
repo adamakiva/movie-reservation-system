@@ -27,18 +27,18 @@ type Hall = {
 
 /**********************************************************************************/
 
-function handlePossibleDuplicationError(err: unknown, hall: string) {
+function handlePossibleDuplicationError(error: unknown, hall: string) {
   if (
-    !(err instanceof pg.PostgresError) ||
-    err.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+    !(error instanceof pg.PostgresError) ||
+    error.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   ) {
-    return err;
+    return error;
   }
 
   return new GeneralError(
     HTTP_STATUS_CODES.CONFLICT,
     `Hall '${hall}' already exists`,
-    err.cause,
+    error.cause,
   );
 }
 

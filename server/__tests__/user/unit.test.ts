@@ -58,9 +58,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -85,9 +85,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -112,9 +112,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -162,10 +162,10 @@ await suite('User unit tests', async () => {
           randomUUID(),
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
         assert.strictEqual(
-          err.getClientError(response).code,
+          error.getClientError(response).code,
           HTTP_STATUS_CODES.NOT_FOUND,
         );
         return true;
@@ -188,9 +188,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -219,9 +219,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -250,9 +250,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -277,9 +277,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.CURSOR.ERROR_MESSAGE,
         });
@@ -306,9 +306,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -335,9 +335,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -362,9 +362,9 @@ await suite('User unit tests', async () => {
       () => {
         validateGetUsersSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: PAGINATION.PAGE_SIZE.INVALID_TYPE_ERROR_MESSAGE,
         });
@@ -392,9 +392,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -422,9 +422,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -454,9 +454,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -486,9 +486,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -516,9 +516,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -546,9 +546,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -578,9 +578,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -610,9 +610,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -640,9 +640,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
         });
@@ -670,9 +670,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -700,9 +700,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -730,9 +730,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -760,9 +760,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -790,9 +790,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
         });
@@ -820,9 +820,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -852,9 +852,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -884,9 +884,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -914,9 +914,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -944,9 +944,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -974,9 +974,9 @@ await suite('User unit tests', async () => {
       () => {
         validateCreateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -1007,9 +1007,9 @@ await suite('User unit tests', async () => {
             },
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `User '${createdUser.email}' already exists`,
           });
@@ -1038,9 +1038,9 @@ await suite('User unit tests', async () => {
           generateRandomUserData(roleId),
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `Role '${roleId}' does not exist`,
         });
@@ -1065,9 +1065,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -1090,9 +1090,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1118,9 +1118,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1146,9 +1146,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1174,9 +1174,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1207,9 +1207,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1240,9 +1240,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.FIRST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1268,9 +1268,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1301,9 +1301,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1334,9 +1334,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.LAST_NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1362,9 +1362,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -1393,9 +1393,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: `${USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE}, ${USER.EMAIL.ERROR_MESSAGE}`,
         });
@@ -1424,9 +1424,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1452,9 +1452,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.EMAIL.ERROR_MESSAGE,
         });
@@ -1480,9 +1480,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1513,9 +1513,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -1546,9 +1546,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.PASSWORD.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -1574,9 +1574,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -1607,9 +1607,9 @@ await suite('User unit tests', async () => {
       () => {
         validateUpdateUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ROLE_ID.ERROR_MESSAGE,
         });
@@ -1640,9 +1640,9 @@ await suite('User unit tests', async () => {
           },
         );
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.NOT_FOUND,
           message: `User '${userId}' does not exist`,
         });
@@ -1672,9 +1672,9 @@ await suite('User unit tests', async () => {
             },
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `User '${createdUsers[1]!.email}' already exists`,
           });
@@ -1709,9 +1709,9 @@ await suite('User unit tests', async () => {
             },
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.NOT_FOUND,
             message: `Role '${updatedRoleId}' does not exist`,
           });
@@ -1736,9 +1736,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -1761,9 +1761,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });
@@ -1786,9 +1786,9 @@ await suite('User unit tests', async () => {
       () => {
         validateDeleteUserSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: USER.ID.ERROR_MESSAGE,
         });

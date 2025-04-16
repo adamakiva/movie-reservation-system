@@ -50,10 +50,10 @@ async function deleteMovie(
     return deletedMoviePoster.absolutePath;
   });
 
-  fileManager.deleteFile(absolutePath).catch((err: unknown) => {
+  fileManager.deleteFile(absolutePath).catch((error: unknown) => {
     logger.warn(
       `Failure to delete file: '${absolutePath}'`,
-      (err as Error).cause,
+      (error as Error).cause,
     );
   });
 }

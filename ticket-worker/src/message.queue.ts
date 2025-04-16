@@ -173,6 +173,8 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .removeListener('error', this.#handleErrorEvent);
   }
 
+  /********************************************************************************/
+
   readonly #handleErrorEvent = (error: unknown) => {
     console.error('Error during message queue usage:', error);
   };

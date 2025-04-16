@@ -24,8 +24,8 @@ async function createGenre(
       .returning({ id: genreModel.id, name: genreModel.name });
 
     return createdGenre!;
-  } catch (err) {
-    throw handlePossibleDuplicationError(err, genreToCreate.name);
+  } catch (error) {
+    throw handlePossibleDuplicationError(error, genreToCreate.name);
   }
 }
 

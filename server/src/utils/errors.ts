@@ -2,9 +2,8 @@
 
 import { inspect } from 'node:util';
 
-import type { Response } from 'express';
-
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
+import type { Response } from 'express';
 
 /**********************************************************************************/
 
@@ -81,7 +80,7 @@ class GeneralError extends Error {
 class UnauthorizedError extends GeneralError {
   // See: https://datatracker.ietf.org/doc/html/rfc6750#section-3
   static readonly #realm = 'Bearer realm="movie_reservation_system"';
-  static readonly #errors: UnauthenticatedErrors = {
+  static readonly #errors = {
     missing: {
       message: 'Missing authorization header',
       header: UnauthorizedError.#realm,
@@ -94,7 +93,7 @@ class UnauthorizedError extends GeneralError {
       message: 'JWT token expired',
       header: `${UnauthorizedError.#realm}, error="invalid_token", error_description="The access token expired"`,
     },
-  } as const;
+  } as const satisfies UnauthenticatedErrors;
 
   readonly #reason;
 

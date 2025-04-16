@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { seedHall } from '../hall/utils.ts';
@@ -18,6 +17,7 @@ import {
   suite,
   terminateServer,
   test,
+  type PaginatedResult,
   type ServerParams,
 } from '../utils.ts';
 
@@ -86,17 +86,22 @@ await suite('Showtime integration tests', async () => {
       const query = new URLSearchParams({
         'page-size': String(SINGLE_PAGE.SIZE),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { showtimes: fetchedShowtimes, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ showtimes: Showtime[] }>
+      >({
         route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-      const fetchedShowtimes = responseBody.showtimes as Showtime[];
       for (let i = createdShowtimes.length - 1; i >= 0; --i) {
         const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
           return u.id === createdShowtimes[i]!.id;
@@ -114,9 +119,9 @@ await suite('Showtime integration tests', async () => {
       }
       assert.strictEqual(createdShowtimes.length, 0);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -138,17 +143,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -165,8 +175,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
@@ -191,17 +203,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -218,8 +235,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
@@ -242,17 +261,22 @@ await suite('Showtime integration tests', async () => {
         'movie-id': movieIdToFilterBy,
         'page-size': String(SINGLE_PAGE.SIZE),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { showtimes: fetchedShowtimes, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ showtimes: Showtime[] }>
+      >({
         route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-      const fetchedShowtimes = responseBody.showtimes as Showtime[];
       for (let i = createdShowtimes.length - 1; i >= 0; --i) {
         const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
           return u.id === createdShowtimes[i]!.id;
@@ -275,9 +299,9 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -305,17 +329,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -332,8 +361,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -369,17 +400,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -396,8 +432,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -425,17 +463,22 @@ await suite('Showtime integration tests', async () => {
         'hall-id': hallIdToFilterBy,
         'page-size': String(SINGLE_PAGE.SIZE),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { showtimes: fetchedShowtimes, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ showtimes: Showtime[] }>
+      >({
         route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-      const fetchedShowtimes = responseBody.showtimes as Showtime[];
       for (let i = createdShowtimes.length - 1; i >= 0; --i) {
         const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
           return u.id === createdShowtimes[i]!.id;
@@ -458,9 +501,9 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -488,17 +531,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -515,8 +563,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -552,17 +602,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -579,8 +634,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -610,17 +667,22 @@ await suite('Showtime integration tests', async () => {
         'hall-id': hallIdToFilterBy,
         'page-size': String(SINGLE_PAGE.SIZE),
       });
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { showtimes: fetchedShowtimes, page },
+      } = await sendHttpRequest<
+        'GET',
+        'json',
+        PaginatedResult<{ showtimes: Showtime[] }>
+      >({
         route: `${serverParams.routes.http}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+      assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-      const responseBody = await res.json();
-      assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-      const fetchedShowtimes = responseBody.showtimes as Showtime[];
       for (let i = createdShowtimes.length - 1; i >= 0; --i) {
         const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
           return u.id === createdShowtimes[i]!.id;
@@ -646,9 +708,9 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
 
-      assert.strictEqual(!!responseBody.page, true);
-      assert.strictEqual(responseBody.page.hasNext, false);
-      assert.strictEqual(responseBody.page.cursor, null);
+      assert.strictEqual(!!page, true);
+      assert.strictEqual(page.hasNext, false);
+      assert.strictEqual(page.cursor, null);
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -678,17 +740,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(MULTIPLE_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -705,8 +772,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -747,17 +816,22 @@ await suite('Showtime integration tests', async () => {
           cursor: pagination.cursor,
           'page-size': String(LOT_OF_PAGES.SIZE),
         });
-        const res = await sendHttpRequest({
+        const {
+          statusCode,
+          responseBody: { showtimes: fetchedShowtimes, page },
+        } = await sendHttpRequest<
+          'GET',
+          'json',
+          PaginatedResult<{ showtimes: Showtime[] }>
+        >({
           route: `${serverParams.routes.http}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
+          responseType: 'json',
         });
-        assert.strictEqual(res.status, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
+        assert.strictEqual(Array.isArray(fetchedShowtimes), true);
 
-        const responseBody = await res.json();
-        assert.strictEqual(Array.isArray(responseBody.showtimes), true);
-
-        const fetchedShowtimes = responseBody.showtimes as Showtime[];
         for (let i = createdShowtimes.length - 1; i >= 0; --i) {
           const matchingShowtimeIndex = fetchedShowtimes.findIndex((u) => {
             return u.id === createdShowtimes[i]!.id;
@@ -774,8 +848,10 @@ await suite('Showtime integration tests', async () => {
           }
         }
 
-        assert.strictEqual(!!responseBody.page, true);
-        pagination = responseBody.page;
+        assert.strictEqual(!!page, true);
+        //@ts-expect-error null and 'null' (string) are interchangeable in this
+        // context
+        pagination = page;
       }
       /* eslint-enable no-await-in-loop */
       const removedAllRelevantShowtimes = !createdShowtimes.filter(
@@ -794,7 +870,7 @@ await suite('Showtime integration tests', async () => {
   await test('Invalid - Create request with excess size', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const { status } = await sendHttpRequest({
+    const { statusCode } = await sendHttpRequest<'POST'>({
       route: `${serverParams.routes.http}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
@@ -803,9 +879,10 @@ await suite('Showtime integration tests', async () => {
         movieId: randomAlphaNumericString(CONSTANTS.ONE_MEGABYTE),
         hallId: randomUUID(),
       },
+      responseType: 'bytes',
     });
 
-    assert.strictEqual(status, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
@@ -819,16 +896,18 @@ await suite('Showtime integration tests', async () => {
         hallId: createdHall.id,
       } as const;
 
-      const res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id, movieTitle, hallName, ...createdShowtime },
+      } = await sendHttpRequest<'POST', 'json', Showtime>({
         route: `${serverParams.routes.http}/showtimes`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: showtimeData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-      const { id, movieTitle, hallName, ...createdShowtime } =
-        (await res.json()) as Showtime;
       const { movieId: _1, hallId: _2, ...expectedShowtime } = showtimeData;
 
       assert.deepStrictEqual(
@@ -856,26 +935,27 @@ await suite('Showtime integration tests', async () => {
         hallId: createdHall.id,
       } as const;
 
-      let res = await sendHttpRequest({
+      const {
+        statusCode,
+        responseBody: { id: showtimeId },
+      } = await sendHttpRequest<'POST', 'json', Showtime>({
         route: `${serverParams.routes.http}/showtimes`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: showtimeData,
+        responseType: 'json',
       });
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.CREATED);
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
-      const { id: showtimeId } = (await res.json()) as Showtime;
-
-      res = await sendHttpRequest({
+      const result = await sendHttpRequest<'DELETE', 'text', string>({
         route: `${serverParams.routes.http}/showtimes/${showtimeId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
+        responseType: 'text',
       });
 
-      const responseBody = await res.text();
-
-      assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
-      assert.strictEqual(responseBody, '');
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(result.responseBody, '');
     } finally {
       await clearDatabase(serverParams.database);
     }
@@ -883,15 +963,18 @@ await suite('Showtime integration tests', async () => {
   await test('Valid - Delete non-existent', async () => {
     const { accessToken } = await getAdminTokens(serverParams);
 
-    const res = await sendHttpRequest({
+    const { statusCode, responseBody } = await sendHttpRequest<
+      'DELETE',
+      'text',
+      string
+    >({
       route: `${serverParams.routes.http}/showtimes/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
+      responseType: 'text',
     });
 
-    const responseBody = await res.text();
-
-    assert.strictEqual(res.status, HTTP_STATUS_CODES.NO_CONTENT);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.NO_CONTENT);
     assert.strictEqual(responseBody, '');
   });
 });

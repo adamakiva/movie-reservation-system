@@ -52,9 +52,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.REQUIRED_ERROR_MESSAGE,
         });
@@ -81,9 +81,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -110,9 +110,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -139,9 +139,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateCreateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -171,9 +171,9 @@ await suite('Genre unit tests', async () => {
             genreToCreate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${genreName}' already exists`,
           });
@@ -203,9 +203,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NO_FIELDS_TO_UPDATE_ERROR_MESSAGE,
         });
@@ -232,9 +232,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -264,9 +264,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -296,9 +296,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -328,9 +328,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -360,9 +360,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MIN_LENGTH.ERROR_MESSAGE,
         });
@@ -392,9 +392,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateUpdateGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.NAME.MAX_LENGTH.ERROR_MESSAGE,
         });
@@ -426,9 +426,9 @@ await suite('Genre unit tests', async () => {
             genreToUpdate,
           );
         },
-        (err: GeneralError) => {
-          assert.strictEqual(err instanceof GeneralError, true);
-          assert.deepStrictEqual(err.getClientError(response), {
+        (error: GeneralError) => {
+          assert.strictEqual(error instanceof GeneralError, true);
+          assert.deepStrictEqual(error.getClientError(response), {
             code: HTTP_STATUS_CODES.CONFLICT,
             message: `Genre '${createdGenres[1]!.name}' already exists`,
           });
@@ -453,9 +453,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.REQUIRED_ERROR_MESSAGE,
         });
@@ -482,9 +482,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
@@ -511,9 +511,9 @@ await suite('Genre unit tests', async () => {
       () => {
         validateDeleteGenreSpy(request);
       },
-      (err: GeneralError) => {
-        assert.strictEqual(err instanceof GeneralError, true);
-        assert.deepStrictEqual(err.getClientError(response), {
+      (error: GeneralError) => {
+        assert.strictEqual(error instanceof GeneralError, true);
+        assert.deepStrictEqual(error.getClientError(response), {
           code: HTTP_STATUS_CODES.UNPROCESSABLE_ENTITY,
           message: GENRE.ID.ERROR_MESSAGE,
         });
