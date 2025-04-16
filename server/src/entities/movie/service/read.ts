@@ -163,6 +163,11 @@ async function streamMoviePosterResponse(
   response: ResponseWithContext,
   movieMetadata: MoviePoster,
 ) {
+  const {
+    locals: {
+      context: { fileManager },
+    },
+  } = response;
   const { absolutePath, contentType, sizeInBytes } = movieMetadata;
 
   response
@@ -172,7 +177,7 @@ async function streamMoviePosterResponse(
       'content-length': sizeInBytes,
     });
 
-  await response.locals.context.fileManager.streamFile(response, absolutePath);
+  await fileManager.streamFile(response, absolutePath);
 }
 
 /**********************************************************************************/
