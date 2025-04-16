@@ -6,97 +6,100 @@ import {
   before,
   clearDatabase,
   CONSTANTS,
+  generateHallsData,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
   randomAlphaNumericString,
   randomUUID,
+  seedHall,
+  seedHalls,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
+  type Hall,
   type ServerParams,
-} from '../utils.ts';
-
-import {
-  generateGenresData,
-  seedGenre,
-  seedGenres,
-  type Genre,
-} from './utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
-await suite('Genre integration tests', async () => {
-  let serverParams: ServerParams = null!;
+await suite('Hall integration tests', async () => {
+  let server: ServerParams['server'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Read many', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdGenres = await seedGenres(serverParams, 32);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdHalls = await seedHalls(database, 32);
 
     try {
-      const { statusCode, responseBody: fetchedGenres } = await sendHttpRequest<
+      const { statusCode, responseBody: fetchedHalls } = await sendHttpRequest<
         'GET',
         'json',
-        Genre[]
+        Hall[]
       >({
-        route: `${serverParams.routes.http}/genres`,
+        route: `${httpRoute}/halls`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
       });
       assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      createdGenres.forEach((genre) => {
-        const matchingGenre = fetchedGenres.find((fetchedGenre) => {
-          return fetchedGenre.id === genre.id;
+      createdHalls.forEach((hall) => {
+        const matchingHall = fetchedHalls.find((fetchedHall) => {
+          return fetchedHall.id === hall.id;
         });
 
-        assert.deepStrictEqual(genre, matchingGenre);
+        assert.deepStrictEqual(hall, matchingHall);
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdGenres = await seedGenres(serverParams, 8_192);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdHalls = await seedHalls(database, 8_192);
 
     try {
-      const { statusCode, responseBody: fetchedGenres } = await sendHttpRequest<
+      const { statusCode, responseBody: fetchedHalls } = await sendHttpRequest<
         'GET',
         'json',
-        Genre[]
+        Hall[]
       >({
-        route: `${serverParams.routes.http}/genres`,
+        route: `${httpRoute}/halls`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
       });
       assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
-      createdGenres.forEach((genre) => {
-        const matchingGenre = fetchedGenres.find((fetchedGenre) => {
-          return fetchedGenre.id === genre.id;
+      createdHalls.forEach((hall) => {
+        const matchingHall = fetchedHalls.find((fetchedHall) => {
+          return fetchedHall.id === hall.id;
         });
 
-        assert.deepStrictEqual(genre, matchingGenre);
+        assert.deepStrictEqual(hall, matchingHall);
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'POST'>({
-      route: `${serverParams.routes.http}/genres`,
+      route: `${httpRoute}/halls`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
@@ -108,37 +111,37 @@ await suite('Genre integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
-    const genreData = generateGenresData()[0]!;
+    const hallData = generateHallsData()[0]!;
 
     try {
       const {
         statusCode,
         responseBody: { id, ...fields },
-      } = await sendHttpRequest<'POST', 'json', Genre>({
-        route: `${serverParams.routes.http}/genres`,
+      } = await sendHttpRequest<'POST', 'json', Hall>({
+        route: `${httpRoute}/halls`,
         method: 'POST',
         headers: { Authorization: accessToken },
-        payload: genreData,
+        payload: hallData,
         responseType: 'json',
       });
       assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
       assert.strictEqual(typeof id === 'string', true);
       assert.deepStrictEqual(
-        { ...genreData, name: genreData.name.toLowerCase() },
+        { ...hallData, name: hallData.name.toLowerCase() },
         fields,
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'PUT'>({
-      route: `${serverParams.routes.http}/genres/${randomUUID()}`,
+      route: `${httpRoute}/halls/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
@@ -150,62 +153,62 @@ await suite('Genre integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdGenre = await seedGenre(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdHall = await seedHall(database);
 
-    const updatedGenreData = generateGenresData()[0]!;
+    const updatedHallData = generateHallsData()[0]!;
 
     try {
-      const { statusCode, responseBody: updatedGenre } = await sendHttpRequest<
+      const { statusCode, responseBody: updatedHall } = await sendHttpRequest<
         'PUT',
         'json',
-        Genre
+        Hall
       >({
-        route: `${serverParams.routes.http}/genres/${createdGenre.id}`,
+        route: `${httpRoute}/halls/${createdHall.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
-        payload: updatedGenreData,
+        payload: updatedHallData,
         responseType: 'json',
       });
       assert.strictEqual(statusCode, HTTP_STATUS_CODES.SUCCESS);
 
       assert.deepStrictEqual(
         {
-          ...createdGenre,
+          ...createdHall,
           ...{
-            ...updatedGenreData,
-            name: updatedGenreData.name.toLowerCase(),
+            ...updatedHallData,
+            name: updatedHallData.name.toLowerCase(),
           },
         },
-        updatedGenre,
+        updatedHall,
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
-  await test('Valid - Delete existent genre', async () => {
-    let genreId = '';
+  await test('Valid - Delete existent hall', async () => {
+    let hallId = '';
 
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
-    const genreData = generateGenresData()[0]!;
+    const hallData = generateHallsData()[0]!;
 
     try {
-      const createGenreResponse = await sendHttpRequest<'POST', 'json', Genre>({
-        route: `${serverParams.routes.http}/genres`,
+      const {
+        statusCode,
+        responseBody: { id },
+      } = await sendHttpRequest<'POST', 'json', Hall>({
+        route: `${httpRoute}/halls`,
         method: 'POST',
         headers: { Authorization: accessToken },
-        payload: genreData,
+        payload: hallData,
         responseType: 'json',
       });
-      assert.strictEqual(
-        createGenreResponse.statusCode,
-        HTTP_STATUS_CODES.CREATED,
-      );
-      genreId = createGenreResponse.responseBody.id;
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
+      hallId = id;
 
       const result = await sendHttpRequest<'DELETE', 'text', string>({
-        route: `${serverParams.routes.http}/genres/${genreId}`,
+        route: `${httpRoute}/halls/${hallId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
@@ -214,18 +217,18 @@ await suite('Genre integration tests', async () => {
       assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(result.responseBody, '');
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
-  await test('Valid - Delete non-existent genre', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+  await test('Valid - Delete non-existent hall', async () => {
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode, responseBody } = await sendHttpRequest<
       'DELETE',
       'text',
       string
     >({
-      route: `${serverParams.routes.http}/genres/${randomUUID()}`,
+      route: `${httpRoute}/halls/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
       responseType: 'text',

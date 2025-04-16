@@ -6,34 +6,42 @@ import {
   before,
   clearDatabase,
   CONSTANTS,
+  generateRolesData,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
   randomAlphaNumericString,
   randomUUID,
+  seedRole,
+  seedRoles,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
+  type Role,
   type ServerParams,
-} from '../utils.ts';
-
-import { generateRolesData, seedRole, seedRoles, type Role } from './utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
 await suite('Role integration tests', async () => {
-  let serverParams: ServerParams = null!;
+  let server: ServerParams['server'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Read many', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdRoles = await seedRoles(serverParams, 32);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdRoles = await seedRoles(database, 32);
 
     try {
       const { statusCode, responseBody: fetchedRoles } = await sendHttpRequest<
@@ -41,7 +49,7 @@ await suite('Role integration tests', async () => {
         'json',
         Role[]
       >({
-        route: `${serverParams.routes.http}/roles`,
+        route: `${httpRoute}/roles`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -56,12 +64,12 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdRoles = await seedRoles(serverParams, 8_192);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdRoles = await seedRoles(database, 8_192);
 
     try {
       const { statusCode, responseBody: fetchedRoles } = await sendHttpRequest<
@@ -69,7 +77,7 @@ await suite('Role integration tests', async () => {
         'json',
         Role[]
       >({
-        route: `${serverParams.routes.http}/roles`,
+        route: `${httpRoute}/roles`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -84,14 +92,14 @@ await suite('Role integration tests', async () => {
         assert.deepStrictEqual(role, matchingRole);
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'POST'>({
-      route: `${serverParams.routes.http}/roles`,
+      route: `${httpRoute}/roles`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
@@ -103,7 +111,7 @@ await suite('Role integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const roleData = generateRolesData()[0]!;
 
@@ -112,7 +120,7 @@ await suite('Role integration tests', async () => {
         statusCode,
         responseBody: { id, ...fields },
       } = await sendHttpRequest<'POST', 'json', Role>({
-        route: `${serverParams.routes.http}/roles`,
+        route: `${httpRoute}/roles`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: roleData,
@@ -126,14 +134,14 @@ await suite('Role integration tests', async () => {
         fields,
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'PUT'>({
-      route: `${serverParams.routes.http}/roles/${randomUUID()}`,
+      route: `${httpRoute}/roles/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
@@ -145,8 +153,8 @@ await suite('Role integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const createdRole = await seedRole(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const createdRole = await seedRole(database);
 
     const updatedRoleData = generateRolesData()[0]!;
 
@@ -156,7 +164,7 @@ await suite('Role integration tests', async () => {
         'json',
         Role
       >({
-        route: `${serverParams.routes.http}/roles/${createdRole.id}`,
+        route: `${httpRoute}/roles/${createdRole.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedRoleData,
@@ -175,13 +183,13 @@ await suite('Role integration tests', async () => {
         updatedRole,
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete existent role', async () => {
     let roleId = '';
 
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const roleData = generateRolesData()[0]!;
 
@@ -190,7 +198,7 @@ await suite('Role integration tests', async () => {
         statusCode,
         responseBody: { id },
       } = await sendHttpRequest<'POST', 'json', Role>({
-        route: `${serverParams.routes.http}/roles`,
+        route: `${httpRoute}/roles`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: roleData,
@@ -200,7 +208,7 @@ await suite('Role integration tests', async () => {
       roleId = id;
 
       const result = await sendHttpRequest<'DELETE', 'text', string>({
-        route: `${serverParams.routes.http}/roles/${roleId}`,
+        route: `${httpRoute}/roles/${roleId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
@@ -209,18 +217,18 @@ await suite('Role integration tests', async () => {
       assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(result.responseBody, '');
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete non-existent role', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode, responseBody } = await sendHttpRequest<
       'DELETE',
       'text',
       string
     >({
-      route: `${serverParams.routes.http}/roles/${randomUUID()}`,
+      route: `${httpRoute}/roles/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
       responseType: 'text',

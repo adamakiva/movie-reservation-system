@@ -5,39 +5,39 @@ import {
   clearDatabase,
   createHttpMocks,
   GeneralError,
+  HALL,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomNumber,
   randomUUID,
+  seedHall,
+  seedHalls,
   suite,
   terminateServer,
   test,
-  type Logger,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
-import {
-  HALL,
-  seedHall,
-  seedHalls,
-  serviceFunctions,
-  validationFunctions,
-} from './utils.ts';
+import * as serviceFunctions from './service/index.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
 await suite('Hall unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
@@ -459,7 +459,7 @@ await suite('Hall unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { name: hallName } = await seedHall(serverParams);
+    const { name: hallName } = await seedHall(database);
 
     const hallToCreate = {
       name: hallName,
@@ -479,10 +479,10 @@ await suite('Hall unit tests', async () => {
           // In case the function does not throw, we want to clean the created entry
           await serviceFunctions.createHall(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             hallToCreate,
@@ -499,7 +499,7 @@ await suite('Hall unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -914,7 +914,7 @@ await suite('Hall unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const createdHalls = await seedHalls(serverParams, 2);
+    const createdHalls = await seedHalls(database, 2);
 
     const hallToUpdate = {
       hallId: createdHalls[0]!.id,
@@ -926,10 +926,10 @@ await suite('Hall unit tests', async () => {
         async () => {
           await serviceFunctions.updateHall(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             hallToUpdate,
@@ -946,7 +946,7 @@ await suite('Hall unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

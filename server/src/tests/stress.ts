@@ -1,9 +1,9 @@
-import { kill, memoryUsage } from 'node:process';
+import { kill } from 'node:process';
 
 import autocannon, { type Request } from 'autocannon';
 
-import { Database } from '../src/database/index.ts';
-import { EnvironmentManager, Logger } from '../src/utils/index.ts';
+import { Database } from '../database/index.ts';
+import { EnvironmentManager, Logger } from '../utils/index.ts';
 
 import { setTimeout } from 'node:timers/promises';
 import {
@@ -16,6 +16,7 @@ import {
 
 async function stressTest() {
   const { url, database, serverEnv, logger } = setup();
+
   const accessToken = await generateAccessToken(
     `${url}/${serverEnv.httpRoute}/login`,
   );
@@ -103,7 +104,6 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       //@ts-expect-error Missing the function declaration in the definitelyTyped
       // package
       setupRequest: (request: Request) => {
-        console.log(memoryUsage());
         return {
           ...request,
           method: 'GET',

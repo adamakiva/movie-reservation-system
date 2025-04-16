@@ -5,17 +5,18 @@
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
-    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter junit --test-reporter-destination=__tests__/junit.xml",
+    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter junit --test-reporter-destination=./src/tests/junit.xml",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
-    "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --open=false --on-port 'node ./__tests__/stress.ts' -- node ./src/main.ts",
-    "lint": "tsc --project tsconfig.json; eslint {src,__tests__}/**/*.ts",
+    "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --open=false --on-port 'node ./src/tests/stress.ts' -- node ./src/main.ts",
+    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
     "check-code-deps": "./check.unused.deps.sh",
-    "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 \"{src,__tests__}/**/*.ts\"",
-    "check-licenses": "nlf -d -r 1"
+    "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
+    "check-licenses": "nlf -d -r 1",
+    "build": "eslint src/**/*.ts; tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
     "@adamakiva/movie-reservation-system-shared": "0.0.1",

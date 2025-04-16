@@ -2,43 +2,51 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { seedRole } from '../role/utils.ts';
-import { generateUsersData } from '../user/utils.ts';
 import {
   after,
   assert,
   before,
   clearDatabase,
   generateTokens,
+  generateUsersData,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
+  seedRole,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
 await suite('Authentication integration tests', async () => {
-  let serverParams: ServerParams = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      authentication,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Login', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
-    const { id: roleId } = await seedRole(serverParams);
+    const { id: roleId } = await seedRole(database);
     const userData = generateUsersData(1)[0]!;
 
     const { statusCode } = await sendHttpRequest<'POST', 'json'>({
-      route: `${serverParams.routes.http}/users`,
+      route: `${httpRoute}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: { ...userData, roleId },
@@ -48,7 +56,7 @@ await suite('Authentication integration tests', async () => {
 
     try {
       const tokens = await generateTokens({
-        serverParams,
+        httpRoute: httpRoute,
         email: userData.email,
         password: userData.password,
       });
@@ -57,30 +65,30 @@ await suite('Authentication integration tests', async () => {
 
       assert.strictEqual(typeof tokens.accessToken === 'string', true);
       await assert.doesNotReject(async () => {
-        await serverParams.authentication.validateToken(
+        await authentication.validateToken(
           tokens.accessToken as string,
           'access',
         );
       });
       assert.strictEqual(typeof tokens.refreshToken === 'string', true);
       await assert.doesNotReject(async () => {
-        await serverParams.authentication.validateToken(
+        await authentication.validateToken(
           tokens.refreshToken as string,
           'refresh',
         );
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Refresh', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
-    const { id: roleId } = await seedRole(serverParams);
+    const { id: roleId } = await seedRole(database);
     const userData = generateUsersData(1)[0]!;
 
     const { statusCode } = await sendHttpRequest<'POST', 'json'>({
-      route: `${serverParams.routes.http}/users`,
+      route: `${httpRoute}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: { ...userData, roleId },
@@ -90,13 +98,13 @@ await suite('Authentication integration tests', async () => {
 
     try {
       const { refreshToken } = await generateTokens({
-        serverParams,
+        httpRoute: httpRoute,
         email: userData.email,
         password: userData.password,
       });
 
       const result = await sendHttpRequest<'PUT', 'json', string>({
-        route: `${serverParams.routes.http}/refresh`,
+        route: `${httpRoute}/refresh`,
         method: 'PUT',
         payload: { refreshToken: refreshToken },
         responseType: 'json',
@@ -105,13 +113,10 @@ await suite('Authentication integration tests', async () => {
 
       assert.strictEqual(typeof result.responseBody === 'string', true);
       await assert.doesNotReject(async () => {
-        await serverParams.authentication.validateToken(
-          result.responseBody,
-          'access',
-        );
+        await authentication.validateToken(result.responseBody, 'access');
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
 });

@@ -5,27 +5,23 @@ import {
   clearDatabase,
   createHttpMocks,
   GeneralError,
+  generateMovieDataIncludingPoster,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
+  MOVIE,
   randomAlphaNumericString,
   randomUUID,
+  seedMovie,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  type Logger,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
-import {
-  generateMovieDataIncludingPoster,
-  MOVIE,
-  seedMovie,
-  serviceFunctions,
-  validationFunctions,
-} from './utils.ts';
+import * as serviceFunctions from './service/index.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
@@ -34,14 +30,18 @@ const { PAGINATION } = VALIDATION;
 /**********************************************************************************/
 
 await suite('Movie unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {
@@ -123,8 +123,6 @@ await suite('Movie unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
@@ -1243,10 +1241,10 @@ await suite('Movie unit tests', async () => {
       async () => {
         await serviceFunctions.createMovie(
           {
-            authentication: serverParams.authentication,
-            database: serverParams.database,
-            fileManager: serverParams.fileManager,
-            messageQueue: serverParams.messageQueue,
+            authentication,
+            database,
+            fileManager,
+            messageQueue,
             logger,
           },
           {
@@ -2043,10 +2041,10 @@ await suite('Movie unit tests', async () => {
       async () => {
         await serviceFunctions.updateMovie(
           {
-            authentication: serverParams.authentication,
-            database: serverParams.database,
-            fileManager: serverParams.fileManager,
-            messageQueue: serverParams.messageQueue,
+            authentication,
+            database,
+            fileManager,
+            messageQueue,
             logger,
           },
           {
@@ -2070,17 +2068,17 @@ await suite('Movie unit tests', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
     const updatedGenreId = randomUUID();
 
-    const { createdMovie } = await seedMovie(serverParams);
+    const { createdMovie } = await seedMovie(database);
 
     try {
       await assert.rejects(
         async () => {
           await serviceFunctions.updateMovie(
             {
-              authentication: serverParams.authentication,
-              database: serverParams.database,
-              fileManager: serverParams.fileManager,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              database,
+              fileManager,
+              messageQueue,
               logger,
             },
             {
@@ -2100,7 +2098,7 @@ await suite('Movie unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

@@ -48,5 +48,5 @@
     "skipLibCheck": true
   },
   // Does not support glob pattern
-  "include": ["src/**/*.ts", "__tests__/**/*.ts", "eslint.config.js"]
+  "include": ["src/**/*.ts", "eslint.config.js"]
 }

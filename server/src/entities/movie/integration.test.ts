@@ -5,34 +5,31 @@ import {
   assert,
   before,
   clearDatabase,
-  CONSTANTS,
-  getAdminTokens,
-  HTTP_STATUS_CODES,
-  initServer,
-  randomAlphaNumericString,
-  randomNumber,
-  randomUUID,
-  sendHttpRequest,
-  suite,
-  terminateServer,
-  test,
-  type PaginatedResult,
-  type ServerParams,
-} from '../utils.ts';
-
-import {
   compareFiles,
+  CONSTANTS,
   generateMovieDataIncludingPoster,
   generateMoviePostersData,
   generateMoviesData,
+  getAdminTokens,
+  HTTP_STATUS_CODES,
+  initServer,
   MOVIE,
+  randomAlphaNumericString,
+  randomNumber,
+  randomUUID,
   readFile,
   seedGenre,
   seedMovie,
   seedMovies,
+  sendHttpRequest,
+  suite,
+  terminateServer,
+  test,
   USER,
   type Movie,
-} from './utils.ts';
+  type PaginatedResult,
+  type ServerParams,
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
@@ -41,20 +38,23 @@ const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 /**********************************************************************************/
 
 await suite('Movie integration tests', async () => {
-  let serverParams: ServerParams = null!;
+  let server: ServerParams['server'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Read a single page', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies } = await seedMovies(
-      serverParams,
-      SINGLE_PAGE.CREATE,
-    );
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdMovies } = await seedMovies(database, SINGLE_PAGE.CREATE);
 
     try {
       const query = new URLSearchParams({
@@ -68,7 +68,7 @@ await suite('Movie integration tests', async () => {
         'json',
         PaginatedResult<{ movies: Movie[] }>
       >({
-        route: `${serverParams.routes.http}/movies?${query}`,
+        route: `${httpRoute}/movies?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -94,15 +94,12 @@ await suite('Movie integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies } = await seedMovies(
-      serverParams,
-      MULTIPLE_PAGES.CREATE,
-    );
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdMovies } = await seedMovies(database, MULTIPLE_PAGES.CREATE);
 
     let pagination = {
       hasNext: true,
@@ -124,7 +121,7 @@ await suite('Movie integration tests', async () => {
           'json',
           PaginatedResult<{ movies: Movie[] }>
         >({
-          route: `${serverParams.routes.http}/movies?${query}`,
+          route: `${httpRoute}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -153,15 +150,12 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovies } = await seedMovies(
-      serverParams,
-      LOT_OF_PAGES.CREATE,
-    );
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdMovies } = await seedMovies(database, LOT_OF_PAGES.CREATE);
 
     let pagination = {
       hasNext: true,
@@ -183,7 +177,7 @@ await suite('Movie integration tests', async () => {
           'json',
           PaginatedResult<{ movies: Movie[] }>
         >({
-          route: `${serverParams.routes.http}/movies?${query}`,
+          route: `${httpRoute}/movies?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -212,12 +206,12 @@ await suite('Movie integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdMovies.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read movie poster', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovie, createdMoviePoster } = await seedMovie(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdMovie, createdMoviePoster } = await seedMovie(database);
 
     try {
       const { statusCode, responseBody } = await sendHttpRequest<
@@ -225,7 +219,7 @@ await suite('Movie integration tests', async () => {
         'bytes',
         ReadableStream<Uint8Array>
       >({
-        route: `${serverParams.routes.http}/movies/poster/${createdMovie.id}`,
+        route: `${httpRoute}/movies/poster/${createdMovie.id}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'bytes',
@@ -234,14 +228,14 @@ await suite('Movie integration tests', async () => {
 
       await compareFiles(responseBody, createdMoviePoster.absolutePath);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'POST'>({
-      route: `${serverParams.routes.http}/movies`,
+      route: `${httpRoute}/movies`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
@@ -257,8 +251,8 @@ await suite('Movie integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { id: genreId, name: genreName } = await seedGenre(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { id: genreId, name: genreName } = await seedGenre(database);
 
     try {
       const { poster, ...movieData } =
@@ -279,7 +273,7 @@ await suite('Movie integration tests', async () => {
         statusCode,
         responseBody: { id, ...createdMovie },
       } = await sendHttpRequest<'POST', 'json', Movie>({
-        route: `${serverParams.routes.http}/movies`,
+        route: `${httpRoute}/movies`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: formData,
@@ -294,14 +288,14 @@ await suite('Movie integration tests', async () => {
         genre: genreName,
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'PUT'>({
-      route: `${serverParams.routes.http}/movies/${randomUUID()}`,
+      route: `${httpRoute}/movies/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
@@ -313,11 +307,11 @@ await suite('Movie integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdMovie } = await seedMovie(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdMovie } = await seedMovie(database);
 
     try {
-      const newGenre = await seedGenre(serverParams);
+      const newGenre = await seedGenre(database);
 
       const updatedMovieData = {
         ...generateMoviesData()[0]!,
@@ -342,7 +336,7 @@ await suite('Movie integration tests', async () => {
         'json',
         Movie
       >({
-        route: `${serverParams.routes.http}/movies/${createdMovie.id}`,
+        route: `${httpRoute}/movies/${createdMovie.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedMovieData,
@@ -360,14 +354,14 @@ await suite('Movie integration tests', async () => {
         updatedMovie,
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete existent movie', async () => {
     let movieId = '';
 
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { id: genreId } = await seedGenre(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { id: genreId } = await seedGenre(database);
 
     try {
       const { poster, ...movieData } =
@@ -387,7 +381,7 @@ await suite('Movie integration tests', async () => {
         statusCode,
         responseBody: { id },
       } = await sendHttpRequest<'POST', 'json', Movie>({
-        route: `${serverParams.routes.http}/movies`,
+        route: `${httpRoute}/movies`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: formData,
@@ -397,7 +391,7 @@ await suite('Movie integration tests', async () => {
       movieId = id;
 
       const result = await sendHttpRequest<'DELETE', 'text', string>({
-        route: `${serverParams.routes.http}/movies/${movieId}`,
+        route: `${httpRoute}/movies/${movieId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
@@ -406,18 +400,18 @@ await suite('Movie integration tests', async () => {
       assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(result.responseBody, '');
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete non-existent movie', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode, responseBody } = await sendHttpRequest<
       'DELETE',
       'text',
       string
     >({
-      route: `${serverParams.routes.http}/movies/${randomUUID()}`,
+      route: `${httpRoute}/movies/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
       responseType: 'text',

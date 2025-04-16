@@ -9,27 +9,25 @@ import {
   before,
   createHttpMocks,
   initServer,
-  mockLogger,
   suite,
   terminateServer,
   test,
-  type Logger,
   type ResponseWithContext,
   type ResponseWithoutContext,
   type ServerParams,
-} from './utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
 await suite('Middleware tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, authentication, logger } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Methods middleware', (context) => {
@@ -50,7 +48,7 @@ await suite('Middleware tests', async () => {
 
     methods.forEach((allowedMethod, index) => {
       const { request, response } = createHttpMocks<ResponseWithoutContext>({
-        logger: logger,
+        logger,
         reqOptions: {
           method: allowedMethod,
         },
@@ -85,7 +83,7 @@ await suite('Middleware tests', async () => {
 
     methods.forEach((disallowedMethod, index) => {
       const { request, response } = createHttpMocks<ResponseWithoutContext>({
-        logger: logger,
+        logger,
         reqOptions: {
           method: disallowedMethod,
         },
@@ -101,7 +99,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Valid - Non-existent route middleware', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const handleNonExistentRouteSpy = context.mock.fn(
@@ -113,12 +111,12 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Authentication middleware: Missing authorization header', async (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const httpAuthenticationMiddlewareSpy = context.mock
-      .fn(serverParams.authentication.httpAuthenticationMiddleware)
-      .bind(serverParams.authentication);
+      .fn(authentication.httpAuthenticationMiddleware)
+      .bind(authentication);
 
     await assert.rejects(
       async () => {
@@ -141,15 +139,15 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Authentication middleware: Invalid token', async (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
       reqOptions: {
         headers: { authorization: 'Bearer bla' },
       },
     });
 
     const httpAuthenticationMiddlewareSpy = context.mock
-      .fn(serverParams.authentication.httpAuthenticationMiddleware)
-      .bind(serverParams.authentication);
+      .fn(authentication.httpAuthenticationMiddleware)
+      .bind(authentication);
 
     await assert.rejects(
       async () => {
@@ -172,7 +170,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Headers sent', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
     const nextMock = context.mock.fn();
 
@@ -187,7 +185,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: MRS error instance', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
     const nextMock = context.mock.fn();
 
@@ -207,7 +205,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Payload error', (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
     const nextMock = context.mock.fn();
 
@@ -228,7 +226,7 @@ await suite('Middleware tests', async () => {
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const error = new PostgresError('Expected error');
@@ -245,7 +243,7 @@ await suite('Middleware tests', async () => {
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const error = new PostgresError('Expected error');
@@ -262,7 +260,7 @@ await suite('Middleware tests', async () => {
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const error = new PostgresError('Expected error');
@@ -279,7 +277,7 @@ await suite('Middleware tests', async () => {
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const error = new Error('Expected error');
@@ -295,7 +293,7 @@ await suite('Middleware tests', async () => {
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
-      logger: logger,
+      logger,
     });
 
     const errorHandlerSpy = context.mock.fn(Middlewares.errorHandler);

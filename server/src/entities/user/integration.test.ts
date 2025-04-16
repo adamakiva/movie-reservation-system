@@ -4,8 +4,10 @@ import {
   after,
   assert,
   before,
+  checkUserPassword,
   clearDatabase,
   CONSTANTS,
+  generateRandomUserData,
   getAdminRole,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -13,22 +15,17 @@ import {
   randomAlphaNumericString,
   randomNumber,
   randomUUID,
+  seedUser,
+  seedUsers,
   sendHttpRequest,
   suite,
   terminateServer,
   test,
+  USER,
   type PaginatedResult,
   type ServerParams,
-} from '../utils.ts';
-
-import {
-  checkUserPassword,
-  generateRandomUserData,
-  seedUser,
-  seedUsers,
-  USER,
   type User,
-} from './utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
@@ -37,17 +34,29 @@ const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 /**********************************************************************************/
 
 await suite('User integration tests', async () => {
-  let serverParams: ServerParams = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      authentication,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Read a single page', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers } = await seedUsers(serverParams, SINGLE_PAGE.CREATE);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdUsers } = await seedUsers(
+      authentication,
+      database,
+      SINGLE_PAGE.CREATE,
+    );
 
     try {
       // +1 to include the admin as well
@@ -62,7 +71,7 @@ await suite('User integration tests', async () => {
         'json',
         PaginatedResult<{ users: User[] }>
       >({
-        route: `${serverParams.routes.http}/users?${query}`,
+        route: `${httpRoute}/users?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -88,13 +97,14 @@ await suite('User integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdUsers } = await seedUsers(
-      serverParams,
+      authentication,
+      database,
       MULTIPLE_PAGES.CREATE,
     );
 
@@ -118,7 +128,7 @@ await suite('User integration tests', async () => {
           'json',
           PaginatedResult<{ users: User[] }>
         >({
-          route: `${serverParams.routes.http}/users?${query}`,
+          route: `${httpRoute}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -147,12 +157,16 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUsers } = await seedUsers(serverParams, LOT_OF_PAGES.CREATE);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdUsers } = await seedUsers(
+      authentication,
+      database,
+      LOT_OF_PAGES.CREATE,
+    );
 
     try {
       let pagination = {
@@ -174,7 +188,7 @@ await suite('User integration tests', async () => {
           'json',
           PaginatedResult<{ users: User[] }>
         >({
-          route: `${serverParams.routes.http}/users?${query}`,
+          route: `${httpRoute}/users?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -203,14 +217,14 @@ await suite('User integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdUsers.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'POST'>({
-      route: `${serverParams.routes.http}/users`,
+      route: `${httpRoute}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
@@ -226,7 +240,7 @@ await suite('User integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { id: roleId, name: roleName } = getAdminRole();
 
     try {
@@ -236,7 +250,7 @@ await suite('User integration tests', async () => {
         statusCode,
         responseBody: { id, ...createdUser },
       } = await sendHttpRequest<'POST', 'json', User>({
-        route: `${serverParams.routes.http}/users`,
+        route: `${httpRoute}/users`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: userData,
@@ -251,14 +265,14 @@ await suite('User integration tests', async () => {
         role: roleName,
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'PUT'>({
-      route: `${serverParams.routes.http}/users/${randomUUID()}`,
+      route: `${httpRoute}/users/${randomUUID()}`,
       method: 'PUT',
       headers: { Authorization: accessToken },
       payload: {
@@ -270,8 +284,12 @@ await suite('User integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Update', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
-    const { createdUser, createdRole } = await seedUser(serverParams, true);
+    const { accessToken } = await getAdminTokens(httpRoute);
+    const { createdUser, createdRole } = await seedUser(
+      authentication,
+      database,
+      true,
+    );
 
     try {
       const updatedUserData = generateRandomUserData(createdRole.id);
@@ -281,7 +299,7 @@ await suite('User integration tests', async () => {
         'json',
         User
       >({
-        route: `${serverParams.routes.http}/users/${createdUser.id}`,
+        route: `${httpRoute}/users/${createdUser.id}`,
         method: 'PUT',
         headers: { Authorization: accessToken },
         payload: updatedUserData,
@@ -298,17 +316,21 @@ await suite('User integration tests', async () => {
         },
         updatedUser,
       );
-      await checkUserPassword(serverParams, {
-        email: updatedUserData.email,
-        password: updatedUserData.password,
+      await checkUserPassword({
+        authentication,
+        database,
+        credentials: {
+          email: updatedUserData.email,
+          password: updatedUserData.password,
+        },
       });
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete existent user', async () => {
     let userId = '';
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { id: roleId } = getAdminRole();
 
     try {
@@ -316,7 +338,7 @@ await suite('User integration tests', async () => {
         statusCode,
         responseBody: { id },
       } = await sendHttpRequest<'POST', 'json', User>({
-        route: `${serverParams.routes.http}/users`,
+        route: `${httpRoute}/users`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: generateRandomUserData(roleId),
@@ -326,7 +348,7 @@ await suite('User integration tests', async () => {
       userId = id;
 
       const result = await sendHttpRequest<'DELETE', 'text', string>({
-        route: `${serverParams.routes.http}/users/${userId}`,
+        route: `${httpRoute}/users/${userId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
@@ -335,18 +357,18 @@ await suite('User integration tests', async () => {
       assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(result.responseBody, '');
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete non-existent user', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode, responseBody } = await sendHttpRequest<
       'DELETE',
       'text',
       string
     >({
-      route: `${serverParams.routes.http}/users/${randomUUID()}`,
+      route: `${httpRoute}/users/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
       responseType: 'text',

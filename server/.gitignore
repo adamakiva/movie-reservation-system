@@ -13,7 +13,6 @@
 !src/**/*.ts
 !src/database/migrations/*.sql
 !src/database/migrations/meta/*.json
-!__tests__/**/*.ts
 
 # Exclude config files
 !eslint.config.js
@@ -28,4 +27,4 @@
 !.gitignore
 
 # Exclude assets
-!__tests__/**/*.jpg
+!src/tests/**/*.jpg

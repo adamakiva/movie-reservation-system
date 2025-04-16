@@ -145,8 +145,23 @@ class HttpServer {
     return this.#messageQueue;
   }
 
-  public close() {
+  public async close() {
+    let exitCode = 0;
+
+    (
+      await Promise.allSettled([
+        this.#database.close(),
+        this.#messageQueue.close(),
+      ])
+    ).forEach((result) => {
+      if (result.status === 'rejected') {
+        this.#logger.fatal(result.reason, 'Error during server termination');
+        exitCode = ERROR_CODES.EXIT_NO_RESTART;
+      }
+    });
     this.#server.close();
+
+    return exitCode;
   }
 
   /********************************************************************************/
@@ -265,10 +280,9 @@ class HttpServer {
 
   #attachServerEventHandlers() {
     this.#server
-      .once('error', this.#handleErrorEvent)
       // On purpose since the process is shutting-down anyhow
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      .once('close', this.#handleCloseEvent);
+      .once('error', this.#handleErrorEvent);
   }
 
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
@@ -295,33 +309,14 @@ class HttpServer {
 
   /********************************************************************************/
 
-  readonly #handleErrorEvent = (error: Error) => {
+  readonly #handleErrorEvent = async (error: Error) => {
     this.#logger.fatal(error, 'HTTP Server error');
+
+    await this.close();
 
     // If an http server error happened, we shutdown the application with status
     // code that indicates that a server restart should happen
     process.exit(ERROR_CODES.EXIT_RESTART);
-  };
-
-  readonly #handleCloseEvent = async () => {
-    let exitCode = 0;
-
-    (
-      await Promise.allSettled([
-        this.#database.close(),
-        this.#messageQueue.close(),
-      ])
-    ).forEach((result) => {
-      if (result.status === 'rejected') {
-        this.#logger.fatal(result.reason, 'Error during server termination');
-        exitCode = ERROR_CODES.EXIT_NO_RESTART;
-      }
-    });
-    if (exitCode) {
-      process.exit(exitCode);
-    }
-
-    process.exitCode = 0;
   };
 }
 

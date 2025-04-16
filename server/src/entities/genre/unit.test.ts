@@ -5,38 +5,38 @@ import {
   clearDatabase,
   createHttpMocks,
   GeneralError,
+  GENRE,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomUUID,
+  seedGenre,
+  seedGenres,
   suite,
   terminateServer,
   test,
-  type Logger,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
-import {
-  GENRE,
-  seedGenre,
-  seedGenres,
-  serviceFunctions,
-  validationFunctions,
-} from './utils.ts';
+import * as serviceFunctions from './service/index.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
 await suite('Genre unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
@@ -152,7 +152,7 @@ await suite('Genre unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { name: genreName } = await seedGenre(serverParams);
+    const { name: genreName } = await seedGenre(database);
 
     const genreToCreate = { name: genreName };
 
@@ -162,10 +162,10 @@ await suite('Genre unit tests', async () => {
           // In case the function does not throw, we want to clean the created entry
           await serviceFunctions.createGenre(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             genreToCreate,
@@ -182,7 +182,7 @@ await suite('Genre unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -405,7 +405,7 @@ await suite('Genre unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const createdGenres = await seedGenres(serverParams, 2);
+    const createdGenres = await seedGenres(database, 2);
 
     const genreToUpdate = {
       genreId: createdGenres[0]!.id,
@@ -417,10 +417,10 @@ await suite('Genre unit tests', async () => {
         async () => {
           await serviceFunctions.updateGenre(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             genreToUpdate,
@@ -437,7 +437,7 @@ await suite('Genre unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

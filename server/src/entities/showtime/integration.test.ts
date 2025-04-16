@@ -1,32 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { seedHall } from '../hall/utils.ts';
-import { seedMovie } from '../movie/utils.ts';
 import {
   after,
   assert,
   before,
   clearDatabase,
   CONSTANTS,
+  generateShowtimesData,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
   randomAlphaNumericString,
   randomUUID,
+  seedHall,
+  seedMovie,
+  seedShowtimes,
   sendHttpRequest,
+  SHOWTIME,
   suite,
   terminateServer,
   test,
   type PaginatedResult,
   type ServerParams,
-} from '../utils.ts';
-
-import {
-  generateShowtimesData,
-  seedShowtimes,
-  SHOWTIME,
   type Showtime,
-} from './utils.ts';
+} from '../../tests/utils.ts';
 
 /**********************************************************************************/
 
@@ -69,18 +66,24 @@ function compareShowtimes(params: {
 /**********************************************************************************/
 
 await suite('Showtime integration tests', async () => {
-  let serverParams: ServerParams = null!;
+  let server: ServerParams['server'] = null!;
+  let database: ServerParams['database'] = null!;
+  let httpRoute: ServerParams['routes']['http'] = null!;
   before(async () => {
-    serverParams = await initServer();
+    ({
+      server,
+      database,
+      routes: { http: httpRoute },
+    } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Valid - Read a single page without filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(serverParams, SINGLE_PAGE.CREATE);
+      await seedShowtimes(database, SINGLE_PAGE.CREATE);
 
     try {
       const query = new URLSearchParams({
@@ -94,7 +97,7 @@ await suite('Showtime integration tests', async () => {
         'json',
         PaginatedResult<{ showtimes: Showtime[] }>
       >({
-        route: `${serverParams.routes.http}/showtimes?${query}`,
+        route: `${httpRoute}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -123,13 +126,13 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages without filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(serverParams, MULTIPLE_PAGES.CREATE);
+      await seedShowtimes(database, MULTIPLE_PAGES.CREATE);
 
     try {
       let pagination = {
@@ -151,7 +154,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -183,13 +186,13 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages without filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(serverParams, LOT_OF_PAGES.CREATE);
+      await seedShowtimes(database, LOT_OF_PAGES.CREATE);
 
     try {
       let pagination = {
@@ -211,7 +214,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -243,17 +246,13 @@ await suite('Showtime integration tests', async () => {
       /* eslint-enable no-await-in-loop */
       assert.strictEqual(createdShowtimes.length, 0);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a single page with movie filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(
-        serverParams,
-        SINGLE_PAGE.CREATE,
-        SINGLE_PAGE.CREATE / 2,
-      );
+      await seedShowtimes(database, SINGLE_PAGE.CREATE, SINGLE_PAGE.CREATE / 2);
     const movieIdToFilterBy = createdMovies[0]!.id;
 
     try {
@@ -269,7 +268,7 @@ await suite('Showtime integration tests', async () => {
         'json',
         PaginatedResult<{ showtimes: Showtime[] }>
       >({
-        route: `${serverParams.routes.http}/showtimes?${query}`,
+        route: `${httpRoute}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -303,14 +302,14 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages with movie filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         MULTIPLE_PAGES.CREATE,
         MULTIPLE_PAGES.CREATE / 2,
       );
@@ -337,7 +336,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -374,14 +373,14 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages with movie filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         LOT_OF_PAGES.CREATE,
         LOT_OF_PAGES.CREATE / 2,
       );
@@ -408,7 +407,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -445,17 +444,13 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a single page with hall filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(
-        serverParams,
-        SINGLE_PAGE.CREATE,
-        SINGLE_PAGE.CREATE / 2,
-      );
+      await seedShowtimes(database, SINGLE_PAGE.CREATE, SINGLE_PAGE.CREATE / 2);
     const hallIdToFilterBy = createdHalls[0]!.id;
 
     try {
@@ -471,7 +466,7 @@ await suite('Showtime integration tests', async () => {
         'json',
         PaginatedResult<{ showtimes: Showtime[] }>
       >({
-        route: `${serverParams.routes.http}/showtimes?${query}`,
+        route: `${httpRoute}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -505,14 +500,14 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages with hall filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         MULTIPLE_PAGES.CREATE,
         MULTIPLE_PAGES.CREATE / 2,
       );
@@ -539,7 +534,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -576,14 +571,14 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages with hall filter', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         LOT_OF_PAGES.CREATE,
         LOT_OF_PAGES.CREATE / 2,
       );
@@ -610,7 +605,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -647,17 +642,13 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a single page with all filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
-      await seedShowtimes(
-        serverParams,
-        SINGLE_PAGE.CREATE,
-        SINGLE_PAGE.CREATE / 2,
-      );
+      await seedShowtimes(database, SINGLE_PAGE.CREATE, SINGLE_PAGE.CREATE / 2);
     const movieIdToFilterBy = createdMovies[0]!.id;
     const hallIdToFilterBy = createdHalls[0]!.id;
 
@@ -675,7 +666,7 @@ await suite('Showtime integration tests', async () => {
         'json',
         PaginatedResult<{ showtimes: Showtime[] }>
       >({
-        route: `${serverParams.routes.http}/showtimes?${query}`,
+        route: `${httpRoute}/showtimes?${query}`,
         method: 'GET',
         headers: { Authorization: accessToken },
         responseType: 'json',
@@ -712,14 +703,14 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(page.hasNext, false);
       assert.strictEqual(page.cursor, null);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read many pages with all filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         MULTIPLE_PAGES.CREATE,
         MULTIPLE_PAGES.CREATE / 2,
       );
@@ -748,7 +739,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -788,14 +779,14 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Read a lot pages with all filters', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     const { createdMovies, createdHalls, createdShowtimes } =
       await seedShowtimes(
-        serverParams,
+        database,
         LOT_OF_PAGES.CREATE,
         LOT_OF_PAGES.CREATE / 2,
       );
@@ -824,7 +815,7 @@ await suite('Showtime integration tests', async () => {
           'json',
           PaginatedResult<{ showtimes: Showtime[] }>
         >({
-          route: `${serverParams.routes.http}/showtimes?${query}`,
+          route: `${httpRoute}/showtimes?${query}`,
           method: 'GET',
           headers: { Authorization: accessToken },
           responseType: 'json',
@@ -864,14 +855,14 @@ await suite('Showtime integration tests', async () => {
       ).length;
       assert.strictEqual(removedAllRelevantShowtimes, true);
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create request with excess size', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode } = await sendHttpRequest<'POST'>({
-      route: `${serverParams.routes.http}/users`,
+      route: `${httpRoute}/users`,
       method: 'POST',
       headers: { Authorization: accessToken },
       payload: {
@@ -885,10 +876,10 @@ await suite('Showtime integration tests', async () => {
     assert.strictEqual(statusCode, HTTP_STATUS_CODES.CONTENT_TOO_LARGE);
   });
   await test('Valid - Create', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
     try {
-      const { createdMovie } = await seedMovie(serverParams);
-      const createdHall = await seedHall(serverParams);
+      const { createdMovie } = await seedMovie(database);
+      const createdHall = await seedHall(database);
 
       const showtimeData = {
         ...generateShowtimesData()[0]!,
@@ -900,7 +891,7 @@ await suite('Showtime integration tests', async () => {
         statusCode,
         responseBody: { id, movieTitle, hallName, ...createdShowtime },
       } = await sendHttpRequest<'POST', 'json', Showtime>({
-        route: `${serverParams.routes.http}/showtimes`,
+        route: `${httpRoute}/showtimes`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: showtimeData,
@@ -919,15 +910,15 @@ await suite('Showtime integration tests', async () => {
         { movieTitle: createdMovie.title, hallName: createdHall.name },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete existent', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     try {
-      const { createdMovie } = await seedMovie(serverParams);
-      const createdHall = await seedHall(serverParams);
+      const { createdMovie } = await seedMovie(database);
+      const createdHall = await seedHall(database);
 
       const showtimeData = {
         ...generateShowtimesData()[0]!,
@@ -939,7 +930,7 @@ await suite('Showtime integration tests', async () => {
         statusCode,
         responseBody: { id: showtimeId },
       } = await sendHttpRequest<'POST', 'json', Showtime>({
-        route: `${serverParams.routes.http}/showtimes`,
+        route: `${httpRoute}/showtimes`,
         method: 'POST',
         headers: { Authorization: accessToken },
         payload: showtimeData,
@@ -948,7 +939,7 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(statusCode, HTTP_STATUS_CODES.CREATED);
 
       const result = await sendHttpRequest<'DELETE', 'text', string>({
-        route: `${serverParams.routes.http}/showtimes/${showtimeId}`,
+        route: `${httpRoute}/showtimes/${showtimeId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
@@ -957,18 +948,18 @@ await suite('Showtime integration tests', async () => {
       assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
       assert.strictEqual(result.responseBody, '');
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Valid - Delete non-existent', async () => {
-    const { accessToken } = await getAdminTokens(serverParams);
+    const { accessToken } = await getAdminTokens(httpRoute);
 
     const { statusCode, responseBody } = await sendHttpRequest<
       'DELETE',
       'text',
       string
     >({
-      route: `${serverParams.routes.http}/showtimes/${randomUUID()}`,
+      route: `${httpRoute}/showtimes/${randomUUID()}`,
       method: 'DELETE',
       headers: { Authorization: accessToken },
       responseType: 'text',

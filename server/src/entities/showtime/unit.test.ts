@@ -4,25 +4,21 @@ import {
   before,
   createHttpMocks,
   GeneralError,
+  generateShowtimesData,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomUUID,
+  SHOWTIME,
   suite,
   terminateServer,
   test,
   VALIDATION,
-  type Logger,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
-import {
-  generateShowtimesData,
-  SHOWTIME,
-  validationFunctions,
-} from './utils.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
@@ -31,14 +27,13 @@ const { PAGINATION } = VALIDATION;
 /**********************************************************************************/
 
 await suite('Showtime unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, logger } = await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Read multiple validation: Empty movie id', (context) => {

@@ -1,39 +1,40 @@
-import * as serviceFunctions from '../../src/entities/authentication/controller.ts';
-import * as validationFunctions from '../../src/entities/authentication/validator.ts';
-
-import { AUTHENTICATION } from '../../src/entities/authentication/validator.ts';
-import { USER } from '../../src/entities/user/validator.ts';
-
 import {
   after,
   assert,
+  AUTHENTICATION,
   before,
   createHttpMocks,
   GeneralError,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomUUID,
   suite,
   terminateServer,
   test,
-  type Logger,
+  USER,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
+
+import * as serviceFunctions from './controller.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
 await suite('Authentication unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Login validation: Missing email', (context) => {
@@ -207,8 +208,6 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Non-existent user', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -247,8 +246,6 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Incorrect password', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {
@@ -364,8 +361,6 @@ await suite('Authentication unit tests', async () => {
     'Invalid - Refresh service: Malformed JWT',
     { todo: 'Figure out a way to mock the sync validation check' },
     async (context) => {
-      const { authentication, fileManager, database, messageQueue } =
-        serverParams;
       const { request, response } = createHttpMocks<ResponseWithContext>({
         logger,
         reqOptions: {
@@ -406,8 +401,6 @@ await suite('Authentication unit tests', async () => {
     },
   );
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,
       reqOptions: {

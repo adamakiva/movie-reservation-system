@@ -7,7 +7,7 @@ import tslint from 'typescript-eslint';
 
 // Export the relevant rules for the relevant folders
 export default tslint.config({
-  files: ['src/**/*.ts', '__tests__/**/*.ts', 'eslint.config.js'],
+  files: ['src/**/*.ts', 'eslint.config.js'],
   plugins: {
     '@typescript-eslint': tslint.plugin,
     '@security': security,

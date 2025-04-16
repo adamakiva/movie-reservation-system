@@ -7,7 +7,7 @@ ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
 DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data;
 MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
-TEST_COVERAGE_FILE="$ROOT_DIR"/server/__tests__/junit.xml;
+TEST_COVERAGE_FILE="$ROOT_DIR"/server/src/tests/junit.xml;
 CLINIC_FOLDER="$ROOT_DIR"/server/.clinic;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));

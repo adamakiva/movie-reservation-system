@@ -103,26 +103,25 @@ function attachProcessHandlers(server: HttpServer, logger: Logger) {
     .on('warning', logger.warn)
     .once('unhandledRejection', (reason: unknown) => {
       logger.fatal(`Unhandled rejection:`, reason);
-      server.close();
-
-      // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
-      process.exit(ERROR_CODES.EXIT_RESTART);
+      closeServer(server, ERROR_CODES.EXIT_RESTART);
     })
     .once('uncaughtException', (error: unknown) => {
       logger.fatal(`Unhandled exception:`, error);
-      server.close();
-
-      // See: https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html#error-exception-handling
-      process.exit(ERROR_CODES.EXIT_RESTART);
+      closeServer(server, ERROR_CODES.EXIT_RESTART);
     });
 
   const signalHandler = () => {
-    server.close();
-
-    process.exit(ERROR_CODES.EXIT_NO_RESTART);
+    closeServer(server, ERROR_CODES.EXIT_NO_RESTART);
   };
   SIGNALS.forEach((signal) => {
     process.once(signal, signalHandler);
+  });
+}
+
+function closeServer(server: HttpServer, code: number) {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  server.close().finally(() => {
+    process.exit(code);
   });
 }
 

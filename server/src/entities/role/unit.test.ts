@@ -7,36 +7,36 @@ import {
   GeneralError,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomUUID,
-  suite,
-  terminateServer,
-  test,
-  type Logger,
-  type ResponseWithContext,
-  type ServerParams,
-} from '../utils.ts';
-
-import {
   ROLE,
   seedRole,
   seedRoles,
-  serviceFunctions,
-  validationFunctions,
-} from './utils.ts';
+  suite,
+  terminateServer,
+  test,
+  type ResponseWithContext,
+  type ServerParams,
+} from '../../tests/utils.ts';
+
+import * as serviceFunctions from './service/index.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
 await suite('Role unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
@@ -152,7 +152,7 @@ await suite('Role unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { name: roleName } = await seedRole(serverParams);
+    const { name: roleName } = await seedRole(database);
 
     try {
       const roleToCreate = { name: roleName };
@@ -161,10 +161,10 @@ await suite('Role unit tests', async () => {
         async () => {
           await serviceFunctions.createRole(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             roleToCreate,
@@ -181,7 +181,7 @@ await suite('Role unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
@@ -404,7 +404,7 @@ await suite('Role unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const createdRoles = await seedRoles(serverParams, 2);
+    const createdRoles = await seedRoles(database, 2);
 
     try {
       const roleToUpdate = {
@@ -416,10 +416,10 @@ await suite('Role unit tests', async () => {
         async () => {
           await serviceFunctions.updateRole(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             roleToUpdate,
@@ -436,7 +436,7 @@ await suite('Role unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {

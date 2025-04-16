@@ -5,28 +5,24 @@ import {
   clearDatabase,
   createHttpMocks,
   GeneralError,
+  generateRandomUserData,
   HTTP_STATUS_CODES,
   initServer,
-  mockLogger,
   randomAlphaNumericString,
   randomUUID,
+  seedUser,
+  seedUsers,
   suite,
   terminateServer,
   test,
+  USER,
   VALIDATION,
-  type Logger,
   type ResponseWithContext,
   type ServerParams,
-} from '../utils.ts';
+} from '../../tests/utils.ts';
 
-import {
-  generateRandomUserData,
-  seedUser,
-  seedUsers,
-  serviceFunctions,
-  USER,
-  validationFunctions,
-} from './utils.ts';
+import * as serviceFunctions from './service/index.ts';
+import * as validationFunctions from './validator.ts';
 
 /**********************************************************************************/
 
@@ -35,14 +31,18 @@ const { PAGINATION } = VALIDATION;
 /**********************************************************************************/
 
 await suite('User unit tests', async () => {
-  let logger: Logger = null!;
-  let serverParams: ServerParams = null!;
+  let logger: ServerParams['logger'] = null!;
+  let server: ServerParams['server'] = null!;
+  let authentication: ServerParams['authentication'] = null!;
+  let fileManager: ServerParams['fileManager'] = null!;
+  let database: ServerParams['database'] = null!;
+  let messageQueue: ServerParams['messageQueue'] = null!;
   before(async () => {
-    logger = mockLogger();
-    serverParams = await initServer();
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
-  after(() => {
-    terminateServer(serverParams);
+  after(async () => {
+    await terminateServer(server);
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {
@@ -124,8 +124,6 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { authentication, fileManager, database, messageQueue } =
-      serverParams;
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
     context.mock.method(database, 'getHandler', () => {
@@ -987,7 +985,11 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdUser, createdRole } = await seedUser(serverParams, true);
+    const { createdUser, createdRole } = await seedUser(
+      authentication,
+      database,
+      true,
+    );
 
     try {
       await assert.rejects(
@@ -995,10 +997,10 @@ await suite('User unit tests', async () => {
           // In case the function does not throw, we want to clean the created entry
           await serviceFunctions.createUser(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             {
@@ -1018,7 +1020,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
@@ -1029,10 +1031,10 @@ await suite('User unit tests', async () => {
       async () => {
         await serviceFunctions.createUser(
           {
-            authentication: serverParams.authentication,
-            fileManager: serverParams.fileManager,
-            database: serverParams.database,
-            messageQueue: serverParams.messageQueue,
+            authentication,
+            fileManager,
+            database,
+            messageQueue,
             logger,
           },
           generateRandomUserData(roleId),
@@ -1626,10 +1628,10 @@ await suite('User unit tests', async () => {
       async () => {
         await serviceFunctions.updateUser(
           {
-            authentication: serverParams.authentication,
-            fileManager: serverParams.fileManager,
-            database: serverParams.database,
-            messageQueue: serverParams.messageQueue,
+            authentication,
+            fileManager,
+            database,
+            messageQueue,
             logger,
           },
           {
@@ -1653,17 +1655,17 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
-    const { createdUsers } = await seedUsers(serverParams, 2);
+    const { createdUsers } = await seedUsers(authentication, database, 2);
 
     try {
       await assert.rejects(
         async () => {
           await serviceFunctions.updateUser(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             {
@@ -1683,24 +1685,24 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
     const { response } = createHttpMocks<ResponseWithContext>({ logger });
 
-    const { createdUser } = await seedUser(serverParams, true);
+    const { createdUser } = await seedUser(authentication, database, true);
 
     try {
       await assert.rejects(
         async () => {
           await serviceFunctions.updateUser(
             {
-              authentication: serverParams.authentication,
-              fileManager: serverParams.fileManager,
-              database: serverParams.database,
-              messageQueue: serverParams.messageQueue,
+              authentication,
+              fileManager,
+              database,
+              messageQueue,
               logger,
             },
             {
@@ -1720,7 +1722,7 @@ await suite('User unit tests', async () => {
         },
       );
     } finally {
-      await clearDatabase(serverParams.database);
+      await clearDatabase(database);
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
