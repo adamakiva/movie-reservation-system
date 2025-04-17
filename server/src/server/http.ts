@@ -99,7 +99,6 @@ class HttpServer {
 
     // The order matters
     self.#attachServerConfigurations();
-    self.#attachServerEventHandlers();
     self.#attachRoutesMiddlewares(app, logMiddleware);
 
     return self;
@@ -194,7 +193,8 @@ class HttpServer {
     this.#fileManager = fileManager;
     this.#database = database;
     this.#messageQueue = messageQueue.handler;
-    this.#server = server;
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    this.#server = server.once('error', this.#handleErrorEvent);
     this.#routes = routes;
     this.#logger = logger;
 
@@ -276,13 +276,6 @@ class HttpServer {
     this.#server.maxRequestsPerSocket = 32;
     this.#server.keepAliveTimeout = 8_000; // millis
     this.#server.maxConnections = 8_000;
-  }
-
-  #attachServerEventHandlers() {
-    this.#server
-      // On purpose since the process is shutting-down anyhow
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      .once('error', this.#handleErrorEvent);
   }
 
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {

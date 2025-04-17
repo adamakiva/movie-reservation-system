@@ -16,7 +16,7 @@
     "check-code-deps": "./check.unused.deps.sh",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
     "check-licenses": "nlf -d -r 1",
-    "build": "eslint src/**/*.ts; tsc --build --verbose tsconfig.prod.json"
+    "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
     "@adamakiva/movie-reservation-system-shared": "0.0.1",

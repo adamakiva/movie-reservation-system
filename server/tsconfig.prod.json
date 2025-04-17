@@ -8,5 +8,5 @@
   },
   // Does not support glob pattern
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.test.ts", "src/tests/*"]
+  "exclude": ["src/**/*.test.ts", "src/tests"]
 }
