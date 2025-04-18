@@ -1,7 +1,7 @@
 {
-  "name": "mrs",
+  "name": "movie-reservation-system-ticket-worker",
   "version": "1.0.0",
-  "description": "Movie reservation system",
+  "description": "Movie reservation system ticket worker",
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {

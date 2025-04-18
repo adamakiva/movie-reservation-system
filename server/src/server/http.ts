@@ -46,9 +46,9 @@ class HttpServer {
       ConstructorParameters<typeof MessageQueue>[0],
       'logger'
     > & { routing: typeof MESSAGE_QUEUE };
-    corsOptions: Parameters<typeof cors>[0];
+    corsOptions: Omit<Parameters<typeof cors>[0], 'methods'>;
     databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
-    allowedMethods: Set<string>;
+    allowedMethods: readonly string[];
     routes: { http: string };
     logMiddleware: LogMiddleware;
     logger: Logger;
@@ -76,7 +76,7 @@ class HttpServer {
 
     const app = express().use(
       Middlewares.checkMethod(allowedMethods),
-      cors(corsOptions),
+      cors({ ...corsOptions, methods: allowedMethods.slice() }),
       compress(),
     );
     // Express type chain include extending IRouter which returns void | Promise<void>,

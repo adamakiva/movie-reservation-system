@@ -14,13 +14,13 @@ import {
 
 /**********************************************************************************/
 
-function checkMethod(allowedMethods: Set<string>) {
+function checkMethod(allowedMethods: readonly string[]) {
   return (
     request: Request,
     response: ResponseWithoutContext,
     next: NextFunction,
   ) => {
-    if (!allowedMethods.has(request.method.toUpperCase())) {
+    if (!allowedMethods.includes(request.method.toUpperCase())) {
       // Reason for explicitly adding the header:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
       response

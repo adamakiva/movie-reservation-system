@@ -1,18 +1,18 @@
-import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
 
-import {
-  ERROR_CODES,
-  MESSAGE_QUEUE,
-  SIGNALS,
-} from '@adamakiva/movie-reservation-system-shared';
+import { MESSAGE_QUEUE } from '@adamakiva/movie-reservation-system-shared';
 
-import { HttpServer } from './server/index.ts';
-import { EnvironmentManager, Logger } from './utils/index.ts';
+import { HttpServer } from '../../server/index.ts';
+import { EnvironmentManager, Logger } from '../../utils/index.ts';
 
 /**********************************************************************************/
 
-async function startServer() {
-  const logger = new Logger();
+async function createServer() {
+  // In order to reuse the environment manager class, we swap the relevant values
+  process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
+
+  const logger = mockLogger();
 
   const environmentManager = new EnvironmentManager(logger);
   const {
@@ -35,12 +35,12 @@ async function startServer() {
       refresh: {
         expiresAt: jwt.refreshTokenExpiration,
       },
-      keysPath: resolve(import.meta.dirname, '..', 'keys'),
+      keysPath: resolve(import.meta.dirname, '..', '..', '..', 'keys'),
       hashSecret: jwt.hash,
     },
     fileManagerParams: {
       generatedFileNameLength: 32,
-      saveDir: join(import.meta.dirname, '..', 'posters'),
+      saveDir: tmpdir(),
       highWatermark: node.defaultHighWaterMark,
       limits: {
         fileSize: 4_194_304, // 4mb
@@ -64,8 +64,8 @@ async function startServer() {
           idle_in_transaction_session_timeout: database.transactionTimeout,
         },
       },
-      // Alive vs Readiness check boils down to the following:
-      // Should we restart the pod (isAlive) OR redirect the traffic to a different instance (isReady)
+      // Alive vs Readiness check boils down to:
+      // Should we restart the pod OR redirect the traffic to a different pod
       isAliveQuery: 'SELECT NOW()',
       isReadyQuery: 'SELECT NOW()',
     },
@@ -81,40 +81,44 @@ async function startServer() {
     logger,
   });
 
-  await server.listen(serverEnv.port);
+  const port = await server.listen();
+  const baseUrl = `http://127.0.0.1:${port}`;
 
-  attachProcessHandlers(server, logger);
+  return {
+    server,
+    authentication: server.getAuthenticationManager(),
+    fileManager: server.getFileManager(),
+    database: server.getDatabase(),
+    messageQueue: server.getMessageQueue(),
+    routes: {
+      base: baseUrl,
+      http: `${baseUrl}/${serverEnv.httpRoute}`,
+    },
+    logger,
+  } as const;
 }
 
-/**********************************************************************************/
+function emptyFunction() {
+  // On purpose
+}
 
-function attachProcessHandlers(server: HttpServer, logger: Logger) {
-  process
-    .on('warning', logger.warn)
-    .once('unhandledRejection', (reason: unknown) => {
-      logger.fatal(`Unhandled rejection:`, reason);
-      closeServer(server, ERROR_CODES.EXIT_RESTART);
-    })
-    .once('uncaughtException', (error: unknown) => {
-      logger.fatal(`Unhandled exception:`, error);
-      closeServer(server, ERROR_CODES.EXIT_RESTART);
-    });
+function mockLogger() {
+  const logger = new Logger();
 
-  const signalHandler = () => {
-    closeServer(server, ERROR_CODES.EXIT_NO_RESTART);
+  (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
+    logger[level] = emptyFunction;
+  });
+  logger.getLogMiddleware = () => {
+    return (_request, _response, next) => {
+      next();
+    };
   };
-  SIGNALS.forEach((signal) => {
-    process.once(signal, signalHandler);
-  });
+
+  return logger;
 }
 
-function closeServer(server: HttpServer, code: number) {
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  server.close().finally(() => {
-    process.exit(code);
-  });
-}
+const handler = await createServer();
 
 /**********************************************************************************/
 
-await startServer();
+export { handler };

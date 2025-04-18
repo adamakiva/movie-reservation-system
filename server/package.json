@@ -1,5 +1,5 @@
 {
-  "name": "mrs",
+  "name": "movie-reservation-system",
   "version": "1.0.0",
   "description": "Movie reservation system",
   "type": "module",
@@ -7,7 +7,7 @@
   "scripts": {
     "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter junit --test-reporter-destination=./src/tests/junit.xml",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
-    "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --open=false --on-port 'node ./src/tests/stress.ts' -- node ./src/main.ts",
+    "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --dest ./src/tests/.clinic --open=false --on-port 'node ./src/tests/stress/index.ts' -- node ./src/tests/stress/server.ts",
     "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "check-global-updates": "ncu -g",
@@ -29,8 +29,8 @@
     "jose": "~6.0.10",
     "multer": "~1.4.5-lts.2",
     "postgres": "~3.4.5",
-    "rabbitmq-client": "~5.0.2",
-    "zod": "~3.24.2"
+    "rabbitmq-client": "~5.0.4",
+    "zod": "~3.24.3"
   },
   "devDependencies": {
     "@types/autocannon": "~7.12.6",

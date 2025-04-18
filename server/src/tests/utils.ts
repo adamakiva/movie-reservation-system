@@ -4,7 +4,6 @@
 
 import assert from 'node:assert/strict';
 import { randomUUID as nodeRandomUUID } from 'node:crypto';
-import { EventEmitter } from 'node:events';
 import type { PathLike } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -122,9 +121,6 @@ async function createServer() {
   // In order to reuse the environment manager class, we swap the relevant values
   process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
-
   const logger = mockLogger();
 
   const environmentManager = new EnvironmentManager(logger);
@@ -161,11 +157,10 @@ async function createServer() {
       },
     },
     corsOptions: {
-      methods: Array.from(serverEnv.allowedMethods),
       origin:
-        serverEnv.allowedOrigins.size === 1
-          ? Array.from(serverEnv.allowedOrigins)[0]
-          : Array.from(serverEnv.allowedOrigins),
+        serverEnv.allowedOrigins.length === 1
+          ? serverEnv.allowedOrigins[0]
+          : serverEnv.allowedOrigins,
       maxAge: 86_400, // 1 day in seconds
       optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
     },

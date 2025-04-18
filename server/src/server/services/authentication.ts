@@ -13,10 +13,6 @@ import {
 
 /**********************************************************************************/
 
-type TokenTypes = ['access', 'refresh'];
-
-/**********************************************************************************/
-
 class AuthenticationManager {
   readonly #audience;
   readonly #issuer;
@@ -120,7 +116,10 @@ class AuthenticationManager {
       .sign(this.#refresh.privateKey);
   }
 
-  public async validateToken(token: string, type: TokenTypes[number]) {
+  public async validateToken(
+    token: string,
+    type: ['access', 'refresh'][number],
+  ) {
     let publicKey: jose.CryptoKey = null!;
     switch (type) {
       case 'access':
@@ -231,8 +230,6 @@ class AuthenticationManager {
       jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
   }
-
-  /********************************************************************************/
 
   async #httpAuthenticationMiddleware(
     request: Request,

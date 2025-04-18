@@ -41,7 +41,7 @@ await suite('Middleware tests', async () => {
       'OPTIONS',
     ] as const;
 
-    const checkMethodMiddleware = Middlewares.checkMethod(new Set(methods));
+    const checkMethodMiddleware = Middlewares.checkMethod(methods);
 
     const nextMock = context.mock.fn();
     const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);
@@ -74,9 +74,7 @@ await suite('Middleware tests', async () => {
     ] as const;
     const expectedAllowHeader = { allow: allowedMethods.join(', ') };
 
-    const checkMethodMiddleware = Middlewares.checkMethod(
-      new Set(allowedMethods),
-    );
+    const checkMethodMiddleware = Middlewares.checkMethod(allowedMethods);
 
     const nextMock = context.mock.fn();
     const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);

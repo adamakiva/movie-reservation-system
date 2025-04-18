@@ -8,13 +8,13 @@ class DatabaseLogger implements DrizzleLogger {
   readonly #queriesToIgnore;
   readonly #logger;
 
-  public constructor(queries: Set<string>, logger: Logger) {
+  public constructor(queries: string[], logger: Logger) {
     this.#queriesToIgnore = queries;
     this.#logger = logger;
   }
 
   public logQuery(query: string, params: unknown[]) {
-    if (!this.#queriesToIgnore.has(query)) {
+    if (!this.#queriesToIgnore.includes(query)) {
       this.#logger.debug(`Database query:\n%o\nParams: %o`, query, params);
     }
   }

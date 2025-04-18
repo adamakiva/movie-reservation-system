@@ -1,3 +1,6 @@
+import { globalAgent } from 'node:http';
+import Stream from 'node:stream';
+
 import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 
 import type { Logger } from './logger.ts';
@@ -8,7 +11,7 @@ class EnvironmentManager {
   readonly #logger;
   readonly #environmentVariables;
 
-  static readonly #REQUIRED_ENVIRONMENT_VARIABLES = new Set([
+  static readonly #REQUIRED_ENVIRONMENT_VARIABLES = [
     'SERVER_PORT',
     'SERVER_BASE_URL',
     'HTTP_ROUTE',
@@ -17,7 +20,7 @@ class EnvironmentManager {
     'DATABASE_URL',
     'MESSAGE_QUEUE_URL',
     'AUTHENTICATION_HASH_SECRET',
-  ] as const);
+  ] as const;
 
   public constructor(logger: Logger) {
     this.#logger = logger;
@@ -43,9 +46,9 @@ class EnvironmentManager {
         port: this.#toNumber('SERVER_PORT', process.env.SERVER_PORT)!,
         baseUrl: process.env.SERVER_BASE_URL!,
         httpRoute: process.env.HTTP_ROUTE!,
-        allowedHosts: new Set(process.env.ALLOWED_HOSTS!.split(',')),
-        allowedOrigins: new Set(process.env.ALLOWED_ORIGINS!.split(',')),
-        allowedMethods: new Set([
+        allowedHosts: process.env.ALLOWED_HOSTS!.split(','),
+        allowedOrigins: process.env.ALLOWED_ORIGINS!.split(','),
+        allowedMethods: [
           'HEAD',
           'GET',
           'POST',
@@ -53,7 +56,7 @@ class EnvironmentManager {
           'PATCH',
           'DELETE',
           'OPTIONS',
-        ]),
+        ],
       },
       database: {
         url: process.env.DATABASE_URL!,
@@ -90,6 +93,8 @@ class EnvironmentManager {
         hash: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
       },
     } as const;
+
+    this.#setGlobalValues();
   }
 
   public getEnvVariables() {
@@ -126,6 +131,22 @@ class EnvironmentManager {
     }
 
     return valueAsNumber;
+  }
+
+  #setGlobalValues() {
+    const {
+      node: { maxSockets, maxTotalSockets, defaultHighWaterMark },
+    } = this.#environmentVariables;
+
+    // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+    Stream.EventEmitter.captureRejections = true;
+
+    // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
+    globalAgent.maxSockets = maxSockets;
+    globalAgent.maxTotalSockets = maxTotalSockets;
+
+    // Set the default high water mark for Readable/Writeable streams
+    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
   }
 }
 
