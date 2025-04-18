@@ -1,8 +1,8 @@
-import type { RequestContext } from '../../../utils/index.ts';
+import type { RequestContext } from '../../../utils/types.ts';
 
 import {
-  type CreateRoleValidatedData,
   handlePossibleDuplicationError,
+  type CreateRoleValidatedData,
   type Role,
 } from './utils.ts';
 

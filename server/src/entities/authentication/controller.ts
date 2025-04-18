@@ -2,12 +2,8 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
-import {
-  GeneralError,
-  UnauthorizedError,
-  type RequestContext,
-  type ResponseWithContext,
-} from '../../utils/index.ts';
+import { GeneralError, UnauthorizedError } from '../../utils/errors.ts';
+import type { RequestContext, ResponseWithContext } from '../../utils/types.ts';
 
 import * as authenticationValidator from './validator.ts';
 

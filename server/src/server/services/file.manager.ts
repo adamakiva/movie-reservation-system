@@ -8,7 +8,8 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
 import multer, { type Multer, type Options, type StorageEngine } from 'multer';
 
-import { GeneralError, type Logger } from '../../utils/index.ts';
+import { GeneralError } from '../../utils/errors.ts';
+import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 

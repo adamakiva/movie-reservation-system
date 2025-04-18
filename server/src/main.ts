@@ -7,7 +7,8 @@ import {
 } from '@adamakiva/movie-reservation-system-shared';
 
 import { HttpServer } from './server/index.ts';
-import { EnvironmentManager, Logger } from './utils/index.ts';
+import { EnvironmentManager } from './utils/config.ts';
+import { Logger } from './utils/logger.ts';
 
 /**********************************************************************************/
 

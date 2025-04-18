@@ -1,7 +1,7 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import type { Request } from 'express';
 
-import type { ResponseWithContext } from '../../utils/index.ts';
+import type { ResponseWithContext } from '../../utils/types.ts';
 
 import * as showtimeService from './service/index.ts';
 import * as showtimeValidator from './validator.ts';

@@ -1,6 +1,6 @@
 import type { Logger as DrizzleLogger } from 'drizzle-orm';
 
-import type { Logger } from '../utils/index.ts';
+import type { Logger } from '../utils/logger.ts';
 
 /**********************************************************************************/
 

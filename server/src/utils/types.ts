@@ -7,9 +7,7 @@ import type {
   MessageQueue,
 } from '../server/services/index.ts';
 
-import { EnvironmentManager } from './config.ts';
-import { GeneralError, UnauthorizedError } from './errors.ts';
-import { Logger, type LogMiddleware } from './logger.ts';
+import type { Logger, LogMiddleware } from './logger.ts';
 
 /********************************** Http ******************************************/
 
@@ -50,16 +48,12 @@ type PaginatedResult<T = unknown> = T & { page: Pagination };
 
 /**********************************************************************************/
 
-export {
-  EnvironmentManager,
-  GeneralError,
-  Logger,
-  UnauthorizedError,
-  type DatabaseHandler,
-  type DatabaseModel,
-  type LogMiddleware,
-  type PaginatedResult,
-  type RequestContext,
-  type ResponseWithContext,
-  type ResponseWithoutContext,
+export type {
+  DatabaseHandler,
+  DatabaseModel,
+  LogMiddleware,
+  PaginatedResult,
+  RequestContext,
+  ResponseWithContext,
+  ResponseWithoutContext,
 };

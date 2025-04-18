@@ -15,7 +15,8 @@ import {
   cancelShowtimeReservations,
   reserveShowtimeTicket,
 } from '../entities/showtime/service/utils.ts';
-import type { Logger, LogMiddleware, RequestContext } from '../utils/index.ts';
+import type { Logger, LogMiddleware } from '../utils/logger.ts';
+import type { RequestContext } from '../utils/types.ts';
 
 import {
   AuthenticationManager,

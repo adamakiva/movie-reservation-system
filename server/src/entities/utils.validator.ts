@@ -5,7 +5,7 @@ import zod, {
   type SafeParseReturnType,
 } from 'zod';
 
-import { GeneralError } from '../utils/index.ts';
+import { GeneralError } from '../utils/errors.ts';
 
 /**********************************************************************************/
 

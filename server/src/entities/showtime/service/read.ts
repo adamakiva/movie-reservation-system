@@ -5,7 +5,7 @@ import type {
   DatabaseModel,
   PaginatedResult,
   RequestContext,
-} from '../../../utils/index.ts';
+} from '../../../utils/types.ts';
 
 import { encodeCursor } from '../../utils.validator.ts';
 

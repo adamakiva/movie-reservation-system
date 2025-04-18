@@ -2,7 +2,7 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import type { Request } from 'express';
 import zod from 'zod';
 
-import type { ResponseWithContext } from '../../utils/index.ts';
+import type { ResponseWithContext } from '../../utils/types.ts';
 
 import { parseValidationResult } from '../utils.validator.ts';
 

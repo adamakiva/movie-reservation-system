@@ -7,7 +7,8 @@ import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import pg from 'postgres';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
-import { GeneralError, type RequestContext } from '../../../utils/index.ts';
+import { GeneralError } from '../../../utils/errors.ts';
+import type { RequestContext } from '../../../utils/types.ts';
 
 import type {
   validateCancelUserShowtimeReservation,

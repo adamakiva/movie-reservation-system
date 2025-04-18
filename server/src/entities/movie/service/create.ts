@@ -4,7 +4,7 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   RequestContext,
-} from '../../../utils/index.ts';
+} from '../../../utils/types.ts';
 
 import {
   type CreateMovieValidatedData,

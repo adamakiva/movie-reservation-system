@@ -20,7 +20,8 @@ import {
   type ReturnedMessage,
 } from 'rabbitmq-client';
 
-import { GeneralError, type Logger } from '../../utils/index.ts';
+import { GeneralError } from '../../utils/errors.ts';
+import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 

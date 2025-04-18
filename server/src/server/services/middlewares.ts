@@ -5,12 +5,12 @@ import {
 import type { NextFunction, Request, Response } from 'express';
 import pg from 'postgres';
 
-import {
-  GeneralError,
-  type RequestContext,
-  type ResponseWithContext,
-  type ResponseWithoutContext,
-} from '../../utils/index.ts';
+import { GeneralError } from '../../utils/errors.ts';
+import type {
+  RequestContext,
+  ResponseWithContext,
+  ResponseWithoutContext,
+} from '../../utils/types.ts';
 
 /**********************************************************************************/
 

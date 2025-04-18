@@ -5,11 +5,8 @@ import { argon2i, hash, verify } from 'argon2';
 import type { NextFunction, Request } from 'express';
 import * as jose from 'jose';
 
-import {
-  GeneralError,
-  UnauthorizedError,
-  type ResponseWithContext,
-} from '../../utils/index.ts';
+import { GeneralError, UnauthorizedError } from '../../utils/errors.ts';
+import type { ResponseWithContext } from '../../utils/types.ts';
 
 /**********************************************************************************/
 

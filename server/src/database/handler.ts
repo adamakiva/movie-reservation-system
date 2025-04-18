@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import pg from 'postgres';
 
-import type { Logger } from '../utils/index.ts';
+import type { Logger } from '../utils/logger.ts';
 
 import { DatabaseLogger } from './logger.ts';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */

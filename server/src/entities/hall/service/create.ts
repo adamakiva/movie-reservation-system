@@ -1,4 +1,4 @@
-import type { RequestContext } from '../../../utils/index.ts';
+import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type CreateHallValidatedData,

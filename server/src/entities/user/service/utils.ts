@@ -4,7 +4,7 @@ import {
 } from '@adamakiva/movie-reservation-system-shared';
 import pg from 'postgres';
 
-import { GeneralError } from '../../../utils/index.ts';
+import { GeneralError } from '../../../utils/errors.ts';
 
 import type {
   validateCreateUser,
