@@ -148,8 +148,8 @@ class AuthenticationManager {
     }
   }
 
-  public getUserId(authorizationHeader: string) {
-    const token = authorizationHeader.replace('Bearer', '');
+  public getUserId(authenticationHeader: string) {
+    const token = authenticationHeader.replace('Bearer', '');
 
     const decodedJwt = jose.decodeJwt(token);
 
@@ -167,6 +167,15 @@ class AuthenticationManager {
     return await verify(hash, password, {
       secret: this.#hashSecret,
     });
+  }
+
+  public async verifyWebsocketAuthentication(token: string) {
+    const {
+      payload: { sub, exp },
+    } = await this.validateToken(token, 'access');
+    if (!sub || !exp) {
+      throw new UnauthorizedError('malformed');
+    }
   }
 
   /********************************************************************************/
@@ -233,11 +242,11 @@ class AuthenticationManager {
     _response: ResponseWithContext,
     next: NextFunction,
   ) {
-    const authorizationHeader = request.headers.authorization;
-    if (!authorizationHeader) {
+    const authenticationHeader = request.headers.authorization;
+    if (!authenticationHeader) {
       throw new UnauthorizedError('missing');
     }
-    const token = authorizationHeader.replace('Bearer', '');
+    const token = authenticationHeader.replace('Bearer', '');
 
     const {
       payload: { sub, exp },

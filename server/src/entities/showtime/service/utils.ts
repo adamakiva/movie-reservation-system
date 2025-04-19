@@ -81,10 +81,16 @@ function reserveShowtimeTicket(database: RequestContext['database']) {
     const handler = database.getHandler();
     const { userShowtime: userShowtimeModel } = database.getModels();
 
-    await handler
-      .update(userShowtimeModel)
-      .set({ transactionId })
-      .where(eq(userShowtimeModel.id, userShowtimeId));
+    const filter = eq(userShowtimeModel.id, userShowtimeId);
+    if (transactionId) {
+      await handler
+        .update(userShowtimeModel)
+        .set({ transactionId })
+        .where(filter);
+    } else {
+      // TODO Send a socket message to update available seats (transaction canceled)
+      await handler.delete(userShowtimeModel).where(filter);
+    }
 
     return ConsumerStatus.ACK;
   };
@@ -106,7 +112,7 @@ function cancelShowtimeReservations(database: RequestContext['database']) {
     const handler = database.getHandler();
     const { userShowtime: userShowtimeModel } = database.getModels();
 
-    await handler.delete(userShowtimeModel).where(
+    const deleted = await handler.delete(userShowtimeModel).where(
       and(
         eq(userShowtimeModel.showtimeId, showtimeId),
         // Only delete confirmed reservations (Reservations which were payed for)
@@ -116,6 +122,9 @@ function cancelShowtimeReservations(database: RequestContext['database']) {
           : inArray(userShowtimeModel.userId, userIds),
       ),
     );
+    if (deleted.length) {
+      // TODO Send a socket message to update available seats (transaction(s) canceled)
+    }
 
     return ConsumerStatus.ACK;
   };

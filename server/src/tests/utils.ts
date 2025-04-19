@@ -43,7 +43,7 @@ import type { User } from '../entities/user/service/utils.ts';
 import { USER } from '../entities/user/validator.ts';
 import { VALIDATION } from '../entities/utils.validator.ts';
 import { HttpServer } from '../server/index.ts';
-import * as Middlewares from '../server/services/middlewares.ts';
+import { Middlewares } from '../server/middlewares/index.ts';
 
 import { EnvironmentManager } from '../utils/config.ts';
 import { GeneralError } from '../utils/errors.ts';

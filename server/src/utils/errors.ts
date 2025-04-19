@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
 
+import type { ServerResponse } from 'node:http';
 import { inspect } from 'node:util';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import type { Response } from 'express';
 import pg from 'postgres';
 
 /**********************************************************************************/
@@ -48,7 +48,7 @@ class GeneralError extends Error {
 
   // The unused variable exists to allow overrides of child classes
   // eslint-disable-next-line no-unused-vars
-  public getClientError(_response: Response) {
+  public getClientError(_response: ServerResponse) {
     return {
       code: this.#statusCode,
       message: this.#message,
@@ -113,7 +113,7 @@ class UnauthorizedError extends GeneralError {
     this.#reason = reason;
   }
 
-  public override getClientError(response: Response) {
+  public override getClientError(response: ServerResponse) {
     response.setHeader(
       'WWW-Authenticate',
       this.#getWWWAuthenticateHeaderValue(),

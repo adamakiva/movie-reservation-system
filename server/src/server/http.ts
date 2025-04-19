@@ -18,11 +18,11 @@ import {
 import type { Logger, LogMiddleware } from '../utils/logger.ts';
 import type { RequestContext } from '../utils/types.ts';
 
+import { Middlewares } from './middlewares/index.ts';
 import {
   AuthenticationManager,
   FileManager,
   MessageQueue,
-  Middlewares,
 } from './services/index.ts';
 
 /**********************************************************************************/

@@ -107,7 +107,8 @@ function createReserveTicketConsumer(
       }
       const { userShowtimeId, userDetails, movieDetails } = body;
 
-      // TODO Payment processing
+      // TODO Payment processing, on failure return a null transactionId so the
+      // ph entry in the database can be removed
       const transactionId = randomUUID();
 
       // TODO Send email receipt

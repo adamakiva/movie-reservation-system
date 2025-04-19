@@ -168,6 +168,8 @@ async function reserveShowtimeTicket(params: {
       });
     }
   });
+
+  // TODO Send a socket message to update available seats
 }
 
 /**********************************************************************************/
