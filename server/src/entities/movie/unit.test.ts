@@ -41,7 +41,7 @@ await suite('Movie unit tests', async () => {
       await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {

@@ -4,9 +4,9 @@ import { setTimeout } from 'node:timers/promises';
 import autocannon from 'autocannon';
 
 import {
-  clearDatabase,
   randomAlphaNumericString,
   sendHttpRequest,
+  terminateServer,
 } from '../utils.ts';
 
 import { handler } from './server.ts';
@@ -15,6 +15,7 @@ import { handler } from './server.ts';
 
 async function stressTest() {
   const {
+    server,
     routes: { http: httpRoute },
     database,
     logger,
@@ -45,19 +46,15 @@ async function stressTest() {
         console.error(err);
       }
 
-      // Allow any hanging resources (I/O, connections, etc...) time to shutdown
-      await setTimeout(2_000);
+      try {
+        // Allow any hanging resources (I/O, connections, etc...) time to shutdown
+        await setTimeout(2_000);
+      } catch {
+        // On purpose
+      }
 
-      try {
-        await clearDatabase(database);
-      } catch {
-        // Continue shutdown
-      }
-      try {
-        await handler.server.close();
-      } catch {
-        // Continue shutdown
-      }
+      // Can't throw
+      await terminateServer(server, database);
 
       logger.info(autocannon.printResult(result));
 
@@ -94,6 +91,7 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       //@ts-expect-error Missing the function declaration in the definitelyTyped
       // package
       setupRequest: (request) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...request,
           method: 'GET',
@@ -106,6 +104,7 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       //@ts-expect-error Missing the function declaration in the definitelyTyped
       // package
       setupRequest: (request) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...request,
           method: 'POST',

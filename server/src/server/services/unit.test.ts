@@ -23,11 +23,12 @@ await suite('Middleware tests', async () => {
   let logger: ServerParams['logger'] = null!;
   let server: ServerParams['server'] = null!;
   let authentication: ServerParams['authentication'] = null!;
+  let database: ServerParams['database'] = null!;
   before(async () => {
-    ({ server, authentication, logger } = await initServer());
+    ({ server, authentication, database, logger } = await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Valid - Methods middleware', (context) => {

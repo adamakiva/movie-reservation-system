@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+import Stream from 'node:stream';
 
 import {
   ERROR_CODES,
@@ -41,11 +42,10 @@ function startWorker() {
     throw new Error('Missing message queue url');
   }
 
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
+  setGlobalValues();
 
   const messageQueue = new MessageQueue({
-    url: process.env.MESSAGE_QUEUE_URL!,
+    url: messageQueueUrl,
   });
 
   const publishers = messageQueue.createPublishers({
@@ -74,6 +74,18 @@ function startWorker() {
 }
 
 /**********************************************************************************/
+
+function setGlobalValues() {
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
+
+  const defaultHighWaterMark = Number(process.env.NODE_DEFAULT_HIGH_WATERMARK);
+  if (isNaN(defaultHighWaterMark)) {
+    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
+  } else {
+    Stream.setDefaultHighWaterMark(false, 65_536);
+  }
+}
 
 function createReserveTicketConsumer(
   messageQueue: MessageQueue,

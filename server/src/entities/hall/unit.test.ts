@@ -37,7 +37,7 @@ await suite('Hall unit tests', async () => {
       await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {

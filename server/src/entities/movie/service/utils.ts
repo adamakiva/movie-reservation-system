@@ -2,9 +2,12 @@ import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
 } from '@adamakiva/movie-reservation-system-shared';
-import pg from 'postgres';
 
-import { GeneralError } from '../../../utils/errors.ts';
+import {
+  GeneralError,
+  isDatabaseError,
+  isError,
+} from '../../../utils/errors.ts';
 
 import type {
   validateCreateMovie,
@@ -38,8 +41,14 @@ type MoviePoster = {
 /**********************************************************************************/
 
 function handlePossibleMissingGenreError(error: unknown, genre: string) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
   if (
-    !(error instanceof pg.PostgresError) ||
+    !isDatabaseError(error) ||
     error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
     return error;

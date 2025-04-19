@@ -3,9 +3,9 @@ import {
   HTTP_STATUS_CODES,
 } from '@adamakiva/movie-reservation-system-shared';
 import type { NextFunction, Request, Response } from 'express';
-import pg from 'postgres';
+import type pg from 'postgres';
 
-import { GeneralError } from '../../utils/errors.ts';
+import { GeneralError, isDatabaseError, isError } from '../../utils/errors.ts';
 import type {
   RequestContext,
   ResponseWithContext,
@@ -69,17 +69,13 @@ function errorHandler(
     response.status(code).json(message);
     return;
   }
-  if (
-    error instanceof Object &&
-    'type' in error &&
-    error.type === 'entity.too.large'
-  ) {
+  if (isError(error) && 'type' in error && error.type === 'entity.too.large') {
     response
       .status(HTTP_STATUS_CODES.CONTENT_TOO_LARGE)
       .json('Request entity too large');
     return;
   }
-  if (error instanceof pg.PostgresError) {
+  if (isError(error) && isDatabaseError(error)) {
     handlePostgresError(error, response);
     return;
   }

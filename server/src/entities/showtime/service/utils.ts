@@ -4,10 +4,14 @@ import {
   MESSAGE_QUEUE,
 } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq, inArray, isNotNull } from 'drizzle-orm';
-import pg from 'postgres';
+import type pg from 'postgres';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
-import { GeneralError } from '../../../utils/errors.ts';
+import {
+  GeneralError,
+  isDatabaseError,
+  isError,
+} from '../../../utils/errors.ts';
 import type { RequestContext } from '../../../utils/types.ts';
 
 import type {
@@ -125,7 +129,13 @@ function handlePossibleShowtimeCreationError(params: {
 }) {
   const { error, at, hall, movie } = params;
 
-  if (!(error instanceof pg.PostgresError)) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (!isDatabaseError(error)) {
     return error;
   }
 
@@ -185,8 +195,14 @@ function handlePossibleTicketDuplicationError(params: {
 }) {
   const { error, row, column } = params;
 
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
   if (
-    !(error instanceof pg.PostgresError) ||
+    !isDatabaseError(error) ||
     error.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   ) {
     return error;

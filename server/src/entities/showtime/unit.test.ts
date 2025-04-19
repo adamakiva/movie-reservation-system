@@ -29,11 +29,12 @@ const { PAGINATION } = VALIDATION;
 await suite('Showtime unit tests', async () => {
   let logger: ServerParams['logger'] = null!;
   let server: ServerParams['server'] = null!;
+  let database: ServerParams['database'] = null!;
   before(async () => {
-    ({ server, logger } = await initServer());
+    ({ server, database, logger } = await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Invalid - Read multiple validation: Empty movie id', (context) => {

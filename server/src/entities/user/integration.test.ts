@@ -47,7 +47,7 @@ await suite('User integration tests', async () => {
     } = await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Valid - Read a single page', async () => {

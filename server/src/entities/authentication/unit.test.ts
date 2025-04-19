@@ -34,7 +34,7 @@ await suite('Authentication unit tests', async () => {
       await initServer());
   });
   after(async () => {
-    await terminateServer(server);
+    await terminateServer(server, database);
   });
 
   await test('Invalid - Login validation: Missing email', (context) => {

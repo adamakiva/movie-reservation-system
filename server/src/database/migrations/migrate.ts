@@ -10,18 +10,7 @@ import * as schemas from '../schemas.ts';
 
 /**********************************************************************************/
 
-/**
- * This function may return a promise or not, depending on whether the required
- * environment variables exist.
- *
- * Normally this is bad practice because due to different error handling.
- *
- * However in this case, all errors are handled by shutting down the process and
- * are not propagated down the caller chain.
- */
-//@ts-expect-error On purpose, see the above comment
-// eslint-disable-next-line consistent-return
-function run() {
+async function run() {
   const logger = new Logger();
 
   const environmentVariables = new Map([
@@ -44,7 +33,7 @@ function run() {
   });
 
   if (!errorMessages.length) {
-    return Promise.all(
+    await Promise.all(
       databaseUrls.values().map((databaseUrl) => {
         return migration(databaseUrl!, logger);
       }),
@@ -52,6 +41,7 @@ function run() {
       logger.fatal('Migration failed:', error);
       process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
+    return;
   }
 
   logger.fatal(errorMessages.join('\n'));
@@ -116,6 +106,4 @@ async function seedInitialData(params: {
 
 /**********************************************************************************/
 
-// On purpose, see this function documentation
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-run();
+await run();

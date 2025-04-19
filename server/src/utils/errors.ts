@@ -4,6 +4,7 @@ import { inspect } from 'node:util';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import type { Response } from 'express';
+import pg from 'postgres';
 
 /**********************************************************************************/
 
@@ -130,4 +131,14 @@ class UnauthorizedError extends GeneralError {
 
 /**********************************************************************************/
 
-export { GeneralError, UnauthorizedError };
+function isError(obj: unknown): obj is Error {
+  return obj instanceof Error;
+}
+
+function isDatabaseError(obj: unknown): obj is pg.PostgresError {
+  return obj instanceof pg.PostgresError;
+}
+
+/**********************************************************************************/
+
+export { GeneralError, isDatabaseError, isError, UnauthorizedError };

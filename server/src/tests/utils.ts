@@ -17,7 +17,7 @@ import {
 } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash } from 'argon2';
 import { eq, getTableName, sql } from 'drizzle-orm';
-import type { Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { fileTypeFromFile } from 'file-type';
 import {
   createRequest,
@@ -110,9 +110,17 @@ async function initServer() {
   return await createServer();
 }
 
-async function terminateServer(server: HttpServer) {
-  // The database closure is handled by the server close event handler
-  await server.close();
+async function terminateServer(server: HttpServer, database: Database) {
+  try {
+    await clearDatabase(database);
+  } catch {
+    // On purpose
+  }
+  try {
+    await server.close();
+  } catch {
+    // On purpose
+  }
 }
 
 /**********************************************************************************/
@@ -892,6 +900,11 @@ function mockLogger() {
 
   (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
     mock.method(logger, level, emptyFunction);
+  });
+  mock.method(logger, 'getLogMiddleware', () => {
+    return (_request: Request, _response: Response, next: NextFunction) => {
+      next();
+    };
   });
 
   return logger;

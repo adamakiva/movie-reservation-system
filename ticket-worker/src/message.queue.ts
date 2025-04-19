@@ -119,58 +119,47 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   }
 
   public async close() {
-    try {
-      await this.#closeConnections();
-    } finally {
-      this.#removeEventListeners();
-    }
-  }
+    await Promise.allSettled(
+      Object.values(this.#publishers).map((publisher) => {
+        return publisher
+          .close()
+          .catch(() => {
+            // On purpose
+          })
+          .finally(() => {
+            publisher.removeListener(
+              'basic-return',
+              this.#handleUndeliveredMessageEvent,
+            );
+          });
+      }),
+    );
 
-  /********************************************************************************/
+    await Promise.allSettled(
+      this.#consumers.map((consumer) => {
+        return consumer
+          .close()
+          .catch(() => {
+            // On purpose
+          })
+          .finally(() => {
+            consumer.removeListener('error', this.#handleConsumerErrorEvent);
+          });
+      }),
+    );
 
-  async #closeConnections() {
-    try {
-      await Promise.all(
-        Object.values(this.#publishers).map(async (publisher) => {
-          await publisher.close();
-        }),
-      );
-    } catch (error) {
-      console.error('Failure to shutdown publisher(s):', error);
-    }
-
-    try {
-      await Promise.all(
-        this.#consumers.map(async (consumer) => {
-          await consumer.close();
-        }),
-      );
-    } catch (error) {
-      console.error('Failure to shutdown consumer(s):', error);
-    }
-
-    try {
-      await this.#handler.close();
-    } catch (error) {
-      console.error('Failure to close message queue connection:', error);
-    }
-  }
-
-  #removeEventListeners() {
-    Object.values(this.#publishers).forEach((publisher) => {
-      publisher.removeListener(
-        'basic-return',
-        this.#handleUndeliveredMessageEvent,
-      );
-    });
-    this.#consumers.forEach((consumer) => {
-      consumer.removeListener('error', this.#handleConsumerErrorEvent);
-    });
-    this.#handler
-      .removeListener('connection.unblocked', this.#handleUnblockedEvent)
-      .removeListener('connection.blocked', this.#handleBlockedEvent)
-      .removeListener('connection', this.#handleConnectionEvent)
-      .removeListener('error', this.#handleErrorEvent);
+    await this.#handler
+      .close()
+      .catch(() => {
+        // On purpose
+      })
+      .finally(() => {
+        this.#handler
+          .removeListener('connection.unblocked', this.#handleUnblockedEvent)
+          .removeListener('connection.blocked', this.#handleBlockedEvent)
+          .removeListener('connection', this.#handleConnectionEvent)
+          .removeListener('error', this.#handleErrorEvent);
+      });
   }
 
   /********************************************************************************/
