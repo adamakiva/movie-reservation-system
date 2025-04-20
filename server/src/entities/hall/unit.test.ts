@@ -32,9 +32,17 @@ await suite('Hall unit tests', async () => {
   let fileManager: ServerParams['fileManager'] = null!;
   let database: ServerParams['database'] = null!;
   let messageQueue: ServerParams['messageQueue'] = null!;
+  let websocketServer: ServerParams['websocketServer'] = null!;
   before(async () => {
-    ({ server, fileManager, authentication, database, messageQueue, logger } =
-      await initServer());
+    ({
+      server,
+      fileManager,
+      authentication,
+      database,
+      messageQueue,
+      websocketServer,
+      logger,
+    } = await initServer());
   });
   after(async () => {
     await terminateServer(server, database);
@@ -480,9 +488,10 @@ await suite('Hall unit tests', async () => {
           await serviceFunctions.createHall(
             {
               authentication,
-              fileManager,
               database,
+              fileManager,
               messageQueue,
+              websocketServer,
               logger,
             },
             hallToCreate,
@@ -927,9 +936,10 @@ await suite('Hall unit tests', async () => {
           await serviceFunctions.updateHall(
             {
               authentication,
-              fileManager,
               database,
+              fileManager,
               messageQueue,
+              websocketServer,
               logger,
             },
             hallToUpdate,

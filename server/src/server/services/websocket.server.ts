@@ -77,12 +77,18 @@ class WebsocketServer {
     server: Server;
     authentication: AuthenticationManager;
     path: string;
-    pingTime: number;
+    pingTime?: number | undefined;
     backlog?: number | undefined;
     maxPayload?: number | undefined; // In bytes
     logger: Logger;
   }) {
-    const { server, authentication, pingTime, logger, ...options } = params;
+    const {
+      server,
+      authentication,
+      pingTime = 8_000,
+      logger,
+      ...options
+    } = params;
 
     // Fix the websocket path if needed
     if (!options.path.startsWith('/', 0)) {

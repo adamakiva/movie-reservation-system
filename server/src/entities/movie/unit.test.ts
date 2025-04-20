@@ -36,9 +36,17 @@ await suite('Movie unit tests', async () => {
   let fileManager: ServerParams['fileManager'] = null!;
   let database: ServerParams['database'] = null!;
   let messageQueue: ServerParams['messageQueue'] = null!;
+  let websocketServer: ServerParams['websocketServer'] = null!;
   before(async () => {
-    ({ server, fileManager, authentication, database, messageQueue, logger } =
-      await initServer());
+    ({
+      server,
+      fileManager,
+      authentication,
+      database,
+      messageQueue,
+      websocketServer,
+      logger,
+    } = await initServer());
   });
   after(async () => {
     await terminateServer(server, database);
@@ -154,6 +162,7 @@ await suite('Movie unit tests', async () => {
             database,
             fileManager,
             messageQueue,
+            websocketServer,
             logger,
           },
           randomUUID(),
@@ -1245,6 +1254,7 @@ await suite('Movie unit tests', async () => {
             database,
             fileManager,
             messageQueue,
+            websocketServer,
             logger,
           },
           {
@@ -2045,6 +2055,7 @@ await suite('Movie unit tests', async () => {
             database,
             fileManager,
             messageQueue,
+            websocketServer,
             logger,
           },
           {
@@ -2079,6 +2090,7 @@ await suite('Movie unit tests', async () => {
               database,
               fileManager,
               messageQueue,
+              websocketServer,
               logger,
             },
             {

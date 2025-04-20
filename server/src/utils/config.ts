@@ -18,8 +18,20 @@ class EnvironmentManager {
     'ALLOWED_HOSTS',
     'ALLOWED_ORIGINS',
     'DATABASE_URL',
+    'DATABASE_MAX_CONNECTIONS',
+    'DATABASE_STATEMENT_TIMEOUT',
+    'DATABASE_TRANSACTION_TIMEOUT',
     'MESSAGE_QUEUE_URL',
+    'WEBSOCKET_SERVER_BASE_URL',
+    'WEBSOCKET_SERVER_PING_TIME',
+    'WEBSOCKET_SERVER_BACKLOG',
+    'WEBSOCKET_SERVER_MAX_PAYLOAD',
     'AUTHENTICATION_HASH_SECRET',
+    'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
+    'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
+    'NODE_MAX_SOCKETS',
+    'NODE_MAX_TOTAL_SOCKETS',
+    'NODE_DEFAULT_HIGH_WATERMARK',
   ] as const;
 
   public constructor(logger: Logger) {
@@ -28,24 +40,23 @@ class EnvironmentManager {
 
     this.#environmentVariables = {
       node: {
-        maxSockets:
-          this.#toNumber('NODE_MAX_SOCKETS', process.env.NODE_MAX_SOCKETS) ??
-          Infinity,
-        maxTotalSockets:
-          this.#toNumber(
-            'NODE_MAX_TOTAL_SOCKETS',
-            process.env.NODE_MAX_TOTAL_SOCKETS,
-          ) ?? Infinity,
-        defaultHighWaterMark:
-          this.#toNumber(
-            'NODE_DEFAULT_HIGH_WATERMARK',
-            process.env.NODE_DEFAULT_HIGH_WATERMARK,
-          ) ?? 65_536,
+        maxSockets: this.#toNumber(
+          'NODE_MAX_SOCKETS',
+          process.env.NODE_MAX_SOCKETS,
+        )!,
+        maxTotalSockets: this.#toNumber(
+          'NODE_MAX_TOTAL_SOCKETS',
+          process.env.NODE_MAX_TOTAL_SOCKETS,
+        )!,
+        defaultHighWaterMark: this.#toNumber(
+          'NODE_DEFAULT_HIGH_WATERMARK',
+          process.env.NODE_DEFAULT_HIGH_WATERMARK,
+        )!,
       },
-      server: {
+      httpServer: {
         port: this.#toNumber('SERVER_PORT', process.env.SERVER_PORT)!,
         baseUrl: process.env.SERVER_BASE_URL!,
-        httpRoute: process.env.HTTP_ROUTE!,
+        route: process.env.HTTP_ROUTE!,
         allowedHosts: process.env.ALLOWED_HOSTS!.split(','),
         allowedOrigins: process.env.ALLOWED_ORIGINS!.split(','),
         allowedMethods: [
@@ -58,38 +69,48 @@ class EnvironmentManager {
           'OPTIONS',
         ],
       },
+      websocketServer: {
+        route: process.env.WEBSOCKET_SERVER_BASE_URL!,
+        pingTime: this.#toNumber(
+          'WEBSOCKET_SERVER_PING_TIME',
+          process.env.WEBSOCKET_SERVER_PING_TIME,
+        )!,
+        backlog: this.#toNumber(
+          'WEBSOCKET_SERVER_BACKLOG',
+          process.env.WEBSOCKET_SERVER_BACKLOG,
+        )!,
+        maxPayload: this.#toNumber(
+          'WEBSOCKET_SERVER_MAX_PAYLOAD',
+          process.env.WEBSOCKET_SERVER_MAX_PAYLOAD,
+        )!,
+      },
       database: {
         url: process.env.DATABASE_URL!,
-        maxConnections:
-          this.#toNumber(
-            'DATABASE_MAX_CONNECTIONS',
-            process.env.DATABASE_MAX_CONNECTIONS,
-          ) ?? 32,
-        statementTimeout:
-          this.#toNumber(
-            'DATABASE_STATEMENT_TIMEOUT',
-            process.env.DATABASE_STATEMENT_TIMEOUT,
-          ) ?? 30_000,
-        transactionTimeout:
-          this.#toNumber(
-            'DATABASE_TRANSACTION_TIMEOUT',
-            process.env.DATABASE_TRANSACTION_TIMEOUT,
-          ) ?? 60_000,
+        maxConnections: this.#toNumber(
+          'DATABASE_MAX_CONNECTIONS',
+          process.env.DATABASE_MAX_CONNECTIONS,
+        )!,
+        statementTimeout: this.#toNumber(
+          'DATABASE_STATEMENT_TIMEOUT',
+          process.env.DATABASE_STATEMENT_TIMEOUT,
+        )!,
+        transactionTimeout: this.#toNumber(
+          'DATABASE_TRANSACTION_TIMEOUT',
+          process.env.DATABASE_TRANSACTION_TIMEOUT,
+        )!,
       },
       messageQueue: {
         url: process.env.MESSAGE_QUEUE_URL!,
       },
       jwt: {
-        accessTokenExpiration:
-          this.#toNumber(
-            'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
-            process.env.AUTHENTICATION_ACCESS_TOKEN_EXPIRATION,
-          ) ?? 900, // 15 Minutes
-        refreshTokenExpiration:
-          this.#toNumber(
-            'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
-            process.env.AUTHENTICATION_REFRESH_TOKEN_EXPIRATION,
-          ) ?? 2_629_746, // 1 Month
+        accessTokenExpiration: this.#toNumber(
+          'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
+          process.env.AUTHENTICATION_ACCESS_TOKEN_EXPIRATION,
+        )!,
+        refreshTokenExpiration: this.#toNumber(
+          'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
+          process.env.AUTHENTICATION_REFRESH_TOKEN_EXPIRATION,
+        )!,
         hash: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
       },
     } as const;

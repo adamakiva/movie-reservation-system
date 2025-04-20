@@ -23,6 +23,7 @@ import {
   AuthenticationManager,
   FileManager,
   MessageQueue,
+  WebsocketServer,
 } from './services/index.ts';
 
 /**********************************************************************************/
@@ -32,6 +33,7 @@ class HttpServer {
   readonly #fileManager;
   readonly #database;
   readonly #messageQueue;
+  readonly #websocketServer;
   readonly #server;
   readonly #routes;
   readonly #requestContext;
@@ -39,6 +41,7 @@ class HttpServer {
 
   public static async create(params: {
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
+    databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     fileManagerParams: Omit<
       ConstructorParameters<typeof FileManager>[0],
       'logger'
@@ -47,8 +50,11 @@ class HttpServer {
       ConstructorParameters<typeof MessageQueue>[0],
       'logger'
     > & { routing: typeof MESSAGE_QUEUE };
+    websocketServerParams: Omit<
+      ConstructorParameters<typeof WebsocketServer>[0],
+      'server' | 'authentication' | 'logger'
+    >;
     corsOptions: Omit<Parameters<typeof cors>[0], 'methods'>;
-    databaseParams: Omit<ConstructorParameters<typeof Database>[0], 'logger'>;
     allowedMethods: readonly string[];
     routes: { http: string };
     logMiddleware: LogMiddleware;
@@ -56,10 +62,11 @@ class HttpServer {
   }) {
     const {
       authenticationParams,
-      fileManagerParams,
-      corsOptions,
       databaseParams,
+      fileManagerParams,
       messageQueueParams,
+      websocketServerParams,
+      corsOptions,
       allowedMethods,
       routes,
       logMiddleware,
@@ -68,8 +75,8 @@ class HttpServer {
 
     const authentication =
       await AuthenticationManager.create(authenticationParams);
-    const fileManager = new FileManager({ ...fileManagerParams, logger });
     const database = new Database({ ...databaseParams, logger });
+    const fileManager = new FileManager({ ...fileManagerParams, logger });
     const messageQueue = new MessageQueue({
       connectionOptions: messageQueueParams.connectionOptions,
       logger,
@@ -85,14 +92,22 @@ class HttpServer {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const server = createServer(app);
 
+    const websocketServer = new WebsocketServer({
+      ...websocketServerParams,
+      server,
+      authentication,
+      logger,
+    });
+
     const self = new HttpServer({
       authentication,
-      fileManager,
       database,
+      fileManager,
       messageQueue: {
         handler: messageQueue,
         routing: messageQueueParams.routing,
       },
+      websocketServer,
       server,
       routes,
       logger,
@@ -145,6 +160,10 @@ class HttpServer {
     return this.#messageQueue;
   }
 
+  public getWebsocketServer() {
+    return this.#websocketServer;
+  }
+
   public async close() {
     let exitCode = 0;
 
@@ -159,6 +178,7 @@ class HttpServer {
         exitCode = ERROR_CODES.EXIT_NO_RESTART;
       }
     });
+    this.#websocketServer.close();
     this.#server.close();
 
     return exitCode;
@@ -168,32 +188,35 @@ class HttpServer {
 
   private constructor(params: {
     authentication: AuthenticationManager;
-    fileManager: FileManager;
     database: Database;
+    fileManager: FileManager;
     messageQueue: {
       handler: MessageQueue;
       routing: Parameters<
         typeof HttpServer.create
       >[0]['messageQueueParams']['routing'];
     };
+    websocketServer: WebsocketServer;
     server: Server;
     routes: { http: string };
     logger: Logger;
   }) {
     const {
       authentication,
-      fileManager,
       database,
+      fileManager,
       messageQueue,
+      websocketServer,
       server,
       routes,
       logger,
     } = params;
 
     this.#authentication = authentication;
-    this.#fileManager = fileManager;
     this.#database = database;
+    this.#fileManager = fileManager;
     this.#messageQueue = messageQueue.handler;
+    this.#websocketServer = websocketServer;
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.#server = server.once('error', this.#handleErrorEvent);
     this.#routes = routes;
@@ -203,9 +226,10 @@ class HttpServer {
 
     this.#requestContext = {
       authentication,
-      fileManager,
       database,
+      fileManager,
       messageQueue: messageQueue.handler,
+      websocketServer,
       logger,
     } as const satisfies RequestContext;
   }

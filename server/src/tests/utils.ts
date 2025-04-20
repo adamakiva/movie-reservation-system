@@ -133,11 +133,12 @@ async function createServer() {
 
   const environmentManager = new EnvironmentManager(logger);
   const {
-    node,
-    jwt,
-    server: serverEnv,
-    database,
-    messageQueue,
+    node: nodeEnv,
+    jwt: jwtEnv,
+    httpServer: httpServerEnv,
+    websocketServer: websocketServerEnv,
+    database: databaseEnv,
+    messageQueue: messageQueueEnv,
   } = environmentManager.getEnvVariables();
 
   const server = await HttpServer.create({
@@ -147,38 +148,21 @@ async function createServer() {
       type: 'JWT',
       algorithm: 'RS256',
       access: {
-        expiresAt: jwt.accessTokenExpiration,
+        expiresAt: jwtEnv.accessTokenExpiration,
       },
       refresh: {
-        expiresAt: jwt.refreshTokenExpiration,
+        expiresAt: jwtEnv.refreshTokenExpiration,
       },
       keysPath: resolve(import.meta.dirname, '..', '..', 'keys'),
-      hashSecret: jwt.hash,
-    },
-    fileManagerParams: {
-      generatedFileNameLength: 32,
-      saveDir: tmpdir(),
-      highWatermark: node.defaultHighWaterMark,
-      limits: {
-        fileSize: 4_194_304, // 4mb
-        files: 1, // Currently only 1 file is expected, change if needed
-      },
-    },
-    corsOptions: {
-      origin:
-        serverEnv.allowedOrigins.length === 1
-          ? serverEnv.allowedOrigins[0]
-          : serverEnv.allowedOrigins,
-      maxAge: 86_400, // 1 day in seconds
-      optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
+      hashSecret: jwtEnv.hash,
     },
     databaseParams: {
-      url: database.url,
+      url: databaseEnv.url,
       options: {
-        max: database.maxConnections,
+        max: databaseEnv.maxConnections,
         connection: {
-          statement_timeout: database.statementTimeout,
-          idle_in_transaction_session_timeout: database.transactionTimeout,
+          statement_timeout: databaseEnv.statementTimeout,
+          idle_in_transaction_session_timeout: databaseEnv.transactionTimeout,
         },
       },
       // Alive vs Readiness check boils down to:
@@ -186,13 +170,36 @@ async function createServer() {
       isAliveQuery: 'SELECT NOW()',
       isReadyQuery: 'SELECT NOW()',
     },
+    fileManagerParams: {
+      generatedFileNameLength: 32,
+      saveDir: tmpdir(),
+      highWatermark: nodeEnv.defaultHighWaterMark,
+      limits: {
+        fileSize: 4_194_304, // 4mb
+        files: 1, // Currently only 1 file is expected, change if needed
+      },
+    },
     messageQueueParams: {
-      connectionOptions: { url: messageQueue.url },
+      connectionOptions: { url: messageQueueEnv.url },
       routing: MESSAGE_QUEUE,
     },
-    allowedMethods: serverEnv.allowedMethods,
+    websocketServerParams: {
+      path: `/${websocketServerEnv.route}`,
+      pingTime: websocketServerEnv.pingTime,
+      backlog: websocketServerEnv.backlog,
+      maxPayload: websocketServerEnv.maxPayload,
+    },
+    corsOptions: {
+      origin:
+        httpServerEnv.allowedOrigins.length === 1
+          ? httpServerEnv.allowedOrigins[0]
+          : httpServerEnv.allowedOrigins,
+      maxAge: 86_400, // 1 day in seconds
+      optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
+    },
+    allowedMethods: httpServerEnv.allowedMethods,
     routes: {
-      http: `/${serverEnv.httpRoute}`,
+      http: `/${httpServerEnv.route}`,
     },
     logMiddleware: logger.getLogMiddleware(),
     logger,
@@ -207,9 +214,11 @@ async function createServer() {
     fileManager: server.getFileManager(),
     database: server.getDatabase(),
     messageQueue: server.getMessageQueue(),
+    websocketServer: server.getWebsocketServer(),
     routes: {
       base: baseUrl,
-      http: `${baseUrl}/${serverEnv.httpRoute}`,
+      http: `${baseUrl}/${httpServerEnv.route}`,
+      ws: `${baseUrl}/${websocketServerEnv.route}`,
     },
     logger,
   } as const;
