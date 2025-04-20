@@ -1,15 +1,34 @@
 {
   "name": "@adamakiva/movie-reservation-system-shared",
-  "version": "0.0.1",
   "description": "Movie reservation system shared components",
+  "version": "0.0.2",
+  "type": "module",
   "main": "index.js",
   "author": "Adam Akiva",
   "license": "MIT",
+  "private": false,
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/adamakiva/movie-reservation-system.git"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/AdamAkiva/movie-reservation-system/issues"
+  },
+  "maintainers": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ]
 }
