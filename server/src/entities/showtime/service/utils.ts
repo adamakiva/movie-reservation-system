@@ -1,18 +1,14 @@
 import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
-  MESSAGE_QUEUE,
 } from '@adamakiva/movie-reservation-system-shared';
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import type pg from 'postgres';
-import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
 import {
   GeneralError,
   isDatabaseError,
   isError,
 } from '../../../utils/errors.ts';
-import type { RequestContext } from '../../../utils/types.ts';
 
 import type {
   validateCancelUserShowtimeReservation,
@@ -64,71 +60,6 @@ type ShowtimeTicket = {
 };
 
 /**********************************************************************************/
-
-function reserveShowtimeTicket(database: RequestContext['database']) {
-  return async (
-    message: Omit<AsyncMessage, 'body'> & {
-      body: { userShowtimeId: string; transactionId: string };
-    },
-  ) => {
-    const { correlationId, body } = message;
-
-    if (correlationId !== MESSAGE_QUEUE.TICKET.RESERVE.CORRELATION_ID) {
-      return ConsumerStatus.DROP;
-    }
-    const { userShowtimeId, transactionId } = body;
-
-    const handler = database.getHandler();
-    const { userShowtime: userShowtimeModel } = database.getModels();
-
-    const filter = eq(userShowtimeModel.id, userShowtimeId);
-    if (transactionId) {
-      await handler
-        .update(userShowtimeModel)
-        .set({ transactionId })
-        .where(filter);
-    } else {
-      // TODO Send a socket message to update available seats (transaction canceled)
-      await handler.delete(userShowtimeModel).where(filter);
-    }
-
-    return ConsumerStatus.ACK;
-  };
-}
-
-function cancelShowtimeReservations(database: RequestContext['database']) {
-  return async (
-    message: Omit<AsyncMessage, 'body'> & {
-      body: { showtimeId: string; userIds: string | string[] };
-    },
-  ) => {
-    const { correlationId, body } = message;
-
-    if (correlationId !== MESSAGE_QUEUE.TICKET.CANCEL.CORRELATION_ID) {
-      return ConsumerStatus.DROP;
-    }
-    const { showtimeId, userIds } = body;
-
-    const handler = database.getHandler();
-    const { userShowtime: userShowtimeModel } = database.getModels();
-
-    const deleted = await handler.delete(userShowtimeModel).where(
-      and(
-        eq(userShowtimeModel.showtimeId, showtimeId),
-        // Only delete confirmed reservations (Reservations which were payed for)
-        isNotNull(userShowtimeModel.transactionId),
-        !Array.isArray(userIds)
-          ? eq(userShowtimeModel.userId, userIds)
-          : inArray(userShowtimeModel.userId, userIds),
-      ),
-    );
-    if (deleted.length) {
-      // TODO Send a socket message to update available seats (transaction(s) canceled)
-    }
-
-    return ConsumerStatus.ACK;
-  };
-}
 
 function handlePossibleShowtimeCreationError(params: {
   error: unknown;
@@ -227,10 +158,8 @@ function handlePossibleTicketDuplicationError(params: {
 /**********************************************************************************/
 
 export {
-  cancelShowtimeReservations,
   handlePossibleShowtimeCreationError,
   handlePossibleTicketDuplicationError,
-  reserveShowtimeTicket,
   type CancelUserShowtimeValidatedData,
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,

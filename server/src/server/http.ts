@@ -13,7 +13,7 @@ import * as routers from '../entities/index.ts';
 import {
   cancelShowtimeReservations,
   reserveShowtimeTicket,
-} from '../entities/showtime/service/utils.ts';
+} from '../entities/showtime/service/consumer.ts';
 import type { EnvironmentVariables } from '../utils/config.ts';
 import type { Logger, LogMiddleware } from '../utils/logger.ts';
 import type { RequestContext } from '../utils/types.ts';
@@ -265,7 +265,11 @@ class HttpServer {
         queue: routing.TICKET.RESERVE.CLIENT.QUEUE_NAME,
         routingKey: routing.TICKET.RESERVE.CLIENT.ROUTING_KEY_NAME,
       },
-      handler: reserveShowtimeTicket(this.#database),
+      handler: reserveShowtimeTicket({
+        database: this.#database,
+        websocketServer: this.#websocketServer,
+        logger: this.#logger,
+      }),
     });
     messageQueue.createConsumer({
       concurrency: 1,
@@ -275,7 +279,11 @@ class HttpServer {
         queue: routing.TICKET.CANCEL.CLIENT.QUEUE_NAME,
         routingKey: routing.TICKET.CANCEL.CLIENT.ROUTING_KEY_NAME,
       },
-      handler: cancelShowtimeReservations(this.#database),
+      handler: cancelShowtimeReservations({
+        database: this.#database,
+        websocketServer: this.#websocketServer,
+        logger: this.#logger,
+      }),
     });
   }
 

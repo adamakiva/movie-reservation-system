@@ -5,7 +5,7 @@ import type { Socket } from 'node:net';
 import { parse } from 'node:url';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import { type WebSocket, WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
 import { UnauthorizedError } from '../../utils/errors.ts';
 import type { Logger } from '../../utils/logger.ts';
@@ -32,6 +32,10 @@ class Websocket {
       .on('pong', this.#pongEventHandler);
 
     this.isAlive = true;
+  }
+
+  public state() {
+    return this.#handler.readyState;
   }
 
   public ping(...parameters: Parameters<WebSocket['ping']>) {
@@ -132,10 +136,22 @@ class WebsocketServer {
     userId: string,
     ...parameters: Parameters<WebSocket['send']>
   ) {
-    const ws = this.#clients.get(userId);
+    const userWebsockets = this.#clients.get(userId);
 
-    ws?.forEach((ws) => {
-      ws.sendMessage(...parameters);
+    userWebsockets?.forEach((websocket) => {
+      if (websocket.isAlive && websocket.state() === WebSocket.OPEN) {
+        websocket.sendMessage(...parameters);
+      }
+    });
+  }
+
+  public broadcast(...parameters: Parameters<WebSocket['send']>) {
+    this.#clients.forEach((websockets) => {
+      websockets.forEach((websocket) => {
+        if (websocket.isAlive && websocket.state() === WebSocket.OPEN) {
+          websocket.sendMessage(...parameters);
+        }
+      });
     });
   }
 

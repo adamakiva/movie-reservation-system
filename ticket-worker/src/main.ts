@@ -21,6 +21,7 @@ type TicketReservationsParams = {
   userShowtimeId: string;
   userDetails: { id: string; email: string };
   movieDetails: {
+    showtimeId: string;
     hallName: string;
     movieTitle: string;
     price: number;
@@ -122,7 +123,13 @@ function createReserveTicketConsumer(
           contentType: 'application/json',
           routingKey: replyTo,
         },
-        { userShowtimeId, transactionId },
+        {
+          showtimeId: movieDetails.showtimeId,
+          row: movieDetails.row,
+          column: movieDetails.column,
+          userShowtimeId,
+          transactionId,
+        },
       );
 
       return ConsumerStatus.ACK;

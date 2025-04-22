@@ -97,6 +97,7 @@ async function reserveShowtimeTicket(params: {
 
     try {
       const {
+        showtimeId,
         userShowtimeId,
         userEmail,
         userId,
@@ -110,8 +111,8 @@ async function reserveShowtimeTicket(params: {
         await transaction
           .with(createUserShowtimeSubQuery)
           .select({
-            userShowtimeId: createUserShowtimeSubQuery.userShowtimeId,
             showtimeId: createUserShowtimeSubQuery.showtimeId,
+            userShowtimeId: createUserShowtimeSubQuery.userShowtimeId,
             userId: createUserShowtimeSubQuery.userId,
             row: createUserShowtimeSubQuery.row,
             column: createUserShowtimeSubQuery.column,
@@ -144,6 +145,7 @@ async function reserveShowtimeTicket(params: {
           userDetails: { id: userId, email: userEmail },
           // Used to send an email with the reservation details
           movieDetails: {
+            showtimeId,
             hallName,
             movieTitle,
             price,
@@ -168,8 +170,6 @@ async function reserveShowtimeTicket(params: {
       });
     }
   });
-
-  // TODO Send a socket message to update available seats
 }
 
 /**********************************************************************************/
@@ -242,8 +242,8 @@ function buildInsertUserShowtimeCTE(params: {
 
   const createUserShowtimeSubQuery = handler.$with('create_user_showtime').as(
     handler.insert(userShowtimeModel).values(showtimeTicket).returning({
-      userShowtimeId: userShowtimeModel.id,
       showtimeId: userShowtimeModel.showtimeId,
+      userShowtimeId: userShowtimeModel.id,
       userId: userShowtimeModel.userId,
       row: userShowtimeModel.row,
       column: userShowtimeModel.column,
