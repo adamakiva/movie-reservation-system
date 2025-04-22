@@ -15,6 +15,11 @@ import { handler } from './server.ts';
 
 async function stressTest() {
   const {
+    env: {
+      httpServer: {
+        configurations: { maxRequestsPerSocket },
+      },
+    },
     server,
     routes: { http: httpRoute },
     database,
@@ -29,16 +34,14 @@ async function stressTest() {
   const instance = autocannon(
     {
       url: httpRoute,
-      connections: 100,
-      duration: 45,
-      timeout: 3,
+      connections: 256,
+      duration: 30,
+      timeout: 8,
       bailout: 1,
-      reconnectRate: 32,
+      reconnectRate: maxRequestsPerSocket,
       title: 'Stress tests',
       // Not using idReplacement since, for some reason it does not work.
       // So we just modify the request fields directly
-      //@ts-expect-error Missing the function declaration in the definitelyTyped
-      // package
       requests: [...roleTests],
     },
     async (err, result) => {
@@ -88,10 +91,7 @@ async function generateAccessToken(route: string) {
 function generateRoleTests(baseRoute: string, accessToken: string) {
   return [
     {
-      //@ts-expect-error Missing the function declaration in the definitelyTyped
-      // package
       setupRequest: (request) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...request,
           method: 'GET',
@@ -101,10 +101,7 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       },
     },
     {
-      //@ts-expect-error Missing the function declaration in the definitelyTyped
-      // package
       setupRequest: (request) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return {
           ...request,
           method: 'POST',

@@ -2,7 +2,7 @@
 
 ## Inspired by https://roadmap.sh/projects/movie-reservation-system
 
-A backend which allows to reserve movie tickets.  
+An application which allows to reserve movie tickets.  
 This is a practice project so some stuff may be redundant/complicated for learning purposes.  
 For any questions/suggestions, contact details are in my github profile
 
@@ -11,20 +11,6 @@ For any questions/suggestions, contact details are in my github profile
 - Node.js
 - PostgresQL
 - Rabbitmq
-
-## Libraries
-
-- **[argon2](<(https://github.com/ranisalt/node-argon2)>)** - Argon2 encryption and decryption
-- **[compression](<(https://github.com/expressjs/express)>)** - Compress http responses
-- **[cors](<(https://github.com/expressjs/express)>)** - Adds cors headers to the http responses
-- **[Drizzle ORM](<(https://github.com/drizzle-team/drizzle-orm)>)** - SQL ORM (More of a query builder)
-- **[Express.js](<(https://github.com/expressjs/express)>)** - Http routing
-- **[file-type](<(https://github.com/expressjs/express)>)** - Detect file type from the magic numbers
-- **[jose](<(https://github.com/panva/jose)>)** - JWT generation & validation
-- **[multer](<(https://github.com/expressjs/multer)>)** - `multipart/form-data` handler
-- **[Postgres](<(https://github.com/porsager/postgres)>)** - Native handler for postgreSQL (used by the ORM)
-- **[rabbitmq-client](<(https://github.com/expressjs/express)>)** - Node.js rabbitmq client
-- **[zod](<(https://github.com/colinhacks/zod)>)** - Validation library
 
 ---
 
@@ -86,15 +72,12 @@ If you have permission errors when running the postgres image, try the following
 
 ## Development notes
 
-### CORS & Helmet
+### Helmet
 
 **Helmet** (or rather the security headers added by it) are handled at the NGINX
 (reverse proxy) level.  
 The reason is that they are static and there is more sense to block access
 at the reverse proxy level rather than the server level.
-
-**CORS** on the other hand is handled on the server level.  
-The reason for that is the ability to be able to handle dynamic values.
 
 ### Express `.send` vs `.json`
 

@@ -7,6 +7,10 @@ import type { Logger } from './logger.ts';
 
 /**********************************************************************************/
 
+type EnvironmentVariables = ReturnType<EnvironmentManager['getEnvVariables']>;
+
+/**********************************************************************************/
+
 class EnvironmentManager {
   readonly #logger;
   readonly #environmentVariables;
@@ -16,19 +20,24 @@ class EnvironmentManager {
     'SERVER_BASE_URL',
     'HTTP_ROUTE',
     'ALLOWED_HOSTS',
-    'ALLOWED_ORIGINS',
     'DATABASE_URL',
     'DATABASE_MAX_CONNECTIONS',
     'DATABASE_STATEMENT_TIMEOUT',
     'DATABASE_TRANSACTION_TIMEOUT',
     'MESSAGE_QUEUE_URL',
+    'AUTHENTICATION_HASH_SECRET',
+    'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
+    'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
     'WEBSOCKET_SERVER_BASE_URL',
     'WEBSOCKET_SERVER_PING_TIME',
     'WEBSOCKET_SERVER_BACKLOG',
     'WEBSOCKET_SERVER_MAX_PAYLOAD',
-    'AUTHENTICATION_HASH_SECRET',
-    'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
-    'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
+    'HTTP_SERVER_MAX_HEADERS_COUNT',
+    'HTTP_SERVER_HEADERS_TIMEOUT',
+    'HTTP_SERVER_REQUEST_TIMEOUT',
+    'HTTP_SERVER_TIMEOUT',
+    'HTTP_SERVER_MAX_REQUESTS_PER_SOCKET',
+    'HTTP_SERVER_KEEP_ALIVE_TIMEOUT',
     'NODE_MAX_SOCKETS',
     'NODE_MAX_TOTAL_SOCKETS',
     'NODE_DEFAULT_HIGH_WATERMARK',
@@ -58,7 +67,6 @@ class EnvironmentManager {
         baseUrl: process.env.SERVER_BASE_URL!,
         route: process.env.HTTP_ROUTE!,
         allowedHosts: process.env.ALLOWED_HOSTS!.split(','),
-        allowedOrigins: process.env.ALLOWED_ORIGINS!.split(','),
         allowedMethods: [
           'HEAD',
           'GET',
@@ -68,6 +76,32 @@ class EnvironmentManager {
           'DELETE',
           'OPTIONS',
         ],
+        configurations: {
+          maxHeadersCount: this.#toNumber(
+            'HTTP_SERVER_MAX_HEADERS_COUNT',
+            process.env.HTTP_SERVER_MAX_HEADERS_COUNT,
+          )!,
+          headersTimeout: this.#toNumber(
+            'HTTP_SERVER_HEADERS_TIMEOUT',
+            process.env.HTTP_SERVER_HEADERS_TIMEOUT,
+          )!,
+          requestTimeout: this.#toNumber(
+            'HTTP_SERVER_REQUEST_TIMEOUT',
+            process.env.HTTP_SERVER_REQUEST_TIMEOUT,
+          )!,
+          timeout: this.#toNumber(
+            'HTTP_SERVER_TIMEOUT',
+            process.env.HTTP_SERVER_TIMEOUT,
+          )!,
+          maxRequestsPerSocket: this.#toNumber(
+            'HTTP_SERVER_MAX_REQUESTS_PER_SOCKET',
+            process.env.HTTP_SERVER_MAX_REQUESTS_PER_SOCKET,
+          )!,
+          keepAliveTimeout: this.#toNumber(
+            'HTTP_SERVER_KEEP_ALIVE_TIMEOUT',
+            process.env.HTTP_SERVER_KEEP_ALIVE_TIMEOUT,
+          )!,
+        },
       },
       websocketServer: {
         route: process.env.WEBSOCKET_SERVER_BASE_URL!,
@@ -173,4 +207,4 @@ class EnvironmentManager {
 
 /**********************************************************************************/
 
-export { EnvironmentManager };
+export { EnvironmentManager, type EnvironmentVariables };

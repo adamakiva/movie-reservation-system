@@ -65,7 +65,6 @@ services:
       - SERVER_BASE_URL=${SERVER_BASE_URL:-http://localhost}
       - HTTP_ROUTE=${HTTP_ROUTE:-api/v0}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-::,127.0.0.1,localhost}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*} # TODO Change this
       # Database options
       - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs}
       - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs_test}
@@ -88,6 +87,13 @@ services:
       - ADMIN_ROLE_NAME=${ADMIN_ROLE_NAME:-admin}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@admin.com}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-bla123}
+      # Node server options
+      - HTTP_SERVER_MAX_HEADERS_COUNT=${HTTP_SERVER_MAX_HEADERS_COUNT:-64}
+      - HTTP_SERVER_HEADERS_TIMEOUT=${HTTP_SERVER_HEADERS_TIMEOUT:-8000}
+      - HTTP_SERVER_REQUEST_TIMEOUT=${HTTP_SERVER_REQUEST_TIMEOUT:-16000}
+      - HTTP_SERVER_TIMEOUT=${HTTP_SERVER_TIMEOUT:-60000}
+      - HTTP_SERVER_MAX_REQUESTS_PER_SOCKET=${HTTP_SERVER_MAX_REQUESTS_PER_SOCKET:-64}
+      - HTTP_SERVER_KEEP_ALIVE_TIMEOUT=${HTTP_SERVER_KEEP_ALIVE_TIMEOUT:-8000}
       # Node flags and options
       - NODE_ENV=${NODE_ENV:-production}
       - NODE_MAX_SOCKETS=${NODE_MAX_SOCKETS:-256}

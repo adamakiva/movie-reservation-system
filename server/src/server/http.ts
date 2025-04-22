@@ -6,7 +6,6 @@ import {
   type MESSAGE_QUEUE,
 } from '@adamakiva/movie-reservation-system-shared';
 import compress from 'compression';
-import cors from 'cors';
 import express, { type Express } from 'express';
 
 import { Database } from '../database/index.ts';
@@ -15,6 +14,7 @@ import {
   cancelShowtimeReservations,
   reserveShowtimeTicket,
 } from '../entities/showtime/service/utils.ts';
+import type { EnvironmentVariables } from '../utils/config.ts';
 import type { Logger, LogMiddleware } from '../utils/logger.ts';
 import type { RequestContext } from '../utils/types.ts';
 
@@ -54,9 +54,9 @@ class HttpServer {
       ConstructorParameters<typeof WebsocketServer>[0],
       'server' | 'authentication' | 'logger'
     >;
-    corsOptions: Omit<Parameters<typeof cors>[0], 'methods'>;
     allowedMethods: readonly string[];
     routes: { http: string };
+    httpServerConfigurations: EnvironmentVariables['httpServer']['configurations'];
     logMiddleware: LogMiddleware;
     logger: Logger;
   }) {
@@ -66,9 +66,9 @@ class HttpServer {
       fileManagerParams,
       messageQueueParams,
       websocketServerParams,
-      corsOptions,
       allowedMethods,
       routes,
+      httpServerConfigurations,
       logMiddleware,
       logger,
     } = params;
@@ -84,7 +84,6 @@ class HttpServer {
 
     const app = express().use(
       Middlewares.checkMethod(allowedMethods),
-      cors({ ...corsOptions, methods: allowedMethods.slice() }),
       compress(),
     );
     // Express type chain include extending IRouter which returns void | Promise<void>,
@@ -114,7 +113,7 @@ class HttpServer {
     });
 
     // The order matters
-    self.#attachServerConfigurations();
+    self.#attachServerConfigurations(httpServerConfigurations);
     self.#attachRoutesMiddlewares(app, logMiddleware);
 
     return self;
@@ -280,27 +279,36 @@ class HttpServer {
     });
   }
 
-  #attachServerConfigurations() {
+  #attachServerConfigurations(
+    httpServerConfigurations: EnvironmentVariables['httpServer']['configurations'],
+  ) {
+    const {
+      maxHeadersCount,
+      headersTimeout,
+      requestTimeout,
+      timeout,
+      maxRequestsPerSocket,
+      keepAliveTimeout,
+    } = httpServerConfigurations;
     // Every configuration referring to sockets here, talks about network/tcp
     // socket NOT websockets. Network socket is the underlying layer for http
     // request (in this case). In short, the socket options refer to a "standard"
     // connection from a client
-    this.#server.maxHeadersCount = 64;
-    this.#server.headersTimeout = 8_000; // millis
-    this.#server.requestTimeout = 16_000; // millis
+    this.#server.maxHeadersCount = maxHeadersCount;
+    this.#server.headersTimeout = headersTimeout;
+    this.#server.requestTimeout = requestTimeout;
     // Connection close will terminate the tcp socket once the payload was
     // transferred and acknowledged. This setting is for the rare cases where,
     // for some reason, the tcp socket is left alive
-    this.#server.timeout = 60_000; // millis
+    this.#server.timeout = timeout;
     // See: https://github.com/nodejs/node/issues/40071
     // Leaving this without any limit will cause the server to reuse the
     // connection indefinitely (in theory). As a result, load balancing will
     // have very little effects if more instances of the server are brought up
     // by the deployment orchestration tool.
     // As for a good number, it depends on the application traffic
-    this.#server.maxRequestsPerSocket = 32;
-    this.#server.keepAliveTimeout = 8_000; // millis
-    this.#server.maxConnections = 8_000;
+    this.#server.maxRequestsPerSocket = maxRequestsPerSocket;
+    this.#server.keepAliveTimeout = keepAliveTimeout;
   }
 
   #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {

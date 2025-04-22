@@ -73,18 +73,11 @@ async function startServer() {
       backlog: websocketServerEnv.backlog,
       maxPayload: websocketServerEnv.maxPayload,
     },
-    corsOptions: {
-      origin:
-        httpServerEnv.allowedOrigins.length === 1
-          ? httpServerEnv.allowedOrigins[0]
-          : httpServerEnv.allowedOrigins,
-      maxAge: 86_400, // 1 day in seconds
-      optionsSuccessStatus: 200, // last option here: https://github.com/expressjs/cors?tab=readme-ov-file#configuration-options
-    },
     allowedMethods: httpServerEnv.allowedMethods,
     routes: {
       http: `/${httpServerEnv.route}`,
     },
+    httpServerConfigurations: httpServerEnv.configurations,
     logMiddleware: logger.getLogMiddleware(),
     logger,
   });

@@ -15,7 +15,7 @@
     "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
-    "@adamakiva/movie-reservation-system-shared": "0.0.1",
+    "@adamakiva/movie-reservation-system-shared": "0.0.2",
     "rabbitmq-client": "~5.0.4"
   },
   "devDependencies": {
@@ -23,15 +23,15 @@
     "@types/eslint-plugin-security": "~3.0.0",
     "@types/node": "~22.14.1",
     "dpdm": "~3.14.0",
-    "eslint": "~9.25.0",
+    "eslint": "~9.25.1",
     "eslint-config-prettier": "~10.1.2",
     "eslint-plugin-security": "~3.0.1",
     "globals": "~16.0.0",
     "nlf": "~2.1.1",
-    "npm-check-updates": "~17.1.18",
+    "npm-check-updates": "~18.0.0",
     "prettier": "~3.5.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "~8.30.1"
+    "typescript-eslint": "~8.31.0"
   },
   "engines": {
     "node": ">=22.7"
