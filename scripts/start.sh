@@ -10,6 +10,7 @@ MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
 NPM_SERVER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/server;
 NPM_TICKET_WORKER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/ticket-worker;
 KEYS_FOLDER="$ROOT_DIR"/server/keys;
+CERTS_FOLDER="$ROOT_DIR"/nginx/certs;
 ERR_LOG_FILE="$ROOT_DIR"/error_logs.txt;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
@@ -55,6 +56,17 @@ generate_keys() {
     fi
 }
 
+generate_certs() {
+    if [ ! -d "$CERTS_FOLDER" ]; then
+        mkdir "$CERTS_FOLDER" || exit 1;
+
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$CERTS_FOLDER"/selfsigned.key \
+        -out "$CERTS_FOLDER"/selfsigned.crt \
+        -subj "/C=US/ST=Test/L=Local/O=Dev/OU=Test/CN=localhost" || exit 1;
+    fi
+}
+
 check_services_health() {
     error_occurred=false;
 
@@ -84,6 +96,7 @@ start() {
     mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_SERVER_CACHE_FOLDER" "$NPM_TICKET_WORKER_CACHE_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
     install_dependencies &&
     generate_keys &&
+    generate_certs &&
     rm -f "$ERR_LOG_FILE";
     UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait || exit 1;
     check_services_health;

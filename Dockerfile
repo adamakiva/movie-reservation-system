@@ -38,6 +38,6 @@ ENTRYPOINT ["/home/node/init.sh"]
 FROM nginxinc/nginx-unprivileged:1.27.4-alpine-slim AS nginx
 USER nginx
 
-COPY ./nginx /etc/nginx
+COPY --chown=nginx ./nginx /etc/nginx
 
 CMD ["nginx", "-g", "daemon off;"]
