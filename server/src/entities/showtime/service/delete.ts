@@ -1,8 +1,15 @@
-import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import { eq } from 'drizzle-orm';
+import {
+  ERROR_CODES,
+  HTTP_STATUS_CODES,
+} from '@adamakiva/movie-reservation-system-shared';
+import { and, eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
-import { GeneralError } from '../../../utils/errors.ts';
+import {
+  GeneralError,
+  isDatabaseError,
+  isError,
+} from '../../../utils/errors.ts';
 import type {
   DatabaseHandler,
   DatabaseModel,
@@ -26,33 +33,33 @@ async function deleteShowtime(
   const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
     database.getModels();
 
-  await handler.transaction(async (transaction) => {
-    // When removing a showtime we need to cancel all relevant reservations
-    const userIds = (
-      await transaction
-        .select({ userId: userShowtimeModel.userId })
-        .from(userShowtimeModel)
-        .where(eq(userShowtimeModel.showtimeId, showtimeId))
-    ).map(({ userId }) => {
-      return userId;
-    });
-    if (!userIds.length) {
-      await deleteShowtimeEntry({
-        handler: transaction,
-        showtimeModel,
-        showtimeId,
-      });
-      return;
-    }
+  const [exists] = await handler
+    .update(showtimeModel)
+    .set({ markedForDeletion: true })
+    .where(eq(showtimeModel.id, showtimeId))
+    .returning({ id: showtimeModel.id });
+  if (!exists) {
+    return;
+  }
 
-    await cancelShowtimeReservations({
-      handler: transaction,
+  try {
+    await handler
+      .delete(showtimeModel)
+      .where(
+        and(
+          eq(showtimeModel.id, showtimeId),
+          eq(showtimeModel.markedForDeletion, true),
+        ),
+      );
+  } catch (error) {
+    await handleShowtimeDeletionWithUserShowtimes({
+      error,
       messageQueue,
-      showtimeModel,
+      handler,
+      userShowtimeModel,
       showtimeId,
-      userIds,
     });
-  });
+  }
 }
 
 async function cancelUserShowtimeReservation(params: {
@@ -71,41 +78,59 @@ async function cancelUserShowtimeReservation(params: {
 
   const userId = authentication.getUserId(request.headers.authorization!);
 
-  await handler.transaction(async (transaction) => {
-    await cancelShowtimeReservation({
-      handler: transaction,
-      messageQueue,
-      showtimeModel,
-      showtimeId,
-      userIds: userId,
-    });
-  });
-}
-
-/**********************************************************************************/
-
-async function cancelShowtimeReservations(params: {
-  handler: DatabaseHandler;
-  messageQueue: RequestContext['messageQueue'];
-  showtimeModel: DatabaseModel<'showtime'>;
-  showtimeId: string;
-  userIds: string[];
-}) {
-  const { handler, messageQueue, showtimeModel, showtimeId, userIds } = params;
-
-  // Don't promise.all here, the user showtimes entries MUST be deleted before
-  // deleting the showtime entry
   await cancelShowtimeReservation({
     handler,
     messageQueue,
     showtimeModel,
     showtimeId,
-    userIds,
+    userIds: userId,
   });
-  await deleteShowtimeEntry({
-    handler,
-    showtimeModel,
-    showtimeId,
+}
+
+/**********************************************************************************/
+
+async function handleShowtimeDeletionWithUserShowtimes(params: {
+  error: unknown;
+  messageQueue: RequestContext['messageQueue'];
+  handler: DatabaseHandler;
+  userShowtimeModel: DatabaseModel<'userShowtime'>;
+  showtimeId: string;
+}) {
+  const { error, messageQueue, handler, userShowtimeModel, showtimeId } =
+    params;
+
+  if (!isError(error)) {
+    throw new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (
+    !isDatabaseError(error) ||
+    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+  ) {
+    throw error;
+  }
+
+  const userIds = (
+    await handler
+      .select({ userId: userShowtimeModel.userId })
+      .from(userShowtimeModel)
+      .where(eq(userShowtimeModel.showtimeId, showtimeId))
+  ).map(({ userId }) => {
+    return userId;
+  });
+  await messageQueue.publish({
+    publisher: 'ticket',
+    exchange: 'mrs',
+    routingKey: 'mrs-ticket-cancel',
+    data: { showtimeId, userIds },
+    options: {
+      durable: true,
+      mandatory: true,
+      replyTo: 'mrs.ticket.cancel.reply.to',
+      correlationId: 'ticket.cancel',
+    },
   });
 }
 
@@ -145,21 +170,9 @@ async function cancelShowtimeReservation(params: {
       durable: true,
       mandatory: true,
       replyTo: 'mrs.ticket.cancel.reply.to',
-      correlationId: 'cancel',
+      correlationId: 'ticket.cancel',
     },
   });
-}
-
-async function deleteShowtimeEntry(params: {
-  handler: DatabaseHandler;
-  showtimeModel: DatabaseModel<'showtime'>;
-  showtimeId: string;
-}) {
-  const { handler, showtimeModel, showtimeId } = params;
-  // I've decided that if nothing was deleted because it didn't exist in the
-  // first place, it is still considered as a success since the end result
-  // is the same
-  await handler.delete(showtimeModel).where(eq(showtimeModel.id, showtimeId));
 }
 
 /**********************************************************************************/

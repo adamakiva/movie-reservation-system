@@ -40,6 +40,7 @@ declare const SIGNALS: [
 declare const ERROR_CODES: {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
   POSTGRES: {
+    RESTRICT_VIOLATION: "23001";
     FOREIGN_KEY_VIOLATION: "23503";
     UNIQUE_VIOLATION: "23505";
     TOO_MANY_CONNECTIONS: "53300";
@@ -51,93 +52,39 @@ declare const ERROR_CODES: {
   EXIT_NO_RESTART: 180;
 };
 
-declare const MESSAGE_QUEUE: {
-  TICKET: {
-    RESERVE: {
-      CLIENT: {
-        EXCHANGE_NAME: "mrs";
-        QUEUE_NAME: "mrs.ticket.reserve.reply.to";
-        ROUTING_KEY_NAME: "mrs-ticket-reserve-reply-to";
-      };
-      SERVER: {
-        EXCHANGE_NAME: "mrs";
-        QUEUE_NAME: "mrs.ticket.reserve";
-        ROUTING_KEY_NAME: "mrs-ticket-reserve";
-      };
-      CORRELATION_ID: "reserve";
-    };
-    CANCEL: {
-      CLIENT: {
-        EXCHANGE_NAME: "mrs";
-        QUEUE_NAME: "mrs.ticket.cancel.reply.to";
-        ROUTING_KEY_NAME: "mrs-ticket-cancel-reply-to";
-      };
-      SERVER: {
-        EXCHANGE_NAME: "mrs";
-        QUEUE_NAME: "mrs.ticket.cancel";
-        ROUTING_KEY_NAME: "mrs-ticket-cancel";
-      };
-      CORRELATION_ID: "cancel";
-    };
-  };
+declare const CORRELATION_IDS: {
+  TICKET_RESERVATION: "ticket.reserve";
+  TICKET_CANCELLATION: "ticket.cancel";
+  SHOWTIME_CANCELLATION: "showtime.cancel";
 };
 
 /**********************************************************************************/
 
 type Exchanges = ["mrs"];
-type Consumers = ["ticket"];
-type Publishers = ["ticket"];
+type Consumers = ["ticket", "showtime"];
+type Publishers = ["ticket", "showtime"];
 
-type ServerPublishersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Publishers[0]}.reserve`,
-    `${K}.${Publishers[0]}.cancel`
+type Queues = {
+  ticket: [
+    "mrs.ticket.reserve",
+    "mrs.ticket.cancel",
+    "mrs.ticket.reserve.reply.to",
+    "mrs.ticket.cancel.reply.to"
   ];
+  showtime: ["mrs.showtime.cancel", "mrs.showtime.cancel.reply.to"];
 };
-type ServerPublishersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Publishers[0]}-reserve`,
-    `${K}-${Publishers[0]}-cancel`
+type RoutingKeys = {
+  ticket: [
+    "mrs-ticket-reserve",
+    "mrs-ticket-cancel",
+    "mrs-ticket-reserve-reply-to",
+    "mrs-ticket-cancel-reply-to"
   ];
-};
-type ServerConsumersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Consumers[0]}.reserve.reply.to`,
-    `${K}.${Consumers[0]}.cancel.reply.to`
-  ];
-};
-type ServerConsumersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Consumers[0]}-reserve-reply-to`,
-    `${K}-${Consumers[0]}-cancel-reply-to`
-  ];
-};
-type WorkerPublishersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Consumers[0]}.reserve.reply.to`,
-    `${K}.${Consumers[0]}.cancel.reply.to`
-  ];
-};
-type WorkerPublishersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Consumers[0]}-reserve-reply-to`,
-    `${K}-${Consumers[0]}-cancel-reply-to`
-  ];
-};
-type WorkerConsumersQueues = {
-  [K in Exchanges[number]]: [
-    `${K}.${Publishers[0]}.reserve`,
-    `${K}.${Publishers[0]}.cancel`
-  ];
-};
-type WorkerConsumersRoutingKeys = {
-  [K in Exchanges[number]]: [
-    `${K}-${Publishers[0]}-reserve`,
-    `${K}-${Publishers[0]}-cancel`
-  ];
+  showtime: ["mrs-showtime-cancel", "mrs-showtime-cancel-reply-to"];
 };
 
-type TicketReservationsParams = {
+type TicketReservationsMessage = {
+  showtimeId: string;
   userShowtimeId: string;
   userDetails: { id: string; email: string };
   movieDetails: {
@@ -149,29 +96,28 @@ type TicketReservationsParams = {
     column: number;
   };
 };
-type TicketCancellationParams = {
+type TicketCancellationMessage = {
   showtimeId: string;
   userIds: string | string[];
+};
+type ShowtimeCancellationMessage = {
+  showtimeId: string;
+  userIds: string[];
 };
 
 /**********************************************************************************/
 
 export {
+  CORRELATION_IDS,
   ERROR_CODES,
   HTTP_STATUS_CODES,
-  MESSAGE_QUEUE,
   SIGNALS,
   type Consumers,
   type Exchanges,
   type Publishers,
-  type ServerConsumersQueues,
-  type ServerConsumersRoutingKeys,
-  type ServerPublishersQueues,
-  type ServerPublishersRoutingKeys,
-  type TicketCancellationParams,
-  type TicketReservationsParams,
-  type WorkerConsumersQueues,
-  type WorkerConsumersRoutingKeys,
-  type WorkerPublishersQueues,
-  type WorkerPublishersRoutingKeys,
+  type Queues,
+  type RoutingKeys,
+  type ShowtimeCancellationMessage,
+  type TicketCancellationMessage,
+  type TicketReservationsMessage,
 };

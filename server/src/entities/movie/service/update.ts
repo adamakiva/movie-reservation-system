@@ -20,7 +20,7 @@ async function updateMovie(
   context: RequestContext,
   movieToUpdate: UpdateMovieValidatedData,
 ): Promise<Movie> {
-  const { database, fileManager, logger } = context;
+  const { database } = context;
 
   const handler = database.getHandler();
   const {
@@ -37,20 +37,6 @@ async function updateMovie(
   });
 
   try {
-    if (subQueries.updateMoviePosterSubQuery) {
-      return await updateMovieIncludingPosterInDatabase({
-        handler,
-        fileManager,
-        subQueries,
-        models: {
-          genre: genreModel,
-          moviePoster: moviePosterModel,
-        },
-        movieId: movieToUpdate.movieId,
-        logger,
-      });
-    }
-
     return await updateMovieInDatabase({
       handler,
       subQueries,
@@ -102,77 +88,21 @@ function buildUpdateMovieCTEs(params: {
     } as const;
   }
 
-  const updateMoviePosterSubQuery = handler.$with('update_movie_poster').as(
-    handler
-      .update(moviePosterModel)
-      .set({
-        absolutePath: poster.absolutePath,
-        sizeInBytes: poster.sizeInBytes,
-        updatedAt: now,
-      })
-      .where(eq(moviePosterModel.movieId, movieId)),
+  const insertMoviePosterSubQuery = handler.$with('insert_movie_poster').as(
+    handler.insert(moviePosterModel).values({
+      movieId,
+      absolutePath: poster.absolutePath,
+      mimeType: poster.mimeType,
+      sizeInBytes: poster.sizeInBytes,
+      createdAt: now,
+      updatedAt: now,
+    }),
   );
 
   return {
     updateMovieSubQuery,
-    updateMoviePosterSubQuery,
+    insertMoviePosterSubQuery,
   } as const;
-}
-
-async function updateMovieIncludingPosterInDatabase(params: {
-  handler: DatabaseHandler;
-  fileManager: RequestContext['fileManager'];
-  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
-  models: {
-    genre: DatabaseModel<'genre'>;
-    moviePoster: DatabaseModel<'moviePoster'>;
-  };
-  movieId: string;
-  logger: RequestContext['logger'];
-}) {
-  const {
-    handler,
-    fileManager,
-    subQueries,
-    models: { genre: genreModel, moviePoster: moviePosterModel },
-    movieId,
-    logger,
-  } = params;
-
-  return await handler.transaction(async (transaction) => {
-    // Making this a separate query because we need the old absolute path
-    // in order to remove the old file
-    const [moviePoster] = await transaction
-      .select({
-        absolutePath: moviePosterModel.absolutePath,
-      })
-      .from(moviePosterModel)
-      .where(eq(moviePosterModel.movieId, movieId));
-    if (!moviePoster) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.NOT_FOUND,
-        `Movie '${movieId}' does not exist`,
-      );
-    }
-
-    const outdatedFileAbsolutePath = moviePoster.absolutePath;
-
-    const updatedMovie = await updateMovieInDatabase({
-      handler: transaction,
-      subQueries,
-      genreModel,
-      movieId,
-    });
-
-    fileManager.deleteFile(outdatedFileAbsolutePath).catch((error: unknown) => {
-      logger.warn(
-        `Failure to delete old file: ${outdatedFileAbsolutePath}`,
-        (error as Error).cause,
-      );
-    });
-
-    return updatedMovie;
-  });
 }
 
 async function updateMovieInDatabase(params: {

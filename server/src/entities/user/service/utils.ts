@@ -100,9 +100,31 @@ function handleForeignKeyNotFoundError(params: {
   );
 }
 
+function handlePossibleRestrictError(error: unknown, user: string) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (
+    !isDatabaseError(error) ||
+    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+  ) {
+    return error;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `User '${user}' has one or more showtime(s) attached and can't be removed`,
+    error.cause,
+  );
+}
+
 /**********************************************************************************/
 
 export {
+  handlePossibleRestrictError,
   handleUserCreationError,
   handleUserUpdateError,
   type CreateUserValidatedData,

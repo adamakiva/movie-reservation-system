@@ -61,10 +61,32 @@ function handlePossibleMissingGenreError(error: unknown, genre: string) {
   );
 }
 
+function handlePossibleRestrictError(error: unknown, movie: string) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (
+    !isDatabaseError(error) ||
+    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+  ) {
+    return error;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Movie '${movie}' has one or more showtime(s) attached and can't be removed`,
+    error.cause,
+  );
+}
+
 /**********************************************************************************/
 
 export {
   handlePossibleMissingGenreError,
+  handlePossibleRestrictError,
   type CreateMovieValidatedData,
   type DeleteMovieValidatedData,
   type GetMoviesValidatedData,

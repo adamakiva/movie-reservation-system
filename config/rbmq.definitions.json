@@ -40,6 +40,22 @@
       "routing_key": "mrs-ticket-cancel-reply-to",
       "source": "mrs",
       "vhost": "/"
+    },
+    {
+      "arguments": {},
+      "destination": "mrs.showtime.cancel",
+      "destination_type": "queue",
+      "routing_key": "mrs-showtime-cancel",
+      "source": "mrs",
+      "vhost": "/"
+    },
+    {
+      "arguments": {},
+      "destination": "mrs.showtime.cancel.reply.to",
+      "destination_type": "queue",
+      "routing_key": "mrs-showtime-cancel-reply-to",
+      "source": "mrs",
+      "vhost": "/"
     }
   ],
   "queues": [
@@ -83,6 +99,31 @@
     },
     {
       "name": "mrs.ticket.cancel.reply.to",
+      "durable": true,
+      "auto_delete": false,
+      "type": "quorum",
+      "vhost": "/",
+      "arguments": {
+        "x-max-length": 8192,
+        "x-max-length-bytes": 10485760,
+        "x-queue-type": "quorum"
+      }
+    },
+    {
+      "name": "mrs.showtime.cancel",
+      "durable": true,
+      "auto_delete": false,
+      "type": "quorum",
+      "vhost": "/",
+      "arguments": {
+        "x-max-length": 8192,
+        "x-delivery-limit": 32,
+        "x-max-length-bytes": 10485760,
+        "x-queue-type": "quorum"
+      }
+    },
+    {
+      "name": "mrs.showtime.cancel.reply.to",
       "durable": true,
       "auto_delete": false,
       "type": "quorum",

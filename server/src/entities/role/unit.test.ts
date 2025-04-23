@@ -31,17 +31,9 @@ await suite('Role unit tests', async () => {
   let fileManager: ServerParams['fileManager'] = null!;
   let database: ServerParams['database'] = null!;
   let messageQueue: ServerParams['messageQueue'] = null!;
-  let websocketServer: ServerParams['websocketServer'] = null!;
   before(async () => {
-    ({
-      server,
-      fileManager,
-      authentication,
-      database,
-      messageQueue,
-      websocketServer,
-      logger,
-    } = await initServer());
+    ({ server, fileManager, authentication, database, messageQueue, logger } =
+      await initServer());
   });
   after(async () => {
     await terminateServer(server, database);
@@ -173,7 +165,6 @@ await suite('Role unit tests', async () => {
               database,
               fileManager,
               messageQueue,
-              websocketServer,
               logger,
             },
             roleToCreate,
@@ -429,7 +420,6 @@ await suite('Role unit tests', async () => {
               database,
               fileManager,
               messageQueue,
-              websocketServer,
               logger,
             },
             roleToUpdate,

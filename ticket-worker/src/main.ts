@@ -4,8 +4,10 @@ import Stream from 'node:stream';
 
 import {
   ERROR_CODES,
-  MESSAGE_QUEUE,
   SIGNALS,
+  type ShowtimeCancellationMessage,
+  type TicketCancellationMessage,
+  type TicketReservationsMessage,
 } from '@adamakiva/movie-reservation-system-shared';
 import {
   ConsumerStatus,
@@ -14,26 +16,6 @@ import {
 } from 'rabbitmq-client';
 
 import { MessageQueue } from './message.queue.ts';
-
-/**********************************************************************************/
-
-type TicketReservationsParams = {
-  userShowtimeId: string;
-  userDetails: { id: string; email: string };
-  movieDetails: {
-    showtimeId: string;
-    hallName: string;
-    movieTitle: string;
-    price: number;
-    at: Date;
-    row: number;
-    column: number;
-  };
-};
-type TicketCancellationParams = {
-  showtimeId: string;
-  userIds: string | string[];
-};
 
 /**********************************************************************************/
 
@@ -55,20 +37,32 @@ function startWorker() {
       maxAttempts: 32,
       routing: [
         {
-          exchange: MESSAGE_QUEUE.TICKET.RESERVE.CLIENT.EXCHANGE_NAME,
-          queue: MESSAGE_QUEUE.TICKET.RESERVE.CLIENT.QUEUE_NAME,
-          routingKey: MESSAGE_QUEUE.TICKET.RESERVE.CLIENT.ROUTING_KEY_NAME,
+          exchange: 'mrs',
+          queue: 'mrs.ticket.reserve.reply.to',
+          routingKey: 'mrs-ticket-reserve-reply-to',
         },
         {
-          exchange: MESSAGE_QUEUE.TICKET.CANCEL.CLIENT.EXCHANGE_NAME,
-          queue: MESSAGE_QUEUE.TICKET.CANCEL.CLIENT.QUEUE_NAME,
-          routingKey: MESSAGE_QUEUE.TICKET.CANCEL.CLIENT.ROUTING_KEY_NAME,
+          exchange: 'mrs',
+          queue: 'mrs.ticket.cancel.reply.to',
+          routingKey: 'mrs-ticket-cancel-reply-to',
+        },
+      ],
+    },
+    showtime: {
+      confirm: true,
+      maxAttempts: 32,
+      routing: [
+        {
+          exchange: 'mrs',
+          queue: 'mrs.showtime.cancel.reply.to',
+          routingKey: 'mrs-showtime-cancel-reply-to',
         },
       ],
     },
   });
 
   createReserveTicketConsumer(messageQueue, publishers.ticket!);
+  createCancelShowtimeConsumer(messageQueue, publishers.showtime!);
   createCancelTicketConsumer(messageQueue, publishers.ticket!);
 
   attachProcessHandlers(messageQueue);
@@ -76,30 +70,18 @@ function startWorker() {
 
 /**********************************************************************************/
 
-function setGlobalValues() {
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
-
-  const defaultHighWaterMark = Number(process.env.NODE_DEFAULT_HIGH_WATERMARK);
-  if (isNaN(defaultHighWaterMark)) {
-    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
-  } else {
-    Stream.setDefaultHighWaterMark(false, 65_536);
-  }
-}
-
 function createReserveTicketConsumer(
   messageQueue: MessageQueue,
   ticketPublisher: Publisher,
 ) {
   messageQueue.createConsumer({
     routing: {
-      exchange: MESSAGE_QUEUE.TICKET.RESERVE.SERVER.EXCHANGE_NAME,
-      queue: MESSAGE_QUEUE.TICKET.RESERVE.SERVER.QUEUE_NAME,
-      routingKey: MESSAGE_QUEUE.TICKET.RESERVE.SERVER.ROUTING_KEY_NAME,
+      exchange: 'mrs',
+      queue: 'mrs.ticket.reserve',
+      routingKey: 'mrs-ticket-reserve',
     },
     handler: async (
-      message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsParams },
+      message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
     ) => {
       const { correlationId, replyTo, body } = message;
 
@@ -124,10 +106,7 @@ function createReserveTicketConsumer(
           routingKey: replyTo,
         },
         {
-          showtimeId: movieDetails.showtimeId,
-          row: movieDetails.row,
-          column: movieDetails.column,
-          userShowtimeId,
+          ...body,
           transactionId,
         },
       );
@@ -143,12 +122,12 @@ function createCancelTicketConsumer(
 ) {
   messageQueue.createConsumer({
     routing: {
-      exchange: MESSAGE_QUEUE.TICKET.CANCEL.SERVER.EXCHANGE_NAME,
-      queue: MESSAGE_QUEUE.TICKET.CANCEL.SERVER.QUEUE_NAME,
-      routingKey: MESSAGE_QUEUE.TICKET.CANCEL.SERVER.ROUTING_KEY_NAME,
+      exchange: 'mrs',
+      queue: 'mrs.ticket.cancel',
+      routingKey: 'mrs-ticket-cancel',
     },
     handler: async (
-      message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationParams },
+      message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
     ) => {
       const { correlationId, replyTo, body } = message;
 
@@ -168,7 +147,48 @@ function createCancelTicketConsumer(
           contentType: 'application/json',
           routingKey: replyTo,
         },
-        { showtimeId, userIds },
+        body,
+      );
+
+      return ConsumerStatus.ACK;
+    },
+  });
+}
+
+function createCancelShowtimeConsumer(
+  messageQueue: MessageQueue,
+  showtimePublisher: Publisher,
+) {
+  messageQueue.createConsumer({
+    routing: {
+      exchange: 'mrs',
+      queue: 'mrs.showtime.cancel',
+      routingKey: 'mrs-showtime-cancel',
+    },
+    handler: async (
+      message: Omit<AsyncMessage, 'body'> & {
+        body: ShowtimeCancellationMessage;
+      },
+    ) => {
+      const { correlationId, replyTo, body } = message;
+
+      if (!replyTo || !correlationId) {
+        return ConsumerStatus.DROP;
+      }
+      const { showtimeId, userIds } = body;
+
+      // TODO Refund processing
+      console.log(showtimeId, userIds);
+
+      await showtimePublisher.send(
+        {
+          durable: true,
+          mandatory: true,
+          correlationId,
+          contentType: 'application/json',
+          routingKey: replyTo,
+        },
+        body,
       );
 
       return ConsumerStatus.ACK;
@@ -177,6 +197,18 @@ function createCancelTicketConsumer(
 }
 
 /**********************************************************************************/
+
+function setGlobalValues() {
+  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
+  EventEmitter.captureRejections = true;
+
+  const defaultHighWaterMark = Number(process.env.NODE_DEFAULT_HIGH_WATERMARK);
+  if (isNaN(defaultHighWaterMark)) {
+    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
+  } else {
+    Stream.setDefaultHighWaterMark(false, 65_536);
+  }
+}
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
   const errorHandler = () => {

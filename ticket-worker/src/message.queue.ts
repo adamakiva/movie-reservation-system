@@ -1,10 +1,8 @@
 import type {
   Exchanges,
   Publishers,
-  WorkerConsumersQueues,
-  WorkerConsumersRoutingKeys,
-  WorkerPublishersQueues,
-  WorkerPublishersRoutingKeys,
+  Queues,
+  RoutingKeys,
 } from '@adamakiva/movie-reservation-system-shared';
 import {
   Connection,
@@ -19,11 +17,11 @@ import {
 
 /**********************************************************************************/
 
-class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
+class MessageQueue {
   readonly #handler;
 
-  #publishers: { [key: string]: Publisher } = {};
-  readonly #consumers: Consumer[] = [];
+  #publishers: { [key: string]: Publisher };
+  readonly #consumers: Consumer[];
 
   public constructor(connectionOptions: ConnectionOptions) {
     this.#handler = new Connection(connectionOptions)
@@ -31,6 +29,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       .on('connection', this.#handleConnectionEvent)
       .on('connection.blocked', this.#handleBlockedEvent)
       .on('connection.unblocked', this.#handleUnblockedEvent);
+
+    this.#publishers = {};
+    this.#consumers = [];
   }
 
   public createPublishers(publishers: {
@@ -40,9 +41,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       'confirm' | 'maxAttempts'
     > & {
       routing: {
-        exchange: E;
-        queue: WorkerPublishersQueues[E][number];
-        routingKey: WorkerPublishersRoutingKeys[E][number];
+        exchange: Exchanges[number];
+        queue: Queues[keyof Queues][number];
+        routingKey: RoutingKeys[keyof RoutingKeys][number];
       }[];
     };
   }) {
@@ -82,9 +83,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   public createConsumer(
     consumerProps: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
       routing: {
-        exchange: E;
-        queue: WorkerConsumersQueues[E][number];
-        routingKey: WorkerConsumersRoutingKeys[E][number];
+        exchange: Exchanges[number];
+        queue: Queues[keyof Queues][number];
+        routingKey: RoutingKeys[keyof RoutingKeys][number];
       };
       handler: ConsumerHandler;
     },

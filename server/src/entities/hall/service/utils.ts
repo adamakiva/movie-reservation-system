@@ -51,10 +51,32 @@ function handlePossibleDuplicationError(error: unknown, hall: string) {
   );
 }
 
+function handlePossibleRestrictError(error: unknown, hall: string) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (
+    !isDatabaseError(error) ||
+    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+  ) {
+    return error;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Hall '${hall}' has one or more showtime(s) attached`,
+    error.cause,
+  );
+}
+
 /**********************************************************************************/
 
 export {
   handlePossibleDuplicationError,
+  handlePossibleRestrictError,
   type CreateHallValidatedData,
   type DeleteHallValidatedData,
   type Hall,

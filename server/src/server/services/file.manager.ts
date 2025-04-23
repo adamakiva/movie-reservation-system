@@ -13,6 +13,8 @@ import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 
+// TODO, Add a cronjob to delete movie posters for movies which were deleted
+
 /**
  * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
  */

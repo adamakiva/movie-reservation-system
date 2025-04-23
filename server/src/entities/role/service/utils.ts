@@ -49,10 +49,32 @@ function handlePossibleDuplicationError(error: unknown, role: string) {
   );
 }
 
+function handlePossibleRestrictError(error: unknown, role: string) {
+  if (!isError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.SERVER_ERROR,
+      'Thrown a non error object',
+    );
+  }
+  if (
+    !isDatabaseError(error) ||
+    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+  ) {
+    return error;
+  }
+
+  return new GeneralError(
+    HTTP_STATUS_CODES.CONFLICT,
+    `Role '${role}' has one or more user(s) attached and can't be removed`,
+    error.cause,
+  );
+}
+
 /**********************************************************************************/
 
 export {
   handlePossibleDuplicationError,
+  handlePossibleRestrictError,
   type CreateRoleValidatedData,
   type DeleteRoleValidatedData,
   type Role,

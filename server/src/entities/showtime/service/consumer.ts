@@ -1,43 +1,40 @@
-import { MESSAGE_QUEUE } from '@adamakiva/movie-reservation-system-shared';
+import {
+  CORRELATION_IDS,
+  type ShowtimeCancellationMessage,
+  type TicketCancellationMessage,
+  type TicketReservationsMessage,
+} from '@adamakiva/movie-reservation-system-shared';
 import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
+import type { WebsocketServer } from '../../../server/services/index.ts';
 import type { RequestContext } from '../../../utils/types.ts';
-
-/**********************************************************************************/
-
-type ReserveShowtimeTicketMessage = Omit<AsyncMessage, 'body'> & {
-  body: {
-    showtimeId: string;
-    row: number;
-    column: number;
-    userShowtimeId: string;
-    transactionId: string;
-  };
-};
-type CancelShowtimeTicketsMessage = Omit<AsyncMessage, 'body'> & {
-  body: {
-    showtimeId: string;
-    userIds: string | string[];
-  };
-};
 
 /**********************************************************************************/
 
 function reserveShowtimeTicket(params: {
   database: RequestContext['database'];
-  websocketServer: RequestContext['websocketServer'];
+  websocketServer: WebsocketServer;
   logger: RequestContext['logger'];
 }) {
   const { database, websocketServer, logger } = params;
 
-  return async (message: ReserveShowtimeTicketMessage) => {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & {
+      body: TicketReservationsMessage & { transactionId?: string | undefined };
+    },
+  ) => {
     const { correlationId, body } = message;
 
-    if (correlationId !== MESSAGE_QUEUE.TICKET.RESERVE.CORRELATION_ID) {
+    if (correlationId !== CORRELATION_IDS.TICKET_RESERVATION) {
       return ConsumerStatus.DROP;
     }
-    const { showtimeId, row, column, userShowtimeId, transactionId } = body;
+    const {
+      showtimeId,
+      movieDetails: { row, column },
+      userShowtimeId,
+      transactionId,
+    } = body;
 
     const handler = database.getHandler();
     const { userShowtime: userShowtimeModel } = database.getModels();
@@ -66,15 +63,17 @@ function reserveShowtimeTicket(params: {
 
 function cancelShowtimeReservations(params: {
   database: RequestContext['database'];
-  websocketServer: RequestContext['websocketServer'];
+  websocketServer: WebsocketServer;
   logger: RequestContext['logger'];
 }) {
   const { database, websocketServer, logger } = params;
 
-  return async (message: CancelShowtimeTicketsMessage) => {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
+  ) => {
     const { correlationId, body } = message;
 
-    if (correlationId !== MESSAGE_QUEUE.TICKET.CANCEL.CORRELATION_ID) {
+    if (correlationId !== CORRELATION_IDS.SHOWTIME_CANCELLATION) {
       return ConsumerStatus.DROP;
     }
     const { showtimeId, userIds } = body;
@@ -111,8 +110,43 @@ function cancelShowtimeReservations(params: {
   };
 }
 
+function cancelShowtime(database: RequestContext['database']) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & { body: ShowtimeCancellationMessage },
+  ) => {
+    const { correlationId, body } = message;
+
+    if (correlationId !== CORRELATION_IDS.TICKET_CANCELLATION) {
+      return ConsumerStatus.DROP;
+    }
+
+    const { showtimeId } = body;
+
+    const handler = database.getHandler();
+    const { showtime: showtimeModel, userShowtime: userShowtimeModel } =
+      database.getModels();
+
+    // Don't `Promise.all()`, the reservations must be deleted before the showtime
+    await handler
+      .delete(userShowtimeModel)
+      .where(eq(userShowtimeModel.showtimeId, showtimeId));
+    await handler
+      .delete(showtimeModel)
+      .where(
+        and(
+          eq(showtimeModel.id, showtimeId),
+          eq(showtimeModel.markedForDeletion, true),
+        ),
+      );
+
+    return ConsumerStatus.ACK;
+  };
+}
+
+/**********************************************************************************/
+
 function broadcastReserveTicketMessages(params: {
-  websocketServer: RequestContext['websocketServer'];
+  websocketServer: WebsocketServer;
   showtimeId: string;
   row: number;
   column: number;
@@ -130,7 +164,7 @@ function broadcastReserveTicketMessages(params: {
 }
 
 function broadcastCancelTicketsMessages(params: {
-  websocketServer: RequestContext['websocketServer'];
+  websocketServer: WebsocketServer;
   showtimeId: string;
   tickets: { row: number; column: number }[];
   logger: RequestContext['logger'];
@@ -155,4 +189,4 @@ function broadcastCancelTicketsMessages(params: {
 
 /**********************************************************************************/
 
-export { cancelShowtimeReservations, reserveShowtimeTicket };
+export { cancelShowtime, cancelShowtimeReservations, reserveShowtimeTicket };

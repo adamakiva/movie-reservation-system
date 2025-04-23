@@ -1,4 +1,5 @@
 import {
+  boolean,
   foreignKey,
   integer,
   pgTable,
@@ -72,8 +73,8 @@ const userModel = pgTable(
         foreignColumns: [roleModel.id],
         name: 'user_role_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
     ];
   },
 );
@@ -111,8 +112,8 @@ const movieModel = pgTable(
         foreignColumns: [genreModel.id],
         name: 'movie_genre_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
     ];
   },
 );
@@ -135,10 +136,10 @@ const moviePosterModel = pgTable(
         foreignColumns: [movieModel.id],
         name: 'movie_poster_movie_id_fk',
       })
-        // 'no action' is used instead of 'cascade' since we need to delete
-        // the actual file as well which is done manually
-        .onDelete('no action')
-        .onUpdate('no action'),
+        // The actual file will be deleted by a cronjob. The cronjob will check
+        // for every file, whether it does not have a co-responding database entry
+        .onDelete('cascade')
+        .onUpdate('cascade'),
     ];
   },
 );
@@ -166,6 +167,7 @@ const showtimeModel = pgTable(
     }).notNull(),
     movieId: uuid('movie_id').notNull(),
     hallId: uuid('hall_id').notNull(),
+    markedForDeletion: boolean('marked_for_deletion').default(false).notNull(),
     ...timestamps,
   },
   (table) => {
@@ -175,15 +177,15 @@ const showtimeModel = pgTable(
         foreignColumns: [movieModel.id],
         name: 'showtime_movie_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
       foreignKey({
         columns: [table.hallId],
         foreignColumns: [hallModel.id],
         name: 'showtime_hall_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
       unique('showtime_unique_constraint').on(table.at, table.hallId),
     ];
   },
@@ -210,15 +212,15 @@ const usersShowtimesModel = pgTable(
         foreignColumns: [userModel.id],
         name: 'user_showtime_user_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
       foreignKey({
         columns: [table.showtimeId],
         foreignColumns: [showtimeModel.id],
         name: 'user_showtime_showtime_id_fk',
       })
-        .onDelete('cascade')
-        .onUpdate('no action'),
+        .onDelete('restrict')
+        .onUpdate('cascade'),
       unique('user_showtime_unique_constraint').on(
         table.row,
         table.column,

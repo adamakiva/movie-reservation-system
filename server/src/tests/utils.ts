@@ -13,7 +13,6 @@ import { after, before, mock, suite, test } from 'node:test';
 import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
-  MESSAGE_QUEUE,
 } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash } from 'argon2';
 import { eq, getTableName, sql } from 'drizzle-orm';
@@ -181,7 +180,6 @@ async function createServer() {
     },
     messageQueueParams: {
       connectionOptions: { url: messageQueueEnv.url },
-      routing: MESSAGE_QUEUE,
     },
     websocketServerParams: {
       path: `/${websocketServerEnv.route}`,

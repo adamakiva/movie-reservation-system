@@ -1,5 +1,5 @@
 {
-  "id": "a1f34fd8-6fbb-4fc7-bf0a-1c5ea4519713",
+  "id": "644dceec-9713-44e1-9957-691c42eb00c3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -17,7 +17,7 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(33)",
           "primaryKey": false,
           "notNull": true
         },
@@ -65,7 +65,7 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(33)",
           "primaryKey": false,
           "notNull": true
         },
@@ -125,13 +125,13 @@
         },
         "title": {
           "name": "title",
-          "type": "text",
+          "type": "varchar(129)",
           "primaryKey": false,
           "notNull": true
         },
         "description": {
           "name": "description",
-          "type": "text",
+          "type": "varchar(2049)",
           "primaryKey": false,
           "notNull": true
         },
@@ -174,7 +174,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         }
       },
@@ -196,7 +196,7 @@
         },
         "absolute_path": {
           "name": "absolute_path",
-          "type": "text",
+          "type": "varchar(513)",
           "primaryKey": false,
           "notNull": true
         },
@@ -239,7 +239,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
@@ -262,7 +262,7 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(65)",
           "primaryKey": false,
           "notNull": true
         },
@@ -326,6 +326,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "marked_for_deletion": {
+          "name": "marked_for_deletion",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp (3) with time zone",
@@ -353,7 +360,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         },
         "showtime_hall_id_fk": {
@@ -366,7 +373,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         }
       },
@@ -398,19 +405,19 @@
         },
         "first_name": {
           "name": "first_name",
-          "type": "text",
+          "type": "varchar(65)",
           "primaryKey": false,
           "notNull": true
         },
         "last_name": {
           "name": "last_name",
-          "type": "text",
+          "type": "varchar(129)",
           "primaryKey": false,
           "notNull": true
         },
         "email": {
           "name": "email",
-          "type": "text",
+          "type": "varchar(257)",
           "primaryKey": false,
           "notNull": true
         },
@@ -453,7 +460,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         }
       },
@@ -539,7 +546,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         },
         "user_showtime_showtime_id_fk": {
@@ -552,7 +559,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
+          "onDelete": "restrict",
           "onUpdate": "cascade"
         }
       },

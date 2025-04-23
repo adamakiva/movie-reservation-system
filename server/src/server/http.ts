@@ -1,16 +1,14 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import {
-  ERROR_CODES,
-  type MESSAGE_QUEUE,
-} from '@adamakiva/movie-reservation-system-shared';
+import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 import compress from 'compression';
 import express, { type Express } from 'express';
 
 import { Database } from '../database/index.ts';
 import * as routers from '../entities/index.ts';
 import {
+  cancelShowtime,
   cancelShowtimeReservations,
   reserveShowtimeTicket,
 } from '../entities/showtime/service/consumer.ts';
@@ -49,7 +47,7 @@ class HttpServer {
     messageQueueParams: Omit<
       ConstructorParameters<typeof MessageQueue>[0],
       'logger'
-    > & { routing: typeof MESSAGE_QUEUE };
+    >;
     websocketServerParams: Omit<
       ConstructorParameters<typeof WebsocketServer>[0],
       'server' | 'authentication' | 'logger'
@@ -102,10 +100,7 @@ class HttpServer {
       authentication,
       database,
       fileManager,
-      messageQueue: {
-        handler: messageQueue,
-        routing: messageQueueParams.routing,
-      },
+      messageQueue,
       websocketServer,
       server,
       routes,
@@ -189,12 +184,7 @@ class HttpServer {
     authentication: AuthenticationManager;
     database: Database;
     fileManager: FileManager;
-    messageQueue: {
-      handler: MessageQueue;
-      routing: Parameters<
-        typeof HttpServer.create
-      >[0]['messageQueueParams']['routing'];
-    };
+    messageQueue: MessageQueue;
     websocketServer: WebsocketServer;
     server: Server;
     routes: { http: string };
@@ -214,45 +204,50 @@ class HttpServer {
     this.#authentication = authentication;
     this.#database = database;
     this.#fileManager = fileManager;
-    this.#messageQueue = messageQueue.handler;
+    this.#messageQueue = messageQueue;
     this.#websocketServer = websocketServer;
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.#server = server.once('error', this.#handleErrorEvent);
     this.#routes = routes;
     this.#logger = logger;
 
-    this.#initMessageQueue(messageQueue.handler, messageQueue.routing);
+    this.#initMessageQueue(messageQueue);
 
     this.#requestContext = {
       authentication,
       database,
       fileManager,
-      messageQueue: messageQueue.handler,
-      websocketServer,
+      messageQueue,
       logger,
     } as const satisfies RequestContext;
   }
 
-  #initMessageQueue(
-    messageQueue: MessageQueue,
-    routing: Parameters<
-      typeof HttpServer.create
-    >[0]['messageQueueParams']['routing'],
-  ) {
+  #initMessageQueue(messageQueue: MessageQueue) {
     messageQueue.createPublishers({
       ticket: {
         confirm: true,
         maxAttempts: 32,
         routing: [
           {
-            exchange: routing.TICKET.RESERVE.SERVER.EXCHANGE_NAME,
-            queue: routing.TICKET.RESERVE.SERVER.QUEUE_NAME,
-            routingKey: routing.TICKET.RESERVE.SERVER.ROUTING_KEY_NAME,
+            exchange: 'mrs',
+            queue: 'mrs.ticket.reserve',
+            routingKey: 'mrs-ticket-reserve',
           },
           {
-            exchange: routing.TICKET.CANCEL.SERVER.EXCHANGE_NAME,
-            queue: routing.TICKET.CANCEL.SERVER.QUEUE_NAME,
-            routingKey: routing.TICKET.CANCEL.SERVER.ROUTING_KEY_NAME,
+            exchange: 'mrs',
+            queue: 'mrs.ticket.cancel',
+            routingKey: 'mrs-ticket-cancel',
+          },
+        ],
+      },
+      showtime: {
+        confirm: true,
+        maxAttempts: 32,
+        routing: [
+          {
+            exchange: 'mrs',
+            queue: 'mrs.showtime.cancel',
+            routingKey: 'mrs-showtime-cancel',
           },
         ],
       },
@@ -261,9 +256,9 @@ class HttpServer {
       concurrency: 1,
       exclusive: true,
       routing: {
-        exchange: routing.TICKET.RESERVE.CLIENT.EXCHANGE_NAME,
-        queue: routing.TICKET.RESERVE.CLIENT.QUEUE_NAME,
-        routingKey: routing.TICKET.RESERVE.CLIENT.ROUTING_KEY_NAME,
+        exchange: 'mrs',
+        queue: 'mrs.ticket.reserve.reply.to',
+        routingKey: 'mrs-ticket-reserve-reply-to',
       },
       handler: reserveShowtimeTicket({
         database: this.#database,
@@ -275,15 +270,25 @@ class HttpServer {
       concurrency: 1,
       exclusive: true,
       routing: {
-        exchange: routing.TICKET.CANCEL.CLIENT.EXCHANGE_NAME,
-        queue: routing.TICKET.CANCEL.CLIENT.QUEUE_NAME,
-        routingKey: routing.TICKET.CANCEL.CLIENT.ROUTING_KEY_NAME,
+        exchange: 'mrs',
+        queue: 'mrs.ticket.cancel.reply.to',
+        routingKey: 'mrs-ticket-cancel-reply-to',
       },
       handler: cancelShowtimeReservations({
         database: this.#database,
         websocketServer: this.#websocketServer,
         logger: this.#logger,
       }),
+    });
+    messageQueue.createConsumer({
+      concurrency: 1,
+      exclusive: true,
+      routing: {
+        exchange: 'mrs',
+        queue: 'mrs.showtime.cancel.reply.to',
+        routingKey: 'mrs-showtime-cancel-reply-to',
+      },
+      handler: cancelShowtime(this.#database),
     });
   }
 

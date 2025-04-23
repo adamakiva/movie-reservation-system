@@ -1,5 +1,5 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
@@ -158,7 +158,7 @@ async function reserveShowtimeTicket(params: {
           durable: true,
           mandatory: true,
           replyTo: 'mrs.ticket.reserve.reply.to',
-          correlationId: 'reserve',
+          correlationId: 'ticket.reserve',
           contentType: 'application/json',
         },
       });
@@ -214,7 +214,12 @@ async function validateMovieReservation(params: {
     })
     .from(showtimeModel)
     // Checks the showtime id is valid
-    .where(eq(showtimeModel.id, showtimeTicket.showtimeId))
+    .where(
+      and(
+        eq(showtimeModel.id, showtimeTicket.showtimeId),
+        eq(showtimeModel.markedForDeletion, false),
+      ),
+    )
     .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId));
   if (!showTimesData.length) {
     throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Bad request');

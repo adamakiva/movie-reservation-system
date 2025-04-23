@@ -5,7 +5,6 @@ import type {
   AuthenticationManager,
   FileManager,
   MessageQueue,
-  WebsocketServer,
 } from '../server/services/index.ts';
 
 import type { Logger, LogMiddleware } from './logger.ts';
@@ -23,7 +22,6 @@ type RequestContext = {
   database: Database;
   fileManager: FileManager;
   messageQueue: MessageQueue;
-  websocketServer: WebsocketServer;
   logger: Logger;
 };
 

@@ -2,7 +2,6 @@ import { join, resolve } from 'node:path';
 
 import {
   ERROR_CODES,
-  MESSAGE_QUEUE,
   SIGNALS,
 } from '@adamakiva/movie-reservation-system-shared';
 
@@ -65,7 +64,6 @@ async function startServer() {
     },
     messageQueueParams: {
       connectionOptions: { url: messageQueueEnv.url },
-      routing: MESSAGE_QUEUE,
     },
     websocketServerParams: {
       path: `/${websocketServerEnv.route}`,

@@ -40,6 +40,7 @@ const SIGNALS = [
 const ERROR_CODES = {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
   POSTGRES: {
+    RESTRICT_VIOLATION: "23001",
     FOREIGN_KEY_VIOLATION: "23503",
     UNIQUE_VIOLATION: "23505",
     TOO_MANY_CONNECTIONS: "53300",
@@ -51,37 +52,12 @@ const ERROR_CODES = {
   EXIT_NO_RESTART: 180,
 };
 
-const MESSAGE_QUEUE = {
-  TICKET: {
-    RESERVE: {
-      CLIENT: {
-        EXCHANGE_NAME: "mrs",
-        QUEUE_NAME: "mrs.ticket.reserve.reply.to",
-        ROUTING_KEY_NAME: "mrs-ticket-reserve-reply-to",
-      },
-      SERVER: {
-        EXCHANGE_NAME: "mrs",
-        QUEUE_NAME: "mrs.ticket.reserve",
-        ROUTING_KEY_NAME: "mrs-ticket-reserve",
-      },
-      CORRELATION_ID: "reserve",
-    },
-    CANCEL: {
-      CLIENT: {
-        EXCHANGE_NAME: "mrs",
-        QUEUE_NAME: "mrs.ticket.cancel.reply.to",
-        ROUTING_KEY_NAME: "mrs-ticket-cancel-reply-to",
-      },
-      SERVER: {
-        EXCHANGE_NAME: "mrs",
-        QUEUE_NAME: "mrs.ticket.cancel",
-        ROUTING_KEY_NAME: "mrs-ticket-cancel",
-      },
-      CORRELATION_ID: "cancel",
-    },
-  },
+const CORRELATION_IDS = {
+  TICKET_RESERVATION: "ticket.reserve",
+  TICKET_CANCELLATION: "ticket.cancel",
+  SHOWTIME_CANCELLATION: "showtime.cancel",
 };
 
 /**********************************************************************************/
 
-export { ERROR_CODES, HTTP_STATUS_CODES, MESSAGE_QUEUE, SIGNALS };
+export { CORRELATION_IDS, ERROR_CODES, HTTP_STATUS_CODES, SIGNALS };

@@ -19,7 +19,7 @@
     "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
-    "@adamakiva/movie-reservation-system-shared": "0.0.2",
+    "@adamakiva/movie-reservation-system-shared": "0.0.3",
     "argon2": "~0.41.1",
     "compression": "~1.8.0",
     "drizzle-orm": "~0.42.0",

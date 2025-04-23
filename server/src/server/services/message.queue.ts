@@ -1,12 +1,10 @@
 import {
   HTTP_STATUS_CODES,
+  type CORRELATION_IDS,
   type Exchanges,
-  type MESSAGE_QUEUE,
   type Publishers,
-  type ServerConsumersQueues,
-  type ServerConsumersRoutingKeys,
-  type ServerPublishersQueues,
-  type ServerPublishersRoutingKeys,
+  type Queues,
+  type RoutingKeys,
 } from '@adamakiva/movie-reservation-system-shared';
 import {
   Connection,
@@ -25,19 +23,17 @@ import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 
-type PublishOptions<E extends Exchanges[number]> = Omit<
+type PublishOptions = Omit<
   Envelope,
   'exchange' | 'routingKey' | 'replyTo' | 'correlationId'
 > & {
-  replyTo?: ServerConsumersQueues[E][number];
-  correlationId?:
-    | (typeof MESSAGE_QUEUE)['TICKET']['RESERVE']['CORRELATION_ID']
-    | (typeof MESSAGE_QUEUE)['TICKET']['CANCEL']['CORRELATION_ID'];
+  replyTo?: Queues[keyof Queues][number];
+  correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
 };
 
 /**********************************************************************************/
 
-class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
+class MessageQueue {
   readonly #handler;
   readonly #logger;
 
@@ -75,9 +71,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
       'confirm' | 'maxAttempts'
     > & {
       routing: {
-        exchange: E;
-        queue: ServerPublishersQueues[E][number];
-        routingKey: ServerPublishersRoutingKeys[E][number];
+        exchange: Exchanges[number];
+        queue: Queues[keyof Queues][number];
+        routingKey: RoutingKeys[keyof RoutingKeys][number];
       }[];
     };
   }) {
@@ -115,9 +111,9 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
   public createConsumer(
     consumerProps: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
       routing: {
-        exchange: E;
-        queue: ServerConsumersQueues[E][number];
-        routingKey: ServerConsumersRoutingKeys[E][number];
+        exchange: Exchanges[number];
+        queue: Queues[keyof Queues][number];
+        routingKey: RoutingKeys[keyof RoutingKeys][number];
       };
       handler: ConsumerHandler;
     },
@@ -146,10 +142,10 @@ class MessageQueue<E extends Exchanges[number] = Exchanges[number]> {
 
   public async publish(params: {
     publisher: Publishers[number];
-    exchange: E;
-    routingKey: ServerPublishersRoutingKeys[E][number];
+    exchange: Exchanges[number];
+    routingKey: RoutingKeys[keyof RoutingKeys][number];
     data: Buffer | string | object;
-    options: PublishOptions<E>;
+    options: PublishOptions;
   }) {
     const { publisher, exchange, routingKey, data, options } = params;
 
