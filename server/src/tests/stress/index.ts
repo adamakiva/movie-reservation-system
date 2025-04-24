@@ -4,12 +4,18 @@ import { setTimeout } from 'node:timers/promises';
 import autocannon from 'autocannon';
 
 import {
-  randomAlphaNumericString,
+  seedShowtimes,
+  seedUsers,
   sendHttpRequest,
   terminateServer,
+  VALIDATION,
 } from '../utils.ts';
 
 import { handler } from './server.ts';
+
+/**********************************************************************************/
+
+const maxPageSize = VALIDATION.PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE;
 
 /**********************************************************************************/
 
@@ -22,20 +28,35 @@ async function stressTest() {
     },
     server,
     routes: { http: httpRoute },
+    authentication,
     database,
     logger,
   } = handler;
 
-  const accessToken = await generateAccessToken(`${httpRoute}/login`);
-  const roleTests = generateRoleTests(httpRoute, accessToken);
+  const results = await Promise.allSettled([
+    generateAccessToken(`${httpRoute}/login`),
+    seedUsers(authentication, database, maxPageSize, false, 1),
+    seedShowtimes(database, maxPageSize, 1),
+  ]);
+  await Promise.all(
+    results.map(async (result) => {
+      if (result.status === 'rejected') {
+        await terminateServer(server, database);
+        process.exit(1);
+      }
+    }),
+  );
+
+  const accessToken = (results[0] as PromiseFulfilledResult<string>).value;
+  const roleTests = generateTests(httpRoute, accessToken);
 
   console.info('Running stress tests, this may take a bit...\n');
 
   const instance = autocannon(
     {
       url: httpRoute,
-      connections: 256,
-      duration: 30,
+      connections: 100,
+      duration: 60,
       timeout: 8,
       bailout: 1,
       reconnectRate: maxRequestsPerSocket,
@@ -88,8 +109,38 @@ async function generateAccessToken(route: string) {
   return accessToken;
 }
 
-function generateRoleTests(baseRoute: string, accessToken: string) {
+function generateTests(baseRoute: string, accessToken: string) {
   return [
+    {
+      setupRequest: (request) => {
+        return {
+          ...request,
+          method: 'GET',
+          path: `${baseRoute}/genres`,
+          headers: { authorization: accessToken },
+        } as const;
+      },
+    },
+    {
+      setupRequest: (request) => {
+        return {
+          ...request,
+          method: 'GET',
+          path: `${baseRoute}/halls`,
+          headers: { authorization: accessToken },
+        } as const;
+      },
+    },
+    {
+      setupRequest: (request) => {
+        return {
+          ...request,
+          method: 'GET',
+          path: `${baseRoute}/movies?page-size=${maxPageSize}`,
+          headers: { authorization: accessToken },
+        } as const;
+      },
+    },
     {
       setupRequest: (request) => {
         return {
@@ -104,13 +155,19 @@ function generateRoleTests(baseRoute: string, accessToken: string) {
       setupRequest: (request) => {
         return {
           ...request,
-          method: 'POST',
-          path: `${baseRoute}/roles`,
-          headers: {
-            'Content-type': 'application/json; charset=utf-8',
-            authorization: accessToken,
-          },
-          body: JSON.stringify({ name: randomAlphaNumericString(16) }),
+          method: 'GET',
+          path: `${baseRoute}/showtimes?page-size=${maxPageSize}`,
+          headers: { authorization: accessToken },
+        } as const;
+      },
+    },
+    {
+      setupRequest: (request) => {
+        return {
+          ...request,
+          method: 'GET',
+          path: `${baseRoute}/users?page-size=${maxPageSize}`,
+          headers: { authorization: accessToken },
         } as const;
       },
     },

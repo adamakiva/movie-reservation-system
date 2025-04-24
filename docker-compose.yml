@@ -99,7 +99,7 @@ services:
       - NODE_MAX_SOCKETS=${NODE_MAX_SOCKETS:-256}
       - NODE_MAX_TOTAL_SOCKETS=${NODE_MAX_TOTAL_SOCKETS:-2048}
       - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
-      - NODE_OPTIONS=${NODE_OPTIONS:- --experimental-transform-types --stack-trace-limit=32 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --v8-pool-size=0 --max-old-space-size=1536}
+      - NODE_OPTIONS=${NODE_OPTIONS:- --experimental-transform-types --stack-trace-limit=16 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --v8-pool-size=0 --max-semi-space-size=32}
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
       # Clinic options
@@ -148,7 +148,7 @@ services:
       # Node flags and options
       - NODE_ENV=${NODE_ENV:-production}
       - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
-      - NODE_OPTIONS=${NODE_OPTIONS:- --experimental-transform-types --stack-trace-limit=32 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --v8-pool-size=0 --max-old-space-size=1536}
+      - NODE_OPTIONS=${NODE_OPTIONS:- --experimental-transform-types --stack-trace-limit=16 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --trace-warnings --v8-pool-size=0 --max-semi-space-size=32}
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
     volumes:
