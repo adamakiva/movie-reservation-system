@@ -40,9 +40,9 @@ import type { Showtime } from '../entities/showtime/service/utils.ts';
 import { SHOWTIME } from '../entities/showtime/validator.ts';
 import type { User } from '../entities/user/service/utils.ts';
 import { USER } from '../entities/user/validator.ts';
-import { VALIDATION } from '../entities/utils.validator.ts';
+import { VALIDATION } from '../entities/utils.ts';
 import { HttpServer } from '../server/index.ts';
-import { Middlewares } from '../server/middlewares/index.ts';
+import * as Middlewares from '../server/middlewares/index.ts';
 
 import { EnvironmentManager } from '../utils/config.ts';
 import { GeneralError } from '../utils/errors.ts';
@@ -205,7 +205,7 @@ async function createServer() {
   });
 
   const port = await server.listen();
-  const baseUrl = `http://127.0.0.1:${port}`;
+  const baseUrl = `http://localhost:${port}`;
 
   return {
     env: environmentManager.getEnvVariables(),

@@ -177,9 +177,9 @@ class WebsocketServer {
 
   /********************************************************************************/
 
-  #parseAuthenticationHeader(req: IncomingMessage) {
-    // Can be asserted since the req is an http request. See: https://nodejs.org/api/http.html#messageurl
-    const { query } = parse(req.url!, true);
+  #parseAuthenticationHeader(request: IncomingMessage) {
+    // Can be asserted since the request is an http request. See: https://nodejs.org/api/http.html#messageurl
+    const { query } = parse(request.url!, true);
     let authorizationToken = Array.isArray(query.auth_token)
       ? query.auth_token[0]
       : query.auth_token;
@@ -204,7 +204,7 @@ class WebsocketServer {
   };
 
   readonly #upgradeEventHandler = (
-    req: IncomingMessage,
+    request: IncomingMessage,
     socket: Socket,
     head: Buffer,
   ) => {
@@ -212,12 +212,12 @@ class WebsocketServer {
 
     // The authentication token is expected in the query string of the websocket
     // as a base64 encoded bearer token (With or without the `Bearer` keyword)
-    const authenticationHeader = this.#parseAuthenticationHeader(req);
+    const authenticationHeader = this.#parseAuthenticationHeader(request);
     this.#authentication
       .verifyWebsocketAuthentication(authenticationHeader)
       .then(() => {
-        this.#handler.handleUpgrade(req, socket, head, (ws, req) => {
-          this.#handler.emit('connection', ws, req);
+        this.#handler.handleUpgrade(request, socket, head, (ws, request) => {
+          this.#handler.emit('connection', ws, request);
         });
       })
       .catch(() => {
@@ -240,10 +240,13 @@ class WebsocketServer {
     this.#logger.error('Unexpected socket error:', err);
   };
 
-  readonly #connectionEventHandler = (ws: WebSocket, req: IncomingMessage) => {
+  readonly #connectionEventHandler = (
+    ws: WebSocket,
+    request: IncomingMessage,
+  ) => {
     // At this stage, the token exists and is authenticated
     const userId = this.#authentication.getUserId(
-      this.#parseAuthenticationHeader(req),
+      this.#parseAuthenticationHeader(request),
     );
     const handler = new Websocket({ ws, id: userId, logger: this.#logger });
 

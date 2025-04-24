@@ -1,5 +1,3 @@
-import { asc } from 'drizzle-orm';
-
 import type { RequestContext } from '../../../utils/types.ts';
 
 import type { Role } from './utils.ts';
@@ -12,12 +10,9 @@ async function getRoles(context: RequestContext): Promise<Role[]> {
   const handler = database.getHandler();
   const { role: roleModel } = database.getModels();
 
-  const roles = await handler
+  return await handler
     .select({ id: roleModel.id, name: roleModel.name })
-    .from(roleModel)
-    .orderBy(asc(roleModel.name));
-
-  return roles;
+    .from(roleModel);
 }
 
 /**********************************************************************************/

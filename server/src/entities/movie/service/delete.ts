@@ -18,9 +18,6 @@ async function deleteMovie(
   const handler = database.getHandler();
   const { movie: movieModel } = database.getModels();
 
-  // I've decided that if nothing was deleted because it didn't exist in the
-  // first place, it is still considered as a success since the end result
-  // is the same
   try {
     await handler.delete(movieModel).where(eq(movieModel.id, movieId));
   } catch (error) {

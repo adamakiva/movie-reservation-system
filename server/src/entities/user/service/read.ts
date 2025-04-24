@@ -2,9 +2,13 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, asc, eq, gt, or } from 'drizzle-orm';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type { PaginatedResult, RequestContext } from '../../../utils/types.ts';
+import type {
+  PaginatedResult,
+  Pagination,
+  RequestContext,
+} from '../../../utils/types.ts';
 
-import { encodeCursor } from '../../utils.validator.ts';
+import { encodeCursor, sanitizeElement } from '../../utils.ts';
 
 import type {
   GetUserValidatedData,
@@ -89,32 +93,21 @@ function sanitizeUserPage(
   users: (User & { createdAt: Date })[],
   pageSize: number,
 ) {
+  let page: Pagination = { hasNext: false, cursor: null } as const;
   if (users.length > pageSize) {
     users.pop();
     const lastUser = users[users.length - 1]!;
 
-    return {
-      users: users.map(sanitizeUser),
-      page: {
-        hasNext: true,
-        cursor: encodeCursor(lastUser.id, lastUser.createdAt),
-      },
+    page = {
+      hasNext: true,
+      cursor: encodeCursor(lastUser.id, lastUser.createdAt),
     } as const;
   }
 
   return {
-    users: users.map(sanitizeUser),
-    page: {
-      hasNext: false,
-      cursor: null,
-    },
+    users: users.map(sanitizeElement),
+    page,
   } as const;
-}
-
-function sanitizeUser(user: Parameters<typeof sanitizeUserPage>[0][number]) {
-  const { createdAt, ...fields } = user;
-
-  return fields;
 }
 
 /**********************************************************************************/

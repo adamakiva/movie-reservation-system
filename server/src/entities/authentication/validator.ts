@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 import zod from 'zod';
 
-import { parseValidationResult, VALIDATION } from '../utils.validator.ts';
+import { parseValidationResult, VALIDATION } from '../utils.ts';
 
 /**********************************************************************************/
 

@@ -4,7 +4,7 @@ import zod from 'zod';
 
 import type { ResponseWithContext } from '../../utils/types.ts';
 
-import { parseValidationResult } from '../utils.validator.ts';
+import { parseValidationResult } from '../utils.ts';
 
 /**********************************************************************************/
 

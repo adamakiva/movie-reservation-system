@@ -10,6 +10,7 @@
 
 # Exclude config files
 !package.json
+!package-lock.json
 !README.md
 !.npmrc
 !.gitignore

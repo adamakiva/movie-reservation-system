@@ -112,6 +112,8 @@ function coerceNumber(
   };
 }
 
+/**********************************************************************************/
+
 function encodeCursor(id: string, createdAt: Date) {
   return Buffer.from(`${id},${createdAt.toISOString()}`).toString('base64');
 }
@@ -127,6 +129,14 @@ function decodeCursor(cursor: string) {
   } as const;
 }
 
+function sanitizeElement<
+  T extends { [key: string]: unknown } & { createdAt: Date },
+>(element: T) {
+  const { createdAt, ...fields } = element;
+
+  return fields;
+}
+
 /**********************************************************************************/
 
 export {
@@ -135,5 +145,6 @@ export {
   decodeCursor,
   encodeCursor,
   parseValidationResult,
+  sanitizeElement,
   VALIDATION,
 };

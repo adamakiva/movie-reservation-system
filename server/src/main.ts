@@ -57,7 +57,7 @@ async function startServer() {
       generatedFileNameLength: 32,
       saveDir: join(import.meta.dirname, '..', 'posters'),
       highWatermark: nodeEnv.defaultHighWaterMark,
-      pipeTimeout: 16_000,
+      pipeTimeout: nodeEnv.pipeTimeout,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed

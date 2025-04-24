@@ -61,6 +61,10 @@ class EnvironmentManager {
           'NODE_DEFAULT_HIGH_WATERMARK',
           process.env.NODE_DEFAULT_HIGH_WATERMARK,
         )!,
+        pipeTimeout: this.#toNumber(
+          'NODE_PIPE_TIMEOUT',
+          process.env.NODE_PIPE_TIMEOUT,
+        )!,
       },
       httpServer: {
         port: this.#toNumber('SERVER_PORT', process.env.SERVER_PORT)!,

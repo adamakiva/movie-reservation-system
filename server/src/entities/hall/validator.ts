@@ -1,11 +1,7 @@
 import type { Request } from 'express';
 import zod, { ZodIssueCode } from 'zod';
 
-import {
-  coerceNumber,
-  parseValidationResult,
-  VALIDATION,
-} from '../utils.validator.ts';
+import { coerceNumber, parseValidationResult, VALIDATION } from '../utils.ts';
 
 /**********************************************************************************/
 

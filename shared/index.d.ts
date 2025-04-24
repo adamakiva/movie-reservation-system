@@ -105,6 +105,19 @@ type ShowtimeCancellationMessage = {
   userIds: string[];
 };
 
+type TicketReservationWebsocketMessage = {
+  action: "reserve";
+  showtimeId: string;
+  row: number;
+  column: number;
+};
+type TicketCancellationWebsocketMessages = {
+  action: "cancel";
+  showtimeId: string;
+  rows: number[];
+  columns: number[];
+};
+
 /**********************************************************************************/
 
 export {
@@ -119,5 +132,7 @@ export {
   type RoutingKeys,
   type ShowtimeCancellationMessage,
   type TicketCancellationMessage,
+  type TicketCancellationWebsocketMessages,
   type TicketReservationsMessage,
+  type TicketReservationWebsocketMessage,
 };

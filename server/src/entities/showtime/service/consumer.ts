@@ -2,7 +2,9 @@ import {
   CORRELATION_IDS,
   type ShowtimeCancellationMessage,
   type TicketCancellationMessage,
+  type TicketCancellationWebsocketMessages,
   type TicketReservationsMessage,
+  type TicketReservationWebsocketMessage,
 } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
@@ -155,7 +157,12 @@ function broadcastReserveTicketMessages(params: {
   const { websocketServer, showtimeId, row, column, logger } = params;
 
   websocketServer.broadcast(
-    JSON.stringify({ action: 'reserve', showtimeId, row, column }),
+    JSON.stringify({
+      action: 'reserve',
+      showtimeId,
+      row,
+      column,
+    } satisfies TicketReservationWebsocketMessage),
     {},
     (err) => {
       logger.error('Failure to write socket message:', err);
@@ -179,7 +186,12 @@ function broadcastCancelTicketsMessages(params: {
   });
 
   websocketServer.broadcast(
-    JSON.stringify({ action: 'cancel', showtimeId, rows, columns }),
+    JSON.stringify({
+      action: 'cancel',
+      showtimeId,
+      rows,
+      columns,
+    } satisfies TicketCancellationWebsocketMessages),
     {},
     (err) => {
       logger.error('Failure to write socket message:', err);

@@ -37,7 +37,7 @@ async function updateRole(
 
     return updatedRole;
   } catch (error) {
-    // If there is a conflict it is due to the name update, hence, the name
+    // If there is a conflict it is due to the name field, hence, the name
     // field must exist
     throw handlePossibleDuplicationError(error, fieldsToUpdate.name!);
   }

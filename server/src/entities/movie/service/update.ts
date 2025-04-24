@@ -37,12 +37,28 @@ async function updateMovie(
   });
 
   try {
-    return await updateMovieInDatabase({
-      handler,
-      subQueries,
-      genreModel,
-      movieId: movieToUpdate.movieId,
-    });
+    const [updatedMovie] = await handler
+      .with(...Object.values(subQueries))
+      .select({
+        id: subQueries.updateMovieSubQuery.id,
+        title: subQueries.updateMovieSubQuery.title,
+        description: subQueries.updateMovieSubQuery.description,
+        price: subQueries.updateMovieSubQuery.price,
+        genre: genreModel.name,
+      })
+      .from(subQueries.updateMovieSubQuery)
+      .innerJoin(
+        genreModel,
+        eq(genreModel.id, subQueries.updateMovieSubQuery.genreId),
+      );
+    if (!updatedMovie) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.NOT_FOUND,
+        `Movie '${movieToUpdate.movieId}' does not exist`,
+      );
+    }
+
+    return updatedMovie;
   } catch (error) {
     // Genre type is asserted because if the error type match, it will be defined
     throw handlePossibleMissingGenreError(error, movieToUpdate.genreId!);
@@ -83,9 +99,7 @@ function buildUpdateMovieCTEs(params: {
   );
 
   if (!poster) {
-    return {
-      updateMovieSubQuery,
-    } as const;
+    return { updateMovieSubQuery } as const;
   }
 
   const insertMoviePosterSubQuery = handler.$with('insert_movie_poster').as(
@@ -99,44 +113,7 @@ function buildUpdateMovieCTEs(params: {
     }),
   );
 
-  return {
-    updateMovieSubQuery,
-    insertMoviePosterSubQuery,
-  } as const;
-}
-
-async function updateMovieInDatabase(params: {
-  handler: DatabaseHandler;
-  subQueries: Awaited<ReturnType<typeof buildUpdateMovieCTEs>>;
-  genreModel: DatabaseModel<'genre'>;
-  movieId: string;
-}) {
-  const { handler, subQueries, genreModel, movieId } = params;
-
-  const sanitizedSubQueries = Object.values(params.subQueries);
-
-  const [updatedMovie] = await handler
-    .with(...sanitizedSubQueries)
-    .select({
-      id: subQueries.updateMovieSubQuery.id,
-      title: subQueries.updateMovieSubQuery.title,
-      description: subQueries.updateMovieSubQuery.description,
-      price: subQueries.updateMovieSubQuery.price,
-      genre: genreModel.name,
-    })
-    .from(subQueries.updateMovieSubQuery)
-    .innerJoin(
-      genreModel,
-      eq(genreModel.id, subQueries.updateMovieSubQuery.genreId),
-    );
-  if (!updatedMovie) {
-    throw new GeneralError(
-      HTTP_STATUS_CODES.NOT_FOUND,
-      `Movie '${movieId}' does not exist`,
-    );
-  }
-
-  return updatedMovie;
+  return { updateMovieSubQuery, insertMoviePosterSubQuery } as const;
 }
 
 /**********************************************************************************/

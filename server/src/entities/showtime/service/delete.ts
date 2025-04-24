@@ -52,7 +52,7 @@ async function deleteShowtime(
         ),
       );
   } catch (error) {
-    await handleShowtimeDeletionWithUserShowtimes({
+    await deleteShowtimeWithAttachedUsers({
       error,
       messageQueue,
       handler,
@@ -89,7 +89,7 @@ async function cancelUserShowtimeReservation(params: {
 
 /**********************************************************************************/
 
-async function handleShowtimeDeletionWithUserShowtimes(params: {
+async function deleteShowtimeWithAttachedUsers(params: {
   error: unknown;
   messageQueue: RequestContext['messageQueue'];
   handler: DatabaseHandler;

@@ -4,11 +4,12 @@ import { and, asc, eq, gt, or } from 'drizzle-orm';
 import { GeneralError } from '../../../utils/errors.ts';
 import type {
   PaginatedResult,
+  Pagination,
   RequestContext,
   ResponseWithContext,
 } from '../../../utils/types.ts';
 
-import { encodeCursor } from '../../utils.validator.ts';
+import { encodeCursor, sanitizeElement } from '../../utils.ts';
 
 import type {
   GetMoviesValidatedData,
@@ -129,34 +130,24 @@ function sanitizeMoviesPage(
   movies: (Movie & { createdAt: Date })[],
   pageSize: number,
 ) {
-  if (movies.length <= pageSize) {
-    return {
-      movies: movies.map(sanitizeMovie),
-      page: {
-        hasNext: false,
-        cursor: null,
-      },
+  let page: Pagination = {
+    hasNext: false,
+    cursor: null,
+  } as const;
+  if (movies.length > pageSize) {
+    movies.pop();
+    const lastMovie = movies[movies.length - 1]!;
+
+    page = {
+      hasNext: true,
+      cursor: encodeCursor(lastMovie.id, lastMovie.createdAt),
     } as const;
   }
 
-  movies.pop();
-  const lastMovie = movies[movies.length - 1]!;
-
   return {
-    movies: movies.map(sanitizeMovie),
-    page: {
-      hasNext: true,
-      cursor: encodeCursor(lastMovie.id, lastMovie.createdAt),
-    },
+    movies: movies.map(sanitizeElement),
+    page,
   } as const;
-}
-
-function sanitizeMovie(
-  movie: Parameters<typeof sanitizeMoviesPage>[0][number],
-) {
-  const { createdAt, ...fields } = movie;
-
-  return fields;
 }
 
 async function streamMoviePosterResponse(

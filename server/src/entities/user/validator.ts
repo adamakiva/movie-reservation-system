@@ -7,7 +7,7 @@ import {
   decodeCursor,
   parseValidationResult,
   VALIDATION,
-} from '../utils.validator.ts';
+} from '../utils.ts';
 
 /**********************************************************************************/
 

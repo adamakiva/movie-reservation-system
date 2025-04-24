@@ -4,10 +4,11 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   PaginatedResult,
+  Pagination,
   RequestContext,
 } from '../../../utils/types.ts';
 
-import { encodeCursor } from '../../utils.validator.ts';
+import { encodeCursor, sanitizeElement } from '../../utils.ts';
 
 import type {
   GetShowtimeValidatedData,
@@ -165,7 +166,7 @@ function buildGetPaginatedShowtimesCTE(params: {
     filters,
   } = params;
 
-  const getPaginatedShowtimesSubQuery = handler.$with('paginated_showtimes').as(
+  return handler.$with('paginated_showtimes').as(
     handler
       .select({
         showtimeId: showtimeModel.id,
@@ -196,8 +197,6 @@ function buildGetPaginatedShowtimesCTE(params: {
       .limit(pageSize + 1)
       .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id)),
   );
-
-  return getPaginatedShowtimesSubQuery;
 }
 
 function sanitizePaginatedShowtimes(
@@ -238,69 +237,43 @@ function sanitizePaginatedShowtimes(
     },
   );
 
-  if (groupedAndSanitizedShowtimes.length <= pageSize) {
-    return {
-      showtimes: groupedAndSanitizedShowtimes.map(sanitizeShowtime),
-      page: {
-        hasNext: false,
-        cursor: null,
-      },
+  let page: Pagination = { hasNext: false, cursor: null } as const;
+  if (groupedAndSanitizedShowtimes.length > pageSize) {
+    groupedAndSanitizedShowtimes.pop();
+    const lastShowtime =
+      groupedAndSanitizedShowtimes[groupedAndSanitizedShowtimes.length - 1]!;
+
+    page = {
+      hasNext: true,
+      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
     } as const;
   }
 
-  groupedAndSanitizedShowtimes.pop();
-  const lastShowtime =
-    groupedAndSanitizedShowtimes[groupedAndSanitizedShowtimes.length - 1]!;
-
   return {
-    showtimes: groupedAndSanitizedShowtimes.map(sanitizeShowtime),
-    page: {
-      hasNext: true,
-      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
-    },
+    showtimes: groupedAndSanitizedShowtimes.map(sanitizeElement),
+    page,
   } as const;
-}
-
-function sanitizeShowtime(showtime: Showtime & { createdAt: Date }) {
-  const { createdAt, ...fields } = showtime;
-
-  return fields;
 }
 
 function sanitizePaginatedUserShowtimes(
   userShowtimes: (UserShowtime & { createdAt: Date })[],
   pageSize: number,
 ) {
-  if (userShowtimes.length <= pageSize) {
-    return {
-      userShowtimes: userShowtimes.map(sanitizeUserShowtimesPage),
-      page: {
-        hasNext: false,
-        cursor: null,
-      },
+  let page: Pagination = { hasNext: false, cursor: null } as const;
+  if (userShowtimes.length > pageSize) {
+    userShowtimes.pop();
+    const lastShowtime = userShowtimes[userShowtimes.length - 1]!;
+
+    page = {
+      hasNext: true,
+      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
     } as const;
   }
 
-  userShowtimes.pop();
-  const lastShowtime = userShowtimes[userShowtimes.length - 1]!;
-
   return {
-    userShowtimes: userShowtimes.map(sanitizeUserShowtimesPage),
-    page: {
-      hasNext: true,
-      cursor: encodeCursor(lastShowtime.id, lastShowtime.createdAt),
-    },
+    userShowtimes: userShowtimes.map(sanitizeElement),
+    page,
   } as const;
-}
-
-function sanitizeUserShowtimesPage(
-  userReservedShowtimes: Parameters<
-    typeof sanitizePaginatedUserShowtimes
-  >[0][number],
-) {
-  const { createdAt, ...fields } = userReservedShowtimes;
-
-  return fields;
 }
 
 /**********************************************************************************/

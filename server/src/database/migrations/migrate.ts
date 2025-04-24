@@ -4,15 +4,11 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
-import { Logger } from '../../utils/logger.ts';
-
 import * as schemas from '../schemas.ts';
 
 /**********************************************************************************/
 
 async function run() {
-  const logger = new Logger();
-
   const environmentVariables = new Map([
     ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],
     ['ADMIN_ROLE_NAME', process.env.ADMIN_ROLE_NAME],
@@ -35,20 +31,20 @@ async function run() {
   if (!errorMessages.length) {
     await Promise.all(
       databaseUrls.values().map((databaseUrl) => {
-        return migration(databaseUrl!, logger);
+        return migration(databaseUrl!);
       }),
     ).catch((error: unknown) => {
-      logger.fatal('Migration failed:', error);
+      console.error('Migration failed:', error);
       process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
     });
     return;
   }
 
-  logger.fatal(errorMessages.join('\n'));
+  console.error(errorMessages.join('\n'));
   process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
 }
 
-async function migration(databaseUrl: string, logger: Logger) {
+async function migration(databaseUrl: string) {
   const connection = pg(databaseUrl);
   const databaseHandler = drizzle(connection, { schema: schemas });
 
@@ -79,7 +75,7 @@ async function migration(databaseUrl: string, logger: Logger) {
       await connection.end({ timeout: 30 }); // in seconds
     } catch (error) {
       // No point in propagating it, because there is nothing to do with it
-      logger.fatal(
+      console.error(
         `Error closing database connection for ${databaseUrl}`,
         error,
       );

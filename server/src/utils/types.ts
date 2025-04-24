@@ -53,6 +53,7 @@ export type {
   DatabaseModel,
   LogMiddleware,
   PaginatedResult,
+  Pagination,
   RequestContext,
   ResponseWithContext,
   ResponseWithoutContext,

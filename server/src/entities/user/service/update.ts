@@ -26,9 +26,10 @@ async function updateUser(
   const handler = database.getHandler();
   const { user: userModel, role: roleModel } = database.getModels();
 
-  const hash = password
-    ? await authentication.hashPassword(password)
-    : undefined;
+  let hash: string | undefined = undefined;
+  if (password) {
+    hash = await authentication.hashPassword(password);
+  }
 
   const updateUserSubQuery = buildUpdateUserCTE({
     handler,
@@ -57,7 +58,7 @@ async function updateUser(
 
     return updatedUser;
   } catch (error) {
-    // The fields are asserted because if their error type matches, they will
+    // The fields are asserted because if their error fields match, they will
     // be defined
     throw handleUserUpdateError({
       error,

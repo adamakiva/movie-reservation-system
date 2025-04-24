@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises';
 import { CronJob } from 'cron';
 import { notInArray } from 'drizzle-orm';
 
-import type { Database } from '../../database/handler.ts';
+import type { Database } from '../../database/index.ts';
 import { isSystemCallError } from '../../utils/errors.ts';
 import type { Logger } from '../../utils/logger.ts';
 

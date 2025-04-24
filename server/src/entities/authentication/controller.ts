@@ -20,9 +20,9 @@ async function login(request: Request, response: ResponseWithContext) {
     credentials,
   });
 
-  const result = await generateTokens(authentication, userId);
+  const tokens = await generateTokens(authentication, userId);
 
-  response.status(HTTP_STATUS_CODES.CREATED).json(result);
+  response.status(HTTP_STATUS_CODES.CREATED).json(tokens);
 }
 
 async function refreshAccessToken(
