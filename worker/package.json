@@ -1,7 +1,7 @@
 {
-  "name": "movie-reservation-system-ticket-worker",
+  "name": "movie-reservation-system-worker",
   "version": "1.0.0",
-  "description": "Movie reservation system ticket worker",
+  "description": "Movie reservation system worker",
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {

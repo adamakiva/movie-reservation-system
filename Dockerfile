@@ -25,11 +25,11 @@ ENTRYPOINT ["/home/node/init.sh"]
 
 ####################################################################################
 
-FROM node:22.14.0-slim AS ticket-worker
+FROM node:22.14.0-slim AS worker
 
-WORKDIR /home/node/ticket-worker
+WORKDIR /home/node/worker
 
-COPY ./config/init.ticket.worker.sh /home/node/init.sh
+COPY ./config/init.worker.sh /home/node/init.sh
 
 ENTRYPOINT ["/home/node/init.sh"]
 

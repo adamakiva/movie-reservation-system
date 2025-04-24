@@ -1,4 +1,4 @@
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 
 import {
   ERROR_CODES,
@@ -36,7 +36,7 @@ async function startServer() {
       refresh: {
         expiresAt: jwtEnv.refreshTokenExpiration,
       },
-      keysPath: resolve(import.meta.dirname, '..', 'keys'),
+      keysPath: join(import.meta.dirname, '..', 'keys'),
       hashSecret: jwtEnv.hash,
     },
     databaseParams: {
@@ -57,9 +57,17 @@ async function startServer() {
       generatedFileNameLength: 32,
       saveDir: join(import.meta.dirname, '..', 'posters'),
       highWatermark: nodeEnv.defaultHighWaterMark,
+      pipeTimeout: 16_000,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
+      },
+    },
+    cronjobParams: {
+      moviePosterCleanupParams: {
+        directory: join(import.meta.dirname, '..', 'posters'),
+        retryInterval: 2_000,
+        retryLimit: 5,
       },
     },
     messageQueueParams: {

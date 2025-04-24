@@ -215,7 +215,7 @@ function attachProcessHandlers(messageQueue: MessageQueue) {
     messageQueue
       .close()
       .catch((error: unknown) => {
-        console.error(error);
+        console.error('Shutdown failure:', error);
       })
       .finally(() => {
         process.exit(ERROR_CODES.EXIT_NO_RESTART);

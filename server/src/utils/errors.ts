@@ -139,6 +139,34 @@ function isDatabaseError(obj: unknown): obj is pg.PostgresError {
   return obj instanceof pg.PostgresError;
 }
 
+function isSystemCallError(obj: unknown): obj is NodeJS.ErrnoException {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    Object.hasOwn(obj, 'errno') &&
+    Object.hasOwn(obj, 'syscall')
+  );
+}
+
+function registerAbortController(timeout: number, reason?: string) {
+  const abortController = new AbortController();
+  const timeoutHandler = setTimeout(() => {
+    abortController.abort(reason);
+  }, timeout);
+
+  return {
+    signal: abortController.signal,
+    timeoutHandler,
+  } as const;
+}
+
 /**********************************************************************************/
 
-export { GeneralError, isDatabaseError, isError, UnauthorizedError };
+export {
+  GeneralError,
+  isDatabaseError,
+  isError,
+  isSystemCallError,
+  registerAbortController,
+  UnauthorizedError,
+};

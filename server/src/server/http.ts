@@ -17,6 +17,7 @@ import type { Logger, LogMiddleware } from '../utils/logger.ts';
 import type { RequestContext } from '../utils/types.ts';
 
 import { Middlewares } from './middlewares/index.ts';
+import { Cronjob } from './services/cronjob.ts';
 import {
   AuthenticationManager,
   FileManager,
@@ -29,6 +30,7 @@ import {
 class HttpServer {
   readonly #authentication;
   readonly #fileManager;
+  readonly #cronjob;
   readonly #database;
   readonly #messageQueue;
   readonly #websocketServer;
@@ -43,6 +45,10 @@ class HttpServer {
     fileManagerParams: Omit<
       ConstructorParameters<typeof FileManager>[0],
       'logger'
+    >;
+    cronjobParams: Omit<
+      ConstructorParameters<typeof Cronjob>[0],
+      'database' | 'logger'
     >;
     messageQueueParams: Omit<
       ConstructorParameters<typeof MessageQueue>[0],
@@ -62,6 +68,7 @@ class HttpServer {
       authenticationParams,
       databaseParams,
       fileManagerParams,
+      cronjobParams,
       messageQueueParams,
       websocketServerParams,
       allowedMethods,
@@ -75,6 +82,7 @@ class HttpServer {
       await AuthenticationManager.create(authenticationParams);
     const database = new Database({ ...databaseParams, logger });
     const fileManager = new FileManager({ ...fileManagerParams, logger });
+    const cronjob = new Cronjob({ ...cronjobParams, database, logger });
     const messageQueue = new MessageQueue({
       connectionOptions: messageQueueParams.connectionOptions,
       logger,
@@ -100,6 +108,7 @@ class HttpServer {
       authentication,
       database,
       fileManager,
+      cronjob,
       messageQueue,
       websocketServer,
       server,
@@ -164,6 +173,7 @@ class HttpServer {
     (
       await Promise.allSettled([
         this.#database.close(),
+        this.#cronjob.stopAll(),
         this.#messageQueue.close(),
       ])
     ).forEach((result) => {
@@ -184,6 +194,7 @@ class HttpServer {
     authentication: AuthenticationManager;
     database: Database;
     fileManager: FileManager;
+    cronjob: Cronjob;
     messageQueue: MessageQueue;
     websocketServer: WebsocketServer;
     server: Server;
@@ -194,6 +205,7 @@ class HttpServer {
       authentication,
       database,
       fileManager,
+      cronjob,
       messageQueue,
       websocketServer,
       server,
@@ -204,6 +216,7 @@ class HttpServer {
     this.#authentication = authentication;
     this.#database = database;
     this.#fileManager = fileManager;
+    this.#cronjob = cronjob;
     this.#messageQueue = messageQueue;
     this.#websocketServer = websocketServer;
     // eslint-disable-next-line @typescript-eslint/no-misused-promises

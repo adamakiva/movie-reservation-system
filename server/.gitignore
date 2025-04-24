@@ -27,4 +27,4 @@
 !.gitignore
 
 # Exclude assets
-!src/tests/**/*.jpg
+!src/tests/images/**/*.jpg

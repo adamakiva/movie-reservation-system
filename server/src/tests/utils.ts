@@ -7,7 +7,7 @@ import { randomUUID as nodeRandomUUID } from 'node:crypto';
 import type { PathLike } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { after, before, mock, suite, test } from 'node:test';
 
 import {
@@ -152,7 +152,7 @@ async function createServer() {
       refresh: {
         expiresAt: jwtEnv.refreshTokenExpiration,
       },
-      keysPath: resolve(import.meta.dirname, '..', '..', 'keys'),
+      keysPath: join(import.meta.dirname, '..', '..', 'keys'),
       hashSecret: jwtEnv.hash,
     },
     databaseParams: {
@@ -173,9 +173,17 @@ async function createServer() {
       generatedFileNameLength: 32,
       saveDir: tmpdir(),
       highWatermark: nodeEnv.defaultHighWaterMark,
+      pipeTimeout: 16_000,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
+      },
+    },
+    cronjobParams: {
+      moviePosterCleanupParams: {
+        directory: tmpdir(),
+        retryInterval: 2_000,
+        retryLimit: 5,
       },
     },
     messageQueueParams: {

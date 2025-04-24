@@ -1,6 +1,6 @@
-# Movie reservation system ticket worker
+# Movie reservation system worker
 
-RabbitMQ consumer for movie-ticket actions
+RabbitMQ consumer for intensive actions
 
 ---
 

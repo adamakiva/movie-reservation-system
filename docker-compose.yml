@@ -132,13 +132,13 @@ services:
       movie-reservation-system-rbmq:
         condition: service_healthy
 
-  ticket-worker:
+  worker:
     deploy:
       mode: replicated
       replicas: 1
     restart: unless-stopped
     build:
-      target: ticket-worker
+      target: worker
     user: ${UID}:${GID}
     # Run node as PID 1
     init: true
@@ -152,9 +152,9 @@ services:
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}
     volumes:
-      - ./ticket-worker:/home/node/ticket-worker:rw
+      - ./worker:/home/node/worker:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
-      - ./npm-cache/ticket-worker:/home/node/.npm:rw
+      - ./npm-cache/worker:/home/node/.npm:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:

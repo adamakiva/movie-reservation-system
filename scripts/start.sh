@@ -5,12 +5,13 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
-DATABASE_DATA_FOLDER="$ROOT_DIR"/dev-data/pg;
-MESSAGE_QUEUE_DATA_FOLDER="$ROOT_DIR"/dev-data/rbmq;
-NPM_SERVER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/server;
-NPM_TICKET_WORKER_CACHE_FOLDER="$ROOT_DIR"/npm-cache/ticket-worker;
-KEYS_FOLDER="$ROOT_DIR"/server/keys;
-CERTS_FOLDER="$ROOT_DIR"/nginx/certs;
+DATABASE_DATA_DIR="$ROOT_DIR"/dev-data/pg;
+MESSAGE_QUEUE_DATA_DIR="$ROOT_DIR"/dev-data/rbmq;
+MOVIE_POSTERS_DIR="$ROOT_DIR/server/posters";
+NPM_SERVER_CACHE_DIR="$ROOT_DIR"/npm-cache/server;
+NPM_WORKER_CACHE_DIR="$ROOT_DIR"/npm-cache/worker;
+CERTS_DIR="$ROOT_DIR"/nginx/certs;
+KEYS_DIR="$ROOT_DIR"/server/keys;
 ERR_LOG_FILE="$ROOT_DIR"/error_logs.txt;
 
 UV_THREADPOOL_SIZE=$(($(nproc --all) - 1));
@@ -35,35 +36,35 @@ install_dependencies() {
         exit 1;
     fi
 
-    cd "$ROOT_DIR"/ticket-worker || exit 1;
+    cd "$ROOT_DIR"/worker || exit 1;
     if ! npm install --include=dev -d; then
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
     fi
 }
 
-generate_keys() {
-    if [ ! -d "$KEYS_FOLDER" ]; then
-        mkdir "$KEYS_FOLDER" || exit 1;
+generate_certs() {
+    if [ ! -d "$CERTS_DIR" ]; then
+        mkdir "$CERTS_DIR" || exit 1;
 
-        openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
-        openssl rsa -in "$KEYS_FOLDER"/access_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/access_public_key.pem || exit 1;
-
-        openssl genpkey -algorithm RSA -out "$KEYS_FOLDER"/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
-        openssl rsa -in "$KEYS_FOLDER"/refresh_private_key.pem -pubout -outform DER |
-        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_FOLDER"/refresh_public_key.pem || exit 1;
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "$CERTS_DIR"/selfsigned.key \
+        -out "$CERTS_DIR"/selfsigned.crt \
+        -subj "/C=US/ST=Test/L=Local/O=Dev/OU=Test/CN=localhost" || exit 1;
     fi
 }
 
-generate_certs() {
-    if [ ! -d "$CERTS_FOLDER" ]; then
-        mkdir "$CERTS_FOLDER" || exit 1;
+generate_keys() {
+    if [ ! -d "$KEYS_DIR" ]; then
+        mkdir "$KEYS_DIR" || exit 1;
 
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout "$CERTS_FOLDER"/selfsigned.key \
-        -out "$CERTS_FOLDER"/selfsigned.crt \
-        -subj "/C=US/ST=Test/L=Local/O=Dev/OU=Test/CN=localhost" || exit 1;
+        openssl genpkey -algorithm RSA -out "$KEYS_DIR"/access_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in "$KEYS_DIR"/access_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_DIR"/access_public_key.pem || exit 1;
+
+        openssl genpkey -algorithm RSA -out "$KEYS_DIR"/refresh_private_key.pem -pkeyopt rsa_keygen_bits:2048 &&
+        openssl rsa -in "$KEYS_DIR"/refresh_private_key.pem -pubout -outform DER |
+        openssl pkey -pubin -inform DER -outform PEM -out "$KEYS_DIR"/refresh_public_key.pem || exit 1;
     fi
 }
 
@@ -93,10 +94,10 @@ check_services_health() {
 
 start() {
     check_prerequisites &&
-    mkdir -p "$DATABASE_DATA_FOLDER" "$NPM_SERVER_CACHE_FOLDER" "$NPM_TICKET_WORKER_CACHE_FOLDER" "$MESSAGE_QUEUE_DATA_FOLDER" || exit 1;
+    mkdir -p "$DATABASE_DATA_DIR" "$MESSAGE_QUEUE_DATA_DIR" "$MOVIE_POSTERS_DIR" "$NPM_SERVER_CACHE_DIR" "$NPM_WORKER_CACHE_DIR" || exit 1;
     install_dependencies &&
-    generate_keys &&
     generate_certs &&
+    generate_keys &&
     rm -f "$ERR_LOG_FILE";
     UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait || exit 1;
     check_services_health;

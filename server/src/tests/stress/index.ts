@@ -46,7 +46,7 @@ async function stressTest() {
     },
     async (err, result) => {
       if (err) {
-        console.error(err);
+        console.error('Stress test failure:', err);
       }
 
       try {

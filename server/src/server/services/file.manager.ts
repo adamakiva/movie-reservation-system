@@ -8,12 +8,14 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
 import multer, { type Multer, type Options, type StorageEngine } from 'multer';
 
-import { GeneralError } from '../../utils/errors.ts';
+import {
+  GeneralError,
+  isSystemCallError,
+  registerAbortController,
+} from '../../utils/errors.ts';
 import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
-
-// TODO, Add a cronjob to delete movie posters for movies which were deleted
 
 /**
  * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
@@ -22,6 +24,7 @@ class FileManager implements StorageEngine {
   readonly #generatedFileNameLength;
   readonly #saveDir;
   readonly #highWatermark;
+  readonly #pipeTimeout;
   readonly #logger;
 
   readonly #uploadMiddleware;
@@ -36,15 +39,23 @@ class FileManager implements StorageEngine {
     generatedFileNameLength: number;
     saveDir: string;
     highWatermark: number;
+    pipeTimeout: number;
     logger: Logger;
     limits?: Options['limits'];
   }) {
-    const { generatedFileNameLength, saveDir, highWatermark, logger, limits } =
-      params;
+    const {
+      generatedFileNameLength,
+      saveDir,
+      highWatermark,
+      pipeTimeout,
+      logger,
+      limits,
+    } = params;
 
     this.#generatedFileNameLength = generatedFileNameLength;
     this.#saveDir = saveDir;
     this.#highWatermark = highWatermark;
+    this.#pipeTimeout = pipeTimeout;
     this.#logger = logger;
 
     this.#uploadMiddleware = multer({ storage: this, limits });
@@ -58,33 +69,38 @@ class FileManager implements StorageEngine {
     return this.#uploadMiddleware.array(...params);
   }
 
-  public async streamFile(dest: Writable, absolutePath: PathLike) {
-    try {
-      await pipeline(
-        // This path is provided by the program, not the end-user
-        // eslint-disable-next-line @security/detect-non-literal-fs-filename
-        createReadStream(absolutePath, {
-          highWaterMark: this.#highWatermark,
-        }),
-        dest,
-      );
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        'code' in error &&
-        error.code === 'ENOENT'
-      ) {
-        // Means that 'absolutePath' does not exist, which should be impossible
-        // considering the programmer set the value
-        throw new GeneralError(
-          HTTP_STATUS_CODES.SERVER_ERROR,
-          'Should never happen, contact an administrator',
-          error.cause,
-        );
-      }
+  public streamFile(dest: Writable, absolutePath: PathLike) {
+    // This path is provided by the program, not the end-user
+    // eslint-disable-next-line @security/detect-non-literal-fs-filename
+    const readStream = createReadStream(absolutePath, {
+      highWaterMark: this.#highWatermark,
+    });
 
-      throw error;
-    }
+    const { signal, timeoutHandler } = registerAbortController(
+      this.#pipeTimeout,
+      'Timeout',
+    );
+    return pipeline(readStream, dest, { signal })
+      .catch((error: unknown) => {
+        if (isSystemCallError(error) && error.code === 'ENOENT') {
+          // Means that 'absolutePath' does not exist, which should be impossible
+          // considering the programmer set the value
+          this.#logger.error(
+            `File: '${absolutePath}' does not exist. Should not be possible:`,
+            error,
+          );
+          throw new GeneralError(
+            HTTP_STATUS_CODES.SERVER_ERROR,
+            'Should never happen, contact an administrator',
+            error.cause,
+          );
+        }
+
+        throw error;
+      })
+      .finally(() => {
+        clearTimeout(timeoutHandler);
+      });
   }
 
   public deleteFile(absolutePath?: PathLike) {
@@ -119,7 +135,11 @@ class FileManager implements StorageEngine {
           highWaterMark: this.#highWatermark,
         });
 
-        return pipeline(fileStreamWithFileType, outStream)
+        const { signal, timeoutHandler } = registerAbortController(
+          this.#pipeTimeout,
+          'Timeout',
+        );
+        return pipeline(fileStreamWithFileType, outStream, { signal })
           .then(() => {
             callback(null, {
               filename,
@@ -136,6 +156,9 @@ class FileManager implements StorageEngine {
               `Failure to stream user file to destination: '${file.path}'`,
               (error as Error).cause,
             );
+          })
+          .finally(() => {
+            clearTimeout(timeoutHandler);
           });
       })
       .catch((error: unknown) => {
