@@ -100,7 +100,7 @@ function handleForeignKeyNotFoundError(params: {
   );
 }
 
-function handlePossibleRestrictError(error: unknown, user: string) {
+function handlePossibleForeignKeyError(error: unknown, user: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
@@ -109,7 +109,7 @@ function handlePossibleRestrictError(error: unknown, user: string) {
   }
   if (
     !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
     return error;
   }
@@ -124,7 +124,7 @@ function handlePossibleRestrictError(error: unknown, user: string) {
 /**********************************************************************************/
 
 export {
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
   handleUserCreationError,
   handleUserUpdateError,
   type CreateUserValidatedData,

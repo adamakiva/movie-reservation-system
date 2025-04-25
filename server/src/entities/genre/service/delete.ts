@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type DeleteGenreValidatedData,
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ async function deleteGenre(
   try {
     await handler.delete(genreModel).where(eq(genreModel.id, genreId));
   } catch (error) {
-    throw handlePossibleRestrictError(error, genreId);
+    throw handlePossibleForeignKeyError(error, genreId);
   }
 }
 

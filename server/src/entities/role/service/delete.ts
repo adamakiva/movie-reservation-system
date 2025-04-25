@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type DeleteRoleValidatedData,
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ async function deleteRole(
   try {
     await handler.delete(roleModel).where(eq(roleModel.id, roleId));
   } catch (error) {
-    throw handlePossibleRestrictError(error, roleId);
+    throw handlePossibleForeignKeyError(error, roleId);
   }
 }
 

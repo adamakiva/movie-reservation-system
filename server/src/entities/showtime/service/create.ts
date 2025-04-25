@@ -227,15 +227,15 @@ async function validateMovieReservation(params: {
 
   // Rows are 0 indexed in the database, but 1 indexed for the end-user
   if (
-    showtimeTicket.row - 1 >= 0 &&
-    showtimeTicket.row - 1 <= showTimeData.hallRows
+    showtimeTicket.row - 1 < 0 ||
+    showtimeTicket.row - 1 > showTimeData.hallRows
   ) {
     throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
   }
   // Columns are 0 indexed in the database, but 1 indexed for the end-user
   if (
-    showtimeTicket.column - 1 >= 0 &&
-    showtimeTicket.column - 1 <= showTimeData.hallColumns
+    showtimeTicket.column - 1 < 0 ||
+    showtimeTicket.column - 1 > showTimeData.hallColumns
   ) {
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,

@@ -35,7 +35,7 @@ async function deleteShowtime(request: Request, response: ResponseWithContext) {
 
   await showtimeService.deleteShowtime(response.locals.context, showtimeId);
 
-  response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
+  response.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
 async function reserveShowtimeTicket(

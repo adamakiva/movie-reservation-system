@@ -40,7 +40,6 @@ declare const SIGNALS: [
 declare const ERROR_CODES: {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
   POSTGRES: {
-    RESTRICT_VIOLATION: "23001";
     FOREIGN_KEY_VIOLATION: "23503";
     UNIQUE_VIOLATION: "23505";
     TOO_MANY_CONNECTIONS: "53300";

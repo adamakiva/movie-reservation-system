@@ -51,7 +51,7 @@ function handlePossibleDuplicationError(error: unknown, hall: string) {
   );
 }
 
-function handlePossibleRestrictError(error: unknown, hall: string) {
+function handlePossibleForeignKeyError(error: unknown, hall: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
@@ -60,7 +60,7 @@ function handlePossibleRestrictError(error: unknown, hall: string) {
   }
   if (
     !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
     return error;
   }
@@ -76,7 +76,7 @@ function handlePossibleRestrictError(error: unknown, hall: string) {
 
 export {
   handlePossibleDuplicationError,
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
   type CreateHallValidatedData,
   type DeleteHallValidatedData,
   type Hall,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import {
@@ -14,6 +15,7 @@ import {
   randomUUID,
   seedHall,
   seedMovie,
+  seedShowtime,
   seedShowtimes,
   sendHttpRequest,
   SHOWTIME,
@@ -945,7 +947,7 @@ await suite('Showtime integration tests', async () => {
         responseType: 'text',
       });
 
-      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+      assert.strictEqual(result.statusCode, HTTP_STATUS_CODES.ACCEPTED);
       assert.strictEqual(result.responseBody, '');
     } finally {
       await clearDatabase(database);
@@ -965,7 +967,202 @@ await suite('Showtime integration tests', async () => {
       responseType: 'text',
     });
 
-    assert.strictEqual(statusCode, HTTP_STATUS_CODES.NO_CONTENT);
+    assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
     assert.strictEqual(responseBody, '');
+  });
+  await test('Valid - Reserve ticket', async () => {
+    const { accessToken } = await getAdminTokens(httpRoute);
+    try {
+      const {
+        createdShowtime: { id: showtimeId },
+      } = await seedShowtime(database);
+
+      const { statusCode, responseBody } = await sendHttpRequest<
+        'POST',
+        'text',
+        string
+      >({
+        route: `${httpRoute}/showtimes/reserve-ticket`,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: {
+          showtimeId,
+          row: 1,
+          column: 1,
+        },
+        responseType: 'text',
+      });
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
+
+      assert.strictEqual(responseBody, '');
+    } finally {
+      await clearDatabase(database);
+    }
+  });
+  await test('Valid - Multiple users attempt to reserve the same ticket', async () => {
+    const { accessToken } = await getAdminTokens(httpRoute);
+    try {
+      const {
+        createdShowtime: { id: showtimeId },
+      } = await seedShowtime(database);
+
+      const requestBody = {
+        showtimeId,
+        row: 1,
+        column: 1,
+      } as const;
+
+      const results = await Promise.allSettled(
+        [...Array(32)].map(async () => {
+          return await sendHttpRequest<'POST', 'text', string>({
+            route: `${httpRoute}/showtimes/reserve-ticket`,
+            method: 'POST',
+            headers: { Authorization: accessToken },
+            payload: requestBody,
+            responseType: 'text',
+          });
+        }),
+      );
+      let reserved = false;
+      results.forEach((result) => {
+        if (
+          reserved &&
+          result.status === 'fulfilled' &&
+          result.value.statusCode === HTTP_STATUS_CODES.ACCEPTED
+        ) {
+          throw new Error(
+            'More than one reservation for the same ticket succeeded',
+          );
+        }
+        if (result.status === 'fulfilled') {
+          const { statusCode, responseBody } = result.value;
+          if (statusCode === HTTP_STATUS_CODES.ACCEPTED) {
+            reserved = true;
+            assert.strictEqual(responseBody, '');
+          } else if (statusCode === HTTP_STATUS_CODES.CONFLICT) {
+            assert.notStrictEqual(responseBody, '');
+          } else {
+            throw new Error('Failure not due to duplicate ticket');
+          }
+
+          return;
+        }
+
+        throw new Error('Request failed:', result.reason);
+      });
+    } finally {
+      await clearDatabase(database);
+    }
+  });
+  await test('Valid - Delete with user showtimes', async () => {
+    const { accessToken } = await getAdminTokens(httpRoute);
+    try {
+      const {
+        createdShowtime: { id: showtimeId },
+      } = await seedShowtime(database);
+
+      const requestsBodies = [
+        {
+          showtimeId,
+          row: 1,
+          column: 1,
+        },
+        {
+          showtimeId,
+          row: 2,
+          column: 2,
+        },
+        {
+          showtimeId,
+          row: 3,
+          column: 3,
+        },
+        {
+          showtimeId,
+          row: 4,
+          column: 4,
+        },
+      ] as const;
+
+      await Promise.all(
+        requestsBodies.map(async (requestBody) => {
+          const { statusCode, responseBody } = await sendHttpRequest<
+            'POST',
+            'text',
+            string
+          >({
+            route: `${httpRoute}/showtimes/reserve-ticket`,
+            method: 'POST',
+            headers: { Authorization: accessToken },
+            payload: requestBody,
+            responseType: 'text',
+          });
+          assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
+
+          assert.strictEqual(responseBody, '');
+        }),
+      );
+
+      const { statusCode, responseBody } = await sendHttpRequest<
+        'DELETE',
+        'text',
+        string
+      >({
+        route: `${httpRoute}/showtimes/${showtimeId}`,
+        method: 'DELETE',
+        headers: { Authorization: accessToken },
+        responseType: 'text',
+      });
+
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
+      assert.strictEqual(responseBody, '');
+    } finally {
+      await clearDatabase(database);
+    }
+  });
+  await test('Valid - Cancel reserved showtime', async () => {
+    const { accessToken } = await getAdminTokens(httpRoute);
+    try {
+      const {
+        createdShowtime: { id: showtimeId },
+      } = await seedShowtime(database);
+
+      const requestBody = {
+        showtimeId,
+        row: 1,
+        column: 1,
+      } as const;
+
+      let { statusCode, responseBody } = await sendHttpRequest<
+        'POST',
+        'text',
+        string
+      >({
+        route: `${httpRoute}/showtimes/reserve-ticket`,
+        method: 'POST',
+        headers: { Authorization: accessToken },
+        payload: requestBody,
+        responseType: 'text',
+      });
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
+
+      assert.strictEqual(responseBody, '');
+
+      ({ statusCode, responseBody } = await sendHttpRequest<
+        'DELETE',
+        'text',
+        string
+      >({
+        route: `${httpRoute}/showtimes/cancel-reservation/${showtimeId}`,
+        method: 'DELETE',
+        headers: { Authorization: accessToken },
+        responseType: 'text',
+      }));
+      assert.strictEqual(statusCode, HTTP_STATUS_CODES.ACCEPTED);
+
+      assert.strictEqual(responseBody, '');
+    } finally {
+      await clearDatabase(database);
+    }
   });
 });

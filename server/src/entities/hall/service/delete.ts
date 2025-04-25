@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type DeleteHallValidatedData,
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ async function deleteHall(
   try {
     await handler.delete(hallModel).where(eq(hallModel.id, hallId));
   } catch (error) {
-    throw handlePossibleRestrictError(error, hallId);
+    throw handlePossibleForeignKeyError(error, hallId);
   }
 }
 

@@ -107,7 +107,7 @@ async function deleteShowtimeWithAttachedUsers(params: {
   }
   if (
     !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.RESTRICT_VIOLATION
+    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   ) {
     throw error;
   }

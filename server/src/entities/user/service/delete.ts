@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type DeleteUserValidatedData,
-  handlePossibleRestrictError,
+  handlePossibleForeignKeyError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ async function deleteUser(
   try {
     await handler.delete(userModel).where(eq(userModel.id, userId));
   } catch (error) {
-    throw handlePossibleRestrictError(error, userId);
+    throw handlePossibleForeignKeyError(error, userId);
   }
 }
 

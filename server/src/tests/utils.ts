@@ -342,7 +342,7 @@ async function sendHttpRequest<
   if (!fetchResponse.ok) {
     return {
       statusCode,
-      responseBody: fetchResponse.body,
+      responseBody: await fetchResponse.text(),
     } as ResponseType<RT, R>;
   }
 
