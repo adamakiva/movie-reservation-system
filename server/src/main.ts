@@ -74,7 +74,7 @@ async function startServer() {
       connectionOptions: { url: messageQueueEnv.url },
     },
     websocketServerParams: {
-      path: `/${websocketServerEnv.route}`,
+      path: websocketServerEnv.route,
       pingTime: websocketServerEnv.pingTime,
       backlog: websocketServerEnv.backlog,
       maxPayload: websocketServerEnv.maxPayload,

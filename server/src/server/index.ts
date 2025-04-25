@@ -224,7 +224,7 @@ class HttpServer {
     this.#routes = routes;
     this.#logger = logger;
 
-    this.#initMessageQueue(messageQueue);
+    this.#initMessageQueue();
 
     this.#requestContext = {
       authentication,
@@ -235,8 +235,8 @@ class HttpServer {
     } as const satisfies RequestContext;
   }
 
-  #initMessageQueue(messageQueue: MessageQueue) {
-    messageQueue.createPublishers({
+  #initMessageQueue() {
+    this.#messageQueue.createPublishers({
       ticket: {
         confirm: true,
         maxAttempts: 32,
@@ -265,9 +265,7 @@ class HttpServer {
         ],
       },
     });
-    messageQueue.createConsumer({
-      concurrency: 1,
-      exclusive: true,
+    this.#messageQueue.createConsumer({
       routing: {
         exchange: 'mrs',
         queue: 'mrs.ticket.reserve.reply.to',
@@ -279,9 +277,7 @@ class HttpServer {
         logger: this.#logger,
       }),
     });
-    messageQueue.createConsumer({
-      concurrency: 1,
-      exclusive: true,
+    this.#messageQueue.createConsumer({
       routing: {
         exchange: 'mrs',
         queue: 'mrs.ticket.cancel.reply.to',
@@ -293,9 +289,7 @@ class HttpServer {
         logger: this.#logger,
       }),
     });
-    messageQueue.createConsumer({
-      concurrency: 1,
-      exclusive: true,
+    this.#messageQueue.createConsumer({
       routing: {
         exchange: 'mrs',
         queue: 'mrs.showtime.cancel.reply.to',

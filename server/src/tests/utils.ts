@@ -25,6 +25,7 @@ import {
   type ResponseOptions,
 } from 'node-mocks-http';
 import pg from 'postgres';
+import { WebSocket } from 'ws';
 
 import type { Database } from '../database/index.ts';
 import { AUTHENTICATION } from '../entities/authentication/validator.ts';
@@ -365,6 +366,15 @@ async function sendHttpRequest<
     default:
       throw new Error('Should never happen');
   }
+}
+
+function createWebsocketClient(
+  wsRoute: ServerParams['routes']['ws'],
+  accessToken: string,
+) {
+  return new WebSocket(
+    `${wsRoute}?auth_token=${Buffer.from(accessToken).toString('base64')}`,
+  );
 }
 
 async function getAdminTokens(httpRoute: ServerParams['routes']['http']) {
@@ -949,6 +959,7 @@ export {
   compareFiles,
   CONSTANTS,
   createHttpMocks,
+  createWebsocketClient,
   ERROR_CODES,
   GeneralError,
   generateGenresData,

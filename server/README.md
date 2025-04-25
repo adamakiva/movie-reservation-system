@@ -37,3 +37,15 @@ The backend for the application
 - **`npm run check-cir-deps`** - Check for any circular dependencies
 - **`npm run check-licenses`** - Check all packages licenses
 - **`npm run build`** - Transpile typescript to javascript
+
+---
+
+## Development notes
+
+### Tests
+
+Testing a full integration test for commutating with the worker is not possible.
+The reason is that the returned message will always arrive to the real server and
+can't be mocked.
+So what we have are test for sending and handling the response without tests
+which follow the entire path

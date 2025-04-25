@@ -25,9 +25,8 @@ import type { Logger } from '../../utils/logger.ts';
 
 type PublishOptions = Omit<
   Envelope,
-  'exchange' | 'routingKey' | 'replyTo' | 'correlationId'
+  'exchange' | 'routingKey' | 'correlationId'
 > & {
-  replyTo?: Queues[keyof Queues][number];
   correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
 };
 
@@ -89,7 +88,7 @@ class MessageQueue {
 
           routing.forEach(({ exchange, queue, routingKey }) => {
             exchanges.push({ exchange, passive: true, durable: true });
-            queues.push({ queue, passive: true });
+            queues.push({ queue, passive: true, durable: true });
             queueBindings.push({ exchange, queue, routingKey });
           });
 
@@ -131,7 +130,7 @@ class MessageQueue {
           exchanges: [{ exchange, passive: true, durable: true }],
           queue,
           queueBindings: [{ exchange, queue, routingKey }],
-          queueOptions: { passive: true },
+          queueOptions: { passive: true, durable: true },
         },
         handler,
       )

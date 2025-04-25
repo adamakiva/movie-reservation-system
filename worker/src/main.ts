@@ -3,17 +3,14 @@ import { EventEmitter } from 'node:events';
 import Stream from 'node:stream';
 
 import {
+  CORRELATION_IDS,
   ERROR_CODES,
   SIGNALS,
   type ShowtimeCancellationMessage,
   type TicketCancellationMessage,
   type TicketReservationsMessage,
 } from '@adamakiva/movie-reservation-system-shared';
-import {
-  ConsumerStatus,
-  type AsyncMessage,
-  type Publisher,
-} from 'rabbitmq-client';
+import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
 import { MessageQueue } from './message.queue.ts';
 
@@ -31,7 +28,7 @@ function startWorker() {
     url: messageQueueUrl,
   });
 
-  const publishers = messageQueue.createPublishers({
+  messageQueue.createPublishers({
     ticket: {
       confirm: true,
       maxAttempts: 32,
@@ -60,140 +57,136 @@ function startWorker() {
       ],
     },
   });
-
-  createReserveTicketConsumer(messageQueue, publishers.ticket!);
-  createCancelShowtimeConsumer(messageQueue, publishers.showtime!);
-  createCancelTicketConsumer(messageQueue, publishers.ticket!);
-
-  attachProcessHandlers(messageQueue);
-}
-
-/**********************************************************************************/
-
-function createReserveTicketConsumer(
-  messageQueue: MessageQueue,
-  ticketPublisher: Publisher,
-) {
   messageQueue.createConsumer({
     routing: {
       exchange: 'mrs',
       queue: 'mrs.ticket.reserve',
       routingKey: 'mrs-ticket-reserve',
     },
-    handler: async (
-      message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
-    ) => {
-      const { correlationId, replyTo, body } = message;
-
-      if (!replyTo || !correlationId) {
-        return ConsumerStatus.DROP;
-      }
-      const { userShowtimeId, userDetails, movieDetails } = body;
-
-      // TODO Payment processing, on failure return a null transactionId so the
-      // ph entry in the database can be removed
-      const transactionId = randomUUID();
-
-      // TODO Send email receipt
-      console.log(userShowtimeId, userDetails, movieDetails);
-
-      await ticketPublisher.send(
-        {
-          durable: true,
-          mandatory: true,
-          correlationId,
-          contentType: 'application/json',
-          routingKey: replyTo,
-        },
-        {
-          ...body,
-          transactionId,
-        },
-      );
-
-      return ConsumerStatus.ACK;
-    },
+    handler: reserveShowtimeTicket(messageQueue),
   });
-}
-
-function createCancelTicketConsumer(
-  messageQueue: MessageQueue,
-  ticketPublisher: Publisher,
-) {
   messageQueue.createConsumer({
     routing: {
       exchange: 'mrs',
       queue: 'mrs.ticket.cancel',
       routingKey: 'mrs-ticket-cancel',
     },
-    handler: async (
-      message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
-    ) => {
-      const { correlationId, replyTo, body } = message;
-
-      if (!replyTo || !correlationId) {
-        return ConsumerStatus.DROP;
-      }
-      const { showtimeId, userIds } = body;
-
-      // TODO Refund processing
-      console.log(showtimeId, userIds);
-
-      await ticketPublisher.send(
-        {
-          durable: true,
-          mandatory: true,
-          correlationId,
-          contentType: 'application/json',
-          routingKey: replyTo,
-        },
-        body,
-      );
-
-      return ConsumerStatus.ACK;
-    },
+    handler: cancelShowtimeTicket(messageQueue),
   });
-}
-
-function createCancelShowtimeConsumer(
-  messageQueue: MessageQueue,
-  showtimePublisher: Publisher,
-) {
   messageQueue.createConsumer({
     routing: {
       exchange: 'mrs',
       queue: 'mrs.showtime.cancel',
       routingKey: 'mrs-showtime-cancel',
     },
-    handler: async (
-      message: Omit<AsyncMessage, 'body'> & {
-        body: ShowtimeCancellationMessage;
-      },
-    ) => {
-      const { correlationId, replyTo, body } = message;
-
-      if (!replyTo || !correlationId) {
-        return ConsumerStatus.DROP;
-      }
-      const { showtimeId, userIds } = body;
-
-      // TODO Refund processing
-      console.log(showtimeId, userIds);
-
-      await showtimePublisher.send(
-        {
-          durable: true,
-          mandatory: true,
-          correlationId,
-          contentType: 'application/json',
-          routingKey: replyTo,
-        },
-        body,
-      );
-
-      return ConsumerStatus.ACK;
-    },
+    handler: cancelShowtime(messageQueue),
   });
+
+  attachProcessHandlers(messageQueue);
+}
+
+/**********************************************************************************/
+
+function reserveShowtimeTicket(messageQueue: MessageQueue) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
+  ) => {
+    const { correlationId, body } = message;
+
+    if (correlationId !== CORRELATION_IDS.TICKET_RESERVATION) {
+      return ConsumerStatus.DROP;
+    }
+    const { userShowtimeId, userDetails, movieDetails } = body;
+
+    // TODO Payment processing, on failure return a null transactionId so the
+    // ph entry in the database can be removed
+    const transactionId = randomUUID();
+
+    // TODO Send email receipt
+    console.info(userShowtimeId, userDetails, movieDetails);
+
+    await messageQueue.publish({
+      publisher: 'ticket',
+      exchange: 'mrs',
+      routingKey: 'mrs-ticket-reserve-reply-to',
+      data: {
+        ...body,
+        transactionId,
+      },
+      options: {
+        durable: true,
+        mandatory: true,
+        correlationId,
+        contentType: 'application/json',
+      },
+    });
+
+    return ConsumerStatus.ACK;
+  };
+}
+
+function cancelShowtimeTicket(messageQueue: MessageQueue) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
+  ) => {
+    const { correlationId, body } = message;
+
+    if (correlationId !== CORRELATION_IDS.TICKET_CANCELLATION) {
+      return ConsumerStatus.DROP;
+    }
+    const { showtimeId, userIds } = body;
+
+    // TODO Refund processing
+    console.info(showtimeId, userIds);
+
+    await messageQueue.publish({
+      publisher: 'ticket',
+      exchange: 'mrs',
+      routingKey: 'mrs-ticket-cancel-reply-to',
+      data: body,
+      options: {
+        durable: true,
+        mandatory: true,
+        correlationId,
+        contentType: 'application/json',
+      },
+    });
+
+    return ConsumerStatus.ACK;
+  };
+}
+
+function cancelShowtime(messageQueue: MessageQueue) {
+  return async (
+    message: Omit<AsyncMessage, 'body'> & {
+      body: ShowtimeCancellationMessage;
+    },
+  ) => {
+    const { correlationId, body } = message;
+
+    if (correlationId !== CORRELATION_IDS.SHOWTIME_CANCELLATION) {
+      return ConsumerStatus.DROP;
+    }
+    const { showtimeId, userIds } = body;
+
+    // TODO Refund processing
+    console.info(showtimeId, userIds);
+
+    await messageQueue.publish({
+      publisher: 'showtime',
+      exchange: 'mrs',
+      routingKey: 'mrs-showtime-cancel-reply-to',
+      data: body,
+      options: {
+        durable: true,
+        mandatory: true,
+        correlationId,
+        contentType: 'application/json',
+      },
+    });
+
+    return ConsumerStatus.ACK;
+  };
 }
 
 /**********************************************************************************/

@@ -127,7 +127,7 @@ async function reserveShowtimeTicket(params: {
             showtimeModel,
             eq(showtimeModel.id, createUserShowtimeSubQuery.showtimeId),
           )
-          .innerJoin(hallModel, eq(hallModel, showtimeModel.hallId))
+          .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
           .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
           .innerJoin(
             userModel,
@@ -157,7 +157,6 @@ async function reserveShowtimeTicket(params: {
         options: {
           durable: true,
           mandatory: true,
-          replyTo: 'mrs.ticket.reserve.reply.to',
           correlationId: 'ticket.reserve',
           contentType: 'application/json',
         },
@@ -226,11 +225,18 @@ async function validateMovieReservation(params: {
   }
   const showTimeData = showTimesData[0]!;
 
-  // Rows are 0 indexed for us, but 1 indexed for the end-user
-  if (showTimeData.hallRows > showtimeTicket.row) {
+  // Rows are 0 indexed in the database, but 1 indexed for the end-user
+  if (
+    showtimeTicket.row - 1 >= 0 &&
+    showtimeTicket.row - 1 <= showTimeData.hallRows
+  ) {
     throw new GeneralError(HTTP_STATUS_CODES.BAD_REQUEST, 'Invalid row number');
   }
-  if (showTimeData.hallColumns > showtimeTicket.column) {
+  // Columns are 0 indexed in the database, but 1 indexed for the end-user
+  if (
+    showtimeTicket.column - 1 >= 0 &&
+    showtimeTicket.column - 1 <= showTimeData.hallColumns
+  ) {
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Invalid column number',

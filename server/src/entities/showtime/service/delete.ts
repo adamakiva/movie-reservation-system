@@ -128,8 +128,8 @@ async function deleteShowtimeWithAttachedUsers(params: {
     options: {
       durable: true,
       mandatory: true,
-      replyTo: 'mrs.ticket.cancel.reply.to',
       correlationId: 'ticket.cancel',
+      contentType: 'application/json',
     },
   });
 }
@@ -169,8 +169,8 @@ async function cancelShowtimeReservation(params: {
     options: {
       durable: true,
       mandatory: true,
-      replyTo: 'mrs.ticket.cancel.reply.to',
       correlationId: 'ticket.cancel',
+      contentType: 'application/json',
     },
   });
 }

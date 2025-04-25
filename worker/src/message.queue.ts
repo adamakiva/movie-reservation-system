@@ -1,4 +1,5 @@
 import type {
+  CORRELATION_IDS,
   Exchanges,
   Publishers,
   Queues,
@@ -10,10 +11,20 @@ import {
   type Consumer,
   type ConsumerHandler,
   type ConsumerProps,
+  type Envelope,
   type Publisher,
   type PublisherProps,
   type ReturnedMessage,
 } from 'rabbitmq-client';
+
+/**********************************************************************************/
+
+type PublishOptions = Omit<
+  Envelope,
+  'exchange' | 'routingKey' | 'correlationId'
+> & {
+  correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
+};
 
 /**********************************************************************************/
 
@@ -59,7 +70,7 @@ class MessageQueue {
 
           routing.forEach(({ exchange, queue, routingKey }) => {
             exchanges.push({ exchange, passive: true, durable: true });
-            queues.push({ queue, passive: true });
+            queues.push({ queue, passive: true, durable: true });
             queueBindings.push({ exchange, queue, routingKey });
           });
 
@@ -76,8 +87,6 @@ class MessageQueue {
         }),
       ),
     };
-
-    return this.#publishers;
   }
 
   public createConsumer(
@@ -96,26 +105,34 @@ class MessageQueue {
       ...options
     } = consumerProps;
 
-    const exchanges: ConsumerProps['exchanges'] = [
-      { exchange, passive: true, durable: true },
-    ] as const;
-    const queueBindings: ConsumerProps['queueBindings'] = [
-      { exchange, queue, routingKey },
-    ] as const;
+    const consumer = this.#handler
+      .createConsumer(
+        {
+          ...options,
+          exchanges: [{ exchange, passive: true, durable: true }],
+          queue,
+          queueBindings: [{ exchange, queue, routingKey }],
+          queueOptions: { passive: true, durable: true },
+        },
+        handler,
+      )
+      .on('error', this.#handleConsumerErrorEvent);
 
-    this.#consumers.push(
-      this.#handler
-        .createConsumer(
-          {
-            ...options,
-            exchanges,
-            queue,
-            queueBindings,
-            queueOptions: { passive: true },
-          },
-          handler,
-        )
-        .on('error', this.#handleConsumerErrorEvent),
+    this.#consumers.push(consumer);
+  }
+
+  public async publish(params: {
+    publisher: Publishers[number];
+    exchange: Exchanges[number];
+    routingKey: RoutingKeys[keyof RoutingKeys][number];
+    data: Buffer | string | object;
+    options: PublishOptions;
+  }) {
+    const { publisher, exchange, routingKey, data, options } = params;
+
+    await this.#publishers[publisher]!.send(
+      { ...options, exchange, routingKey },
+      data,
     );
   }
 

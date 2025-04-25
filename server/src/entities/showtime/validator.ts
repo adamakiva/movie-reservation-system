@@ -208,9 +208,9 @@ const SHOWTIME_SCHEMAS = {
       required_error: PARAMS.REQUIRED_ERROR_MESSAGE,
     },
   ),
-  RESERVER: zod.object(
+  RESERVE: zod.object(
     {
-      showtime_id: zod
+      showtimeId: zod
         .string({
           invalid_type_error: SHOWTIME.ID.INVALID_TYPE_ERROR_MESSAGE,
           required_error: SHOWTIME.ID.REQUIRED_ERROR_MESSAGE,
@@ -384,11 +384,9 @@ function validateDeleteShowtime(request: Request) {
 }
 
 function validateReserveShowtimeTicket(request: Request) {
-  const {
-    showtime_id: showtimeId,
-    row,
-    column,
-  } = parseValidationResult(SHOWTIME_SCHEMAS.RESERVER.safeParse(request.body));
+  const { showtimeId, row, column } = parseValidationResult(
+    SHOWTIME_SCHEMAS.RESERVE.safeParse(request.body),
+  );
 
   return {
     showtimeId,
