@@ -65,9 +65,9 @@ async function stressTest() {
       // So we just modify the request fields directly
       requests: [...roleTests],
     },
-    async (err, result) => {
-      if (err) {
-        console.error('Stress test failure:', err);
+    async (error, result) => {
+      if (error) {
+        console.error('Stress test failure:', error);
       }
 
       try {

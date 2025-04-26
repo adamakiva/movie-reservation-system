@@ -1,10 +1,10 @@
+import type { MessageQueue } from '@adamakiva/movie-reservation-system-message-queue';
 import type { Response } from 'express';
 
 import type { Database } from '../database/index.ts';
 import type {
   AuthenticationManager,
   FileManager,
-  MessageQueue,
 } from '../server/services/index.ts';
 
 import type { Logger, LogMiddleware } from './logger.ts';

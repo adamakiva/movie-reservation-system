@@ -99,11 +99,11 @@ function attachProcessHandlers(server: HttpServer, logger: Logger) {
   process
     .on('warning', logger.warn)
     .once('unhandledRejection', (reason: unknown) => {
-      logger.fatal(`Unhandled rejection:`, reason);
+      logger.error(`Unhandled rejection:`, reason);
       closeServer(server, ERROR_CODES.EXIT_RESTART);
     })
     .once('uncaughtException', (error: unknown) => {
-      logger.fatal(`Unhandled exception:`, error);
+      logger.error(`Unhandled exception:`, error);
       closeServer(server, ERROR_CODES.EXIT_RESTART);
     });
 

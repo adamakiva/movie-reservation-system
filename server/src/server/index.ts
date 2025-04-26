@@ -1,6 +1,7 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
+import { MessageQueue } from '@adamakiva/movie-reservation-system-message-queue';
 import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 import compress from 'compression';
 import express, { type Express } from 'express';
@@ -21,7 +22,6 @@ import { Cronjob } from './services/cronjob.ts';
 import {
   AuthenticationManager,
   FileManager,
-  MessageQueue,
   WebsocketServer,
 } from './services/index.ts';
 
@@ -178,7 +178,7 @@ class HttpServer {
       ])
     ).forEach((result) => {
       if (result.status === 'rejected') {
-        this.#logger.fatal(result.reason, 'Error during server termination');
+        this.#logger.error(result.reason, 'Error during server termination');
         exitCode = ERROR_CODES.EXIT_NO_RESTART;
       }
     });
@@ -356,7 +356,7 @@ class HttpServer {
   /********************************************************************************/
 
   readonly #handleErrorEvent = async (error: Error) => {
-    this.#logger.fatal(error, 'HTTP Server error');
+    this.#logger.error(error, 'HTTP Server error');
 
     await this.close();
 

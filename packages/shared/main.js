@@ -24,25 +24,25 @@ const HTTP_STATUS_CODES = {
 };
 
 const SIGNALS = [
-  "SIGHUP",
-  "SIGINT",
-  "SIGQUIT",
-  "SIGILL",
-  "SIGTRAP",
-  "SIGABRT",
-  "SIGBUS",
-  "SIGFPE",
-  "SIGSEGV",
-  "SIGUSR2",
-  "SIGTERM",
+  'SIGHUP',
+  'SIGINT',
+  'SIGQUIT',
+  'SIGILL',
+  'SIGTRAP',
+  'SIGABRT',
+  'SIGBUS',
+  'SIGFPE',
+  'SIGSEGV',
+  'SIGUSR2',
+  'SIGTERM',
 ];
 
 const ERROR_CODES = {
   // See: https://www.postgresql.org/docs/current/errcodes-appendix.html
   POSTGRES: {
-    FOREIGN_KEY_VIOLATION: "23503",
-    UNIQUE_VIOLATION: "23505",
-    TOO_MANY_CONNECTIONS: "53300",
+    FOREIGN_KEY_VIOLATION: '23503',
+    UNIQUE_VIOLATION: '23505',
+    TOO_MANY_CONNECTIONS: '53300',
   },
   // Indicator to the deployment orchestration service to not attempt to restart
   // the service, since the error is a result of a programmer error, and therefore
@@ -51,12 +51,6 @@ const ERROR_CODES = {
   EXIT_NO_RESTART: 180,
 };
 
-const CORRELATION_IDS = {
-  TICKET_RESERVATION: "ticket.reserve",
-  TICKET_CANCELLATION: "ticket.cancel",
-  SHOWTIME_CANCELLATION: "showtime.cancel",
-};
-
 /**********************************************************************************/
 
-export { CORRELATION_IDS, ERROR_CODES, HTTP_STATUS_CODES, SIGNALS };
+export { ERROR_CODES, HTTP_STATUS_CODES, SIGNALS };

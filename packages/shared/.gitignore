@@ -5,12 +5,12 @@
 **/node_modules/
 
 # Exclude source files
-!index.js
-!index.d.ts
+!main.js
+!main.d.ts
 
 # Exclude config files
+!.prettierrc.json
 !package.json
-!package-lock.json
 !README.md
 !.npmrc
 !.gitignore

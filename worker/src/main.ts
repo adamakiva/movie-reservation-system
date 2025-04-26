@@ -4,15 +4,16 @@ import Stream from 'node:stream';
 
 import {
   CORRELATION_IDS,
-  ERROR_CODES,
-  SIGNALS,
+  MessageQueue,
   type ShowtimeCancellationMessage,
   type TicketCancellationMessage,
   type TicketReservationsMessage,
+} from '@adamakiva/movie-reservation-system-message-queue';
+import {
+  ERROR_CODES,
+  SIGNALS,
 } from '@adamakiva/movie-reservation-system-shared';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
-
-import { MessageQueue } from './message.queue.ts';
 
 /**********************************************************************************/
 
@@ -25,7 +26,8 @@ function startWorker() {
   setGlobalValues();
 
   const messageQueue = new MessageQueue({
-    url: messageQueueUrl,
+    connectionOptions: { url: messageQueueUrl },
+    logger: console,
   });
 
   messageQueue.createPublishers({

@@ -55,8 +55,8 @@ class Websocket {
 
   /********************************************************************************/
 
-  readonly #errorEventHandler = (err: Error) => {
-    this.#logger.error('Unexpected websocket error:', err);
+  readonly #errorEventHandler = (error: Error) => {
+    this.#logger.error('Unexpected websocket error:', error);
   };
 
   readonly #pongEventHandler = () => {
@@ -194,12 +194,12 @@ class WebsocketServer {
 
   /********************************************************************************/
 
-  readonly #websocketServerErrorEventHandler = (err: Error) => {
-    this.#logger.error('Unexpected websocket server error:', err);
+  readonly #websocketServerErrorEventHandler = (error: Error) => {
+    this.#logger.error('Unexpected websocket server error:', error);
   };
 
-  readonly #websocketErrorEventHandler = (err: Error, socket: Socket) => {
-    this.#logger.error('Unexpected web socket error:', err);
+  readonly #websocketErrorEventHandler = (error: Error, socket: Socket) => {
+    this.#logger.error('Unexpected web socket error:', error);
     socket.destroy();
   };
 
@@ -223,9 +223,9 @@ class WebsocketServer {
       .catch(() => {
         socket.write(
           `HTTP/1.1 ${HTTP_STATUS_CODES.UNAUTHORIZED}\r\n\r\n`,
-          (err) => {
-            if (err) {
-              this.#logger.error(err);
+          (error) => {
+            if (error) {
+              this.#logger.error('Authentication error:', error);
             }
             socket.destroy();
           },
@@ -236,8 +236,8 @@ class WebsocketServer {
       });
   };
 
-  readonly #socketErrorEventHandler = (err: Error) => {
-    this.#logger.error('Unexpected socket error:', err);
+  readonly #socketErrorEventHandler = (error: Error) => {
+    this.#logger.error('Unexpected socket error:', error);
   };
 
   readonly #connectionEventHandler = (

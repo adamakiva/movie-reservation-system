@@ -1,11 +1,5 @@
-import {
-  HTTP_STATUS_CODES,
-  type CORRELATION_IDS,
-  type Exchanges,
-  type Publishers,
-  type Queues,
-  type RoutingKeys,
-} from '@adamakiva/movie-reservation-system-shared';
+import type { Buffer } from 'node:buffer';
+
 import {
   Connection,
   type ConnectionOptions,
@@ -18,16 +12,71 @@ import {
   type ReturnedMessage,
 } from 'rabbitmq-client';
 
-import { GeneralError } from '../../utils/errors.ts';
-import type { Logger } from '../../utils/logger.ts';
-
 /**********************************************************************************/
+
+const CORRELATION_IDS = {
+  TICKET_RESERVATION: 'ticket.reserve',
+  TICKET_CANCELLATION: 'ticket.cancel',
+  SHOWTIME_CANCELLATION: 'showtime.cancel',
+};
 
 type PublishOptions = Omit<
   Envelope,
   'exchange' | 'routingKey' | 'correlationId'
 > & {
   correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
+};
+
+type Logger = {
+  // eslint-disable-next-line no-unused-vars
+  info: (...args: unknown[]) => void;
+  // eslint-disable-next-line no-unused-vars
+  error: (...args: unknown[]) => void;
+};
+
+type Exchanges = ['mrs'];
+type Consumers = ['ticket', 'showtime'];
+type Publishers = ['ticket', 'showtime'];
+
+type Queues = {
+  ticket: [
+    'mrs.ticket.reserve',
+    'mrs.ticket.cancel',
+    'mrs.ticket.reserve.reply.to',
+    'mrs.ticket.cancel.reply.to',
+  ];
+  showtime: ['mrs.showtime.cancel', 'mrs.showtime.cancel.reply.to'];
+};
+type RoutingKeys = {
+  ticket: [
+    'mrs-ticket-reserve',
+    'mrs-ticket-cancel',
+    'mrs-ticket-reserve-reply-to',
+    'mrs-ticket-cancel-reply-to',
+  ];
+  showtime: ['mrs-showtime-cancel', 'mrs-showtime-cancel-reply-to'];
+};
+
+type TicketReservationsMessage = {
+  showtimeId: string;
+  userShowtimeId: string;
+  userDetails: { id: string; email: string };
+  movieDetails: {
+    hallName: string;
+    movieTitle: string;
+    price: number;
+    at: Date;
+    row: number;
+    column: number;
+  };
+};
+type TicketCancellationMessage = {
+  showtimeId: string;
+  userIds: string | string[];
+};
+type ShowtimeCancellationMessage = {
+  showtimeId: string;
+  userIds: string[];
 };
 
 /**********************************************************************************/
@@ -155,23 +204,11 @@ class MessageQueue {
   }
 
   public isAlive() {
-    if (!this.#isAlive) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.GATEWAY_TIMEOUT,
-        'Message queue is not alive',
-      );
-    }
+    return this.#isAlive;
   }
 
   public isReady() {
-    this.isAlive();
-
-    if (!this.#isReady) {
-      throw new GeneralError(
-        HTTP_STATUS_CODES.GATEWAY_TIMEOUT,
-        'Message queue is not ready',
-      );
-    }
+    return this.isAlive() && this.#isReady;
   }
 
   public async close() {
@@ -260,4 +297,15 @@ class MessageQueue {
 
 /**********************************************************************************/
 
-export { MessageQueue };
+export {
+  CORRELATION_IDS,
+  MessageQueue,
+  type Consumers,
+  type Exchanges,
+  type Publishers,
+  type Queues,
+  type RoutingKeys,
+  type ShowtimeCancellationMessage,
+  type TicketCancellationMessage,
+  type TicketReservationsMessage,
+};

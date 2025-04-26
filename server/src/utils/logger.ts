@@ -33,10 +33,6 @@ class Logger {
     console.error(...args);
   }
 
-  public fatal(...args: unknown[]) {
-    console.error(...args);
-  }
-
   public getLogMiddleware() {
     return this.#boundLogMiddleware;
   }

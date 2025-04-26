@@ -15,7 +15,8 @@
     "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
-    "@adamakiva/movie-reservation-system-shared": "0.0.5",
+    "@adamakiva/movie-reservation-system-message-queue": "0.0.0",
+    "@adamakiva/movie-reservation-system-shared": "0.0.0",
     "rabbitmq-client": "~5.0.4"
   },
   "devDependencies": {

@@ -174,7 +174,7 @@ class FileManager implements StorageEngine {
         callback(null);
       })
       .catch((error: unknown) => {
-        this.#logger.warn(
+        this.#logger.error(
           `Failure to delete file: ${file.path}`,
           (error as Error).cause,
         );

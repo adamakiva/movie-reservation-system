@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# Reference: https://github.com/boskomijin/postgres-multiple-databases-creation/blob/main/init/create-multiple-postgresql-databases.sh
+# Reference (with minor changes):
+# https://github.com/boskomijin/postgres-multiple-databases-creation/blob/main/init/create-multiple-postgresql-databases.sh
 
 set -e;
 set -u;

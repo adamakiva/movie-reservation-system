@@ -1,12 +1,25 @@
 {
   "name": "@adamakiva/movie-reservation-system-shared",
   "description": "Movie reservation system shared components",
-  "version": "0.0.5",
+  "version": "0.0.0",
   "type": "module",
-  "main": "index.js",
+  "exports": {
+    "types": "./main.d.ts",
+    "default": "./main.js"
+  },
   "author": "Adam Akiva",
   "license": "MIT",
   "private": false,
+  "files": [
+    "main.js",
+    "main.d.ts"
+  ],
+  "scripts": {
+    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "prettier": "~3.5.3"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },

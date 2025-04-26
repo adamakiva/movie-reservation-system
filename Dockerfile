@@ -1,7 +1,7 @@
 FROM postgres:17.4-alpine AS pg
 
-COPY ./config/postgresql.conf /etc/postgresql.conf
-COPY ./config/init.databases.sh /docker-entrypoint-initdb.d/init.databases.sh
+COPY ./configs/postgresql.conf /etc/postgresql.conf
+COPY ./scripts/init.databases.sh /docker-entrypoint-initdb.d/init.databases.sh
 
 CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
@@ -9,33 +9,33 @@ CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
 FROM rabbitmq:4.1.0-management-alpine AS rbmq
 
-COPY ./config/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
+COPY ./configs/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
 
 ####################################################################################
 
-FROM node:22.14.0-slim AS server
+FROM node:22.15.0-slim AS server
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/node/mrs
 
-COPY ./config/init.server.sh /home/node/init.sh
+COPY ./scripts/init.server.sh /home/node/init.sh
 
 ENTRYPOINT ["/home/node/init.sh"]
 
 ####################################################################################
 
-FROM node:22.14.0-slim AS worker
+FROM node:22.15.0-slim AS worker
 
 WORKDIR /home/node/worker
 
-COPY ./config/init.worker.sh /home/node/init.sh
+COPY ./scripts/init.worker.sh /home/node/init.sh
 
 ENTRYPOINT ["/home/node/init.sh"]
 
 ####################################################################################
 
-FROM nginxinc/nginx-unprivileged:1.27.4-alpine-slim AS nginx
+FROM nginxinc/nginx-unprivileged:1.27.5-alpine-slim AS nginx
 USER nginx
 
 COPY --chown=nginx ./nginx /etc/nginx

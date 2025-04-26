@@ -94,21 +94,21 @@ function handlePostgresError(
   switch (error.code) {
     case FOREIGN_KEY_VIOLATION:
     case UNIQUE_VIOLATION:
-      logger.fatal(
+      logger.error(
         'Should have been handled by the code and never get here. Check the' +
           ' code implementation:\n',
         error,
       );
       break;
     case TOO_MANY_CONNECTIONS:
-      logger.fatal(
+      logger.error(
         'Exceeded database maximum connections.\nThis Should never happen,' +
           ' check the server and database logs to understand why it happened:\n',
         error,
       );
       break;
     default:
-      logger.fatal('Unexpected database error:\n', error);
+      logger.error('Unexpected database error:\n', error);
       break;
   }
 
@@ -121,9 +121,9 @@ function handleUnexpectedError(error: unknown, response: ResponseWithContext) {
   const { logger } = response.locals.context;
 
   if (error instanceof Error) {
-    logger.fatal('Unhandled exception:\n', error);
+    logger.error('Unhandled exception:\n', error);
   } else {
-    logger.fatal('Caught a non-error object.\nThis should never happen', error);
+    logger.error('Caught a non-error object.\nThis should never happen', error);
   }
 
   response

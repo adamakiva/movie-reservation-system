@@ -170,7 +170,7 @@ class EnvironmentManager {
       }
     });
     if (errorMessages.length) {
-      this.#logger.fatal(errorMessages.join('\n'));
+      this.#logger.error(errorMessages.join('\n'));
 
       process.exit(ERROR_CODES.EXIT_NO_RESTART);
     }
@@ -184,7 +184,7 @@ class EnvironmentManager {
     const valueAsNumber = Number(value);
 
     if (isNaN(valueAsNumber)) {
-      this.#logger.fatal(`Invalid value for '${key}' environment variable`);
+      this.#logger.error(`Invalid value for '${key}' environment variable`);
 
       process.exit(ERROR_CODES.EXIT_NO_RESTART);
     }

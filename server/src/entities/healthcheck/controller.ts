@@ -1,6 +1,7 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import type { Request } from 'express';
 
+import { GeneralError } from '../../utils/errors.ts';
 import type { RequestContext, ResponseWithContext } from '../../utils/types.ts';
 
 import * as healthCheckValidator from './validator.ts';
@@ -50,13 +51,18 @@ async function isAlive(context: RequestContext) {
   try {
     await database.isAlive();
   } catch (error) {
-    logger.error(error);
+    logger.warn(error);
     notAliveMessage += '\nDatabase is not alive';
   }
   try {
-    messageQueue.isAlive();
+    if (!messageQueue.isAlive()) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.GATEWAY_TIMEOUT,
+        'Message queue is not alive',
+      );
+    }
   } catch (error) {
-    logger.error(error);
+    logger.warn(error);
     notAliveMessage += '\nMessage queue is not alive';
   }
 
@@ -70,13 +76,18 @@ async function isReady(context: RequestContext) {
   try {
     await database.isReady();
   } catch (error) {
-    logger.error(error);
+    logger.warn(error);
     notReadyMsg += '\nDatabase is not ready';
   }
   try {
-    messageQueue.isReady();
+    if (!messageQueue.isReady()) {
+      throw new GeneralError(
+        HTTP_STATUS_CODES.GATEWAY_TIMEOUT,
+        'Message queue is not ready',
+      );
+    }
   } catch (error) {
-    logger.error(error);
+    logger.warn(error);
     notReadyMsg += '\nMessage queue is not ready';
   }
 

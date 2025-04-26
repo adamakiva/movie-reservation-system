@@ -1,0 +1,63 @@
+{
+  "name": "@adamakiva/movie-reservation-system-message-queue",
+  "description": "Movie reservation system message queue",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "types": "./dist/main.d.ts",
+    "default": "./dist/main.js"
+  },
+  "author": "Adam Akiva",
+  "license": "MIT",
+  "private": false,
+  "files": [
+    "dist/main.js",
+    "dist/main.d.ts"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
+    "build": "tsc --build --verbose tsconfig.prod.json"
+  },
+  "dependencies": {
+    "rabbitmq-client": "~5.0.4"
+  },
+  "devDependencies": {
+    "@types/eslint-config-prettier": "~6.11.3",
+    "@types/eslint-plugin-security": "~3.0.0",
+    "@types/node": "~22.15.2",
+    "eslint": "~9.25.1",
+    "eslint-config-prettier": "~10.1.2",
+    "eslint-plugin-security": "~3.0.1",
+    "globals": "~16.0.0",
+    "prettier": "~3.5.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "~8.31.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamakiva/movie-reservation-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AdamAkiva/movie-reservation-system/issues"
+  },
+  "maintainers": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Adam Akiva",
+      "email": "adam.akiva14@gmail.com",
+      "url": "https://github.com/AdamAkiva"
+    }
+  ]
+}
