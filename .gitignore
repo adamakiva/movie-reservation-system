@@ -16,9 +16,8 @@
 !LICENSE
 !scripts/**/*.sh
 !nginx/**/*.conf
-!config/**/*.sh
-!config/**/*.conf
-!config/**/*.json
+!configs/postgresql.conf
+!configs/rbmq.definitions.json
 !.vscode/**/*.json
 !.github/workflows/*.yml
 !sonar-project.properties

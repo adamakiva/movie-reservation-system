@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
-    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout --test-reporter junit --test-reporter-destination=./src/tests/junit.xml",
+    "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
     "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --dest ./src/tests/.clinic --open=false --on-port 'node ./src/tests/stress/index.ts' -- node ./src/tests/stress/server.ts",
     "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
@@ -13,7 +13,6 @@
     "check-global-updates": "ncu -g",
     "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
-    "check-code-deps": "./check.unused.deps.sh",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
     "check-licenses": "nlf -d -r 1",
     "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"

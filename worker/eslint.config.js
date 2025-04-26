@@ -28,6 +28,7 @@ export default tslint.config({
   },
   linterOptions: {
     reportUnusedDisableDirectives: 'error',
+    reportUnusedInlineConfigs: 'error',
   },
   rules: {
     // JavaScript
