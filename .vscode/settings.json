@@ -1,7 +1,7 @@
 {
   // Use the latest typescript version, not the VSCode version (Assumes you have
   // nvm on your machine, and lts version of node)
-  "typescript.tsdk": "~/.nvm/versions/node/v22.14.0/lib/node_modules/typescript/lib",
+  "typescript.tsdk": "~/.nvm/versions/node/v22.15.0/lib/node_modules/typescript/lib",
   "typescript.preferences.preferTypeOnlyAutoImports": true,
   "eslint.enable": true,
   "eslint.run": "onSave",

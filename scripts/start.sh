@@ -41,6 +41,17 @@ install_dependencies() {
         printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
         exit 1;
     fi
+
+    cd "$ROOT_DIR"/packages/message-queue || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+    cd "$ROOT_DIR"/packages/shared || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
 }
 
 generate_certs() {
