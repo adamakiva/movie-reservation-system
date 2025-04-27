@@ -11,12 +11,9 @@
   "license": "MIT",
   "private": false,
   "files": [
-    "main.js",
-    "main.d.ts"
+    "main.d.ts",
+    "main.js"
   ],
-  "scripts": {
-    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json"
-  },
   "devDependencies": {
     "prettier": "~3.5.3"
   },

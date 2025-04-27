@@ -50,10 +50,7 @@ class HttpServer {
       ConstructorParameters<typeof Cronjob>[0],
       'database' | 'logger'
     >;
-    messageQueueParams: Omit<
-      ConstructorParameters<typeof MessageQueue>[0],
-      'logger'
-    >;
+    messageQueueParams: EnvironmentVariables['messageQueue'];
     websocketServerParams: Omit<
       ConstructorParameters<typeof WebsocketServer>[0],
       'server' | 'authentication' | 'logger'
@@ -84,7 +81,7 @@ class HttpServer {
     const fileManager = new FileManager({ ...fileManagerParams, logger });
     const cronjob = new Cronjob({ ...cronjobParams, database, logger });
     const messageQueue = new MessageQueue({
-      connectionOptions: messageQueueParams.connectionOptions,
+      connectionOptions: { url: messageQueueParams.url },
       logger,
     });
 
@@ -109,7 +106,7 @@ class HttpServer {
       database,
       fileManager,
       cronjob,
-      messageQueue,
+      messageQueue: { handler: messageQueue, options: messageQueueParams },
       websocketServer,
       server,
       routes,
@@ -195,7 +192,10 @@ class HttpServer {
     database: Database;
     fileManager: FileManager;
     cronjob: Cronjob;
-    messageQueue: MessageQueue;
+    messageQueue: {
+      options: EnvironmentVariables['messageQueue'];
+      handler: MessageQueue;
+    };
     websocketServer: WebsocketServer;
     server: Server;
     routes: { http: string };
@@ -217,25 +217,29 @@ class HttpServer {
     this.#database = database;
     this.#fileManager = fileManager;
     this.#cronjob = cronjob;
-    this.#messageQueue = messageQueue;
+    this.#messageQueue = messageQueue.handler;
     this.#websocketServer = websocketServer;
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     this.#server = server.once('error', this.#handleErrorEvent);
     this.#routes = routes;
     this.#logger = logger;
 
-    this.#initMessageQueue();
+    this.#initMessageQueue(messageQueue.options.consumer);
 
     this.#requestContext = {
       authentication,
       database,
       fileManager,
-      messageQueue,
+      messageQueue: messageQueue.handler,
       logger,
     } as const satisfies RequestContext;
   }
 
-  #initMessageQueue() {
+  #initMessageQueue(
+    consumerOptions: EnvironmentVariables['messageQueue']['consumer'],
+  ) {
+    const { concurrency, prefetchCount } = consumerOptions;
+
     this.#messageQueue.createPublishers({
       ticket: {
         confirm: true,
@@ -266,6 +270,8 @@ class HttpServer {
       },
     });
     this.#messageQueue.createConsumer({
+      concurrency,
+      qos: { prefetchCount },
       routing: {
         exchange: 'mrs',
         queue: 'mrs.ticket.reserve.reply.to',
@@ -278,6 +284,8 @@ class HttpServer {
       }),
     });
     this.#messageQueue.createConsumer({
+      concurrency,
+      qos: { prefetchCount },
       routing: {
         exchange: 'mrs',
         queue: 'mrs.ticket.cancel.reply.to',
@@ -290,6 +298,8 @@ class HttpServer {
       }),
     });
     this.#messageQueue.createConsumer({
+      concurrency,
+      qos: { prefetchCount },
       routing: {
         exchange: 'mrs',
         queue: 'mrs.showtime.cancel.reply.to',

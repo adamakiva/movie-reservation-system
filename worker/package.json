@@ -1,13 +1,11 @@
 {
   "name": "movie-reservation-system-worker",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Movie reservation system worker",
   "type": "module",
   "main": "./src/main.ts",
   "scripts": {
     "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
-    "check-global-updates": "ncu -g",
-    "check-local-updates": "ncu",
     "commit-local-updates": "ncu -u",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
     "check-licenses": "nlf -d -r 1",
@@ -34,7 +32,7 @@
     "typescript-eslint": "~8.31.0"
   },
   "engines": {
-    "node": ">=22.7"
+    "node": ">=22"
   },
   "os": [
     "linux"

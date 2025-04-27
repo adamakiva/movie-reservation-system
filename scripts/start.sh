@@ -27,29 +27,9 @@ check_prerequisites() {
         printf "\nDocker compose not installed, you may follow this: https://docs.docker.com/compose/install/linux/#install-the-plugin-manually \n\n";
         exit 1;
     fi
-}
 
-install_dependencies() {
-    cd "$ROOT_DIR"/server || exit 1;
-    if ! npm install --include=dev -d; then
-        printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
-        exit 1;
-    fi
-
-    cd "$ROOT_DIR"/worker || exit 1;
-    if ! npm install --include=dev -d; then
-        printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
-        exit 1;
-    fi
-
-    cd "$ROOT_DIR"/packages/message-queue || exit 1;
-    if ! npm install --include=dev -d; then
-        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
-        exit 1;
-    fi
-    cd "$ROOT_DIR"/packages/shared || exit 1;
-    if ! npm install --include=dev -d; then
-        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
+    if ! command -v node >/dev/null 2>&1; then
+        printf "\nNode not installed, you may follow this: https://github.com/nvm-sh/nvm \n\n";
         exit 1;
     fi
 }
@@ -79,6 +59,30 @@ generate_keys() {
     fi
 }
 
+install_dependencies() {
+    cd "$ROOT_DIR"/server || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+    cd "$ROOT_DIR"/worker || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+
+    cd "$ROOT_DIR"/packages/message-queue || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+    cd "$ROOT_DIR"/packages/shared || exit 1;
+    if ! npm install --include=dev -d; then
+        printf "\nFailed to install app npm dependencies. Please check for issues and try again.\n\n";
+        exit 1;
+    fi
+}
+
 check_services_health() {
     error_occurred=false;
 
@@ -103,20 +107,16 @@ check_services_health() {
     fi
 }
 
-start() {
+main() {
+    cd "$ROOT_DIR" || exit 1;
     check_prerequisites &&
     mkdir -p "$DATABASE_DATA_DIR" "$MESSAGE_QUEUE_DATA_DIR" "$MOVIE_POSTERS_DIR" "$NPM_SERVER_CACHE_DIR" "$NPM_WORKER_CACHE_DIR" || exit 1;
-    install_dependencies &&
     generate_certs &&
     generate_keys &&
+    install_dependencies &&
     rm -f "$ERR_LOG_FILE";
     UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait || exit 1;
     check_services_health;
-}
-
-main() {
-    cd "$ROOT_DIR" || exit 1;
-    start;
 }
 
 ####################################################################################

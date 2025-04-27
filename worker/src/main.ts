@@ -1,6 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { EventEmitter } from 'node:events';
-import Stream from 'node:stream';
 
 import {
   CORRELATION_IDS,
@@ -15,15 +13,15 @@ import {
 } from '@adamakiva/movie-reservation-system-shared';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
+import { EnvironmentManager } from './config.ts';
+
 /**********************************************************************************/
 
 function startWorker() {
-  const messageQueueUrl = process.env.MESSAGE_QUEUE_URL;
-  if (!messageQueueUrl) {
-    throw new Error('Missing message queue url');
-  }
-
-  setGlobalValues();
+  const {
+    messageQueueUrl,
+    consumer: { concurrency, prefetchCount },
+  } = new EnvironmentManager().getEnvVariables();
 
   const messageQueue = new MessageQueue({
     connectionOptions: { url: messageQueueUrl },
@@ -60,6 +58,8 @@ function startWorker() {
     },
   });
   messageQueue.createConsumer({
+    concurrency,
+    qos: { prefetchCount },
     routing: {
       exchange: 'mrs',
       queue: 'mrs.ticket.reserve',
@@ -68,6 +68,8 @@ function startWorker() {
     handler: reserveShowtimeTicket(messageQueue),
   });
   messageQueue.createConsumer({
+    concurrency,
+    qos: { prefetchCount },
     routing: {
       exchange: 'mrs',
       queue: 'mrs.ticket.cancel',
@@ -76,6 +78,8 @@ function startWorker() {
     handler: cancelShowtimeTicket(messageQueue),
   });
   messageQueue.createConsumer({
+    concurrency,
+    qos: { prefetchCount },
     routing: {
       exchange: 'mrs',
       queue: 'mrs.showtime.cancel',
@@ -192,18 +196,6 @@ function cancelShowtime(messageQueue: MessageQueue) {
 }
 
 /**********************************************************************************/
-
-function setGlobalValues() {
-  // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
-  EventEmitter.captureRejections = true;
-
-  const defaultHighWaterMark = Number(process.env.NODE_DEFAULT_HIGH_WATERMARK);
-  if (isNaN(defaultHighWaterMark)) {
-    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
-  } else {
-    Stream.setDefaultHighWaterMark(false, 65_536);
-  }
-}
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
   const errorHandler = () => {

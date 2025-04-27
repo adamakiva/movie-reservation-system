@@ -25,6 +25,8 @@ class EnvironmentManager {
     'DATABASE_STATEMENT_TIMEOUT',
     'DATABASE_TRANSACTION_TIMEOUT',
     'MESSAGE_QUEUE_URL',
+    'MESSAGE_QUEUE_CONSUMER_CONCURRENCY',
+    'MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT',
     'AUTHENTICATION_HASH_SECRET',
     'AUTHENTICATION_ACCESS_TOKEN_EXPIRATION',
     'AUTHENTICATION_REFRESH_TOKEN_EXPIRATION',
@@ -139,6 +141,16 @@ class EnvironmentManager {
       },
       messageQueue: {
         url: process.env.MESSAGE_QUEUE_URL!,
+        consumer: {
+          concurrency: this.#toNumber(
+            'MESSAGE_QUEUE_CONSUMER_CONCURRENCY',
+            process.env.MESSAGE_QUEUE_CONSUMER_CONCURRENCY,
+          )!,
+          prefetchCount: this.#toNumber(
+            'MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT',
+            process.env.MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT,
+          )!,
+        },
       },
       jwt: {
         accessTokenExpiration: this.#toNumber(
@@ -193,9 +205,18 @@ class EnvironmentManager {
   }
 
   #setGlobalValues() {
-    const {
-      node: { maxSockets, maxTotalSockets, defaultHighWaterMark },
-    } = this.#environmentVariables;
+    const maxSockets = this.#toNumber(
+      'NODE_MAX_SOCKETS',
+      process.env.NODE_MAX_SOCKETS,
+    )!;
+    const maxTotalSockets = this.#toNumber(
+      'NODE_MAX_TOTAL_SOCKETS',
+      process.env.NODE_MAX_TOTAL_SOCKETS,
+    )!;
+    const defaultHighWaterMark = this.#toNumber(
+      'NODE_DEFAULT_HIGH_WATERMARK',
+      process.env.NODE_DEFAULT_HIGH_WATERMARK,
+    )!;
 
     // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
     Stream.EventEmitter.captureRejections = true;

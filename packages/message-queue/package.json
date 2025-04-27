@@ -11,15 +11,14 @@
   "license": "MIT",
   "private": false,
   "files": [
-    "dist/main.js",
-    "dist/main.d.ts"
+    "dist/main.d.ts",
+    "dist/main.js"
   ],
   "engines": {
     "node": ">=14.0.0"
   },
   "scripts": {
-    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
-    "build": "tsc --build --verbose tsconfig.prod.json"
+    "build": "eslint src/**/*.ts && rm -rf ./dist && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
     "rabbitmq-client": "~5.0.4"

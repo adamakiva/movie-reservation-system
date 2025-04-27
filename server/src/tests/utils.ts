@@ -187,9 +187,7 @@ async function createServer() {
         retryLimit: 5,
       },
     },
-    messageQueueParams: {
-      connectionOptions: { url: messageQueueEnv.url },
-    },
+    messageQueueParams: messageQueueEnv,
     websocketServerParams: {
       path: `/${websocketServerEnv.route}`,
       pingTime: websocketServerEnv.pingTime,

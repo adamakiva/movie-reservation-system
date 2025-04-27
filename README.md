@@ -18,22 +18,23 @@ For any questions/suggestions, contact details are in my github profile
 
 ## Prerequisites
 
-1. Linux-based system with POSIX compliant shell (required for the scripts to work)
+1. Unix-based system with POSIX compliant shell (required for the scripts to work)
 2. [Docker engine & docker-compose plugin](https://github.com/AdamAkiva/tutorials/blob/main/tools/docker/docker.md)
-   preferably the latest version, otherwise you may encounter errors
+   preferably the latest version, otherwise you **may** encounter errors
 3. Make sure the scripts have execute permissions, e.g: (Assuming project root dir)
 
 ```bash
 chmod +x ./scripts/*.sh
 ```
 
+4. [NVM - Node Version Manager](https://github.com/nvm-sh/nvm#installing-and-updating)
+5. [Node](https://github.com/nvm-sh/nvm#long-term-support)
+
 ---
 
 ## Recommended (Will work without them, but may require manual work):
 
-1. [NVM - Node Version Manager](https://github.com/nvm-sh/nvm#installing-and-updating)
-2. [Node LTS version](https://github.com/nvm-sh/nvm#long-term-support)
-3. [Debugger](https://github.com/AdamAkiva/tutorials/blob/main/web/node/debugger/typescript/README.md)
+1. [Debugger](https://github.com/AdamAkiva/tutorials/blob/main/web/node/debugger/typescript/README.md)
 
 ---
 
@@ -62,7 +63,7 @@ If you have permission errors when running the postgres image, try the following
    (`sudo service postgresql stop`). If you want to make it permanent,
    [see this answer](https://askubuntu.com/a/19324)
 2. Stop the docker using: `yes | ./scripts/remove.sh`
-3. Remove the following folders: `rm -rf ./dev-data ./node_modules ./npm-cache`
+3. Remove the following folders: `rm -rf ./dev-data ./npm-cache`
 4. Make sure you have the latest docker and docker-compose versions
    (follow step 2 in the prerequisites)
 5. Run `yes | ./scripts/start.sh` and hope for the best
