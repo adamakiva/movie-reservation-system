@@ -19,17 +19,17 @@
   "devDependencies": {
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
-    "@types/node": "~22.14.1",
+    "@types/node": "~22.15.3",
     "dpdm": "~3.14.0",
     "eslint": "~9.25.1",
     "eslint-config-prettier": "~10.1.2",
     "eslint-plugin-security": "~3.0.1",
     "globals": "~16.0.0",
     "nlf": "~2.1.1",
-    "npm-check-updates": "~18.0.0",
+    "npm-check-updates": "~18.0.1",
     "prettier": "~3.5.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "~8.31.0"
+    "typescript-eslint": "~8.31.1"
   },
   "engines": {
     "node": ">=22"
