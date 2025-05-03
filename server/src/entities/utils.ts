@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import zod, {
   ZodIssueCode,

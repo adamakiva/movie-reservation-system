@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { globalAgent } from 'node:http';
 import Stream from 'node:stream';
 

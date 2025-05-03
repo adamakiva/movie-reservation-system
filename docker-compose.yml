@@ -13,6 +13,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-admin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-admin}
+      # Spin-up a an additional replicated database for tests
       - POSTGRES_DATABASES=${POSTGRES_DATABASES:-mrs,mrs_test}
       - PSQL_HISTORY=${PSQL_HISTORY:-/var/lib/postgresql/data/.psql_history}
     volumes:

@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+
 import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash } from 'argon2';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';

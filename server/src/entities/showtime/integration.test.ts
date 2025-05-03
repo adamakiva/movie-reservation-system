@@ -31,6 +31,8 @@ import {
 
 const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
 
+/**********************************************************************************/
+
 function compareShowtimes(params: {
   movies: Awaited<ReturnType<typeof seedShowtimes>>['createdMovies'];
   halls: Awaited<ReturnType<typeof seedShowtimes>>['createdHalls'];

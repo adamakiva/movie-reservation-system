@@ -77,7 +77,7 @@ async function getShowtimes(
 async function getUserShowtimes(
   context: RequestContext,
   pagination: GetUserShowtimesValidatedData,
-): Promise<PaginatedResult<{ userShowtimes: unknown }>> {
+): Promise<PaginatedResult<{ userShowtimes: UserShowtime[] }>> {
   const { database } = context;
   const { userId, cursor, pageSize } = pagination;
 

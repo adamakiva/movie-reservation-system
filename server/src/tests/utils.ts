@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { randomUUID as nodeRandomUUID } from 'node:crypto';
 import type { PathLike } from 'node:fs';
 import { readdir, readFile, stat } from 'node:fs/promises';
@@ -379,7 +380,12 @@ async function getAdminTokens(httpRoute: ServerParams['routes']['http']) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  return await generateTokens({ httpRoute, email, password });
+  const tokens = (await generateTokens({ httpRoute, email, password })) as {
+    accessToken: string;
+    refreshToken: string;
+  };
+
+  return tokens;
 }
 
 async function generateTokens(params: {
@@ -952,6 +958,7 @@ export {
   assert,
   AUTHENTICATION,
   before,
+  Buffer,
   checkUserPassword,
   clearDatabase,
   compareFiles,

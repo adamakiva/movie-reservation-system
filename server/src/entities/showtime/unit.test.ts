@@ -2,6 +2,7 @@ import {
   after,
   assert,
   before,
+  Buffer,
   createHttpMocks,
   GeneralError,
   generateShowtimesData,

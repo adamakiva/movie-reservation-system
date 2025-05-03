@@ -83,7 +83,7 @@ async function cancelUserShowtimeReservation(params: {
     messageQueue,
     showtimeModel,
     showtimeId,
-    userIds: userId,
+    userId,
   });
 }
 
@@ -139,9 +139,9 @@ async function cancelShowtimeReservation(params: {
   messageQueue: RequestContext['messageQueue'];
   showtimeModel: DatabaseModel<'showtime'>;
   showtimeId: string;
-  userIds: string | string[];
+  userId: string;
 }) {
-  const { handler, messageQueue, showtimeModel, showtimeId, userIds } = params;
+  const { handler, messageQueue, showtimeModel, showtimeId, userId } = params;
 
   const [showtime] = await handler
     .select({ at: showtimeModel.at })
@@ -164,7 +164,7 @@ async function cancelShowtimeReservation(params: {
     routingKey: 'mrs-ticket-cancel',
     data: {
       showtimeId,
-      userIds,
+      userIds: userId,
     },
     options: {
       durable: true,

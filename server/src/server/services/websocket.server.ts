@@ -1,5 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
+import { Buffer } from 'node:buffer';
 import type { IncomingMessage, Server } from 'node:http';
 import type { Socket } from 'node:net';
 import { parse } from 'node:url';
