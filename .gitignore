@@ -17,7 +17,7 @@
 !scripts/**/*.sh
 !nginx/**/*.conf
 !configs/postgresql.conf
-!configs/rbmq.definitions.json
+!configs/rabbitmq.definitions.json
 !.vscode/**/*.json
 !.github/workflows/*.yml
 !sonar-project.properties

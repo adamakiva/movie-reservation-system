@@ -65,7 +65,7 @@ function startWorker() {
       queue: 'mrs.ticket.reserve',
       routingKey: 'mrs-ticket-reserve',
     },
-    handler: reserveShowtimeTicket(messageQueue),
+    handler: reserveShowtimeTicket.bind(messageQueue),
   });
   messageQueue.createConsumer({
     concurrency,
@@ -75,7 +75,7 @@ function startWorker() {
       queue: 'mrs.ticket.cancel',
       routingKey: 'mrs-ticket-cancel',
     },
-    handler: cancelShowtimeTicket(messageQueue),
+    handler: cancelShowtimeTicket.bind(messageQueue),
   });
   messageQueue.createConsumer({
     concurrency,
@@ -85,7 +85,7 @@ function startWorker() {
       queue: 'mrs.showtime.cancel',
       routingKey: 'mrs-showtime-cancel',
     },
-    handler: cancelShowtime(messageQueue),
+    handler: cancelShowtime.bind(messageQueue),
   });
 
   attachProcessHandlers(messageQueue);
@@ -93,106 +93,103 @@ function startWorker() {
 
 /**********************************************************************************/
 
-function reserveShowtimeTicket(messageQueue: MessageQueue) {
-  return async (
-    message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
-  ) => {
-    const { correlationId, body } = message;
+async function reserveShowtimeTicket(
+  this: MessageQueue,
+  message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
+) {
+  const { correlationId, body } = message;
 
-    if (correlationId !== CORRELATION_IDS.TICKET_RESERVATION) {
-      return ConsumerStatus.DROP;
-    }
-    const { userShowtimeId, userDetails, movieDetails } = body;
+  if (correlationId !== CORRELATION_IDS.TICKET_RESERVATION) {
+    return ConsumerStatus.DROP;
+  }
+  const { userShowtimeId, userDetails, movieDetails } = body;
 
-    // TODO Payment processing, on failure return a null transactionId so the
-    // ph entry in the database can be removed
-    const transactionId = randomUUID();
+  // TODO Payment processing, on failure return a null transactionId so the
+  // ph entry in the database can be removed
+  const transactionId = randomUUID();
 
-    // TODO Send email receipt
-    console.info(userShowtimeId, userDetails, movieDetails);
+  // TODO Send email receipt
+  console.info(userShowtimeId, userDetails, movieDetails);
 
-    await messageQueue.publish({
-      publisher: 'ticket',
-      exchange: 'mrs',
-      routingKey: 'mrs-ticket-reserve-reply-to',
-      data: {
-        ...body,
-        transactionId,
-      },
-      options: {
-        durable: true,
-        mandatory: true,
-        correlationId,
-        contentType: 'application/json',
-      },
-    });
-
-    return ConsumerStatus.ACK;
-  };
-}
-
-function cancelShowtimeTicket(messageQueue: MessageQueue) {
-  return async (
-    message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
-  ) => {
-    const { correlationId, body } = message;
-
-    if (correlationId !== CORRELATION_IDS.TICKET_CANCELLATION) {
-      return ConsumerStatus.DROP;
-    }
-    const { showtimeId, userIds } = body;
-
-    // TODO Refund processing
-    console.info(showtimeId, userIds);
-
-    await messageQueue.publish({
-      publisher: 'ticket',
-      exchange: 'mrs',
-      routingKey: 'mrs-ticket-cancel-reply-to',
-      data: body,
-      options: {
-        durable: true,
-        mandatory: true,
-        correlationId,
-        contentType: 'application/json',
-      },
-    });
-
-    return ConsumerStatus.ACK;
-  };
-}
-
-function cancelShowtime(messageQueue: MessageQueue) {
-  return async (
-    message: Omit<AsyncMessage, 'body'> & {
-      body: ShowtimeCancellationMessage;
+  await this.publish({
+    publisher: 'ticket',
+    exchange: 'mrs',
+    routingKey: 'mrs-ticket-reserve-reply-to',
+    data: {
+      ...body,
+      transactionId,
     },
-  ) => {
-    const { correlationId, body } = message;
+    options: {
+      durable: true,
+      mandatory: true,
+      correlationId,
+      contentType: 'application/json',
+    },
+  });
 
-    if (correlationId !== CORRELATION_IDS.SHOWTIME_CANCELLATION) {
-      return ConsumerStatus.DROP;
-    }
-    const { showtimeId, userIds } = body;
+  return ConsumerStatus.ACK;
+}
 
-    // TODO Refund processing
-    console.info(showtimeId, userIds);
+async function cancelShowtimeTicket(
+  this: MessageQueue,
+  message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
+) {
+  const { correlationId, body } = message;
 
-    await messageQueue.publish({
-      publisher: 'showtime',
-      exchange: 'mrs',
-      routingKey: 'mrs-showtime-cancel-reply-to',
-      data: body,
-      options: {
-        durable: true,
-        mandatory: true,
-        correlationId,
-        contentType: 'application/json',
-      },
-    });
+  if (correlationId !== CORRELATION_IDS.TICKET_CANCELLATION) {
+    return ConsumerStatus.DROP;
+  }
+  const { showtimeId, userIds } = body;
 
-    return ConsumerStatus.ACK;
-  };
+  // TODO Refund processing
+  console.info(showtimeId, userIds);
+
+  await this.publish({
+    publisher: 'ticket',
+    exchange: 'mrs',
+    routingKey: 'mrs-ticket-cancel-reply-to',
+    data: body,
+    options: {
+      durable: true,
+      mandatory: true,
+      correlationId,
+      contentType: 'application/json',
+    },
+  });
+
+  return ConsumerStatus.ACK;
+}
+
+async function cancelShowtime(
+  this: MessageQueue,
+  message: Omit<AsyncMessage, 'body'> & {
+    body: ShowtimeCancellationMessage;
+  },
+) {
+  const { correlationId, body } = message;
+
+  if (correlationId !== CORRELATION_IDS.SHOWTIME_CANCELLATION) {
+    return ConsumerStatus.DROP;
+  }
+  const { showtimeId, userIds } = body;
+
+  // TODO Refund processing
+  console.info(showtimeId, userIds);
+
+  await this.publish({
+    publisher: 'showtime',
+    exchange: 'mrs',
+    routingKey: 'mrs-showtime-cancel-reply-to',
+    data: body,
+    options: {
+      durable: true,
+      mandatory: true,
+      correlationId,
+      contentType: 'application/json',
+    },
+  });
+
+  return ConsumerStatus.ACK;
 }
 
 /**********************************************************************************/

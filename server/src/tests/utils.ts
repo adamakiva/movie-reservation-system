@@ -114,13 +114,10 @@ async function initServer() {
 async function terminateServer(server: HttpServer, database: Database) {
   try {
     await clearDatabase(database);
-  } catch {
-    // On purpose
-  }
-  try {
     await server.close();
-  } catch {
-    // On purpose
+  } catch (error) {
+    console.error('Failure to cleanup tests:', error);
+    process.exit(1);
   }
 }
 
@@ -200,7 +197,6 @@ async function createServer() {
       http: `/${httpServerEnv.route}`,
     },
     httpServerConfigurations: httpServerEnv.configurations,
-    logMiddleware: logger.getLogMiddleware(),
     logger,
   });
 
@@ -218,7 +214,7 @@ async function createServer() {
     routes: {
       base: baseUrl,
       http: `${baseUrl}/${httpServerEnv.route}`,
-      ws: `${baseUrl}/${websocketServerEnv.route}`,
+      websocket: `${baseUrl}/${websocketServerEnv.route}`,
     },
     logger,
   } as const;
@@ -368,7 +364,7 @@ async function sendHttpRequest<
 }
 
 function createWebsocketClient(
-  wsRoute: ServerParams['routes']['ws'],
+  wsRoute: ServerParams['routes']['websocket'],
   accessToken: string,
 ) {
   return new WebSocket(
@@ -622,12 +618,10 @@ function generateMoviesData(amount = 1) {
 }
 
 async function generateMovieDataIncludingPoster(genreId?: string) {
-  // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const imageNames = await readdir(join(import.meta.dirname, 'images'));
   const moviePosters = await Promise.all(
     imageNames.map(async (imageName) => {
       const absolutePath = join(import.meta.dirname, 'images', imageName);
-      // eslint-disable-next-line @security/detect-non-literal-fs-filename
       const { size: sizeInBytes } = await stat(absolutePath);
 
       return {
@@ -646,12 +640,10 @@ async function generateMovieDataIncludingPoster(genreId?: string) {
 }
 
 async function generateMoviePostersData() {
-  // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const imageNames = await readdir(join(import.meta.dirname, 'images'));
   const moviePosters = await Promise.all(
     imageNames.map(async (imageName) => {
       const absolutePath = join(import.meta.dirname, 'images', imageName);
-      // eslint-disable-next-line @security/detect-non-literal-fs-filename
       const { size } = await stat(absolutePath);
 
       return {
@@ -666,7 +658,6 @@ async function generateMoviePostersData() {
 }
 
 async function compareFiles(dest: Uint8Array, src: PathLike) {
-  // eslint-disable-next-line @security/detect-non-literal-fs-filename
   const expectedFile = await readFile(src);
 
   assert.strictEqual(expectedFile.compare(dest) === 0, true);
@@ -924,11 +915,13 @@ function mockLogger() {
   (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
     mock.method(logger, level, emptyFunction);
   });
-  mock.method(logger, 'getLogMiddleware', () => {
-    return (_request: Request, _response: Response, next: NextFunction) => {
+  mock.method(
+    logger,
+    'logMiddleware',
+    (_request: Request, _response: Response, next: NextFunction) => {
       next();
-    };
-  });
+    },
+  );
 
   return logger;
 }

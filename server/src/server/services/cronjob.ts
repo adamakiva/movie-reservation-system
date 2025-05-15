@@ -13,12 +13,11 @@ import type { Logger } from '../../utils/logger.ts';
 /**********************************************************************************/
 
 class Cronjob {
-  readonly #moviePosterCleanupParams;
   readonly #abortController;
-  readonly #cronjobs: CronJob<null, this>[] = [];
-
   readonly #database;
   readonly #logger;
+  readonly #moviePosterCleanupParams;
+  readonly #moviePosterCleanupJob;
 
   public constructor(params: {
     moviePosterCleanupParams: {
@@ -31,44 +30,66 @@ class Cronjob {
   }) {
     const { moviePosterCleanupParams, database, logger } = params;
 
-    this.#moviePosterCleanupParams = moviePosterCleanupParams;
     this.#abortController = new AbortController();
-
     this.#database = database;
     this.#logger = logger;
-
-    this.#cronjobs.push(
-      CronJob.from({
-        cronTime: '00 00 00 * * *',
-        name: 'Movie posters cleanup',
-        context: this,
-        errorHandler: function (error) {
-          logger.error('Cronjob failure:', error);
-        },
-        onTick: this.#moviePosterCleanup,
-        runOnInit: true,
-      }),
-    );
+    this.#moviePosterCleanupParams = moviePosterCleanupParams;
+    this.#moviePosterCleanupJob = CronJob.from({
+      cronTime: '00 00 00 * * *',
+      name: 'Movie posters cleanup',
+      errorHandler: (error) => {
+        this.#logger.error('Cronjob failure:', error);
+      },
+      onTick: this.#moviePosterCleanup,
+      runOnInit: true,
+    });
   }
 
   public async stopAll() {
     this.#abortController.abort('Shutdown');
 
-    await Promise.allSettled(
-      this.#cronjobs.map(async (cronjob) => {
-        await cronjob.stop();
-      }),
-    );
+    await this.#moviePosterCleanupJob.stop();
   }
 
   /********************************************************************************/
 
-  async #moviePosterCleanup() {
+  async #removeFile(params: {
+    path: PathLike;
+    retryInterval: number;
+    retryAttempt: number;
+    retryLimit: number;
+  }) {
+    const { path, retryInterval, retryAttempt, retryLimit } = params;
+
+    await setTimeout(retryInterval, undefined, {
+      signal: this.#abortController.signal,
+    });
+
+    try {
+      await unlink(path);
+    } catch (error) {
+      if (
+        retryAttempt > retryLimit ||
+        (isSystemCallError(error) && error.code === 'ENOENT')
+      ) {
+        throw error;
+      }
+
+      await this.#removeFile({
+        path,
+        retryInterval: retryInterval * 1.5,
+        retryAttempt: retryAttempt + 1,
+        retryLimit,
+      });
+    }
+  }
+
+  /********************************************************************************/
+
+  readonly #moviePosterCleanup = async () => {
     const { directory, retryInterval, retryLimit } =
       this.#moviePosterCleanupParams;
 
-    // Value is specified by the program, not the end user
-    // eslint-disable-next-line @security/detect-non-literal-fs-filename
     const posterPaths = (await readdir(directory, { withFileTypes: true }))
       .filter((element) => {
         return !element.isDirectory();
@@ -95,46 +116,13 @@ class Cronjob {
         });
       }),
     );
-    // Errors will be retired again on the next cleanup
+    // Failed promises will be retired again on the next cleanup
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.error('Failure to remove file:', result.reason);
       }
     });
-  }
-
-  async #removeFile(params: {
-    path: PathLike;
-    retryInterval: number;
-    retryAttempt: number;
-    retryLimit: number;
-  }) {
-    const { path, retryInterval, retryAttempt, retryLimit } = params;
-
-    await setTimeout(retryInterval, undefined, {
-      signal: this.#abortController.signal,
-    });
-
-    try {
-      // Value is specified by the program, not the end user
-      // eslint-disable-next-line @security/detect-non-literal-fs-filename
-      await unlink(path);
-    } catch (error) {
-      if (
-        retryAttempt > retryLimit ||
-        (isSystemCallError(error) && error.code === 'ENOENT')
-      ) {
-        throw error;
-      }
-
-      await this.#removeFile({
-        path,
-        retryInterval: retryInterval * 1.5,
-        retryAttempt: retryAttempt + 1,
-        retryLimit,
-      });
-    }
-  }
+  };
 }
 
 /**********************************************************************************/

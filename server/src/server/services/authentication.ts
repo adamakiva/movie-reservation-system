@@ -18,8 +18,6 @@ class AuthenticationManager {
   readonly #refresh;
   readonly #hashSecret;
 
-  readonly #boundHttpAuthenticationMiddleware;
-
   public static async create(params: {
     audience: string;
     issuer: string;
@@ -71,9 +69,26 @@ class AuthenticationManager {
     });
   }
 
-  public httpAuthenticationMiddleware() {
-    return this.#boundHttpAuthenticationMiddleware;
-  }
+  public readonly httpAuthenticationMiddleware = async (
+    request: Request,
+    _response: ResponseWithContext,
+    next: NextFunction,
+  ) => {
+    const authenticationHeader = request.headers.authorization;
+    if (!authenticationHeader) {
+      throw new UnauthorizedError('missing');
+    }
+    const token = authenticationHeader.replace('Bearer', '');
+
+    const {
+      payload: { sub, exp },
+    } = await this.validateToken(token, 'access');
+    if (!sub || !exp) {
+      throw new UnauthorizedError('malformed');
+    }
+
+    next();
+  };
 
   public getExpirationTime() {
     // JWT expects exp in seconds since epoch, not milliseconds
@@ -206,9 +221,6 @@ class AuthenticationManager {
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
-
-    this.#boundHttpAuthenticationMiddleware =
-      this.#httpAuthenticationMiddleware.bind(this);
   }
 
   static async #readKeysFromFile(keysPath: string, algorithm: string) {
@@ -220,13 +232,10 @@ class AuthenticationManager {
       refreshPublicKey,
       refreshPrivateKey,
     ] = await Promise.all([
-      // These path are defined by the programmer, not the end user
-      /* eslint-disable @security/detect-non-literal-fs-filename */
       readFile(`${keysPath}/access_public_key.pem`, encoding),
       readFile(`${keysPath}/access_private_key.pem`, encoding),
       readFile(`${keysPath}/refresh_public_key.pem`, encoding),
       readFile(`${keysPath}/refresh_private_key.pem`, encoding),
-      /* eslint-enable @security/detect-non-literal-fs-filename */
     ]);
 
     return await Promise.all([
@@ -235,27 +244,6 @@ class AuthenticationManager {
       jose.importSPKI(refreshPublicKey, algorithm),
       jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
-  }
-
-  async #httpAuthenticationMiddleware(
-    request: Request,
-    _response: ResponseWithContext,
-    next: NextFunction,
-  ) {
-    const authenticationHeader = request.headers.authorization;
-    if (!authenticationHeader) {
-      throw new UnauthorizedError('missing');
-    }
-    const token = authenticationHeader.replace('Bearer', '');
-
-    const {
-      payload: { sub, exp },
-    } = await this.validateToken(token, 'access');
-    if (!sub || !exp) {
-      throw new UnauthorizedError('malformed');
-    }
-
-    next();
   }
 }
 

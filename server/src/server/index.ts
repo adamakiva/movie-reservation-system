@@ -14,7 +14,7 @@ import {
   reserveShowtimeTicket,
 } from '../entities/showtime/service/consumer.ts';
 import type { EnvironmentVariables } from '../utils/config.ts';
-import type { Logger, LogMiddleware } from '../utils/logger.ts';
+import type { Logger } from '../utils/logger.ts';
 import type { RequestContext } from '../utils/types.ts';
 
 import * as Middlewares from './middlewares/index.ts';
@@ -58,7 +58,6 @@ class HttpServer {
     allowedMethods: readonly string[];
     routes: { http: string };
     httpServerConfigurations: EnvironmentVariables['httpServer']['configurations'];
-    logMiddleware: LogMiddleware;
     logger: Logger;
   }) {
     const {
@@ -71,7 +70,6 @@ class HttpServer {
       allowedMethods,
       routes,
       httpServerConfigurations,
-      logMiddleware,
       logger,
     } = params;
 
@@ -89,9 +87,6 @@ class HttpServer {
       Middlewares.checkMethod(allowedMethods),
       compress(),
     );
-    // Express type chain include extending IRouter which returns void | Promise<void>,
-    // however, this is irrelevant for this use case (`app` type)
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     const server = createServer(app);
 
     const websocketServer = new WebsocketServer({
@@ -115,7 +110,7 @@ class HttpServer {
 
     // The order matters
     self.#attachServerConfigurations(httpServerConfigurations);
-    self.#attachRoutesMiddlewares(app, logMiddleware);
+    self.#attachRoutesMiddlewares(app);
 
     return self;
   }
@@ -219,8 +214,15 @@ class HttpServer {
     this.#cronjob = cronjob;
     this.#messageQueue = messageQueue.handler;
     this.#websocketServer = websocketServer;
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    this.#server = server.once('error', this.#handleErrorEvent);
+    this.#server = server.once('error', async (error) => {
+      this.#logger.error(error, 'HTTP Server error');
+
+      await this.close();
+
+      // If an http server error happened, we shutdown the application with status
+      // code that indicates that a server restart should happen
+      process.exit(ERROR_CODES.EXIT_RESTART);
+    });
     this.#routes = routes;
     this.#logger = logger;
 
@@ -232,7 +234,7 @@ class HttpServer {
       fileManager,
       messageQueue: messageQueue.handler,
       logger,
-    } as const satisfies RequestContext;
+    } satisfies RequestContext;
   }
 
   #initMessageQueue(
@@ -341,18 +343,18 @@ class HttpServer {
     this.#server.keepAliveTimeout = keepAliveTimeout;
   }
 
-  #attachRoutesMiddlewares(app: Express, logMiddleware: LogMiddleware) {
+  #attachRoutesMiddlewares(app: Express) {
     // The order matters
     app
       // Attach context to every request
       .use(Middlewares.attachRequestContext(this.#requestContext))
       .use(routers.healthcheckRouter)
       // No point in logging all healthcheck requests
-      .use(logMiddleware)
+      .use(this.#logger.logMiddleware)
       .use(
         this.#routes.http,
         routers.authenticationRouter,
-        this.#authentication.httpAuthenticationMiddleware(),
+        this.#authentication.httpAuthenticationMiddleware,
         routers.roleRouter,
         routers.userRouter,
         routers.genreRouter,
@@ -362,18 +364,6 @@ class HttpServer {
       )
       .use('/', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
   }
-
-  /********************************************************************************/
-
-  readonly #handleErrorEvent = async (error: Error) => {
-    this.#logger.error(error, 'HTTP Server error');
-
-    await this.close();
-
-    // If an http server error happened, we shutdown the application with status
-    // code that indicates that a server restart should happen
-    process.exit(ERROR_CODES.EXIT_RESTART);
-  };
 }
 
 /**********************************************************************************/

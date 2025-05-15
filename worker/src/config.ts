@@ -1,15 +1,17 @@
 import Stream from 'node:stream';
 
 /**********************************************************************************/
+
+const EXPECTED_ENVIRONMENT_VARIABLES = [
+  'NODE_DEFAULT_HIGH_WATERMARK',
+  'MESSAGE_QUEUE_URL',
+  'MESSAGE_QUEUE_CONSUMER_CONCURRENCY',
+  'MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT',
+] as const;
+
+/**********************************************************************************/
 class EnvironmentManager {
   readonly #environmentVariables;
-
-  static readonly #EXPECTED_ENVIRONMENT_VARIABLES = [
-    'NODE_DEFAULT_HIGH_WATERMARK',
-    'MESSAGE_QUEUE_URL',
-    'MESSAGE_QUEUE_CONSUMER_CONCURRENCY',
-    'MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT',
-  ] as const;
 
   public constructor() {
     this.#checkForMissingEnvironmentVariables();
@@ -39,7 +41,7 @@ class EnvironmentManager {
 
   #checkForMissingEnvironmentVariables() {
     const errorMessages: string[] = [];
-    EnvironmentManager.#EXPECTED_ENVIRONMENT_VARIABLES.forEach((key) => {
+    EXPECTED_ENVIRONMENT_VARIABLES.forEach((key) => {
       if (!process.env[key]) {
         errorMessages.push(`* Missing ${key} environment variable`);
       }

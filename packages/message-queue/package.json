@@ -18,7 +18,7 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "build": "eslint src/**/*.ts && rm -rf ./dist && tsc --build --verbose tsconfig.prod.json"
+    "build": "eslint 'src/**/*.ts' && rm -rf ./dist && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
     "rabbitmq-client": "~5.0.4"

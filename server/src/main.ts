@@ -82,7 +82,6 @@ async function startServer() {
       http: `/${httpServerEnv.route}`,
     },
     httpServerConfigurations: httpServerEnv.configurations,
-    logMiddleware: logger.getLogMiddleware(),
     logger,
   });
 

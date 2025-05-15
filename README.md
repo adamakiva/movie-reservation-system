@@ -88,3 +88,9 @@ For example, string type will be returned as text/html and not application/json.
 A downside may be that you be unsure what is the type which is returned.  
 To be consistent and remove the need to check for the content type on the client
 side, we always use `.json`
+
+### Async event handlers
+
+Event emitters [ignore](https://nodejs.org/api/events.html#events_events) the returned value.  
+Must be created after setting [this flag](https://nodejs.org/api/events.html#capture-rejections-of-promises)
+in order to invoke the error event on async event handlers

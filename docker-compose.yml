@@ -3,12 +3,12 @@
 # of managing these values
 
 services:
-  movie-reservation-system-pg:
-    hostname: movie-reservation-system-pg
-    container_name: movie-reservation-system-pg
+  movie-reservation-system-postgres:
+    hostname: movie-reservation-system-postgres
+    container_name: movie-reservation-system-postgres
     restart: unless-stopped
     build:
-      target: pg
+      target: postgres
     user: ${UID}:${GID}
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-admin}
@@ -17,7 +17,7 @@ services:
       - POSTGRES_DATABASES=${POSTGRES_DATABASES:-mrs,mrs_test}
       - PSQL_HISTORY=${PSQL_HISTORY:-/var/lib/postgresql/data/.psql_history}
     volumes:
-      - ./dev-data/pg:/var/lib/postgresql/data:rw
+      - ./dev-data/postgres:/var/lib/postgresql/data:rw
       # See: https://github.com/docker-library/docs/blob/master/postgres/README.md#arbitrary---user-notes
       - /etc/passwd:/etc/passwd:ro
       # See: https://stackoverflow.com/a/44440563
@@ -29,19 +29,19 @@ services:
       timeout: 2s
       retries: 5
 
-  movie-reservation-system-rbmq:
-    hostname: movie-reservation-system-rbmq
-    container_name: movie-reservation-system-rbmq
+  movie-reservation-system-rabbitmq:
+    hostname: movie-reservation-system-rabbitmq
+    container_name: movie-reservation-system-rabbitmq
     restart: unless-stopped
     build:
-      target: rbmq
+      target: rabbitmq
     user: ${UID}:${GID}
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-admin}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-admin}
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:- -rabbitmq_management load_definitions "/etc/rabbitmq/rbmq.definitions.json"}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:- -rabbitmq_management load_definitions "/etc/rabbitmq/rabbitmq.definitions.json"}
     volumes:
-      - ./dev-data/rbmq:/var/lib/rabbitmq:rw
+      - ./dev-data/rabbitmq:/var/lib/rabbitmq:rw
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
@@ -67,13 +67,13 @@ services:
       - HTTP_ROUTE=${HTTP_ROUTE:-api/v0}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-::,127.0.0.1,localhost}
       # Database options
-      - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs}
-      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@movie-reservation-system-pg:5432/mrs_test}
+      - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@movie-reservation-system-postgres:5432/mrs}
+      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@movie-reservation-system-postgres:5432/mrs_test}
       - DATABASE_MAX_CONNECTIONS=${DATABASE_MAX_CONNECTIONS:-32}
       - DATABASE_STATEMENT_TIMEOUT=${DATABASE_STATEMENT_TIMEOUT:-30000}
       - DATABASE_TRANSACTION_TIMEOUT=${DATABASE_TRANSACTION_TIMEOUT:-60000}
       # Message queue options
-      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rbmq:5672}
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rabbitmq:5672}
       - MESSAGE_QUEUE_CONSUMER_CONCURRENCY=${MESSAGE_QUEUE_CONSUMER_CONCURRENCY:-4}
       - MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT=${MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT:-8}
       # Authentication options
@@ -131,9 +131,9 @@ services:
       retries: 5
       start_period: 30s
     depends_on:
-      movie-reservation-system-pg:
+      movie-reservation-system-postgres:
         condition: service_healthy
-      movie-reservation-system-rbmq:
+      movie-reservation-system-rabbitmq:
         condition: service_healthy
 
   worker:
@@ -148,7 +148,7 @@ services:
     init: true
     environment:
       # Message queue options
-      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rbmq:5672}
+      - MESSAGE_QUEUE_URL=${MESSAGE_QUEUE_URL:-amqp://admin:admin@movie-reservation-system-rabbitmq:5672}
       - MESSAGE_QUEUE_CONSUMER_CONCURRENCY=${MESSAGE_QUEUE_CONSUMER_CONCURRENCY:-4}
       - MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT=${MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT:-8}
       # Node flags and options
@@ -164,7 +164,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
-      movie-reservation-system-rbmq:
+      movie-reservation-system-rabbitmq:
         condition: service_healthy
 
   movie-reservation-system-nginx:

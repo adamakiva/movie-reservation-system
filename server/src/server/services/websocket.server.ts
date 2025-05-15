@@ -1,5 +1,3 @@
-/* eslint-disable max-classes-per-file */
-
 import { Buffer } from 'node:buffer';
 import type { IncomingMessage, Server } from 'node:http';
 import type { Socket } from 'node:net';
@@ -10,6 +8,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 
 import { UnauthorizedError } from '../../utils/errors.ts';
 import type { Logger } from '../../utils/logger.ts';
+
 import type { AuthenticationManager } from './authentication.ts';
 
 /**********************************************************************************/
@@ -17,22 +16,43 @@ import type { AuthenticationManager } from './authentication.ts';
 class Websocket {
   readonly #handler;
   readonly #logger;
+  readonly #isAliveHandler;
 
-  public readonly id;
-  public isAlive;
+  readonly #boundErrorEventHandler;
+  readonly #boundPongEventHandler;
 
-  public constructor(params: { ws: WebSocket; id: string; logger: Logger }) {
-    const { ws, id, logger } = params;
+  #counter;
+  #isAlive;
 
-    this.#handler = ws;
-    this.id = id;
+  public constructor(params: {
+    websocket: WebSocket;
+    pingTime: number;
+    logger: Logger;
+  }) {
+    const { websocket, pingTime, logger } = params;
+
+    this.#counter = 0;
+    this.#isAlive = true;
+
+    this.#boundErrorEventHandler = this.#errorEventHandler.bind(this);
+    this.#boundPongEventHandler = this.#pongEventHandler.bind(this);
+
+    this.#handler = websocket
+      .on('error', this.#boundErrorEventHandler)
+      .on('pong', this.#boundPongEventHandler);
     this.#logger = logger;
 
-    this.#handler
-      .on('error', this.#errorEventHandler)
-      .on('pong', this.#pongEventHandler);
+    this.#isAliveHandler = setInterval(() => {
+      ++this.#counter;
+      this.ping();
+      if (this.#counter > 3) {
+        this.#isAlive = false;
+      }
+    }, pingTime);
+  }
 
-    this.isAlive = true;
+  public isAlive() {
+    return this.#isAlive;
   }
 
   public state() {
@@ -43,26 +63,29 @@ class Websocket {
     this.#handler.ping(...parameters);
   }
 
-  public sendMessage(...parameters: Parameters<WebSocket['send']>) {
+  public send(...parameters: Parameters<WebSocket['send']>) {
     this.#handler.send(...parameters);
   }
 
   public close() {
-    this.#handler.terminate();
+    clearInterval(this.#isAliveHandler);
     this.#handler
-      .removeListener('pong', this.#pongEventHandler)
-      .removeListener('error', this.#errorEventHandler);
+      .removeListener('error', this.#boundErrorEventHandler)
+      .removeListener('pong', this.#boundPongEventHandler)
+      .terminate();
   }
 
   /********************************************************************************/
 
-  readonly #errorEventHandler = (error: Error) => {
+  #errorEventHandler(error: Error) {
     this.#logger.error('Unexpected websocket error:', error);
-  };
+  }
 
-  readonly #pongEventHandler = () => {
-    this.isAlive = true;
-  };
+  #pongEventHandler() {
+    if (this.#counter) {
+      --this.#counter;
+    }
+  }
 }
 
 /**********************************************************************************/
@@ -70,78 +93,85 @@ class Websocket {
 
 class WebsocketServer {
   readonly #handler;
+  readonly #pingTime;
+  readonly #clients;
+  readonly #isAliveHandler;
   readonly #httpServer;
   readonly #authentication;
   readonly #logger;
 
-  readonly #clients;
-
-  readonly #timerHandler;
+  readonly #boundWebsocketServerErrorEventHandler;
+  readonly #boundWebsocketClientErrorEventHandler;
+  readonly #boundConnectionEventHandler;
+  readonly #boundUpgradeEventHandler;
 
   public constructor(params: {
     server: Server;
     authentication: AuthenticationManager;
     path: string;
-    pingTime?: number | undefined;
+    pingTime: number;
+    options?: WebSocket.ServerOptions;
     backlog?: number | undefined;
     maxPayload?: number | undefined; // In bytes
     logger: Logger;
   }) {
-    const {
-      server,
-      authentication,
-      pingTime = 8_000,
-      logger,
-      ...options
-    } = params;
+    const { server, authentication, pingTime, options, logger } = params;
 
     // Fix the websocket path if needed
-    if (!options.path.startsWith('/', 0)) {
-      options.path = `/${options.path}`;
+    if (!params.path.startsWith('/')) {
+      params.path = `/${params.path}`;
     }
+
+    this.#boundWebsocketServerErrorEventHandler =
+      this.#websocketServerErrorEventHandler.bind(this);
+    this.#boundWebsocketClientErrorEventHandler =
+      this.#websocketClientErrorEventHandler.bind(this);
+    this.#boundConnectionEventHandler = this.#connectionEventHandler.bind(this);
+    this.#boundUpgradeEventHandler = this.#upgradeEventHandler.bind(this);
 
     this.#handler = new WebSocketServer<
       typeof WebSocket,
       typeof IncomingMessage
     >({ ...options, noServer: true })
-      .on('error', this.#websocketServerErrorEventHandler)
-      .on('wsClientError', this.#websocketErrorEventHandler)
-      .on('connection', this.#connectionEventHandler);
+      .on('error', this.#boundWebsocketServerErrorEventHandler)
+      .on('wsClientError', this.#boundWebsocketClientErrorEventHandler)
+      .on('connection', this.#boundConnectionEventHandler);
+    this.#pingTime = pingTime;
     this.#httpServer = server;
     this.#authentication = authentication;
     this.#logger = logger;
 
-    this.#httpServer.on('upgrade', this.#upgradeEventHandler);
+    this.#httpServer.on('upgrade', this.#boundUpgradeEventHandler);
 
     // Every client may be connected from more than one device
     this.#clients = new Map<string, Websocket[]>();
 
-    this.#timerHandler = setInterval(() => {
-      this.#clients.forEach((wss) => {
-        for (let i = wss.length - 1; i >= 0; --i) {
-          const ws = wss[i]!;
+    this.#isAliveHandler = setInterval(() => {
+      this.#clients.forEach((websockets, email) => {
+        for (let i = websockets.length - 1; i >= 0; --i) {
+          const websocket = websockets[i]!;
 
-          if (!ws.isAlive) {
-            ws.close();
-            wss.splice(i, 1);
+          if (!websocket.isAlive()) {
+            websocket.close();
+            websockets.splice(i, 1);
+            if (!websockets.length) {
+              this.#clients.delete(email);
+            }
           }
-
-          ws.isAlive = true;
-          ws.ping();
         }
       });
-    }, pingTime);
+    }, 30_000);
   }
 
   public sendMessage(
     userId: string,
     ...parameters: Parameters<WebSocket['send']>
   ) {
-    const userWebsockets = this.#clients.get(userId);
+    const websockets = this.#clients.get(userId);
 
-    userWebsockets?.forEach((websocket) => {
-      if (websocket.isAlive && websocket.state() === WebSocket.OPEN) {
-        websocket.sendMessage(...parameters);
+    websockets?.forEach((websocket) => {
+      if (websocket.isAlive() && websocket.state() === WebSocket.OPEN) {
+        websocket.send(...parameters);
       }
     });
   }
@@ -149,28 +179,33 @@ class WebsocketServer {
   public broadcast(...parameters: Parameters<WebSocket['send']>) {
     this.#clients.forEach((websockets) => {
       websockets.forEach((websocket) => {
-        if (websocket.isAlive && websocket.state() === WebSocket.OPEN) {
-          websocket.sendMessage(...parameters);
+        if (websocket.isAlive() && websocket.state() === WebSocket.OPEN) {
+          websocket.send(...parameters);
         }
       });
     });
   }
 
   public close() {
-    clearInterval(this.#timerHandler);
-
-    this.#clients.forEach((wss) => {
-      wss.forEach((ws) => {
-        ws.close();
+    // Websockets
+    this.#clients.forEach((websockets) => {
+      websockets.forEach((websocket) => {
+        websocket.close();
       });
     });
     this.#clients.clear();
 
-    this.#handler.close();
+    clearInterval(this.#isAliveHandler);
+
+    // Websocket server
     this.#handler
-      .removeListener('connection', this.#connectionEventHandler)
-      .removeListener('wsClientError', this.#websocketErrorEventHandler)
-      .removeListener('error', this.#websocketServerErrorEventHandler);
+      .removeListener('error', this.#boundWebsocketServerErrorEventHandler)
+      .removeListener(
+        'wsClientError',
+        this.#boundWebsocketClientErrorEventHandler,
+      )
+      .removeListener('connection', this.#boundConnectionEventHandler)
+      .close();
 
     // Http server
     this.#httpServer.removeListener('upgrade', this.#upgradeEventHandler);
@@ -193,71 +228,62 @@ class WebsocketServer {
     return authorizationToken.replace('Bearer', '');
   }
 
-  /********************************************************************************/
-
-  readonly #websocketServerErrorEventHandler = (error: Error) => {
+  #websocketServerErrorEventHandler(error: Error) {
     this.#logger.error('Unexpected websocket server error:', error);
-  };
+  }
 
-  readonly #websocketErrorEventHandler = (error: Error, socket: Socket) => {
+  #websocketClientErrorEventHandler(error: Error, socket: Socket) {
     this.#logger.error('Unexpected web socket error:', error);
     socket.destroy();
-  };
+  }
 
-  readonly #upgradeEventHandler = (
+  async #upgradeEventHandler(
     request: IncomingMessage,
     socket: Socket,
     head: Buffer,
-  ) => {
-    socket.on('error', this.#socketErrorEventHandler);
+  ) {
+    socket.once('error', (error) => {
+      this.#logger.error('Socket error:', error);
+      socket.write(
+        `HTTP/1.1 ${HTTP_STATUS_CODES.UNAUTHORIZED}\r\n\r\n`,
+        (error) => {
+          if (error) {
+            this.#logger.error('Writing socket message failed:', error);
+          }
+          socket.destroy();
+        },
+      );
+    });
 
     // The authentication token is expected in the query string of the websocket
     // as a base64 encoded bearer token (With or without the `Bearer` keyword)
     const authenticationHeader = this.#parseAuthenticationHeader(request);
-    this.#authentication
-      .verifyWebsocketAuthentication(authenticationHeader)
-      .then(() => {
-        this.#handler.handleUpgrade(request, socket, head, (ws, request) => {
-          this.#handler.emit('connection', ws, request);
-        });
-      })
-      .catch(() => {
-        socket.write(
-          `HTTP/1.1 ${HTTP_STATUS_CODES.UNAUTHORIZED}\r\n\r\n`,
-          (error) => {
-            if (error) {
-              this.#logger.error('Authentication error:', error);
-            }
-            socket.destroy();
-          },
-        );
-      })
-      .finally(() => {
-        socket.removeListener('error', this.#socketErrorEventHandler);
-      });
-  };
+    await this.#authentication.verifyWebsocketAuthentication(
+      authenticationHeader,
+    );
+    this.#handler.handleUpgrade(request, socket, head, (websocket, request) => {
+      this.#handler.emit('connection', websocket, request);
+    });
+  }
 
-  readonly #socketErrorEventHandler = (error: Error) => {
-    this.#logger.error('Unexpected socket error:', error);
-  };
-
-  readonly #connectionEventHandler = (
-    ws: WebSocket,
-    request: IncomingMessage,
-  ) => {
+  #connectionEventHandler(websocket: WebSocket, request: IncomingMessage) {
     // At this stage, the token exists and is authenticated
     const userId = this.#authentication.getUserId(
       this.#parseAuthenticationHeader(request),
     );
-    const handler = new Websocket({ ws, id: userId, logger: this.#logger });
+    const handler = new Websocket({
+      websocket,
+      pingTime: this.#pingTime,
+      logger: this.#logger,
+    });
 
-    const wss = this.#clients.get(userId);
-    if (!wss) {
+    const websockets = this.#clients.get(userId);
+    if (!websockets) {
       this.#clients.set(userId, [handler]);
     } else {
-      wss.push(handler);
+      websockets.push(handler);
     }
-  };
+  }
 }
 
 /**********************************************************************************/

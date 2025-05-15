@@ -20,7 +20,7 @@ function router(fileManager: FileManager) {
     .put(
       '/movies/:movie_id',
       json({ limit: '4mb' }),
-      fileManager.multipleFiles('poster'),
+      fileManager.singleFile('poster'),
       movieController.updateMovie,
     )
     .delete('/movies/:movie_id', movieController.deleteMovie);

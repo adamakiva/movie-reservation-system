@@ -5,8 +5,8 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
-DATABASE_DATA_DIR="$ROOT_DIR"/dev-data/pg;
-MESSAGE_QUEUE_DATA_DIR="$ROOT_DIR"/dev-data/rbmq;
+DATABASE_DATA_DIR="$ROOT_DIR"/dev-data/postgres;
+MESSAGE_QUEUE_DATA_DIR="$ROOT_DIR"/dev-data/rabbitmq;
 MOVIE_POSTERS_DIR="$ROOT_DIR/server/posters";
 NPM_SERVER_CACHE_DIR="$ROOT_DIR"/npm-cache/server;
 NPM_WORKER_CACHE_DIR="$ROOT_DIR"/npm-cache/worker;

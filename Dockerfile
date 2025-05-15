@@ -1,4 +1,4 @@
-FROM postgres:17.4-alpine AS pg
+FROM postgres:17.5-alpine AS postgres
 
 COPY ./configs/postgresql.conf /etc/postgresql.conf
 COPY ./scripts/init.databases.sh /docker-entrypoint-initdb.d/init.databases.sh
@@ -7,9 +7,9 @@ CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 
 ####################################################################################
 
-FROM rabbitmq:4.1.0-management-alpine AS rbmq
+FROM rabbitmq:4.1.0-management-alpine AS rabbitmq
 
-COPY ./configs/rbmq.definitions.json /etc/rabbitmq/rbmq.definitions.json
+COPY ./configs/rabbitmq.definitions.json /etc/rabbitmq/rabbitmq.definitions.json
 
 ####################################################################################
 

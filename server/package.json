@@ -8,12 +8,12 @@
     "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
     "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --dest ./src/tests/.clinic --open=false --on-port 'node ./src/tests/stress/index.ts' -- node ./src/tests/stress/server.ts",
-    "lint": "eslint src/**/*.ts; tsc --project tsconfig.json",
+    "lint": "eslint 'src/**/*.ts'; tsc --project tsconfig.json",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "commit-local-updates": "ncu -u",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
     "check-licenses": "nlf -d -r 1",
-    "build": "eslint src/**/*.ts && tsc --build --verbose tsconfig.prod.json"
+    "build": "eslint 'src/**/*.ts' && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
     "@adamakiva/movie-reservation-system-message-queue": "0.0.0",
@@ -24,36 +24,36 @@
     "drizzle-orm": "~0.43.1",
     "express": "~5.1.0",
     "file-type": "~20.5.0",
-    "jose": "~6.0.10",
+    "jose": "~6.0.11",
     "multer": "~1.4.5-lts.2",
     "postgres": "~3.4.5",
     "rabbitmq-client": "~5.0.4",
     "ws": "~8.18.2",
-    "zod": "~3.24.3"
+    "zod": "~3.24.4"
   },
   "devDependencies": {
-    "@types/autocannon": "~7.12.6",
+    "@types/autocannon": "~7.12.7",
     "@types/compression": "~1.7.5",
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
     "@types/express": "~5.0.1",
-    "@types/node": "~22.15.3",
+    "@types/node": "~22.15.18",
     "@types/multer": "~1.4.12",
     "@types/ws": "~8.18.1",
     "autocannon": "~8.0.0",
     "clinic": "~13.0.0",
     "dpdm": "~3.14.0",
-    "drizzle-kit": "~0.31.0",
+    "drizzle-kit": "~0.31.1",
     "eslint": "~9.26.0",
-    "eslint-config-prettier": "~10.1.2",
+    "eslint-config-prettier": "~10.1.5",
     "eslint-plugin-security": "~3.0.1",
-    "globals": "~16.0.0",
+    "globals": "~16.1.0",
     "nlf": "~2.1.1",
     "node-mocks-http": "~1.17.2",
     "npm-check-updates": "~18.0.1",
     "prettier": "~3.5.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "~8.31.1"
+    "typescript-eslint": "~8.32.1"
   },
   "engines": {
     "node": ">=22"

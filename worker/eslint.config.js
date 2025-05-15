@@ -73,7 +73,6 @@ export default tslint.config({
     'no-sparse-arrays': 'error',
     'no-template-curly-in-string': 'error',
     'no-this-before-super': 'error',
-    'no-undef': 'error',
     'no-unexpected-multiline': 'error',
     'no-unmodified-loop-condition': 'error',
     'no-unreachable': 'error',
@@ -101,7 +100,6 @@ export default tslint.config({
     eqeqeq: 'error',
     'guard-for-in': 'error',
     // 'init-declarations': ['error', 'always'], // Uncomment if using javascript
-    'max-classes-per-file': 'error',
     'max-depth': ['error', 4],
     // 'max-params': ['error', { max: 4 }], // Uncomment if using javascript
     // 'no-array-constructor': 'error', // Uncomment if using javascript
@@ -150,7 +148,6 @@ export default tslint.config({
     'no-useless-escape': 'error',
     'no-useless-rename': 'error',
     'no-useless-return': 'error',
-    'no-void': 'error',
     'no-with': 'error',
     'prefer-const': 'error',
     // 'prefer-destructuring': ['error', { array: false, object: true }], // Uncomment if using javascript
@@ -213,7 +210,6 @@ export default tslint.config({
     // Note: you must disable the base rule as it can report incorrect errors
     'no-empty-function': 'off',
     '@typescript-eslint/no-empty-function': 'error',
-    '@typescript-eslint/no-empty-object-type': 'error',
     '@typescript-eslint/no-explicit-any': 'error',
     '@typescript-eslint/no-extra-non-null-assertion': 'error',
     '@typescript-eslint/no-extraneous-class': 'error',
@@ -230,7 +226,12 @@ export default tslint.config({
     '@typescript-eslint/no-loop-func': 'error',
     '@typescript-eslint/no-meaningless-void-operator': 'error',
     '@typescript-eslint/no-misused-new': 'error',
-    '@typescript-eslint/no-misused-promises': 'error',
+    // Disables checking an asynchronous function returned in a function whose return type is a function that returns `void`.
+    // Mainly used for async event handlers
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      { checksVoidReturn: { returns: false } },
+    ],
     '@typescript-eslint/no-mixed-enums': 'error',
     '@typescript-eslint/no-namespace': 'error',
     '@typescript-eslint/no-non-null-asserted-nullish-coalescing': 'error',
@@ -307,7 +308,6 @@ export default tslint.config({
     '@security/detect-eval-with-expression': 'error',
     '@security/detect-new-buffer': 'error',
     '@security/detect-no-csrf-before-method-override': 'error',
-    '@security/detect-non-literal-fs-filename': 'error',
     '@security/detect-non-literal-regexp': 'error',
     '@security/detect-non-literal-require': 'error',
     // Note: The reason this rule is turned off is because

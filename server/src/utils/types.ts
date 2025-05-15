@@ -7,7 +7,7 @@ import type {
   FileManager,
 } from '../server/services/index.ts';
 
-import type { Logger, LogMiddleware } from './logger.ts';
+import type { Logger } from './logger.ts';
 
 /********************************** Http ******************************************/
 
@@ -51,7 +51,6 @@ type PaginatedResult<T = unknown> = T & { page: Pagination };
 export type {
   DatabaseHandler,
   DatabaseModel,
-  LogMiddleware,
   PaginatedResult,
   Pagination,
   RequestContext,

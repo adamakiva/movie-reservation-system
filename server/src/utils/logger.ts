@@ -2,17 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**********************************************************************************/
 
-type LogMiddleware = ReturnType<Logger['getLogMiddleware']>;
-
-/**********************************************************************************/
-
 class Logger {
-  readonly #boundLogMiddleware;
-
-  public constructor() {
-    this.#boundLogMiddleware = this.#logMiddleware.bind(this);
-  }
-
   public debug(...args: unknown[]) {
     console.debug(...args);
   }
@@ -33,19 +23,17 @@ class Logger {
     console.error(...args);
   }
 
-  public getLogMiddleware() {
-    return this.#boundLogMiddleware;
-  }
-
-  /********************************************************************************/
-
-  #logMiddleware(_request: Request, _response: Response, next: NextFunction) {
+  public logMiddleware = (
+    _request: Request,
+    _response: Response,
+    next: NextFunction,
+  ) => {
     this.log('PH');
 
     next();
-  }
+  };
 }
 
 /**********************************************************************************/
 
-export { Logger, type LogMiddleware };
+export { Logger };

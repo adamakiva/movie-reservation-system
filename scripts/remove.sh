@@ -5,8 +5,8 @@ GID=$(id -g);
 
 ROOT_DIR=$(realpath "$(dirname "$0")/..");
 
-DATABASE_DATA_DIR="$ROOT_DIR"/dev-data;
-MESSAGE_QUEUE_DATA_DIR="$ROOT_DIR"/dev-data/rbmq;
+DATABASE_DATA_DIR="$ROOT_DIR"/dev-data/postgres;
+MESSAGE_QUEUE_DATA_DIR="$ROOT_DIR"/dev-data/rabbitmq;
 MOVIE_POSTERS_DIR="$ROOT_DIR"/server/posters;
 CLINIC_DIR="$ROOT_DIR"/server/src/tests/.clinic;
 

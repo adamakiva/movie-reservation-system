@@ -113,13 +113,9 @@ await suite('Middleware tests', async () => {
       logger,
     });
 
-    const httpAuthenticationMiddlewareSpy = context.mock
-      .fn(authentication.httpAuthenticationMiddleware)
-      .bind(authentication);
-
     await assert.rejects(
       async () => {
-        await httpAuthenticationMiddlewareSpy()(
+        await authentication.httpAuthenticationMiddleware(
           request,
           response,
           context.mock.fn(),
@@ -144,13 +140,9 @@ await suite('Middleware tests', async () => {
       },
     });
 
-    const httpAuthenticationMiddlewareSpy = context.mock
-      .fn(authentication.httpAuthenticationMiddleware)
-      .bind(authentication);
-
     await assert.rejects(
       async () => {
-        await httpAuthenticationMiddlewareSpy()(
+        await authentication.httpAuthenticationMiddleware(
           request,
           response,
           context.mock.fn(),

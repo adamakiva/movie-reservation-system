@@ -17,23 +17,21 @@ import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 
-/**
- * Custom multer storage, see: https://github.com/expressjs/multer/blob/master/StorageEngine.md
- */
+const ALPHA_NUMERIC = {
+  CHARACTERS:
+    'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+  LENGTH: 67,
+} as const;
+
+/**********************************************************************************/
+
 class FileManager implements StorageEngine {
   readonly #generatedFileNameLength;
   readonly #saveDir;
-  readonly #highWatermark;
   readonly #pipeTimeout;
   readonly #logger;
 
   readonly #uploadMiddleware;
-
-  static readonly #ALPHA_NUMERIC = {
-    CHARACTERS:
-      'ABCDEABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-    LENGTH: 67,
-  } as const;
 
   public constructor(params: {
     generatedFileNameLength: number;
@@ -43,18 +41,11 @@ class FileManager implements StorageEngine {
     logger: Logger;
     limits?: Options['limits'];
   }) {
-    const {
-      generatedFileNameLength,
-      saveDir,
-      highWatermark,
-      pipeTimeout,
-      logger,
-      limits,
-    } = params;
+    const { generatedFileNameLength, saveDir, pipeTimeout, logger, limits } =
+      params;
 
     this.#generatedFileNameLength = generatedFileNameLength;
     this.#saveDir = saveDir;
-    this.#highWatermark = highWatermark;
     this.#pipeTimeout = pipeTimeout;
     this.#logger = logger;
 
@@ -65,21 +56,13 @@ class FileManager implements StorageEngine {
     return this.#uploadMiddleware.single(...params);
   }
 
-  public multipleFiles(...params: Parameters<Multer['array']>) {
-    return this.#uploadMiddleware.array(...params);
-  }
-
   public streamFile(dest: Writable, absolutePath: PathLike) {
-    // This path is provided by the program, not the end-user
-    // eslint-disable-next-line @security/detect-non-literal-fs-filename
-    const readStream = createReadStream(absolutePath, {
-      highWaterMark: this.#highWatermark,
-    });
-
     const { signal, timeoutHandler } = registerAbortController(
       this.#pipeTimeout,
       'Timeout',
     );
+    const readStream = createReadStream(absolutePath, { signal });
+
     return pipeline(readStream, dest, { signal })
       .catch((error: unknown) => {
         if (isSystemCallError(error) && error.code === 'ENOENT') {
@@ -108,8 +91,6 @@ class FileManager implements StorageEngine {
       return Promise.resolve();
     }
 
-    // This path is provided by the program, not the end-user
-    // eslint-disable-next-line @security/detect-non-literal-fs-filename
     return unlink(absolutePath);
   }
 
@@ -129,16 +110,13 @@ class FileManager implements StorageEngine {
 
         const filename = this.#generateFileName();
         file.path = join(this.#saveDir, `${filename}.${extension}`);
-        // This path is provided by the program, not the end-user
-        // eslint-disable-next-line @security/detect-non-literal-fs-filename
-        const outStream = createWriteStream(file.path, {
-          highWaterMark: this.#highWatermark,
-        });
 
         const { signal, timeoutHandler } = registerAbortController(
           this.#pipeTimeout,
           'Timeout',
         );
+        const outStream = createWriteStream(file.path, { signal });
+
         return pipeline(fileStreamWithFileType, outStream, { signal })
           .then(() => {
             callback(null, {
@@ -185,14 +163,10 @@ class FileManager implements StorageEngine {
   /********************************************************************************/
 
   #generateFileName() {
-    return this.#randomAlphaNumericString(this.#generatedFileNameLength);
-  }
-
-  #randomAlphaNumericString(len = 32) {
     let str = '';
-    for (let i = 0; i < len; ++i) {
-      str += FileManager.#ALPHA_NUMERIC.CHARACTERS.charAt(
-        Math.floor(Math.random() * FileManager.#ALPHA_NUMERIC.LENGTH),
+    for (let i = 0; i < this.#generatedFileNameLength; ++i) {
+      str += ALPHA_NUMERIC.CHARACTERS.charAt(
+        Math.floor(Math.random() * ALPHA_NUMERIC.LENGTH),
       );
     }
 
