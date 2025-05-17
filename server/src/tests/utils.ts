@@ -172,7 +172,7 @@ async function createServer() {
       generatedFileNameLength: 32,
       saveDir: tmpdir(),
       highWatermark: nodeEnv.defaultHighWaterMark,
-      pipeTimeout: 16_000,
+      pipeTimeout: nodeEnv.pipeTimeout,
       limits: {
         fileSize: 4_194_304, // 4mb
         files: 1, // Currently only 1 file is expected, change if needed
@@ -182,15 +182,17 @@ async function createServer() {
       moviePosterCleanupParams: {
         directory: tmpdir(),
         retryInterval: 2_000,
-        retryLimit: 5,
+        retryLimit: 3,
       },
     },
     messageQueueParams: messageQueueEnv,
     websocketServerParams: {
       path: `/${websocketServerEnv.route}`,
       pingTime: websocketServerEnv.pingTime,
-      backlog: websocketServerEnv.backlog,
-      maxPayload: websocketServerEnv.maxPayload,
+      options: {
+        backlog: websocketServerEnv.backlog,
+        maxPayload: websocketServerEnv.maxPayload,
+      },
     },
     allowedMethods: httpServerEnv.allowedMethods,
     routes: {
@@ -217,13 +219,6 @@ async function createServer() {
       websocket: `${baseUrl}/${websocketServerEnv.route}`,
     },
     logger,
-  } as const;
-}
-
-function getAdminRole() {
-  return {
-    id: process.env.ADMIN_ROLE_ID!,
-    name: process.env.ADMIN_ROLE_NAME!,
   } as const;
 }
 
@@ -364,11 +359,11 @@ async function sendHttpRequest<
 }
 
 function createWebsocketClient(
-  wsRoute: ServerParams['routes']['websocket'],
+  websocketRoute: ServerParams['routes']['websocket'],
   accessToken: string,
 ) {
   return new WebSocket(
-    `${wsRoute}?auth_token=${Buffer.from(accessToken).toString('base64')}`,
+    `${websocketRoute}?auth_token=${Buffer.from(accessToken).toString('base64')}`,
   );
 }
 
@@ -376,10 +371,8 @@ async function getAdminTokens(httpRoute: ServerParams['routes']['http']) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  const tokens = (await generateTokens({ httpRoute, email, password })) as {
-    accessToken: string;
-    refreshToken: string;
-  };
+  const tokens: { accessToken: string; refreshToken: string } =
+    await generateTokens({ httpRoute, email, password });
 
   return tokens;
 }
@@ -905,12 +898,12 @@ async function checkUserPassword(params: {
 /**********************************************************************************/
 /********************************** Mocks *****************************************/
 
-function emptyFunction() {
-  // On purpose
-}
-
 function mockLogger() {
   const logger = new Logger();
+
+  function emptyFunction() {
+    // On purpose
+  }
 
   (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
     mock.method(logger, level, emptyFunction);
@@ -971,7 +964,6 @@ export {
   generateTokens,
   generateUsersData,
   GENRE,
-  getAdminRole,
   getAdminTokens,
   HALL,
   HTTP_STATUS_CODES,

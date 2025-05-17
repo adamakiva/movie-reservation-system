@@ -9,7 +9,7 @@ import type {
 } from '../../../utils/types.ts';
 
 import {
-  handleUserUpdateError,
+  userUpdateError,
   type UpdateUserValidatedData,
   type User,
 } from './utils.ts';
@@ -60,7 +60,7 @@ async function updateUser(
   } catch (error) {
     // The fields are asserted because if their error fields match, they will
     // be defined
-    throw handleUserUpdateError({
+    throw userUpdateError({
       error,
       email: userToUpdate.email!,
       role: userToUpdate.roleId!,

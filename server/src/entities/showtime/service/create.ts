@@ -10,8 +10,8 @@ import type {
 } from '../../../utils/types.ts';
 
 import {
-  handlePossibleShowtimeCreationError,
-  handlePossibleTicketDuplicationError,
+  possibleShowtimeCreationError,
+  possibleTicketDuplicationError,
   type CreateShowtimeValidatedData,
   type ReserveShowtimeTicketValidatedData,
   type Showtime,
@@ -53,7 +53,7 @@ async function createShowtime(
 
     return { ...createdShowtime!, reservations: [] };
   } catch (error) {
-    throw handlePossibleShowtimeCreationError({
+    throw possibleShowtimeCreationError({
       error,
       at: showtimeToCreate.at,
       hall: showtimeToCreate.hallId,
@@ -162,7 +162,7 @@ async function reserveShowtimeTicket(params: {
         },
       });
     } catch (error) {
-      throw handlePossibleTicketDuplicationError({
+      throw possibleTicketDuplicationError({
         error,
         row: showtimeTicket.row,
         column: showtimeTicket.column,

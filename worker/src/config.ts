@@ -30,7 +30,12 @@ class EnvironmentManager {
       },
     } as const;
 
-    this.#setGlobalValues();
+    this.#setGlobalValues(
+      this.#toNumber(
+        'NODE_DEFAULT_HIGH_WATERMARK',
+        process.env.NODE_DEFAULT_HIGH_WATERMARK,
+      )!,
+    );
   }
 
   public getEnvVariables() {
@@ -69,15 +74,9 @@ class EnvironmentManager {
     return valueAsNumber;
   }
 
-  #setGlobalValues() {
-    const defaultHighWaterMark = this.#toNumber(
-      'NODE_DEFAULT_HIGH_WATERMARK',
-      process.env.NODE_DEFAULT_HIGH_WATERMARK,
-    )!;
-
+  #setGlobalValues(defaultHighWaterMark: number) {
     // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
     Stream.EventEmitter.captureRejections = true;
-
     // Set the default high water mark for Readable/Writeable streams
     Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
   }

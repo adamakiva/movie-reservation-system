@@ -9,7 +9,7 @@ import type {
 } from '../../../utils/types.ts';
 
 import {
-  handlePossibleMissingGenreError,
+  possibleMissingGenreError,
   type Movie,
   type UpdateMovieValidatedData,
 } from './utils.ts';
@@ -61,7 +61,7 @@ async function updateMovie(
     return updatedMovie;
   } catch (error) {
     // Genre type is asserted because if the error type match, it will be defined
-    throw handlePossibleMissingGenreError(error, movieToUpdate.genreId!);
+    throw possibleMissingGenreError(error, movieToUpdate.genreId!);
   }
 }
 

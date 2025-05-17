@@ -5,10 +5,10 @@ import {
 import type pg from 'postgres';
 
 import {
-  GeneralError,
   isDatabaseError,
-  isError,
-} from '../../../utils/errors.ts';
+  isForeignKeyViolationError,
+} from '../../../database/index.ts';
+import { GeneralError, isError } from '../../../utils/errors.ts';
 
 import type {
   validateCreateUser,
@@ -34,7 +34,7 @@ type User = {
   role: string;
 };
 
-function handleUserCreationError(params: {
+function userCreationError(params: {
   error: unknown;
   email: string;
   role: string;
@@ -69,12 +69,12 @@ function handleUserCreationError(params: {
   }
 }
 
-function handleUserUpdateError(params: {
+function userUpdateError(params: {
   error: unknown;
   email: string;
   role: string;
 }) {
-  return handleUserCreationError(params);
+  return userCreationError(params);
 }
 
 function handleForeignKeyNotFoundError(params: {
@@ -100,33 +100,30 @@ function handleForeignKeyNotFoundError(params: {
   );
 }
 
-function handlePossibleForeignKeyError(error: unknown, user: string) {
+function possibleForeignKeyError(error: unknown, user: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
-  ) {
-    return error;
+  if (isForeignKeyViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.CONFLICT,
+      `User '${user}' has one or more showtime(s) attached and can't be removed`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.CONFLICT,
-    `User '${user}' has one or more showtime(s) attached and can't be removed`,
-    error.cause,
-  );
+  return error;
 }
 
 /**********************************************************************************/
 
 export {
-  handlePossibleForeignKeyError,
-  handleUserCreationError,
-  handleUserUpdateError,
+  possibleForeignKeyError,
+  userCreationError,
+  userUpdateError,
   type CreateUserValidatedData,
   type DeleteUserValidatedData,
   type GetUsersValidatedData,

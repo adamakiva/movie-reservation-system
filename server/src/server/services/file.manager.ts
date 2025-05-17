@@ -52,7 +52,7 @@ class FileManager implements StorageEngine {
     this.#uploadMiddleware = multer({ storage: this, limits });
   }
 
-  public singleFile(...params: Parameters<Multer['single']>) {
+  public processSingleFileMiddleware(...params: Parameters<Multer['single']>) {
     return this.#uploadMiddleware.single(...params);
   }
 
@@ -67,7 +67,7 @@ class FileManager implements StorageEngine {
       .catch((error: unknown) => {
         if (isSystemCallError(error) && error.code === 'ENOENT') {
           // Means that 'absolutePath' does not exist, which should be impossible
-          // considering the programmer set the value
+          // considering the programmer should have set the value
           this.#logger.error(
             `File: '${absolutePath}' does not exist. Should not be possible:`,
             error,
@@ -84,14 +84,6 @@ class FileManager implements StorageEngine {
       .finally(() => {
         clearTimeout(timeoutHandler);
       });
-  }
-
-  public deleteFile(absolutePath?: PathLike) {
-    if (!absolutePath) {
-      return Promise.resolve();
-    }
-
-    return unlink(absolutePath);
   }
 
   public _handleFile(...params: Parameters<StorageEngine['_handleFile']>) {
@@ -147,7 +139,7 @@ class FileManager implements StorageEngine {
   public _removeFile(...params: Parameters<StorageEngine['_removeFile']>) {
     const [, file, callback] = params;
 
-    this.deleteFile(file.path)
+    this.#deleteFile(file.path)
       .then(() => {
         callback(null);
       })
@@ -161,6 +153,15 @@ class FileManager implements StorageEngine {
   }
 
   /********************************************************************************/
+
+  async #deleteFile(absolutePath?: PathLike) {
+    if (!absolutePath) {
+      await Promise.resolve();
+      return;
+    }
+
+    await unlink(absolutePath);
+  }
 
   #generateFileName() {
     let str = '';

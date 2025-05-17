@@ -6,7 +6,6 @@ import {
   clearDatabase,
   CONSTANTS,
   generateRandomUserData,
-  getAdminRole,
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
@@ -28,6 +27,13 @@ import {
 /**********************************************************************************/
 
 const { SINGLE_PAGE, MULTIPLE_PAGES, LOT_OF_PAGES } = CONSTANTS;
+
+function getAdminRole() {
+  return {
+    id: process.env.ADMIN_ROLE_ID!,
+    name: process.env.ADMIN_ROLE_NAME!,
+  } as const;
+}
 
 /**********************************************************************************/
 

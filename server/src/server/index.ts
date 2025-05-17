@@ -108,17 +108,12 @@ class HttpServer {
       logger,
     });
 
-    // The order matters
-    self.#attachServerConfigurations(httpServerConfigurations);
-    self.#attachRoutesMiddlewares(app);
-
-    return self;
+    return self
+      .#attachServerConfigurations(httpServerConfigurations)
+      .#attachRoutesMiddlewares(app);
   }
 
   public async listen(port?: number) {
-    // This function await for the async listen to emit the listening event before
-    // returning. In addition it allows to listen to the server on a dynamic port
-    // and returns it (used by the tests to run another server instance)
     const actualPort = await new Promise<number>((resolve) => {
       this.#server.once('listening', () => {
         // Can be asserted since this is not a unix socket and we are inside
@@ -219,8 +214,6 @@ class HttpServer {
 
       await this.close();
 
-      // If an http server error happened, we shutdown the application with status
-      // code that indicates that a server restart should happen
       process.exit(ERROR_CODES.EXIT_RESTART);
     });
     this.#routes = routes;
@@ -242,73 +235,74 @@ class HttpServer {
   ) {
     const { concurrency, prefetchCount } = consumerOptions;
 
-    this.#messageQueue.createPublishers({
-      ticket: {
-        confirm: true,
-        maxAttempts: 32,
-        routing: [
-          {
-            exchange: 'mrs',
-            queue: 'mrs.ticket.reserve',
-            routingKey: 'mrs-ticket-reserve',
-          },
-          {
-            exchange: 'mrs',
-            queue: 'mrs.ticket.cancel',
-            routingKey: 'mrs-ticket-cancel',
-          },
-        ],
-      },
-      showtime: {
-        confirm: true,
-        maxAttempts: 32,
-        routing: [
-          {
-            exchange: 'mrs',
-            queue: 'mrs.showtime.cancel',
-            routingKey: 'mrs-showtime-cancel',
-          },
-        ],
-      },
-    });
-    this.#messageQueue.createConsumer({
-      concurrency,
-      qos: { prefetchCount },
-      routing: {
-        exchange: 'mrs',
-        queue: 'mrs.ticket.reserve.reply.to',
-        routingKey: 'mrs-ticket-reserve-reply-to',
-      },
-      handler: reserveShowtimeTicket({
-        database: this.#database,
-        websocketServer: this.#websocketServer,
-        logger: this.#logger,
-      }),
-    });
-    this.#messageQueue.createConsumer({
-      concurrency,
-      qos: { prefetchCount },
-      routing: {
-        exchange: 'mrs',
-        queue: 'mrs.ticket.cancel.reply.to',
-        routingKey: 'mrs-ticket-cancel-reply-to',
-      },
-      handler: cancelShowtimeReservations({
-        database: this.#database,
-        websocketServer: this.#websocketServer,
-        logger: this.#logger,
-      }),
-    });
-    this.#messageQueue.createConsumer({
-      concurrency,
-      qos: { prefetchCount },
-      routing: {
-        exchange: 'mrs',
-        queue: 'mrs.showtime.cancel.reply.to',
-        routingKey: 'mrs-showtime-cancel-reply-to',
-      },
-      handler: cancelShowtime(this.#database),
-    });
+    this.#messageQueue
+      .createPublishers({
+        ticket: {
+          confirm: true,
+          maxAttempts: 32,
+          routing: [
+            {
+              exchange: 'mrs',
+              queue: 'mrs.ticket.reserve',
+              routingKey: 'mrs-ticket-reserve',
+            },
+            {
+              exchange: 'mrs',
+              queue: 'mrs.ticket.cancel',
+              routingKey: 'mrs-ticket-cancel',
+            },
+          ],
+        },
+        showtime: {
+          confirm: true,
+          maxAttempts: 32,
+          routing: [
+            {
+              exchange: 'mrs',
+              queue: 'mrs.showtime.cancel',
+              routingKey: 'mrs-showtime-cancel',
+            },
+          ],
+        },
+      })
+      .createConsumer({
+        concurrency,
+        qos: { prefetchCount },
+        routing: {
+          exchange: 'mrs',
+          queue: 'mrs.ticket.reserve.reply.to',
+          routingKey: 'mrs-ticket-reserve-reply-to',
+        },
+        handler: reserveShowtimeTicket({
+          database: this.#database,
+          websocketServer: this.#websocketServer,
+          logger: this.#logger,
+        }),
+      })
+      .createConsumer({
+        concurrency,
+        qos: { prefetchCount },
+        routing: {
+          exchange: 'mrs',
+          queue: 'mrs.ticket.cancel.reply.to',
+          routingKey: 'mrs-ticket-cancel-reply-to',
+        },
+        handler: cancelShowtimeReservations({
+          database: this.#database,
+          websocketServer: this.#websocketServer,
+          logger: this.#logger,
+        }),
+      })
+      .createConsumer({
+        concurrency,
+        qos: { prefetchCount },
+        routing: {
+          exchange: 'mrs',
+          queue: 'mrs.showtime.cancel.reply.to',
+          routingKey: 'mrs-showtime-cancel-reply-to',
+        },
+        handler: cancelShowtime(this.#database),
+      });
   }
 
   #attachServerConfigurations(
@@ -341,6 +335,8 @@ class HttpServer {
     // As for a good number, it depends on the application traffic
     this.#server.maxRequestsPerSocket = maxRequestsPerSocket;
     this.#server.keepAliveTimeout = keepAliveTimeout;
+
+    return this;
   }
 
   #attachRoutesMiddlewares(app: Express) {
@@ -363,6 +359,8 @@ class HttpServer {
         routers.showtimeRouter,
       )
       .use('/', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
+
+    return this;
   }
 }
 

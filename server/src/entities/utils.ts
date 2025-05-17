@@ -13,15 +13,15 @@ import { GeneralError } from '../utils/errors.ts';
 
 const VALIDATION = {
   BODY: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Request body should be an object',
+    INVALID_TYPE_ERROR_MESSAGE: 'Request body must be an object',
     REQUIRED_ERROR_MESSAGE: 'Request must have a body',
   },
   PARAMS: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Request params should be an object',
+    INVALID_TYPE_ERROR_MESSAGE: 'Request params must be an object',
     REQUIRED_ERROR_MESSAGE: 'Request must have params',
   },
   QUERY: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Request query should be an object',
+    INVALID_TYPE_ERROR_MESSAGE: 'Request query must be an object',
     REQUIRED_ERROR_MESSAGE: 'Request must have query params',
   },
   PAGINATION: {
@@ -54,7 +54,7 @@ const VALIDATION = {
 
 const { PAGINATION } = VALIDATION;
 
-/****************************** Schemas *******************************************/
+/********************************** Schemas ***************************************/
 
 const CURSOR_SCHEMA = zod.object({
   id: zod

@@ -1,13 +1,10 @@
-import {
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-} from '@adamakiva/movie-reservation-system-shared';
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 
 import {
-  GeneralError,
-  isDatabaseError,
-  isError,
-} from '../../../utils/errors.ts';
+  isForeignKeyViolationError,
+  isUniqueViolationError,
+} from '../../../database/index.ts';
+import { GeneralError, isError } from '../../../utils/errors.ts';
 
 import type {
   validateCreateRole,
@@ -28,53 +25,47 @@ type Role = {
 
 /**********************************************************************************/
 
-function handlePossibleDuplicationError(error: unknown, role: string) {
+function possibleDuplicationError(error: unknown, role: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
-  ) {
-    return error;
+  if (isUniqueViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.CONFLICT,
+      `Role '${role}' already exists`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.CONFLICT,
-    `Role '${role}' already exists`,
-    error.cause,
-  );
+  return error;
 }
 
-function handlePossibleForeignKeyError(error: unknown, role: string) {
+function possibleForeignKeyError(error: unknown, role: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
-  ) {
-    return error;
+  if (isForeignKeyViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.CONFLICT,
+      `Role '${role}' has one or more user(s) attached and can't be removed`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.CONFLICT,
-    `Role '${role}' has one or more user(s) attached and can't be removed`,
-    error.cause,
-  );
+  return error;
 }
 
 /**********************************************************************************/
 
 export {
-  handlePossibleDuplicationError,
-  handlePossibleForeignKeyError,
+  possibleDuplicationError,
+  possibleForeignKeyError,
   type CreateRoleValidatedData,
   type DeleteRoleValidatedData,
   type Role,

@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import pg from 'postgres';
@@ -34,7 +35,7 @@ class Database {
     this.#isAliveQuery = isAliveQuery;
     this.#isReadyQuery = isReadyQuery;
 
-    const connection = pg(url, options ?? {});
+    const connection = pg(url, options);
     this.#handler = drizzle(connection, {
       schema: schemas,
       logger: new DatabaseLogger([isAliveQuery, isReadyQuery] as const, logger),
@@ -79,6 +80,29 @@ class Database {
   }
 }
 
+function isDatabaseError(obj: unknown): obj is pg.PostgresError {
+  return obj instanceof pg.PostgresError;
+}
+
+function isForeignKeyViolationError(error: unknown) {
+  return (
+    isDatabaseError(error) &&
+    error.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
+  );
+}
+
+function isUniqueViolationError(error: unknown) {
+  return (
+    isDatabaseError(error) &&
+    error.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+  );
+}
+
 /**********************************************************************************/
 
-export { Database };
+export {
+  Database,
+  isDatabaseError,
+  isForeignKeyViolationError,
+  isUniqueViolationError,
+};

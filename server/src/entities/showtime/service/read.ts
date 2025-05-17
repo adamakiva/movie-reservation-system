@@ -115,8 +115,6 @@ async function getUserShowtimes(
     .innerJoin(showtimeModel, eq(showtimeModel.id, userShowtime.showtimeId))
     .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
     .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
-    // +1 Will allow us to check if there is an additional page after the current
-    // one
     .limit(pageSize + 1)
     .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id));
 

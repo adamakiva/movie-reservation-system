@@ -85,6 +85,13 @@ class MessageQueue {
   readonly #handler;
   readonly #logger;
 
+  readonly #boundErrorEventHandler;
+  readonly #boundConnectionEventHandler;
+  readonly #boundBlockEventHandler;
+  readonly #boundUnblockedEventHandler;
+  readonly #boundUndeliveredMessageEventHandler;
+  readonly #boundConsumerErrorEventHandler;
+
   #publishers: { [key: string]: Publisher };
   readonly #consumers: Consumer[];
 
@@ -100,11 +107,20 @@ class MessageQueue {
     this.#isAlive = false;
     this.#isReady = false;
 
+    this.#boundErrorEventHandler = this.#errorEventHandler.bind(this);
+    this.#boundConnectionEventHandler = this.#connectionEventHandler.bind(this);
+    this.#boundBlockEventHandler = this.#blockEventHandler.bind(this);
+    this.#boundUnblockedEventHandler = this.#unblockedEventHandler.bind(this);
+    this.#boundUndeliveredMessageEventHandler =
+      this.#undeliveredMessageEventHandler.bind(this);
+    this.#boundConsumerErrorEventHandler =
+      this.#consumerErrorEventHandler.bind(this);
+
     this.#handler = new Connection(connectionOptions)
-      .on('error', this.#handleErrorEvent)
-      .on('connection', this.#handleConnectionEvent)
-      .on('connection.blocked', this.#handleBlockedEvent)
-      .on('connection.unblocked', this.#handleUnblockedEvent);
+      .on('error', this.#boundErrorEventHandler)
+      .on('connection', this.#boundConnectionEventHandler)
+      .on('connection.blocked', this.#boundBlockEventHandler)
+      .on('connection.unblocked', this.#boundUnblockedEventHandler);
 
     this.#logger = logger;
 
@@ -148,12 +164,14 @@ class MessageQueue {
               queues,
               queueBindings,
             })
-            .on('basic.return', this.#handleUndeliveredMessageEvent);
+            .on('basic.return', this.#boundUndeliveredMessageEventHandler);
 
           return [publisherName, publisher] as const;
         }),
       ),
     };
+
+    return this;
   }
 
   public createConsumer(
@@ -183,9 +201,11 @@ class MessageQueue {
         },
         handler,
       )
-      .on('error', this.#handleConsumerErrorEvent);
+      .on('error', this.#boundConsumerErrorEventHandler);
 
     this.#consumers.push(consumer);
+
+    return this;
   }
 
   public async publish(params: {
@@ -218,15 +238,13 @@ class MessageQueue {
     await Promise.allSettled(
       Object.values(this.#publishers).map((publisher) => {
         return publisher
+          .removeListener(
+            'basic-return',
+            this.#boundUndeliveredMessageEventHandler,
+          )
           .close()
-          .catch(() => {
-            // On purpose
-          })
-          .finally(() => {
-            publisher.removeListener(
-              'basic-return',
-              this.#handleUndeliveredMessageEvent,
-            );
+          .catch((error: unknown) => {
+            console.error('Failure to close publisher:', error);
           });
       }),
     );
@@ -234,65 +252,60 @@ class MessageQueue {
     await Promise.allSettled(
       this.#consumers.map((consumer) => {
         return consumer
+          .removeListener('error', this.#boundConsumerErrorEventHandler)
           .close()
-          .catch(() => {
-            // On purpose
-          })
-          .finally(() => {
-            consumer.removeListener('error', this.#handleConsumerErrorEvent);
+          .catch((error: unknown) => {
+            console.error('Failure to close consumer:', error);
           });
       }),
     );
 
     await this.#handler
+      .removeListener('connection.unblocked', this.#boundUnblockedEventHandler)
+      .removeListener('connection.blocked', this.#boundBlockEventHandler)
+      .removeListener('connection', this.#boundConnectionEventHandler)
+      .removeListener('error', this.#boundErrorEventHandler)
       .close()
-      .catch(() => {
-        // On purpose
-      })
-      .finally(() => {
-        this.#handler
-          .removeListener('connection.unblocked', this.#handleUnblockedEvent)
-          .removeListener('connection.blocked', this.#handleBlockedEvent)
-          .removeListener('connection', this.#handleConnectionEvent)
-          .removeListener('error', this.#handleErrorEvent);
+      .catch((error: unknown) => {
+        console.error('Failure to close message queue:', error);
       });
   }
 
   /********************************************************************************/
 
-  readonly #handleErrorEvent = (error: unknown) => {
+  #errorEventHandler(error: unknown) {
     this.#isAlive = false;
     this.#isReady = false;
 
     this.#logger.error('Error during message queue usage:', error);
-  };
+  }
 
-  readonly #handleConnectionEvent = () => {
+  #connectionEventHandler() {
     this.#isAlive = true;
     this.#isReady = true;
 
     this.#logger.info('Message queue (re)connected');
-  };
+  }
 
-  readonly #handleBlockedEvent = (reason: unknown) => {
+  #blockEventHandler(reason: unknown) {
     this.#isReady = false;
 
     this.#logger.error('Message queue is blocked', reason);
-  };
+  }
 
-  readonly #handleUnblockedEvent = () => {
+  #unblockedEventHandler() {
     this.#isReady = true;
 
     this.#logger.info('Message queue is unblocked');
-  };
+  }
 
-  readonly #handleUndeliveredMessageEvent = (message: ReturnedMessage) => {
+  #undeliveredMessageEventHandler(message: ReturnedMessage) {
     this.#logger.error('Message was not delivered:', message);
-  };
+  }
 
-  readonly #handleConsumerErrorEvent = (error: unknown) => {
+  #consumerErrorEventHandler(error: unknown) {
     this.#logger.error('Consumer error:', error);
-  };
+  }
 }
 
 /**********************************************************************************/

@@ -84,7 +84,7 @@ services:
       - WEBSOCKET_SERVER_BASE_URL=${WEBSOCKET_SERVER_BASE_URL:-ws/v0}
       - WEBSOCKET_SERVER_PING_TIME=${WEBSOCKET_SERVER_PING_TIME:-8000}
       - WEBSOCKET_SERVER_BACKLOG=${WEBSOCKET_SERVER_BACKLOG:-32}
-      - WEBSOCKET_SERVER_MAX_PAYLOAD=${WEBSOCKET_SERVER_MAX_PAYLOAD:-262144}  # 256kb
+      - WEBSOCKET_SERVER_MAX_PAYLOAD=${WEBSOCKET_SERVER_MAX_PAYLOAD:-262144}
       # Seed admin user data
       - ADMIN_ROLE_ID=${ADMIN_ROLE_ID:-4d9097e1-3821-46f0-b19f-a75c02de9cb6}
       - ADMIN_ROLE_NAME=${ADMIN_ROLE_NAME:-admin}
@@ -101,7 +101,7 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - NODE_MAX_SOCKETS=${NODE_MAX_SOCKETS:-512}
       - NODE_MAX_TOTAL_SOCKETS=${NODE_MAX_TOTAL_SOCKETS:-4096}
-      - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
+      - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}
       - NODE_PIPE_TIMEOUT=${NODE_PIPE_TIMEOUT:-16000}
       - NODE_OPTIONS=${NODE_OPTIONS:- --experimental-transform-types --stack-trace-limit=16 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --v8-pool-size=0 --max-semi-space-size=32}
       # libuv options
@@ -153,7 +153,7 @@ services:
       - MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT=${MESSAGE_QUEUE_CONSUMER_PREFETCH_COUNT:-8}
       # Node flags and options
       - NODE_ENV=${NODE_ENV:-production}
-      - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}  # 256kb
+      - NODE_DEFAULT_HIGH_WATERMARK=${NODE_DEFAULT_HIGH_WATERMARK:-262144}
       - NODE_OPTIONS=${NODE_OPTIONS:- --no-addons --experimental-transform-types --stack-trace-limit=16 --force-node-api-uncaught-exceptions-policy --enable-source-maps --trace-uncaught --v8-pool-size=0 --max-semi-space-size=32}
       # libuv options
       - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-1}

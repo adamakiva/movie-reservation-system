@@ -67,15 +67,17 @@ async function startServer() {
       moviePosterCleanupParams: {
         directory: join(import.meta.dirname, '..', 'posters'),
         retryInterval: 2_000,
-        retryLimit: 5,
+        retryLimit: 3,
       },
     },
     messageQueueParams: messageQueueEnv,
     websocketServerParams: {
       path: websocketServerEnv.route,
       pingTime: websocketServerEnv.pingTime,
-      backlog: websocketServerEnv.backlog,
-      maxPayload: websocketServerEnv.maxPayload,
+      options: {
+        backlog: websocketServerEnv.backlog,
+        maxPayload: websocketServerEnv.maxPayload,
+      },
     },
     allowedMethods: httpServerEnv.allowedMethods,
     routes: {
@@ -95,28 +97,29 @@ async function startServer() {
 function attachProcessHandlers(server: HttpServer, logger: Logger) {
   process
     .on('warning', logger.warn)
-    .once('unhandledRejection', (reason: unknown) => {
+    .once('unhandledRejection', async (reason: unknown) => {
       logger.error(`Unhandled rejection:`, reason);
-      closeServer(server, ERROR_CODES.EXIT_RESTART);
+      await closeServer(server, ERROR_CODES.EXIT_RESTART);
     })
-    .once('uncaughtException', (error: unknown) => {
+    .once('uncaughtException', async (error: unknown) => {
       logger.error(`Unhandled exception:`, error);
-      closeServer(server, ERROR_CODES.EXIT_RESTART);
+      await closeServer(server, ERROR_CODES.EXIT_RESTART);
     });
 
-  const signalHandler = () => {
-    closeServer(server, ERROR_CODES.EXIT_NO_RESTART);
+  const signalHandler = async () => {
+    await closeServer(server, ERROR_CODES.EXIT_NO_RESTART);
   };
   SIGNALS.forEach((signal) => {
     process.once(signal, signalHandler);
   });
 }
 
-function closeServer(server: HttpServer, code: number) {
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  server.close().finally(() => {
+async function closeServer(server: HttpServer, code: number) {
+  try {
+    await server.close();
+  } finally {
     process.exit(code);
-  });
+  }
 }
 
 /**********************************************************************************/

@@ -34,6 +34,7 @@ class Cronjob {
     this.#database = database;
     this.#logger = logger;
     this.#moviePosterCleanupParams = moviePosterCleanupParams;
+
     this.#moviePosterCleanupJob = CronJob.from({
       cronTime: '00 00 00 * * *',
       name: 'Movie posters cleanup',
@@ -50,6 +51,44 @@ class Cronjob {
 
     await this.#moviePosterCleanupJob.stop();
   }
+
+  readonly #moviePosterCleanup = async () => {
+    const { directory, retryInterval, retryLimit } =
+      this.#moviePosterCleanupParams;
+
+    const posterPaths = (await readdir(directory, { withFileTypes: true }))
+      .filter((element) => {
+        return !element.isDirectory();
+      })
+      .map((element) => {
+        return join(directory, element.name);
+      });
+
+    const handler = this.#database.getHandler();
+    const { moviePoster: moviePosterModel } = this.#database.getModels();
+
+    const unusedMoviePosters = await handler
+      .select({ path: moviePosterModel.absolutePath })
+      .from(moviePosterModel)
+      .where(notInArray(moviePosterModel.absolutePath, posterPaths));
+
+    const results = await Promise.allSettled(
+      unusedMoviePosters.map(async ({ path }) => {
+        await this.#removeFile({
+          path,
+          retryInterval,
+          retryAttempt: 0,
+          retryLimit,
+        });
+      }),
+    );
+    // Failed promises will be retired again on the next cleanup
+    results.forEach((result) => {
+      if (result.status === 'rejected') {
+        this.#logger.error('Failure to remove file:', result.reason);
+      }
+    });
+  };
 
   /********************************************************************************/
 
@@ -83,46 +122,6 @@ class Cronjob {
       });
     }
   }
-
-  /********************************************************************************/
-
-  readonly #moviePosterCleanup = async () => {
-    const { directory, retryInterval, retryLimit } =
-      this.#moviePosterCleanupParams;
-
-    const posterPaths = (await readdir(directory, { withFileTypes: true }))
-      .filter((element) => {
-        return !element.isDirectory();
-      })
-      .map((element) => {
-        return join(directory, element.name);
-      });
-
-    const handler = this.#database.getHandler();
-    const { moviePoster: moviePosterModel } = this.#database.getModels();
-
-    const postersNotInUse = await handler
-      .select({ path: moviePosterModel.absolutePath })
-      .from(moviePosterModel)
-      .where(notInArray(moviePosterModel.absolutePath, posterPaths));
-
-    const results = await Promise.allSettled(
-      postersNotInUse.map(async ({ path }) => {
-        await this.#removeFile({
-          path,
-          retryInterval,
-          retryAttempt: 0,
-          retryLimit,
-        });
-      }),
-    );
-    // Failed promises will be retired again on the next cleanup
-    results.forEach((result) => {
-      if (result.status === 'rejected') {
-        this.#logger.error('Failure to remove file:', result.reason);
-      }
-    });
-  };
 }
 
 /**********************************************************************************/

@@ -1,13 +1,7 @@
-import {
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-} from '@adamakiva/movie-reservation-system-shared';
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 
-import {
-  GeneralError,
-  isDatabaseError,
-  isError,
-} from '../../../utils/errors.ts';
+import { isForeignKeyViolationError } from '../../../database/index.ts';
+import { GeneralError, isError } from '../../../utils/errors.ts';
 
 import type {
   validateCreateMovie,
@@ -40,53 +34,47 @@ type MoviePoster = {
 
 /**********************************************************************************/
 
-function handlePossibleMissingGenreError(error: unknown, genre: string) {
+function possibleMissingGenreError(error: unknown, genre: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
-  ) {
-    return error;
+  if (isForeignKeyViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.NOT_FOUND,
+      `Genre '${genre}' does not exist`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.NOT_FOUND,
-    `Genre '${genre}' does not exist`,
-    error.cause,
-  );
+  return error;
 }
 
-function handlePossibleForeignKeyError(error: unknown, movie: string) {
+function possibleForeignKeyError(error: unknown, movie: string) {
   if (!isError(error)) {
     return new GeneralError(
       HTTP_STATUS_CODES.SERVER_ERROR,
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
-  ) {
-    return error;
+  if (isForeignKeyViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.CONFLICT,
+      `Movie '${movie}' has one or more showtime(s) attached and can't be removed`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.CONFLICT,
-    `Movie '${movie}' has one or more showtime(s) attached and can't be removed`,
-    error.cause,
-  );
+  return error;
 }
 
 /**********************************************************************************/
 
 export {
-  handlePossibleForeignKeyError,
-  handlePossibleMissingGenreError,
+  possibleForeignKeyError,
+  possibleMissingGenreError,
   type CreateMovieValidatedData,
   type DeleteMovieValidatedData,
   type GetMoviesValidatedData,

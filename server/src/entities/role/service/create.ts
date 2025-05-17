@@ -1,7 +1,7 @@
 import type { RequestContext } from '../../../utils/types.ts';
 
 import {
-  handlePossibleDuplicationError,
+  possibleDuplicationError,
   type CreateRoleValidatedData,
   type Role,
 } from './utils.ts';
@@ -25,7 +25,7 @@ async function createRole(
 
     return createdRole!;
   } catch (error) {
-    throw handlePossibleDuplicationError(error, roleToCreate.name);
+    throw possibleDuplicationError(error, roleToCreate.name);
   }
 }
 

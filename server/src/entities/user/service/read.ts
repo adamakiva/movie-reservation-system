@@ -50,8 +50,6 @@ async function getUsers(
         : undefined,
     )
     .innerJoin(roleModel, eq(roleModel.id, userModel.roleId))
-    // +1 Will allow us to check if there is an additional page after the current
-    // one
     .limit(pageSize + 1)
     .orderBy(asc(userModel.createdAt), asc(userModel.id));
 

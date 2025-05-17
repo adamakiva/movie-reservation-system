@@ -1,15 +1,9 @@
-import {
-  ERROR_CODES,
-  HTTP_STATUS_CODES,
-} from '@adamakiva/movie-reservation-system-shared';
+import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq } from 'drizzle-orm';
 import type { Request } from 'express';
 
-import {
-  GeneralError,
-  isDatabaseError,
-  isError,
-} from '../../../utils/errors.ts';
+import { isForeignKeyViolationError } from '../../../database/index.ts';
+import { GeneralError, isError } from '../../../utils/errors.ts';
 import type {
   DatabaseHandler,
   DatabaseModel,
@@ -105,10 +99,7 @@ async function deleteShowtimeWithAttachedUsers(params: {
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
-  ) {
+  if (!isForeignKeyViolationError(error)) {
     throw error;
   }
 

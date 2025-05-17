@@ -166,7 +166,20 @@ class EnvironmentManager {
       },
     } as const;
 
-    this.#setGlobalValues();
+    this.#setGlobalValues({
+      maxSockets: this.#toNumber(
+        'NODE_MAX_SOCKETS',
+        process.env.NODE_MAX_SOCKETS,
+      )!,
+      maxTotalSockets: this.#toNumber(
+        'NODE_MAX_TOTAL_SOCKETS',
+        process.env.NODE_MAX_TOTAL_SOCKETS,
+      )!,
+      defaultHighWaterMark: this.#toNumber(
+        'NODE_DEFAULT_HIGH_WATERMARK',
+        process.env.NODE_DEFAULT_HIGH_WATERMARK,
+      )!,
+    });
   }
 
   public getEnvVariables() {
@@ -205,29 +218,21 @@ class EnvironmentManager {
     return valueAsNumber;
   }
 
-  #setGlobalValues() {
-    const maxSockets = this.#toNumber(
-      'NODE_MAX_SOCKETS',
-      process.env.NODE_MAX_SOCKETS,
-    )!;
-    const maxTotalSockets = this.#toNumber(
-      'NODE_MAX_TOTAL_SOCKETS',
-      process.env.NODE_MAX_TOTAL_SOCKETS,
-    )!;
-    const defaultHighWaterMark = this.#toNumber(
-      'NODE_DEFAULT_HIGH_WATERMARK',
-      process.env.NODE_DEFAULT_HIGH_WATERMARK,
-    )!;
+  #setGlobalValues(params: {
+    maxSockets: number;
+    maxTotalSockets: number;
+    defaultHighWaterMark: number;
+  }) {
+    const { maxSockets, maxTotalSockets, defaultHighWaterMark } = params;
 
     // See: https://nodejs.org/api/events.html#capture-rejections-of-promises
     Stream.EventEmitter.captureRejections = true;
+    // Set the default high water mark for Readable/Writeable streams
+    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
 
     // To prevent DOS attacks, See: https://nodejs.org/en/learn/getting-started/security-best-practices#denial-of-service-of-http-server-cwe-400
     globalAgent.maxSockets = maxSockets;
     globalAgent.maxTotalSockets = maxTotalSockets;
-
-    // Set the default high water mark for Readable/Writeable streams
-    Stream.setDefaultHighWaterMark(false, defaultHighWaterMark);
   }
 }
 

@@ -3,7 +3,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 import {
   type CreateHallValidatedData,
   type Hall,
-  handlePossibleDuplicationError,
+  possibleDuplicationError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -30,7 +30,7 @@ async function createHall(
 
     return createdHall!;
   } catch (error) {
-    throw handlePossibleDuplicationError(error, hallToCreate.name);
+    throw possibleDuplicationError(error, hallToCreate.name);
   }
 }
 

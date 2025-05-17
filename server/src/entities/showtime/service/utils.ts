@@ -5,10 +5,10 @@ import {
 import type pg from 'postgres';
 
 import {
-  GeneralError,
   isDatabaseError,
-  isError,
-} from '../../../utils/errors.ts';
+  isUniqueViolationError,
+} from '../../../database/index.ts';
+import { GeneralError, isError } from '../../../utils/errors.ts';
 
 import type {
   validateCancelUserShowtimeReservation,
@@ -61,7 +61,7 @@ type ShowtimeTicket = {
 
 /**********************************************************************************/
 
-function handlePossibleShowtimeCreationError(params: {
+function possibleShowtimeCreationError(params: {
   error: unknown;
   at: Date;
   movie: string;
@@ -128,7 +128,7 @@ function handleForeignKeyNotFoundError(params: {
   );
 }
 
-function handlePossibleTicketDuplicationError(params: {
+function possibleTicketDuplicationError(params: {
   error: unknown;
   row: number;
   column: number;
@@ -141,25 +141,22 @@ function handlePossibleTicketDuplicationError(params: {
       'Thrown a non error object',
     );
   }
-  if (
-    !isDatabaseError(error) ||
-    error.code !== ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
-  ) {
-    return error;
+  if (isUniqueViolationError(error)) {
+    return new GeneralError(
+      HTTP_STATUS_CODES.CONFLICT,
+      `Seat at '[${row},${column}]' is already taken`,
+      error.cause,
+    );
   }
 
-  return new GeneralError(
-    HTTP_STATUS_CODES.CONFLICT,
-    `Seat at '[${row},${column}]' is already taken`,
-    error.cause,
-  );
+  return error;
 }
 
 /**********************************************************************************/
 
 export {
-  handlePossibleShowtimeCreationError,
-  handlePossibleTicketDuplicationError,
+  possibleShowtimeCreationError,
+  possibleTicketDuplicationError,
   type CancelUserShowtimeValidatedData,
   type CreateShowtimeValidatedData,
   type DeleteShowtimeValidatedData,

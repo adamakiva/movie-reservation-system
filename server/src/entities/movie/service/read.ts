@@ -52,8 +52,6 @@ async function getMovies(
         : undefined,
     )
     .innerJoin(genreModel, eq(genreModel.id, movieModel.genreId))
-    // +1 Will allow us to check if there is an additional page after the current
-    // one
     .limit(pageSize + 1)
     .orderBy(asc(movieModel.createdAt), asc(movieModel.id));
 

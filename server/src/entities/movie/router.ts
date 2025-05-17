@@ -14,13 +14,13 @@ function router(fileManager: FileManager) {
     .post(
       '/movies',
       json({ limit: '4mb' }),
-      fileManager.singleFile('poster'),
+      fileManager.processSingleFileMiddleware('poster'),
       movieController.createMovie,
     )
     .put(
       '/movies/:movie_id',
       json({ limit: '4mb' }),
-      fileManager.singleFile('poster'),
+      fileManager.processSingleFileMiddleware('poster'),
       movieController.updateMovie,
     )
     .delete('/movies/:movie_id', movieController.deleteMovie);

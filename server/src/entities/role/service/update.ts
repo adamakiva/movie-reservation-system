@@ -7,7 +7,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 import {
   type Role,
   type UpdateRoleValidatedData,
-  handlePossibleDuplicationError,
+  possibleDuplicationError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -38,8 +38,8 @@ async function updateRole(
     return updatedRole;
   } catch (error) {
     // If there is a conflict it is due to the name field, hence, the name
-    // field must exist
-    throw handlePossibleDuplicationError(error, fieldsToUpdate.name!);
+    // field can be asserted
+    throw possibleDuplicationError(error, fieldsToUpdate.name!);
   }
 }
 

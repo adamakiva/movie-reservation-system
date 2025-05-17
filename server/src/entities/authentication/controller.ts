@@ -103,8 +103,8 @@ async function validatePassword(params: {
   try {
     const { authentication, hash, password } = params;
 
-    const isPasswordValid = await authentication.verifyPassword(hash, password);
-    if (!isPasswordValid) {
+    const isValid = await authentication.verifyPassword(hash, password);
+    if (!isValid) {
       throw new GeneralError(
         HTTP_STATUS_CODES.BAD_REQUEST,
         'Email and/or password are incorrect',

@@ -3,7 +3,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 import {
   type CreateGenreValidatedData,
   type Genre,
-  handlePossibleDuplicationError,
+  possibleDuplicationError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -25,7 +25,7 @@ async function createGenre(
 
     return createdGenre!;
   } catch (error) {
-    throw handlePossibleDuplicationError(error, genreToCreate.name);
+    throw possibleDuplicationError(error, genreToCreate.name);
   }
 }
 

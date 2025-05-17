@@ -74,13 +74,14 @@ async function migration(databaseUrl: string) {
     throw new Error(`Migration failed for ${databaseUrl}`, { cause: error });
   } finally {
     try {
-      await connection.end({ timeout: 30 }); // in seconds
+      await connection.end({ timeout: 10 }); // in seconds
     } catch (error) {
-      // No point in propagating it, because there is nothing to do with it
       console.error(
         `Error closing database connection for ${databaseUrl}`,
         error,
       );
+
+      process.exit(ERROR_CODES.EXIT_NO_RESTART);
     }
   }
 }

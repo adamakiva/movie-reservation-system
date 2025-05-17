@@ -5,7 +5,8 @@ import {
 import type { NextFunction, Request, Response } from 'express';
 import type pg from 'postgres';
 
-import { GeneralError, isDatabaseError, isError } from '../../utils/errors.ts';
+import { isDatabaseError } from '../../database/index.ts';
+import { GeneralError, isError } from '../../utils/errors.ts';
 import type {
   RequestContext,
   ResponseWithContext,
@@ -24,7 +25,7 @@ function checkMethod(allowedMethods: readonly string[]) {
       // Reason for explicitly adding the header:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
       response
-        .set('Allow', Array.from(allowedMethods).join(', '))
+        .set('Allow', allowedMethods.join(', '))
         .status(HTTP_STATUS_CODES.NOT_ALLOWED)
         .end();
       return;

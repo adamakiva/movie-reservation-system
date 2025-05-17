@@ -55,8 +55,8 @@ class Websocket {
     return this.#isAlive;
   }
 
-  public state() {
-    return this.#handler.readyState;
+  public isReady() {
+    return this.isAlive() && this.#handler.readyState === WebSocket.OPEN;
   }
 
   public ping(...parameters: Parameters<WebSocket['ping']>) {
@@ -69,9 +69,10 @@ class Websocket {
 
   public close() {
     clearInterval(this.#isAliveHandler);
+
     this.#handler
-      .removeListener('error', this.#boundErrorEventHandler)
       .removeListener('pong', this.#boundPongEventHandler)
+      .removeListener('error', this.#boundErrorEventHandler)
       .terminate();
   }
 
@@ -111,8 +112,6 @@ class WebsocketServer {
     path: string;
     pingTime: number;
     options?: WebSocket.ServerOptions;
-    backlog?: number | undefined;
-    maxPayload?: number | undefined; // In bytes
     logger: Logger;
   }) {
     const { server, authentication, pingTime, options, logger } = params;
@@ -170,7 +169,7 @@ class WebsocketServer {
     const websockets = this.#clients.get(userId);
 
     websockets?.forEach((websocket) => {
-      if (websocket.isAlive() && websocket.state() === WebSocket.OPEN) {
+      if (websocket.isReady()) {
         websocket.send(...parameters);
       }
     });
@@ -179,7 +178,7 @@ class WebsocketServer {
   public broadcast(...parameters: Parameters<WebSocket['send']>) {
     this.#clients.forEach((websockets) => {
       websockets.forEach((websocket) => {
-        if (websocket.isAlive() && websocket.state() === WebSocket.OPEN) {
+        if (websocket.isReady()) {
           websocket.send(...parameters);
         }
       });
@@ -199,12 +198,12 @@ class WebsocketServer {
 
     // Websocket server
     this.#handler
-      .removeListener('error', this.#boundWebsocketServerErrorEventHandler)
+      .removeListener('connection', this.#boundConnectionEventHandler)
       .removeListener(
         'wsClientError',
         this.#boundWebsocketClientErrorEventHandler,
       )
-      .removeListener('connection', this.#boundConnectionEventHandler)
+      .removeListener('error', this.#boundWebsocketServerErrorEventHandler)
       .close();
 
     // Http server
@@ -267,7 +266,7 @@ class WebsocketServer {
   }
 
   #connectionEventHandler(websocket: WebSocket, request: IncomingMessage) {
-    // At this stage, the token exists and is authenticated
+    // At this stage, the token should exist and is authenticated
     const userId = this.#authentication.getUserId(
       this.#parseAuthenticationHeader(request),
     );

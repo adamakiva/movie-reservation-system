@@ -2,7 +2,6 @@ import type { ServerResponse } from 'node:http';
 import { inspect } from 'node:util';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import pg from 'postgres';
 
 /**********************************************************************************/
 
@@ -133,10 +132,6 @@ function isError(obj: unknown): obj is Error {
   return obj instanceof Error;
 }
 
-function isDatabaseError(obj: unknown): obj is pg.PostgresError {
-  return obj instanceof pg.PostgresError;
-}
-
 function isSystemCallError(obj: unknown): obj is NodeJS.ErrnoException {
   return (
     typeof obj === 'object' &&
@@ -162,7 +157,6 @@ function registerAbortController(timeout: number, reason?: string) {
 
 export {
   GeneralError,
-  isDatabaseError,
   isError,
   isSystemCallError,
   registerAbortController,

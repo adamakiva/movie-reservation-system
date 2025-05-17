@@ -9,7 +9,7 @@ import type {
 import {
   type CreateMovieValidatedData,
   type Movie,
-  handlePossibleMissingGenreError,
+  possibleMissingGenreError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -44,7 +44,7 @@ async function createMovie(
 
     return createdMovie!;
   } catch (error) {
-    throw handlePossibleMissingGenreError(error, movieToCreate.genreId);
+    throw possibleMissingGenreError(error, movieToCreate.genreId);
   }
 }
 

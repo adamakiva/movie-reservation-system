@@ -4,7 +4,7 @@ import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type DeleteMovieValidatedData,
-  handlePossibleForeignKeyError,
+  possibleForeignKeyError,
 } from './utils.ts';
 
 /**********************************************************************************/
@@ -21,7 +21,7 @@ async function deleteMovie(
   try {
     await handler.delete(movieModel).where(eq(movieModel.id, movieId));
   } catch (error) {
-    throw handlePossibleForeignKeyError(error, movieId);
+    throw possibleForeignKeyError(error, movieId);
   }
 }
 

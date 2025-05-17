@@ -7,7 +7,7 @@ import type {
 } from '../../../utils/types.ts';
 
 import {
-  handleUserCreationError,
+  userCreationError,
   type CreateUserValidatedData,
   type User,
 } from './utils.ts';
@@ -47,7 +47,7 @@ async function createUser(
 
     return createdUser!;
   } catch (error) {
-    throw handleUserCreationError({
+    throw userCreationError({
       error,
       email: userToCreate.email,
       role: userToCreate.roleId,

@@ -13,7 +13,7 @@ COPY ./configs/rabbitmq.definitions.json /etc/rabbitmq/rabbitmq.definitions.json
 
 ####################################################################################
 
-FROM node:22.15.0-slim AS server
+FROM node:22.15.1-slim AS server
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
@@ -25,7 +25,7 @@ ENTRYPOINT ["/home/node/init.sh"]
 
 ####################################################################################
 
-FROM node:22.15.0-slim AS worker
+FROM node:22.15.1-slim AS worker
 
 WORKDIR /home/node/worker
 

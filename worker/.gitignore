@@ -9,7 +9,7 @@
 **/node_modules/
 
 # Exclude source files
-!/src/**/*.ts
+!src/**/*.ts
 
 # Exclude config files
 !eslint.config.js
