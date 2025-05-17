@@ -28,65 +28,66 @@ function startWorker() {
     logger: console,
   });
 
-  messageQueue.createPublishers({
-    ticket: {
-      confirm: true,
-      maxAttempts: 32,
-      routing: [
-        {
-          exchange: 'mrs',
-          queue: 'mrs.ticket.reserve.reply.to',
-          routingKey: 'mrs-ticket-reserve-reply-to',
-        },
-        {
-          exchange: 'mrs',
-          queue: 'mrs.ticket.cancel.reply.to',
-          routingKey: 'mrs-ticket-cancel-reply-to',
-        },
-      ],
-    },
-    showtime: {
-      confirm: true,
-      maxAttempts: 32,
-      routing: [
-        {
-          exchange: 'mrs',
-          queue: 'mrs.showtime.cancel.reply.to',
-          routingKey: 'mrs-showtime-cancel-reply-to',
-        },
-      ],
-    },
-  });
-  messageQueue.createConsumer({
-    concurrency,
-    qos: { prefetchCount },
-    routing: {
-      exchange: 'mrs',
-      queue: 'mrs.ticket.reserve',
-      routingKey: 'mrs-ticket-reserve',
-    },
-    handler: reserveShowtimeTicket(messageQueue),
-  });
-  messageQueue.createConsumer({
-    concurrency,
-    qos: { prefetchCount },
-    routing: {
-      exchange: 'mrs',
-      queue: 'mrs.ticket.cancel',
-      routingKey: 'mrs-ticket-cancel',
-    },
-    handler: cancelShowtimeTicket(messageQueue),
-  });
-  messageQueue.createConsumer({
-    concurrency,
-    qos: { prefetchCount },
-    routing: {
-      exchange: 'mrs',
-      queue: 'mrs.showtime.cancel',
-      routingKey: 'mrs-showtime-cancel',
-    },
-    handler: cancelShowtime(messageQueue),
-  });
+  messageQueue
+    .createPublishers({
+      ticket: {
+        confirm: true,
+        maxAttempts: 32,
+        routing: [
+          {
+            exchange: 'mrs',
+            queue: 'mrs.ticket.reserve.reply.to',
+            routingKey: 'mrs-ticket-reserve-reply-to',
+          },
+          {
+            exchange: 'mrs',
+            queue: 'mrs.ticket.cancel.reply.to',
+            routingKey: 'mrs-ticket-cancel-reply-to',
+          },
+        ],
+      },
+      showtime: {
+        confirm: true,
+        maxAttempts: 32,
+        routing: [
+          {
+            exchange: 'mrs',
+            queue: 'mrs.showtime.cancel.reply.to',
+            routingKey: 'mrs-showtime-cancel-reply-to',
+          },
+        ],
+      },
+    })
+    .createConsumer({
+      concurrency,
+      qos: { prefetchCount },
+      routing: {
+        exchange: 'mrs',
+        queue: 'mrs.ticket.reserve',
+        routingKey: 'mrs-ticket-reserve',
+      },
+      handler: reserveShowtimeTicket(messageQueue),
+    })
+    .createConsumer({
+      concurrency,
+      qos: { prefetchCount },
+      routing: {
+        exchange: 'mrs',
+        queue: 'mrs.ticket.cancel',
+        routingKey: 'mrs-ticket-cancel',
+      },
+      handler: cancelShowtimeTicket(messageQueue),
+    })
+    .createConsumer({
+      concurrency,
+      qos: { prefetchCount },
+      routing: {
+        exchange: 'mrs',
+        queue: 'mrs.showtime.cancel',
+        routingKey: 'mrs-showtime-cancel',
+      },
+      handler: cancelShowtime(messageQueue),
+    });
 
   attachProcessHandlers(messageQueue);
 }
@@ -198,27 +199,24 @@ function cancelShowtime(messageQueue: MessageQueue) {
 /**********************************************************************************/
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
-  const errorHandler = () => {
-    messageQueue
-      .close()
-      .catch((error: unknown) => {
-        console.error('Shutdown failure:', error);
-      })
-      .finally(() => {
-        process.exit(ERROR_CODES.EXIT_NO_RESTART);
-      });
+  const errorHandler = async (error: unknown) => {
+    if (error) {
+      console.error(`Unhandled error/rejection:`, error);
+    }
+
+    try {
+      await messageQueue.close();
+    } catch (error) {
+      console.error('Shutdown failure:', error);
+    } finally {
+      process.exit(ERROR_CODES.EXIT_NO_RESTART);
+    }
   };
 
   process
     .on('warning', console.warn)
-    .once('unhandledRejection', (reason) => {
-      console.error(`Unhandled rejection:`, reason);
-      errorHandler();
-    })
-    .once('uncaughtException', (error) => {
-      console.error(`Unhandled exception:`, error);
-      errorHandler();
-    });
+    .once('unhandledRejection', errorHandler)
+    .once('uncaughtException', errorHandler);
 
   SIGNALS.forEach((signal) => {
     process.once(signal, errorHandler);

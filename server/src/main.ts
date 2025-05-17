@@ -97,24 +97,44 @@ async function startServer() {
 function attachProcessHandlers(server: HttpServer, logger: Logger) {
   process
     .on('warning', logger.warn)
-    .once('unhandledRejection', async (reason: unknown) => {
-      logger.error(`Unhandled rejection:`, reason);
-      await closeServer(server, ERROR_CODES.EXIT_RESTART);
+    .once('unhandledRejection', async (error: unknown) => {
+      await closeServer({
+        server,
+        code: ERROR_CODES.EXIT_RESTART,
+        error: { logger, value: error },
+      });
     })
     .once('uncaughtException', async (error: unknown) => {
-      logger.error(`Unhandled exception:`, error);
-      await closeServer(server, ERROR_CODES.EXIT_RESTART);
+      await closeServer({
+        server,
+        code: ERROR_CODES.EXIT_RESTART,
+        error: { logger, value: error },
+      });
     });
 
   const signalHandler = async () => {
-    await closeServer(server, ERROR_CODES.EXIT_NO_RESTART);
+    await closeServer({ server, code: ERROR_CODES.EXIT_NO_RESTART });
   };
   SIGNALS.forEach((signal) => {
     process.once(signal, signalHandler);
   });
 }
 
-async function closeServer(server: HttpServer, code: number) {
+async function closeServer(params: {
+  server: HttpServer;
+  code: number;
+  error?: {
+    logger: Logger;
+    value: unknown;
+  };
+}) {
+  const { server, code, error } = params;
+
+  if (error) {
+    const { logger, value } = error;
+    logger.error(`Unhandled exception/rejection:`, value);
+  }
+
   try {
     await server.close();
   } finally {

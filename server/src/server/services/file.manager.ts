@@ -72,6 +72,7 @@ class FileManager implements StorageEngine {
             `File: '${absolutePath}' does not exist. Should not be possible:`,
             error,
           );
+
           throw new GeneralError(
             HTTP_STATUS_CODES.SERVER_ERROR,
             'Should never happen, contact an administrator',
@@ -121,10 +122,14 @@ class FileManager implements StorageEngine {
             });
           })
           .catch((error: unknown) => {
+            if (!(error instanceof Error)) {
+              throw error;
+            }
+
             throw new GeneralError(
               HTTP_STATUS_CODES.SERVER_ERROR,
               `Failure to stream user file to destination: '${file.path}'`,
-              (error as Error).cause,
+              error.cause,
             );
           })
           .finally(() => {
@@ -132,7 +137,7 @@ class FileManager implements StorageEngine {
           });
       })
       .catch((error: unknown) => {
-        callback(error as Error | null);
+        callback(error);
       });
   }
 
@@ -144,11 +149,12 @@ class FileManager implements StorageEngine {
         callback(null);
       })
       .catch((error: unknown) => {
-        this.#logger.error(
-          `Failure to delete file: ${file.path}`,
-          (error as Error).cause,
-        );
-        callback(error as Error | null);
+        if (!(error instanceof Error)) {
+          throw error;
+        }
+
+        this.#logger.error(`Failure to delete file: ${file.path}`, error.cause);
+        callback(error);
       });
   }
 

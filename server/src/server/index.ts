@@ -157,13 +157,13 @@ class HttpServer {
   public async close() {
     let exitCode = 0;
 
-    (
-      await Promise.allSettled([
-        this.#database.close(),
-        this.#cronjob.stopAll(),
-        this.#messageQueue.close(),
-      ])
-    ).forEach((result) => {
+    const results = await Promise.allSettled([
+      this.#database.close(),
+      this.#cronjob.stopAll(),
+      this.#messageQueue.close(),
+    ]);
+
+    results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.error(result.reason, 'Error during server termination');
         exitCode = ERROR_CODES.EXIT_NO_RESTART;
@@ -227,7 +227,7 @@ class HttpServer {
       fileManager,
       messageQueue: messageQueue.handler,
       logger,
-    } satisfies RequestContext;
+    } as const satisfies RequestContext;
   }
 
   #initMessageQueue(
@@ -316,6 +316,7 @@ class HttpServer {
       maxRequestsPerSocket,
       keepAliveTimeout,
     } = httpServerConfigurations;
+
     // Every configuration referring to sockets here, talks about network/tcp
     // socket NOT websockets. Network socket is the underlying layer for http
     // request (in this case). In short, the socket options refer to a "standard"

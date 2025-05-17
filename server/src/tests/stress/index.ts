@@ -171,7 +171,7 @@ function generateTests(baseRoute: string, accessToken: string) {
         } as const;
       },
     },
-  ] satisfies autocannon.Request[];
+  ] as const satisfies autocannon.Request[];
 }
 
 /**********************************************************************************/

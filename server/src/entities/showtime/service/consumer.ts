@@ -25,7 +25,7 @@ function reserveShowtimeTicket(params: {
 
   return async (
     message: Omit<AsyncMessage, 'body'> & {
-      body: TicketReservationsMessage & { transactionId?: string | undefined };
+      body: TicketReservationsMessage & { transactionId?: string };
     },
   ) => {
     const { correlationId, body } = message;

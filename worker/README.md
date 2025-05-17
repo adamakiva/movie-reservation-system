@@ -1,12 +1,12 @@
 # Movie reservation system worker
 
-RabbitMQ consumer for intensive actions
+Message queue worker
 
 ---
 
 ## Libraries
 
-- **[rabbitmq-client](<(https://github.com/expressjs/express)>)** - Node.js rabbitmq client
+- **[rabbitmq-client](<(https://github.com/cody-greene/node-rabbitmq-client)>)** - Node.js rabbitmq client
 
 ---
 
@@ -16,4 +16,4 @@ RabbitMQ consumer for intensive actions
 - **`npm run commit-local-updates`** - Check & commit local packages updates
 - **`npm run check-cir-deps`** - Check for any circular dependencies
 - **`npm run check-licenses`** - Check all packages licenses
-- **`npm run build`** - Transpile typescript to javascript
+- **`npm run build`** - Transpile Typescript to Javascript

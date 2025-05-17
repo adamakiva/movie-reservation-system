@@ -59,6 +59,18 @@ import type {
 
 /**********************************************************************************/
 
+type ServerParams = Awaited<ReturnType<typeof initServer>>;
+
+type ResponseType<
+  RT extends 'bytes' | 'json' | 'text' = 'bytes',
+  R = any,
+> = RT extends 'bytes'
+  ? // See: https://stackoverflow.com/a/66629140
+    { statusCode: number; responseBody: Uint8Array }
+  : RT extends 'text'
+    ? { statusCode: number; responseBody: string }
+    : { statusCode: number; responseBody: R };
+
 // To make sure the tests don't miss anything, not even warnings
 process.on('warning', (warn) => {
   console.error(warn);
@@ -90,40 +102,10 @@ const CONSTANTS = {
 
 const { PostgresError } = pg;
 
-/**********************************************************************************/
-
-type ServerParams = Awaited<ReturnType<typeof initServer>>;
-
-type ResponseType<
-  RT extends 'bytes' | 'json' | 'text' = 'bytes',
-  R = any,
-> = RT extends 'bytes'
-  ? // See: https://stackoverflow.com/a/66629140
-    { statusCode: number; responseBody: Uint8Array }
-  : RT extends 'text'
-    ? { statusCode: number; responseBody: string }
-    : { statusCode: number; responseBody: R };
-
 /***************************** Server setup ***************************************/
 /**********************************************************************************/
 
 async function initServer() {
-  return await createServer();
-}
-
-async function terminateServer(server: HttpServer, database: Database) {
-  try {
-    await clearDatabase(database);
-    await server.close();
-  } catch (error) {
-    console.error('Failure to cleanup tests:', error);
-    process.exit(1);
-  }
-}
-
-/**********************************************************************************/
-
-async function createServer() {
   // In order to reuse the environment manager class, we swap the relevant values
   process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
 
@@ -222,6 +204,18 @@ async function createServer() {
   } as const;
 }
 
+async function terminateServer(server: HttpServer, database: Database) {
+  try {
+    await clearDatabase(database);
+    await server.close();
+  } catch (error) {
+    console.error('Failure to cleanup tests:', error);
+    process.exit(1);
+  }
+}
+
+/**********************************************************************************/
+
 async function clearDatabase(database: Database) {
   const handler = database.getHandler();
   const models = database.getModels();
@@ -313,8 +307,8 @@ async function sendHttpRequest<
   const { route, method, payload, responseType } = params;
 
   const headers = !(payload instanceof FormData)
-    ? { ...params.headers, 'Content-Type': 'application/json' }
-    : { ...params.headers };
+    ? ({ ...params.headers, 'Content-Type': 'application/json' } as const)
+    : ({ ...params.headers } as const);
 
   const fetchOptions: RequestInit = {
     method,
@@ -324,7 +318,7 @@ async function sendHttpRequest<
     headers,
     redirect: 'manual',
     window: null,
-  };
+  } as const;
 
   const fetchResponse = await fetch(route, fetchOptions);
   const statusCode = fetchResponse.status;
@@ -333,7 +327,7 @@ async function sendHttpRequest<
     return {
       statusCode,
       responseBody: await fetchResponse.text(),
-    } as ResponseType<RT, R>;
+    } as const as ResponseType<RT, R>;
   }
 
   switch (responseType) {
@@ -341,7 +335,7 @@ async function sendHttpRequest<
       return {
         statusCode,
         responseBody: await fetchResponse[responseType as 'bytes'](),
-      } as ResponseType<RT, R>;
+      } as const as ResponseType<RT, R>;
     case 'json':
     case 'text':
       return {
@@ -352,7 +346,7 @@ async function sendHttpRequest<
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
             responseType as 'json' | 'text'
           ](),
-      } as ResponseType<RT, R>;
+      } as const as ResponseType<RT, R>;
     default:
       throw new Error('Should never happen');
   }
@@ -371,10 +365,9 @@ async function getAdminTokens(httpRoute: ServerParams['routes']['http']) {
   const email = process.env.ADMIN_EMAIL!;
   const password = process.env.ADMIN_PASSWORD!;
 
-  const tokens: { accessToken: string; refreshToken: string } =
-    await generateTokens({ httpRoute, email, password });
+  const tokens = await generateTokens({ httpRoute, email, password });
 
-  return tokens;
+  return tokens as { accessToken: string; refreshToken: string };
 }
 
 async function generateTokens(params: {
@@ -445,7 +438,7 @@ function generateGenresData(amount = 1) {
   const genres = [...Array<CreateGenre>(amount)].map(() => {
     return {
       name: randomAlphaNumericString(GENRE.NAME.MAX_LENGTH.VALUE - 1),
-    } satisfies CreateGenre;
+    } as const satisfies CreateGenre;
   });
 
   return genres;
@@ -488,7 +481,7 @@ function generateHallsData(amount = 1) {
         HALL.COLUMNS.MIN_LENGTH.VALUE + 1,
         HALL.COLUMNS.MAX_LENGTH.VALUE - 1,
       ),
-    } satisfies CreateHall;
+    } as const satisfies CreateHall;
   });
 
   return halls;
@@ -502,7 +495,7 @@ async function seedMovie(database: ServerParams['database']) {
     createdMovie: createdMovies[0]!,
     createdGenre: createdGenres[0]!,
     createdMoviePoster: createdMoviePosters[0]!,
-  };
+  } as const;
 }
 
 async function seedMovies(
@@ -564,7 +557,7 @@ async function seedMovies(
       return {
         createdMovies,
         createdMoviePosters,
-      };
+      } as const;
     });
 
     const createdMovies = createdEntities.createdMovies.map((createdMovie) => {
@@ -576,14 +569,14 @@ async function seedMovies(
       return {
         ...fields,
         genre: genreName,
-      };
+      } as const;
     });
 
     return {
       createdGenres,
       createdMovies,
       createdMoviePosters: createdEntities.createdMoviePosters,
-    };
+    } as const;
   } catch (error) {
     await clearDatabase(database);
 
@@ -604,7 +597,7 @@ function generateMoviesData(amount = 1) {
         MOVIE.PRICE.MIN_VALUE.VALUE + 1,
         MOVIE.PRICE.MAX_VALUE.VALUE - 1,
       ),
-    } satisfies Omit<CreateMovie, 'poster' | 'genreId'>;
+    } as const satisfies Omit<CreateMovie, 'poster' | 'genreId'>;
   });
 
   return movies;
@@ -621,7 +614,7 @@ async function generateMovieDataIncludingPoster(genreId?: string) {
         path: absolutePath,
         mimeType: (await fileTypeFromFile(absolutePath))!.mime,
         size: sizeInBytes,
-      };
+      } as const;
     }),
   );
 
@@ -629,7 +622,7 @@ async function generateMovieDataIncludingPoster(genreId?: string) {
     ...generateMoviesData(1)[0]!,
     poster: moviePosters[randomNumber(0, moviePosters.length - 1)]!,
     genreId: genreId ?? randomUUID(),
-  };
+  } as const;
 }
 
 async function generateMoviePostersData() {
@@ -643,7 +636,7 @@ async function generateMoviePostersData() {
         absolutePath,
         mimeType: (await fileTypeFromFile(absolutePath))!.mime,
         sizeInBytes: size,
-      };
+      } as const;
     }),
   );
 
@@ -680,7 +673,7 @@ function generateRolesData(amount = 1) {
   const roles = [...Array<CreateRole>(amount)].map(() => {
     return {
       name: randomAlphaNumericString(ROLE.NAME.MAX_LENGTH.VALUE - 1),
-    } satisfies CreateRole;
+    } as const satisfies CreateRole;
   });
 
   return roles;
@@ -701,7 +694,7 @@ async function seedShowtime(database: ServerParams['database']) {
     createdMoviePosters: createdMoviePosters[0]!,
     createdHall: createdHalls[0]!,
     createdGenres: createdGenres[0]!,
-  };
+  } as const;
 }
 
 async function seedShowtimes(
@@ -744,7 +737,7 @@ async function seedShowtimes(
       createdMoviePosters,
       createdHalls,
       createdGenres,
-    };
+    } as const;
   } catch (error) {
     await clearDatabase(database);
 
@@ -761,7 +754,7 @@ function generateShowtimesData(amount = 1) {
           SHOWTIME.AT.MIN_VALUE.VALUE() + 2_629_746_000, // One month in milliseconds
         ),
       ),
-    } satisfies CreateShowtime;
+    } as const satisfies CreateShowtime;
   });
 
   return showtimes;
@@ -782,7 +775,7 @@ async function seedUser(
   return {
     createdUser: createdUsers[0]!,
     createdRole: createdRoles[0]!,
-  };
+  } as const;
 }
 
 // We don't consider optional params
@@ -820,7 +813,7 @@ async function seedUsers(
                 roleId:
                   createdRoles[randomNumber(0, createdRoles.length - 1)]!.id,
                 hash,
-              };
+              } as const;
             }),
           ),
         )
@@ -841,13 +834,13 @@ async function seedUsers(
       return {
         ...fields,
         role: roleName,
-      };
+      } as const;
     });
 
     return {
       createdUsers,
       createdRoles,
-    };
+    } as const;
   } catch (error) {
     await clearDatabase(database);
 
@@ -862,14 +855,17 @@ function generateUsersData(amount = 1) {
       lastName: randomAlphaNumericString(USER.LAST_NAME.MIN_LENGTH.VALUE + 1),
       email: `${randomAlphaNumericString(randomNumber(USER.EMAIL.MIN_LENGTH.VALUE + 1, USER.EMAIL.MAX_LENGTH.VALUE / 2))}@ph.com`,
       password: randomAlphaNumericString(USER.PASSWORD.MIN_LENGTH.VALUE + 1),
-    } satisfies Omit<CreateUser, 'roleId'>;
+    } as const satisfies Omit<CreateUser, 'roleId'>;
   });
 
   return users;
 }
 
 function generateRandomUserData(roleId?: string) {
-  return { ...generateUsersData(1)[0]!, roleId: roleId ?? randomUUID() };
+  return {
+    ...generateUsersData(1)[0]!,
+    roleId: roleId ?? randomUUID(),
+  } as const;
 }
 
 async function checkUserPassword(params: {

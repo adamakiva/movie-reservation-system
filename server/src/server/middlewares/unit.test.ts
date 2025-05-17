@@ -213,7 +213,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Foreign key violation', (context) => {
     context.mock.method(logger, 'error', () => {
-      // Since this method log a error error, we mock it on purpose
+      // Since this method log a error, we mock it on purpose
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
@@ -230,7 +230,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Unique violation', (context) => {
     context.mock.method(logger, 'error', () => {
-      // Since this method log a error error, we mock it on purpose
+      // Since this method log a error, we mock it on purpose
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
@@ -247,7 +247,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Too many connections', (context) => {
     context.mock.method(logger, 'error', () => {
-      // Since this method log a error error, we mock it on purpose
+      // Since this method log a error, we mock it on purpose
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
@@ -264,7 +264,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Unexpected error object', (context) => {
     context.mock.method(logger, 'error', () => {
-      // Since this method log a error error, we mock it on purpose
+      // Since this method log a error, we mock it on purpose
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({
@@ -280,7 +280,7 @@ await suite('Middleware tests', async () => {
   });
   await test('Invalid - Error handler middleware: Unexpected non-error object', (context) => {
     context.mock.method(logger, 'error', () => {
-      // Since this method log a error error, we mock it on purpose
+      // Since this method log a error, we mock it on purpose
     });
 
     const { request, response } = createHttpMocks<ResponseWithContext>({

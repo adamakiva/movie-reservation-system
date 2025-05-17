@@ -190,8 +190,6 @@ function buildGetPaginatedShowtimesCTE(params: {
       )
       .innerJoin(movieModel, eq(movieModel.id, showtimeModel.movieId))
       .innerJoin(hallModel, eq(hallModel.id, showtimeModel.hallId))
-      // +1 Will allow us to check if there is an additional page after the current
-      // one
       .limit(pageSize + 1)
       .orderBy(asc(showtimeModel.createdAt), asc(showtimeModel.id)),
   );
@@ -229,9 +227,9 @@ function sanitizePaginatedShowtimes(
                 userId: showtime.reservation!.userId,
                 row: showtime.reservation!.row,
                 column: showtime.reservation!.column,
-              };
+              } as const;
             }) ?? [],
-      };
+      } as const;
     },
   );
 

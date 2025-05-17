@@ -75,7 +75,7 @@ const userModel = pgTable(
       })
         .onDelete('restrict')
         .onUpdate('cascade'),
-    ];
+    ] as const;
   },
 );
 
@@ -114,7 +114,7 @@ const movieModel = pgTable(
       })
         .onDelete('restrict')
         .onUpdate('cascade'),
-    ];
+    ] as const;
   },
 );
 
@@ -140,7 +140,7 @@ const moviePosterModel = pgTable(
         // for every file, whether it does not have a co-responding database entry
         .onDelete('cascade')
         .onUpdate('cascade'),
-    ];
+    ] as const;
   },
 );
 
@@ -187,7 +187,7 @@ const showtimeModel = pgTable(
         .onDelete('restrict')
         .onUpdate('cascade'),
       unique('showtime_unique_constraint').on(table.at, table.hallId),
-    ];
+    ] as const;
   },
 );
 
@@ -226,7 +226,7 @@ const usersShowtimesModel = pgTable(
         table.column,
         table.showtimeId,
       ),
-    ];
+    ] as const;
   },
 );
 

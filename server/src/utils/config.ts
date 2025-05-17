@@ -202,7 +202,7 @@ class EnvironmentManager {
     }
   }
 
-  #toNumber(key: string, value: string | undefined) {
+  #toNumber(key: string, value?: string) {
     if (!value) {
       return undefined;
     }

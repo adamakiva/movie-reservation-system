@@ -236,39 +236,45 @@ class MessageQueue {
     this.#isReady = false;
 
     await Promise.allSettled(
-      Object.values(this.#publishers).map((publisher) => {
-        return publisher
-          .removeListener(
-            'basic-return',
-            this.#boundUndeliveredMessageEventHandler,
-          )
-          .close()
-          .catch((error: unknown) => {
-            console.error('Failure to close publisher:', error);
-          });
+      Object.values(this.#publishers).map(async (publisher) => {
+        try {
+          await publisher
+            .removeListener(
+              'basic-return',
+              this.#boundUndeliveredMessageEventHandler,
+            )
+            .close();
+        } catch (error) {
+          console.error('Failure to close publisher:', error);
+        }
       }),
     );
 
     await Promise.allSettled(
-      this.#consumers.map((consumer) => {
-        return consumer
-          .removeListener('error', this.#boundConsumerErrorEventHandler)
-          .close()
-          .catch((error: unknown) => {
-            console.error('Failure to close consumer:', error);
-          });
+      this.#consumers.map(async (consumer) => {
+        try {
+          await consumer
+            .removeListener('error', this.#boundConsumerErrorEventHandler)
+            .close();
+        } catch (error) {
+          console.error('Failure to close consumer:', error);
+        }
       }),
     );
 
-    await this.#handler
-      .removeListener('connection.unblocked', this.#boundUnblockedEventHandler)
-      .removeListener('connection.blocked', this.#boundBlockEventHandler)
-      .removeListener('connection', this.#boundConnectionEventHandler)
-      .removeListener('error', this.#boundErrorEventHandler)
-      .close()
-      .catch((error: unknown) => {
-        console.error('Failure to close message queue:', error);
-      });
+    try {
+      await this.#handler
+        .removeListener(
+          'connection.unblocked',
+          this.#boundUnblockedEventHandler,
+        )
+        .removeListener('connection.blocked', this.#boundBlockEventHandler)
+        .removeListener('connection', this.#boundConnectionEventHandler)
+        .removeListener('error', this.#boundErrorEventHandler)
+        .close();
+    } catch (error) {
+      console.error('Failure to close message queue:', error);
+    }
   }
 
   /********************************************************************************/

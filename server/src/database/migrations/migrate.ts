@@ -24,26 +24,30 @@ async function run() {
   }
 
   const errorMessages: string[] = [];
-  new Map([...environmentVariables, ...databaseUrls]).forEach((value, key) => {
-    if (!value) {
-      errorMessages.push(`* Missing '${key}' environment variable`);
-    }
-  });
+  new Map([...environmentVariables, ...databaseUrls] as const).forEach(
+    (value, key) => {
+      if (!value) {
+        errorMessages.push(`* Missing '${key}' environment variable`);
+      }
+    },
+  );
 
   if (!errorMessages.length) {
-    await Promise.all(
-      databaseUrls.values().map((databaseUrl) => {
-        return migration(databaseUrl!);
-      }),
-    ).catch((error: unknown) => {
+    try {
+      await Promise.all(
+        databaseUrls.values().map((databaseUrl) => {
+          return migration(databaseUrl!);
+        }),
+      );
+    } catch (error) {
       console.error('Migration failed:', error);
-      process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
-    });
+      process.exit(ERROR_CODES.EXIT_NO_RESTART);
+    }
     return;
   }
 
   console.error(errorMessages.join('\n'));
-  process.exitCode = ERROR_CODES.EXIT_NO_RESTART;
+  process.exit(ERROR_CODES.EXIT_NO_RESTART);
 }
 
 async function migration(databaseUrl: string) {

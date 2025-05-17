@@ -29,7 +29,7 @@ const AUTHENTICATION_HEADER_ERRORS = {
     message: 'JWT token expired',
     header: `${REALM}, error="invalid_token", error_description="The access token expired"`,
   },
-} satisfies UnauthenticatedErrors;
+} as const satisfies UnauthenticatedErrors;
 
 /**********************************************************************************/
 

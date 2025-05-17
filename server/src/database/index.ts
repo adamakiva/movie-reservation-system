@@ -25,7 +25,7 @@ class Database {
 
   public constructor(params: {
     url: string;
-    options?: pg.Options<{}> | undefined;
+    options?: pg.Options<{}>;
     isAliveQuery: string;
     isReadyQuery: string;
     logger: Logger;

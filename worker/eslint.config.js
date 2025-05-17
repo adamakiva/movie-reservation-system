@@ -230,7 +230,7 @@ export default tslint.config({
     // Mainly used for async event handlers
     '@typescript-eslint/no-misused-promises': [
       'error',
-      { checksVoidReturn: { returns: false } },
+      { checksVoidReturn: { arguments: false } },
     ],
     '@typescript-eslint/no-mixed-enums': 'error',
     '@typescript-eslint/no-namespace': 'error',
