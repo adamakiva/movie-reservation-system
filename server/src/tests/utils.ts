@@ -265,8 +265,11 @@ async function recreateAdminRoleAndUser(
 /***************************** General utils **************************************/
 /**********************************************************************************/
 
+/**
+ * Including min, excluding max
+ */
 function randomNumber(min = 0, max = 9) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min)) + min;
 }
 
 function randomUUID<T extends number = 1>(

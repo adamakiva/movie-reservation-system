@@ -35,8 +35,8 @@ async function run() {
   if (!errorMessages.length) {
     try {
       await Promise.all(
-        databaseUrls.values().map((databaseUrl) => {
-          return migration(databaseUrl!);
+        databaseUrls.values().map(async (databaseUrl) => {
+          await migration(databaseUrl!);
         }),
       );
     } catch (error) {

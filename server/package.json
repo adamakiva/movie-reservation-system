@@ -8,6 +8,7 @@
     "test": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --test --test-concurrency=1 --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout",
     "test-only": "NODE_OPTIONS='--no-warnings --experimental-transform-types' node --inspect-wait=$SERVER_DEBUG --test --test-only --test-concurrency=1",
     "test-stress": "SERVER_PORT=${CLINIC_SERVER_PORT} ./node_modules/.bin/clinic doctor --dest ./src/tests/.clinic --open=false --on-port 'node ./src/tests/stress/index.ts' -- node ./src/tests/stress/server.ts",
+    "seed-database": "node ./src/tests/seed.ts",
     "lint": "eslint 'src/**/*.ts'; tsc --project tsconfig.json",
     "generate-migrations": "drizzle-kit generate --name=init-database --config=./src/database/migrations/drizzle.config.ts",
     "commit-local-updates": "ncu -u",

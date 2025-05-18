@@ -201,8 +201,8 @@ const usersShowtimesModel = pgTable(
     row: smallint('row').notNull(),
     column: smallint('column').notNull(),
     userId: uuid('user_id').notNull(),
-    transactionId: text('transaction_id'),
     showtimeId: uuid('showtime_id').notNull(),
+    transactionId: text('transaction_id'),
     ...timestamps,
   },
   (table) => {
