@@ -17,28 +17,19 @@ async function run() {
     ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
     ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
     ['AUTHENTICATION_HASH_SECRET', process.env.AUTHENTICATION_HASH_SECRET],
+    ['DATABASE_URL', process.env.DATABASE_URL],
   ] as const);
-  const databaseUrls = new Map([['DATABASE_URL', process.env.DATABASE_URL]]);
-  if (process.env.DATABASE_TEST_URL) {
-    databaseUrls.set('DATABASE_TEST_URL', process.env.DATABASE_TEST_URL);
-  }
 
   const errorMessages: string[] = [];
-  new Map([...environmentVariables, ...databaseUrls] as const).forEach(
-    (value, key) => {
-      if (!value) {
-        errorMessages.push(`* Missing '${key}' environment variable`);
-      }
-    },
-  );
+  environmentVariables.forEach((value, key) => {
+    if (!value) {
+      errorMessages.push(`* Missing '${key}' environment variable`);
+    }
+  });
 
   if (!errorMessages.length) {
     try {
-      await Promise.all(
-        databaseUrls.values().map(async (databaseUrl) => {
-          await migration(databaseUrl!);
-        }),
-      );
+      await migration(environmentVariables.get('DATABASE_URL')!);
     } catch (error) {
       console.error('Migration failed:', error);
       process.exit(ERROR_CODES.EXIT_NO_RESTART);

@@ -26,11 +26,11 @@
     "express": "~5.1.0",
     "file-type": "~20.5.0",
     "jose": "~6.0.11",
-    "multer": "~1.4.5-lts.2",
+    "multer": "~2.0.0",
     "postgres": "~3.4.5",
     "rabbitmq-client": "~5.0.4",
     "ws": "~8.18.2",
-    "zod": "~3.24.4"
+    "zod": "~3.25.3"
   },
   "devDependencies": {
     "@types/autocannon": "~7.12.7",
@@ -38,7 +38,7 @@
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
     "@types/express": "~5.0.2",
-    "@types/node": "~22.15.18",
+    "@types/node": "~22.15.19",
     "@types/multer": "~1.4.12",
     "@types/ws": "~8.18.1",
     "autocannon": "~8.0.0",

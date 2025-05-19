@@ -1,7 +1,6 @@
 FROM postgres:17.5-alpine AS postgres
 
 COPY ./configs/postgresql.conf /etc/postgresql.conf
-COPY ./scripts/init.databases.sh /docker-entrypoint-initdb.d/init.databases.sh
 
 CMD ["postgres", "-c", "config_file=/etc/postgresql.conf"]
 

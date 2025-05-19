@@ -357,49 +357,6 @@ await suite('Authentication unit tests', async () => {
       },
     );
   });
-  await test(
-    'Invalid - Refresh service: Malformed JWT',
-    { todo: 'Figure out a way to mock the sync validation check' },
-    async (context) => {
-      const { request, response } = createHttpMocks<ResponseWithContext>({
-        logger,
-        reqOptions: {
-          body: {
-            refreshToken: 'Bearer ph',
-          },
-        },
-        resOptions: {
-          locals: {
-            context: {
-              authentication,
-              fileManager,
-              database,
-              messageQueue,
-              logger,
-            },
-          },
-        },
-      });
-
-      const refreshAccessTokenSpy = context.mock.fn(
-        serviceFunctions.refreshAccessToken,
-      );
-
-      await assert.rejects(
-        async () => {
-          await refreshAccessTokenSpy(request, response);
-        },
-        (error: GeneralError) => {
-          assert.strictEqual(error instanceof GeneralError, true);
-          assert.strictEqual(
-            error.getClientError(response).code,
-            HTTP_STATUS_CODES.UNAUTHORIZED,
-          );
-          return true;
-        },
-      );
-    },
-  );
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
     const { request, response } = createHttpMocks<ResponseWithContext>({
       logger,

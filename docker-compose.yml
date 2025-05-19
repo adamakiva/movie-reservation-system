@@ -14,7 +14,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-admin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-admin}
       # Spin-up a an additional replicated database for tests
-      - POSTGRES_DATABASES=${POSTGRES_DATABASES:-mrs,mrs_test}
+      - POSTGRES_DB=${POSTGRES_DB:-mrs}
       - PSQL_HISTORY=${PSQL_HISTORY:-/var/lib/postgresql/data/.psql_history}
     volumes:
       - ./dev-data/postgres:/var/lib/postgresql/data:rw
@@ -68,7 +68,6 @@ services:
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-::,127.0.0.1,localhost}
       # Database options
       - DATABASE_URL=${DATABASE_URL:-postgres://admin:admin@movie-reservation-system-postgres:5432/mrs}
-      - DATABASE_TEST_URL=${DATABASE_TEST_URL:-postgres://admin:admin@movie-reservation-system-postgres:5432/mrs_test}
       - DATABASE_MAX_CONNECTIONS=${DATABASE_MAX_CONNECTIONS:-32}
       - DATABASE_STATEMENT_TIMEOUT=${DATABASE_STATEMENT_TIMEOUT:-30000}
       - DATABASE_TRANSACTION_TIMEOUT=${DATABASE_TRANSACTION_TIMEOUT:-60000}

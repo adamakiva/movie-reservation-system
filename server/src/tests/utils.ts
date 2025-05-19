@@ -106,9 +106,6 @@ const { PostgresError } = pg;
 /**********************************************************************************/
 
 async function initServer() {
-  // In order to reuse the environment manager class, we swap the relevant values
-  process.env.DATABASE_URL = process.env.DATABASE_TEST_URL;
-
   const logger = mockLogger();
 
   const environmentManager = new EnvironmentManager(logger);
