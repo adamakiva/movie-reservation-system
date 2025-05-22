@@ -256,6 +256,12 @@ const SHOWTIME_SCHEMAS = {
   ),
   CANCEL: zod.object(
     {
+      user_id: zod
+        .string({
+          invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
+          required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+        })
+        .uuid(USER.ID.ERROR_MESSAGE),
       showtime_id: zod
         .string({
           invalid_type_error: SHOWTIME.ID.INVALID_TYPE_ERROR_MESSAGE,
@@ -367,20 +373,27 @@ function validateGetShowtimes(request: Request) {
   return validatedResult;
 }
 
+function validateGetUserShowtimes(request: Request) {
+  const { user_id: userId } = parseValidationResult(
+    SHOWTIME_SCHEMAS.USER.READ.PARAMS.safeParse(request.params),
+  );
+  const { cursor, pageSize } = parseValidationResult(
+    SHOWTIME_SCHEMAS.USER.READ.QUERY.safeParse(request.query),
+  );
+
+  return {
+    userId,
+    cursor,
+    pageSize,
+  } as const;
+}
+
 function validateCreateShowtime(request: Request) {
   const validatedResult = parseValidationResult(
     SHOWTIME_SCHEMAS.CREATE.safeParse(request.body),
   );
 
   return validatedResult;
-}
-
-function validateDeleteShowtime(request: Request) {
-  const { showtime_id: showtimeId } = parseValidationResult(
-    SHOWTIME_SCHEMAS.DELETE.safeParse(request.params),
-  );
-
-  return showtimeId;
 }
 
 function validateReserveShowtimeTicket(request: Request) {
@@ -395,27 +408,20 @@ function validateReserveShowtimeTicket(request: Request) {
   } as const;
 }
 
+function validateDeleteShowtime(request: Request) {
+  const { showtime_id: showtimeId } = parseValidationResult(
+    SHOWTIME_SCHEMAS.DELETE.safeParse(request.params),
+  );
+
+  return showtimeId;
+}
+
 function validateCancelUserShowtimeReservation(request: Request) {
   const { showtime_id: showtimeId } = parseValidationResult(
     SHOWTIME_SCHEMAS.CANCEL.safeParse(request.params),
   );
 
   return showtimeId;
-}
-
-function validateGetUserShowtimes(request: Request) {
-  const { user_id: userId } = parseValidationResult(
-    SHOWTIME_SCHEMAS.USER.READ.PARAMS.safeParse(request.params),
-  );
-  const { cursor, pageSize } = parseValidationResult(
-    SHOWTIME_SCHEMAS.USER.READ.QUERY.safeParse(request.query),
-  );
-
-  return {
-    userId,
-    cursor,
-    pageSize,
-  } as const;
 }
 
 /**********************************************************************************/

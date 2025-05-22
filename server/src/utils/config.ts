@@ -38,6 +38,7 @@ const REQUIRED_ENVIRONMENT_VARIABLES = [
   'NODE_MAX_SOCKETS',
   'NODE_MAX_TOTAL_SOCKETS',
   'NODE_DEFAULT_HIGH_WATERMARK',
+  'ADMIN_ROLE_ID',
 ] as const;
 
 /**********************************************************************************/
@@ -164,6 +165,7 @@ class EnvironmentManager {
         )!,
         hash: Buffer.from(process.env.AUTHENTICATION_HASH_SECRET!),
       },
+      adminRoleId: process.env.ADMIN_ROLE_ID!,
     } as const;
 
     this.#setGlobalValues({

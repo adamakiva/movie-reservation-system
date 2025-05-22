@@ -2,6 +2,7 @@ import {
   ERROR_CODES,
   HTTP_STATUS_CODES,
 } from '@adamakiva/movie-reservation-system-shared';
+import { eq, or } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import type pg from 'postgres';
 
@@ -50,6 +51,58 @@ function handleNonExistentRoute(
   response
     .status(HTTP_STATUS_CODES.NOT_FOUND)
     .json(`The route '${request.url}' does not exist`);
+}
+
+function isAdmin(adminRoleId: string) {
+  return async (
+    request: Request,
+    response: ResponseWithContext,
+    next: NextFunction,
+  ) => {
+    const { authentication, database } = response.locals.context;
+    const userId = authentication.getUserId(request.headers.authorization!);
+
+    const handler = database.getHandler();
+    const { user: userModel } = database.getModels();
+
+    const [user] = await handler
+      .select({ roleId: userModel.roleId })
+      .from(userModel)
+      .where(eq(userModel.id, userId));
+    if (!user || user.roleId !== adminRoleId) {
+      throw new GeneralError(HTTP_STATUS_CODES.FORBIDDEN, 'Forbidden');
+    }
+
+    next();
+  };
+}
+
+function isSameUserOrAdmin(adminRoleId: string) {
+  return async (
+    request: Request,
+    response: ResponseWithContext,
+    next: NextFunction,
+  ) => {
+    const { authentication, database } = response.locals.context;
+
+    const handler = database.getHandler();
+    const { user: userModel } = database.getModels();
+    const userId = authentication.getUserId(request.headers.authorization!);
+
+    const userIds = (
+      await handler
+        .select({ id: userModel.id })
+        .from(userModel)
+        .where(or(eq(userModel.id, userId), eq(userModel.roleId, adminRoleId)))
+    ).map(({ id }) => {
+      return id;
+    });
+    if (!userIds.includes(userId)) {
+      throw new GeneralError(HTTP_STATUS_CODES.FORBIDDEN, 'Forbidden');
+    }
+
+    next();
+  };
 }
 
 function errorHandler(
@@ -139,4 +192,6 @@ export {
   checkMethod,
   errorHandler,
   handleNonExistentRoute,
+  isAdmin,
+  isSameUserOrAdmin,
 };

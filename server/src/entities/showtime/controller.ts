@@ -19,6 +19,20 @@ async function getShowtimes(request: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.SUCCESS).json(showtimes);
 }
 
+async function getUserShowtimes(
+  request: Request,
+  response: ResponseWithContext,
+) {
+  const pagination = showtimeValidator.validateGetUserShowtimes(request);
+
+  const userShowtimes = await showtimeService.getUserShowtimes(
+    response.locals.context,
+    pagination,
+  );
+
+  response.status(HTTP_STATUS_CODES.SUCCESS).json(userShowtimes);
+}
+
 async function createShowtime(request: Request, response: ResponseWithContext) {
   const showtimeToCreate = showtimeValidator.validateCreateShowtime(request);
 
@@ -28,14 +42,6 @@ async function createShowtime(request: Request, response: ResponseWithContext) {
   );
 
   response.status(HTTP_STATUS_CODES.CREATED).json(createdShowtime);
-}
-
-async function deleteShowtime(request: Request, response: ResponseWithContext) {
-  const showtimeId = showtimeValidator.validateDeleteShowtime(request);
-
-  await showtimeService.deleteShowtime(response.locals.context, showtimeId);
-
-  response.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
 async function reserveShowtimeTicket(
@@ -54,6 +60,14 @@ async function reserveShowtimeTicket(
   response.status(HTTP_STATUS_CODES.ACCEPTED).end();
 }
 
+async function deleteShowtime(request: Request, response: ResponseWithContext) {
+  const showtimeId = showtimeValidator.validateDeleteShowtime(request);
+
+  await showtimeService.deleteShowtime(response.locals.context, showtimeId);
+
+  response.status(HTTP_STATUS_CODES.ACCEPTED).end();
+}
+
 async function cancelUserShowtimeReservation(
   request: Request,
   response: ResponseWithContext,
@@ -68,20 +82,6 @@ async function cancelUserShowtimeReservation(
   });
 
   response.status(HTTP_STATUS_CODES.ACCEPTED).end();
-}
-
-async function getUserShowtimes(
-  request: Request,
-  response: ResponseWithContext,
-) {
-  const pagination = showtimeValidator.validateGetUserShowtimes(request);
-
-  const userShowtimes = await showtimeService.getUserShowtimes(
-    response.locals.context,
-    pagination,
-  );
-
-  response.status(HTTP_STATUS_CODES.SUCCESS).json(userShowtimes);
 }
 
 /**********************************************************************************/

@@ -58,6 +58,7 @@ class HttpServer {
     allowedMethods: readonly string[];
     routes: { http: string };
     httpServerConfigurations: EnvironmentVariables['httpServer']['configurations'];
+    adminRoleId: string;
     logger: Logger;
   }) {
     const {
@@ -70,6 +71,7 @@ class HttpServer {
       allowedMethods,
       routes,
       httpServerConfigurations,
+      adminRoleId,
       logger,
     } = params;
 
@@ -110,7 +112,7 @@ class HttpServer {
 
     return self
       .#attachServerConfigurations(httpServerConfigurations)
-      .#attachRoutesMiddlewares(app);
+      .#attachRoutesMiddlewares(app, adminRoleId);
   }
 
   public async listen(port?: number) {
@@ -340,7 +342,7 @@ class HttpServer {
     return this;
   }
 
-  #attachRoutesMiddlewares(app: Express) {
+  #attachRoutesMiddlewares(app: Express, adminRoleId: string) {
     // The order matters
     app
       // Attach context to every request
@@ -352,12 +354,12 @@ class HttpServer {
         this.#routes.http,
         routers.authenticationRouter,
         this.#authentication.httpAuthenticationMiddleware,
-        routers.roleRouter,
-        routers.userRouter,
-        routers.genreRouter,
-        routers.movieRouter(this.#fileManager),
-        routers.hallRouter,
-        routers.showtimeRouter,
+        routers.roleRouter(adminRoleId),
+        routers.userRouter(adminRoleId),
+        routers.genreRouter(adminRoleId),
+        routers.movieRouter(this.#fileManager, adminRoleId),
+        routers.hallRouter(adminRoleId),
+        routers.showtimeRouter(adminRoleId),
       )
       .use('/', Middlewares.handleNonExistentRoute, Middlewares.errorHandler);
 

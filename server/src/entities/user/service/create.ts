@@ -43,14 +43,14 @@ async function createUser(
         role: roleModel.name,
       })
       .from(createUserSubQuery)
-      .innerJoin(roleModel, eq(roleModel.id, userToCreate.roleId));
+      .innerJoin(roleModel, eq(roleModel.id, userData.roleId));
 
     return createdUser!;
   } catch (error) {
     throw userCreationError({
       error,
-      email: userToCreate.email,
-      role: userToCreate.roleId,
+      email: userData.email,
+      role: userData.roleId,
     });
   }
 }

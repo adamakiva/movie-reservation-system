@@ -53,7 +53,7 @@ async function getUsers(
     .limit(pageSize + 1)
     .orderBy(asc(userModel.createdAt), asc(userModel.id));
 
-  return sanitizeUserPage(usersPage, pagination.pageSize);
+  return sanitizeUserPage(usersPage, pageSize);
 }
 
 async function getUser(

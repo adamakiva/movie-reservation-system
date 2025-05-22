@@ -116,6 +116,7 @@ async function initServer() {
     websocketServer: websocketServerEnv,
     database: databaseEnv,
     messageQueue: messageQueueEnv,
+    adminRoleId,
   } = environmentManager.getEnvVariables();
 
   const server = await HttpServer.create({
@@ -178,6 +179,7 @@ async function initServer() {
       http: `/${httpServerEnv.route}`,
     },
     httpServerConfigurations: httpServerEnv.configurations,
+    adminRoleId,
     logger,
   });
 
@@ -947,6 +949,7 @@ export {
   CONSTANTS,
   createHttpMocks,
   createWebsocketClient,
+  eq,
   ERROR_CODES,
   GeneralError,
   generateGenresData,

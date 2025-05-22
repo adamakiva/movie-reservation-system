@@ -22,6 +22,7 @@ async function startServer() {
     websocketServer: websocketServerEnv,
     database: databaseEnv,
     messageQueue: messageQueueEnv,
+    adminRoleId,
   } = environmentManager.getEnvVariables();
 
   const server = await HttpServer.create({
@@ -84,6 +85,7 @@ async function startServer() {
       http: `/${httpServerEnv.route}`,
     },
     httpServerConfigurations: httpServerEnv.configurations,
+    adminRoleId,
     logger,
   });
 

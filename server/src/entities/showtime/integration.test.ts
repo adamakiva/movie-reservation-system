@@ -7,6 +7,7 @@ import {
   before,
   clearDatabase,
   CONSTANTS,
+  eq,
   generateShowtimesData,
   getAdminTokens,
   HTTP_STATUS_CODES,
@@ -65,6 +66,23 @@ function compareShowtimes(params: {
       at: new Date(at),
     },
   );
+}
+
+async function getAdminUserId(database: ServerParams['database']) {
+  const handler = database.getHandler();
+  const { user: userModel } = database.getModels();
+  const email = process.env.ADMIN_EMAIL!;
+
+  const [user] = await handler
+    .select({ id: userModel.id })
+    .from(userModel)
+    .where(eq(userModel.email, email));
+
+  if (!user) {
+    throw new Error('Should never happen');
+  }
+
+  return user.id;
 }
 
 /**********************************************************************************/
@@ -1123,7 +1141,10 @@ await suite('Showtime integration tests', async () => {
     }
   });
   await test('Valid - Cancel reserved showtime', async () => {
-    const { accessToken } = await getAdminTokens(httpRoute);
+    const [{ accessToken }, adminUserId] = await Promise.all([
+      getAdminTokens(httpRoute),
+      getAdminUserId(database),
+    ]);
     try {
       const {
         createdShowtime: { id: showtimeId },
@@ -1155,7 +1176,7 @@ await suite('Showtime integration tests', async () => {
         'text',
         string
       >({
-        route: `${httpRoute}/showtimes/cancel-reservation/${showtimeId}`,
+        route: `${httpRoute}/showtimes/cancel-reservation/${adminUserId}/${showtimeId}`,
         method: 'DELETE',
         headers: { Authorization: accessToken },
         responseType: 'text',
