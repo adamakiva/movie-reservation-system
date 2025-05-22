@@ -108,14 +108,14 @@ check_services_health() {
 }
 
 main() {
-    cd "$ROOT_DIR" || exit 1;
+    cd "$ROOT_DIR" &&
     check_prerequisites &&
-    mkdir -p "$DATABASE_DATA_DIR" "$MESSAGE_QUEUE_DATA_DIR" "$MOVIE_POSTERS_DIR" "$NPM_SERVER_CACHE_DIR" "$NPM_WORKER_CACHE_DIR" || exit 1;
+    mkdir -p "$DATABASE_DATA_DIR" "$MESSAGE_QUEUE_DATA_DIR" "$MOVIE_POSTERS_DIR" "$NPM_SERVER_CACHE_DIR" "$NPM_WORKER_CACHE_DIR" &&
     generate_certs &&
     generate_keys &&
     install_dependencies &&
-    rm -f "$ERR_LOG_FILE";
-    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait || exit 1;
+    rm -f "$ERR_LOG_FILE" &&
+    UID="$UID" GID="$GID" UV_THREADPOOL_SIZE="$UV_THREADPOOL_SIZE" docker compose up --always-recreate-deps --build --force-recreate -d --wait &&
     check_services_health;
 }
 

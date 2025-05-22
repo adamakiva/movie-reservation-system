@@ -20,20 +20,6 @@ const CORRELATION_IDS = {
   SHOWTIME_CANCELLATION: 'showtime.cancel',
 };
 
-type PublishOptions = Omit<
-  Envelope,
-  'exchange' | 'routingKey' | 'correlationId'
-> & {
-  correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
-};
-
-type Logger = {
-  // eslint-disable-next-line no-unused-vars
-  info: (...args: unknown[]) => void;
-  // eslint-disable-next-line no-unused-vars
-  error: (...args: unknown[]) => void;
-};
-
 type Exchanges = ['mrs'];
 type Consumers = ['ticket', 'showtime'];
 type Publishers = ['ticket', 'showtime'];
@@ -100,7 +86,12 @@ class MessageQueue {
 
   public constructor(params: {
     connectionOptions: ConnectionOptions;
-    logger: Logger;
+    logger: {
+      // eslint-disable-next-line no-unused-vars
+      info: (...args: unknown[]) => void;
+      // eslint-disable-next-line no-unused-vars
+      error: (...args: unknown[]) => void;
+    };
   }) {
     const { connectionOptions, logger } = params;
 
@@ -190,20 +181,20 @@ class MessageQueue {
       ...options
     } = consumerProps;
 
-    const consumer = this.#handler
-      .createConsumer(
-        {
-          ...options,
-          exchanges: [{ exchange, passive: true, durable: true }],
-          queue,
-          queueBindings: [{ exchange, queue, routingKey }],
-          queueOptions: { passive: true, durable: true },
-        },
-        handler,
-      )
-      .on('error', this.#boundConsumerErrorEventHandler);
-
-    this.#consumers.push(consumer);
+    this.#consumers.push(
+      this.#handler
+        .createConsumer(
+          {
+            ...options,
+            exchanges: [{ exchange, passive: true, durable: true }],
+            queue,
+            queueBindings: [{ exchange, queue, routingKey }],
+            queueOptions: { passive: true, durable: true },
+          },
+          handler,
+        )
+        .on('error', this.#boundConsumerErrorEventHandler),
+    );
 
     return this;
   }
@@ -213,7 +204,9 @@ class MessageQueue {
     exchange: Exchanges[number];
     routingKey: RoutingKeys[keyof RoutingKeys][number];
     data: Buffer | string | object;
-    options: PublishOptions;
+    options: Omit<Envelope, 'exchange' | 'routingKey' | 'correlationId'> & {
+      correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
+    };
   }) {
     const { publisher, exchange, routingKey, data, options } = params;
 
@@ -235,32 +228,34 @@ class MessageQueue {
     this.#isAlive = false;
     this.#isReady = false;
 
-    await Promise.allSettled(
+    let results = await Promise.allSettled(
       Object.values(this.#publishers).map(async (publisher) => {
-        try {
-          await publisher
-            .removeListener(
-              'basic-return',
-              this.#boundUndeliveredMessageEventHandler,
-            )
-            .close();
-        } catch (error) {
-          console.error('Failure to close publisher:', error);
-        }
+        await publisher
+          .removeListener(
+            'basic-return',
+            this.#boundUndeliveredMessageEventHandler,
+          )
+          .close();
       }),
     );
+    results.forEach((result) => {
+      if (result.status === 'rejected') {
+        console.error('Failure to close publisher:', result.reason);
+      }
+    });
 
-    await Promise.allSettled(
+    results = await Promise.allSettled(
       this.#consumers.map(async (consumer) => {
-        try {
-          await consumer
-            .removeListener('error', this.#boundConsumerErrorEventHandler)
-            .close();
-        } catch (error) {
-          console.error('Failure to close consumer:', error);
-        }
+        await consumer
+          .removeListener('error', this.#boundConsumerErrorEventHandler)
+          .close();
       }),
     );
+    results.forEach((result) => {
+      if (result.status === 'rejected') {
+        console.error('Failure to close consumer:', result.reason);
+      }
+    });
 
     try {
       await this.#handler
