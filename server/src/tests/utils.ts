@@ -53,8 +53,6 @@ import type {
   DatabaseHandler,
   DatabaseModel,
   PaginatedResult,
-  ResponseWithContext,
-  ResponseWithoutContext,
 } from '../utils/types.ts';
 
 /**********************************************************************************/
@@ -917,7 +915,7 @@ function mockLogger() {
   return logger;
 }
 
-function createHttpMocks<T extends Response = Response>(params: {
+function createHttpMocks(params: {
   logger: Logger;
   reqOptions?: RequestOptions;
   resOptions?: ResponseOptions;
@@ -925,13 +923,15 @@ function createHttpMocks<T extends Response = Response>(params: {
   const { logger, reqOptions, resOptions } = params;
 
   return {
-    request: createRequest(reqOptions),
-    response: createResponse<T>({
-      locals: {
-        context: { logger: logger },
+    request: createRequest({
+      app: {
+        locals: {
+          logger,
+        },
       },
-      ...resOptions,
+      ...reqOptions,
     }),
+    response: createResponse(resOptions),
   } as const;
 }
 
@@ -998,8 +998,6 @@ export {
   type Hall,
   type Movie,
   type PaginatedResult,
-  type ResponseWithContext,
-  type ResponseWithoutContext,
   type Role,
   type ServerParams,
   type Showtime,

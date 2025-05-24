@@ -1,18 +1,17 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
-import type { Request } from 'express';
+import type { Locals, Request, Response } from 'express';
 
 import { GeneralError, UnauthorizedError } from '../../utils/errors.ts';
-import type { RequestContext, ResponseWithContext } from '../../utils/types.ts';
 
 import * as authenticationValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function login(request: Request, response: ResponseWithContext) {
-  const credentials = authenticationValidator.validateLogin(request);
+async function login(request: Request, response: Response) {
+  const { authentication, database } = request.app.locals;
 
-  const { authentication, database } = response.locals.context;
+  const credentials = authenticationValidator.validateLogin(request);
 
   const userId = await validateCredentials({
     authentication,
@@ -25,15 +24,12 @@ async function login(request: Request, response: ResponseWithContext) {
   response.status(HTTP_STATUS_CODES.CREATED).json(tokens);
 }
 
-async function refreshAccessToken(
-  request: Request,
-  response: ResponseWithContext,
-) {
+async function refreshAccessToken(request: Request, response: Response) {
+  const { authentication } = request.app.locals;
+  const { accessTokenExpirationTime } = authentication.getExpirationTime();
+
   const { refreshToken } =
     authenticationValidator.validateRefreshAccessToken(request);
-
-  const { authentication } = response.locals.context;
-  const { accessTokenExpirationTime } = authentication.getExpirationTime();
 
   const {
     payload: { sub: userId, exp },
@@ -53,8 +49,8 @@ async function refreshAccessToken(
 /**********************************************************************************/
 
 async function validateCredentials(params: {
-  authentication: RequestContext['authentication'];
-  database: RequestContext['database'];
+  authentication: Locals['authentication'];
+  database: Locals['database'];
   credentials: { email: string; password: string };
 }) {
   const {
@@ -70,7 +66,7 @@ async function validateCredentials(params: {
 }
 
 async function readUserFromDatabase(
-  database: RequestContext['database'],
+  database: Locals['database'],
   email: string,
 ) {
   const handler = database.getHandler();
@@ -79,8 +75,7 @@ async function readUserFromDatabase(
   const [user] = await handler
     .select({ id: userModel.id, hash: userModel.hash })
     .from(userModel)
-    .where(eq(userModel.email, email))
-    .limit(1);
+    .where(eq(userModel.email, email));
   if (!user) {
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
@@ -96,7 +91,7 @@ async function readUserFromDatabase(
 }
 
 async function validatePassword(params: {
-  authentication: RequestContext['authentication'];
+  authentication: Locals['authentication'];
   hash: string;
   password: string;
 }) {
@@ -111,20 +106,16 @@ async function validatePassword(params: {
       );
     }
   } catch (error) {
-    if (error instanceof GeneralError || !(error instanceof Error)) {
-      throw error;
-    }
-
     throw new GeneralError(
       HTTP_STATUS_CODES.BAD_REQUEST,
       'Email and/or password are incorrect',
-      error.cause,
+      error instanceof Error ? error.cause : undefined,
     );
   }
 }
 
 async function generateTokens(
-  authentication: RequestContext['authentication'],
+  authentication: Locals['authentication'],
   userId: string,
 ) {
   const { accessTokenExpirationTime, refreshTokenExpirationTime } =

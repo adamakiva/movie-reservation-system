@@ -1,6 +1,5 @@
 import { eq } from 'drizzle-orm';
-
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import {
   type DeleteRoleValidatedData,
@@ -10,7 +9,7 @@ import {
 /**********************************************************************************/
 
 async function deleteRole(
-  context: RequestContext,
+  context: Locals,
   roleId: DeleteRoleValidatedData,
 ): Promise<void> {
   const { database } = context;

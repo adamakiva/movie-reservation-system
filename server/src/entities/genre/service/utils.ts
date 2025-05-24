@@ -16,7 +16,9 @@ import type {
 
 type CreateGenreValidatedData = ReturnType<typeof validateCreateGenre>;
 type UpdateGenreValidatedData = ReturnType<typeof validateUpdateGenre>;
-type DeleteGenreValidatedData = ReturnType<typeof validateDeleteGenre>;
+type DeleteGenreValidatedData = ReturnType<
+  typeof validateDeleteGenre
+>['genreId'];
 
 type Genre = {
   id: string;

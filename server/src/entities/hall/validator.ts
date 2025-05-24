@@ -201,7 +201,7 @@ function validateCreateHall(request: Request) {
 }
 
 function validateUpdateHall(request: Request) {
-  const validatedResult = parseValidationResult(
+  const updates = parseValidationResult(
     HALL_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { hall_id: hallId } = parseValidationResult(
@@ -209,8 +209,8 @@ function validateUpdateHall(request: Request) {
   );
 
   return {
+    ...updates,
     hallId,
-    ...validatedResult,
   } as const;
 }
 
@@ -219,7 +219,7 @@ function validateDeleteHall(request: Request) {
     HALL_SCHEMAS.DELETE.safeParse(request.params),
   );
 
-  return hallId;
+  return { hallId };
 }
 
 /**********************************************************************************/

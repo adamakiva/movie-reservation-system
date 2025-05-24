@@ -2,11 +2,10 @@ import { readFile } from 'node:fs/promises';
 
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { argon2i, hash, verify } from 'argon2';
-import type { NextFunction, Request } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as jose from 'jose';
 
 import { GeneralError, UnauthorizedError } from '../../utils/errors.ts';
-import type { ResponseWithContext } from '../../utils/types.ts';
 
 /**********************************************************************************/
 
@@ -17,6 +16,8 @@ class AuthenticationManager {
   readonly #access;
   readonly #refresh;
   readonly #hashSecret;
+
+  readonly #boundHttpAuthenticationMiddleware;
 
   public static async create(params: {
     audience: string;
@@ -43,14 +44,14 @@ class AuthenticationManager {
       hashSecret,
     } = params;
 
-    const [
+    const {
       publicAccessKey,
       privateAccessKey,
       publicRefreshKey,
       privateRefreshKey,
-    ] = await AuthenticationManager.#readKeysFromFile(keysPath, algorithm);
+    } = await AuthenticationManager.#readKeysFromFile(keysPath, algorithm);
 
-    return new AuthenticationManager({
+    const self = new AuthenticationManager({
       audience,
       issuer,
       type,
@@ -67,28 +68,9 @@ class AuthenticationManager {
       },
       hashSecret,
     });
+
+    return self;
   }
-
-  public readonly httpAuthenticationMiddleware = async (
-    request: Request,
-    _response: ResponseWithContext,
-    next: NextFunction,
-  ) => {
-    const authenticationHeader = request.headers.authorization;
-    if (!authenticationHeader) {
-      throw new UnauthorizedError('missing');
-    }
-    const token = authenticationHeader.replace('Bearer', '');
-
-    const {
-      payload: { sub, exp },
-    } = await this.validateToken(token, 'access');
-    if (!sub || !exp) {
-      throw new UnauthorizedError('malformed');
-    }
-
-    next();
-  };
 
   public getExpirationTime() {
     // JWT expects exp in seconds since epoch, not milliseconds
@@ -134,12 +116,14 @@ class AuthenticationManager {
   ) {
     let publicKey: jose.CryptoKey = null!;
     switch (type) {
-      case 'access':
+      case 'access': {
         ({ publicKey } = this.#access);
         break;
-      case 'refresh':
+      }
+      case 'refresh': {
         ({ publicKey } = this.#refresh);
         break;
+      }
     }
 
     try {
@@ -188,9 +172,12 @@ class AuthenticationManager {
     const {
       payload: { sub, exp },
     } = await this.validateToken(token, 'access');
-    if (!sub || !exp) {
-      throw new UnauthorizedError('malformed');
-    }
+
+    return !!sub && !!exp;
+  }
+
+  public httpAuthenticationMiddleware() {
+    return this.#boundHttpAuthenticationMiddleware;
   }
 
   /********************************************************************************/
@@ -221,6 +208,9 @@ class AuthenticationManager {
     this.#access = access;
     this.#refresh = refresh;
     this.#hashSecret = hashSecret;
+
+    this.#boundHttpAuthenticationMiddleware =
+      this.#httpAuthenticationMiddleware.bind(this);
   }
 
   static async #readKeysFromFile(keysPath: string, algorithm: string) {
@@ -238,12 +228,45 @@ class AuthenticationManager {
       readFile(`${keysPath}/refresh_private_key.pem`, encoding),
     ]);
 
-    return await Promise.all([
+    const [
+      publicAccessKey,
+      privateAccessKey,
+      publicRefreshKey,
+      privateRefreshKey,
+    ] = await Promise.all([
       jose.importSPKI(accessPublicKey, algorithm),
       jose.importPKCS8(accessPrivateKey, algorithm),
       jose.importSPKI(refreshPublicKey, algorithm),
       jose.importPKCS8(refreshPrivateKey, algorithm),
     ]);
+
+    return {
+      publicAccessKey,
+      privateAccessKey,
+      publicRefreshKey,
+      privateRefreshKey,
+    } as const;
+  }
+
+  async #httpAuthenticationMiddleware(
+    request: Request,
+    _response: Response,
+    next: NextFunction,
+  ) {
+    const authenticationHeader = request.headers.authorization;
+    if (!authenticationHeader) {
+      throw new UnauthorizedError('missing');
+    }
+    const token = authenticationHeader.replace('Bearer', '');
+
+    const {
+      payload: { sub, exp },
+    } = await this.validateToken(token, 'access');
+    if (!sub || !exp) {
+      throw new UnauthorizedError('malformed');
+    }
+
+    next();
   }
 }
 

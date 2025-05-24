@@ -1,10 +1,10 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import type { Hall } from './utils.ts';
 
 /**********************************************************************************/
 
-async function getHalls(context: RequestContext): Promise<Hall[]> {
+async function getHalls(context: Locals): Promise<Hall[]> {
   const { database } = context;
 
   const handler = database.getHandler();

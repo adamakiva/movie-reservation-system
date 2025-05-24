@@ -1,10 +1,10 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import type { Genre } from './utils.ts';
 
 /**********************************************************************************/
 
-async function getGenres(context: RequestContext): Promise<Genre[]> {
+async function getGenres(context: Locals): Promise<Genre[]> {
   const { database } = context;
 
   const handler = database.getHandler();

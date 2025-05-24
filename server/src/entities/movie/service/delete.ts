@@ -1,6 +1,5 @@
 import { eq } from 'drizzle-orm';
-
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import {
   type DeleteMovieValidatedData,
@@ -10,7 +9,7 @@ import {
 /**********************************************************************************/
 
 async function deleteMovie(
-  context: RequestContext,
+  context: Locals,
   movieId: DeleteMovieValidatedData,
 ): Promise<void> {
   const { database } = context;

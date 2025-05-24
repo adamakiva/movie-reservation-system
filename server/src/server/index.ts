@@ -15,7 +15,6 @@ import {
 } from '../entities/showtime/service/consumer.ts';
 import type { EnvironmentVariables } from '../utils/config.ts';
 import type { Logger } from '../utils/logger.ts';
-import type { RequestContext } from '../utils/types.ts';
 
 import * as Middlewares from './middlewares/index.ts';
 import { Cronjob } from './services/cronjob.ts';
@@ -36,7 +35,6 @@ class HttpServer {
   readonly #websocketServer;
   readonly #server;
   readonly #routes;
-  readonly #requestContext;
   readonly #logger;
 
   public static async create(params: {
@@ -89,8 +87,15 @@ class HttpServer {
       Middlewares.checkMethod(allowedMethods),
       compress(),
     );
-    const server = createServer(app);
+    app.locals = {
+      authentication,
+      database,
+      fileManager,
+      messageQueue,
+      logger,
+    } as const;
 
+    const server = createServer(app);
     const websocketServer = new WebsocketServer({
       ...websocketServerParams,
       server,
@@ -108,11 +113,11 @@ class HttpServer {
       server,
       routes,
       logger,
-    });
-
-    return self
+    })
       .#attachServerConfigurations(httpServerConfigurations)
       .#attachRoutesMiddlewares(app, adminRoleId);
+
+    return self;
   }
 
   public async listen(port?: number) {
@@ -222,14 +227,6 @@ class HttpServer {
     this.#logger = logger;
 
     this.#initMessageQueue(messageQueue.options.consumer);
-
-    this.#requestContext = {
-      authentication,
-      database,
-      fileManager,
-      messageQueue: messageQueue.handler,
-      logger,
-    } as const satisfies RequestContext;
   }
 
   #initMessageQueue(
@@ -345,15 +342,13 @@ class HttpServer {
   #attachRoutesMiddlewares(app: Express, adminRoleId: string) {
     // The order matters
     app
-      // Attach context to every request
-      .use(Middlewares.attachRequestContext(this.#requestContext))
       .use(routers.healthcheckRouter)
       // No point in logging all healthcheck requests
       .use(this.#logger.logMiddleware)
       .use(
         this.#routes.http,
         routers.authenticationRouter,
-        this.#authentication.httpAuthenticationMiddleware,
+        this.#authentication.httpAuthenticationMiddleware(),
         routers.roleRouter(adminRoleId),
         routers.userRouter(adminRoleId),
         routers.genreRouter(adminRoleId),

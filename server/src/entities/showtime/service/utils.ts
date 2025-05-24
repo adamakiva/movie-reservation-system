@@ -22,17 +22,19 @@ import type {
 /**********************************************************************************/
 
 type GetShowtimeValidatedData = ReturnType<typeof validateGetShowtimes>;
-type CreateShowtimeValidatedData = ReturnType<typeof validateCreateShowtime>;
-type DeleteShowtimeValidatedData = ReturnType<typeof validateDeleteShowtime>;
-type ReserveShowtimeTicketValidatedData = ReturnType<
-  typeof validateReserveShowtimeTicket
->;
-type CancelUserShowtimeValidatedData = ReturnType<
-  typeof validateCancelUserShowtimeReservation
->;
 type GetUserShowtimesValidatedData = ReturnType<
   typeof validateGetUserShowtimes
 >;
+type CreateShowtimeValidatedData = ReturnType<typeof validateCreateShowtime>;
+type ReserveShowtimeTicketValidatedData = ReturnType<
+  typeof validateReserveShowtimeTicket
+>;
+type DeleteShowtimeValidatedData = ReturnType<
+  typeof validateDeleteShowtime
+>['showtimeId'];
+type CancelUserShowtimeValidatedData = ReturnType<
+  typeof validateCancelUserShowtimeReservation
+>['showtimeId'];
 
 type Showtime = {
   id: string;

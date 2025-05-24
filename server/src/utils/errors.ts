@@ -141,24 +141,6 @@ function isSystemCallError(obj: unknown): obj is NodeJS.ErrnoException {
   );
 }
 
-function registerAbortController(timeout: number, reason?: string) {
-  const abortController = new AbortController();
-  const timeoutHandler = setTimeout(() => {
-    abortController.abort(reason);
-  }, timeout);
-
-  return {
-    signal: abortController.signal,
-    timeoutHandler,
-  } as const;
-}
-
 /**********************************************************************************/
 
-export {
-  GeneralError,
-  isError,
-  isSystemCallError,
-  registerAbortController,
-  UnauthorizedError,
-};
+export { GeneralError, isError, isSystemCallError, UnauthorizedError };

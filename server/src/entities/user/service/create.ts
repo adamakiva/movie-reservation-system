@@ -1,10 +1,7 @@
 import { eq } from 'drizzle-orm';
+import type { Locals } from 'express';
 
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { DatabaseHandler, DatabaseModel } from '../../../utils/types.ts';
 
 import {
   userCreationError,
@@ -15,7 +12,7 @@ import {
 /**********************************************************************************/
 
 async function createUser(
-  context: RequestContext,
+  context: Locals,
   userToCreate: CreateUserValidatedData,
 ): Promise<User> {
   const { authentication, database } = context;

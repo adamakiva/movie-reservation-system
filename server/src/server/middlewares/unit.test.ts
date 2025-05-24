@@ -12,8 +12,6 @@ import {
   suite,
   terminateServer,
   test,
-  type ResponseWithContext,
-  type ResponseWithoutContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -48,7 +46,7 @@ await suite('Middleware tests', async () => {
     const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);
 
     methods.forEach((allowedMethod, index) => {
-      const { request, response } = createHttpMocks<ResponseWithoutContext>({
+      const { request, response } = createHttpMocks({
         logger,
         reqOptions: {
           method: allowedMethod,
@@ -81,7 +79,7 @@ await suite('Middleware tests', async () => {
     const checkMethodMiddlewareSpy = context.mock.fn(checkMethodMiddleware);
 
     methods.forEach((disallowedMethod, index) => {
-      const { request, response } = createHttpMocks<ResponseWithoutContext>({
+      const { request, response } = createHttpMocks({
         logger,
         reqOptions: {
           method: disallowedMethod,
@@ -97,7 +95,7 @@ await suite('Middleware tests', async () => {
     });
   });
   await test('Valid - Non-existent route middleware', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -109,13 +107,16 @@ await suite('Middleware tests', async () => {
     assert.strictEqual(response.statusCode, HTTP_STATUS_CODES.NOT_FOUND);
   });
   await test('Invalid - Authentication middleware: Missing authorization header', async (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
+    const httpAuthenticationMiddlewareSpy =
+      authentication.httpAuthenticationMiddleware();
+
     await assert.rejects(
       async () => {
-        await authentication.httpAuthenticationMiddleware(
+        await httpAuthenticationMiddlewareSpy(
           request,
           response,
           context.mock.fn(),
@@ -133,16 +134,19 @@ await suite('Middleware tests', async () => {
     );
   });
   await test('Invalid - Authentication middleware: Invalid token', async (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         headers: { authorization: 'Bearer bla' },
       },
     });
 
+    const httpAuthenticationMiddlewareSpy =
+      authentication.httpAuthenticationMiddleware();
+
     await assert.rejects(
       async () => {
-        await authentication.httpAuthenticationMiddleware(
+        await httpAuthenticationMiddlewareSpy(
           request,
           response,
           context.mock.fn(),
@@ -160,7 +164,7 @@ await suite('Middleware tests', async () => {
     );
   });
   await test('Invalid - Error handler middleware: Headers sent', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
     const nextMock = context.mock.fn();
@@ -175,7 +179,7 @@ await suite('Middleware tests', async () => {
     assert.deepStrictEqual(nextMock.mock.calls[0]?.arguments[0], error);
   });
   await test('Invalid - Error handler middleware: MRS error instance', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
     const nextMock = context.mock.fn();
@@ -195,7 +199,7 @@ await suite('Middleware tests', async () => {
     );
   });
   await test('Invalid - Error handler middleware: Payload error', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
     const nextMock = context.mock.fn();
@@ -216,7 +220,7 @@ await suite('Middleware tests', async () => {
       // Since this method log a error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -233,7 +237,7 @@ await suite('Middleware tests', async () => {
       // Since this method log a error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -250,7 +254,7 @@ await suite('Middleware tests', async () => {
       // Since this method log a error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -267,7 +271,7 @@ await suite('Middleware tests', async () => {
       // Since this method log a error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -283,7 +287,7 @@ await suite('Middleware tests', async () => {
       // Since this method log a error, we mock it on purpose
     });
 
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 

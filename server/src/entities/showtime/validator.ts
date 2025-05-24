@@ -13,14 +13,6 @@ import {
 
 const { PAGINATION, QUERY, BODY, PARAMS } = VALIDATION;
 
-const USER = {
-  ID: {
-    INVALID_TYPE_ERROR_MESSAGE: 'User id must be a string',
-    REQUIRED_ERROR_MESSAGE: 'User id is required',
-    ERROR_MESSAGE: 'User id must be a valid UUIDV4',
-  },
-} as const;
-
 const SHOWTIME = {
   ID: {
     INVALID_TYPE_ERROR_MESSAGE: 'Showtime id must be a string',
@@ -33,7 +25,7 @@ const SHOWTIME = {
       VALUE: () => {
         return Date.now() + 60_000;
       },
-      ERROR_MESSAGE: 'Showtime must be a future date',
+      ERROR_MESSAGE: `Showtime can't be in the past`,
     },
   },
   MOVIE_ID: {
@@ -47,8 +39,8 @@ const SHOWTIME = {
     ERROR_MESSAGE: 'Hall id must be a valid UUIDV4',
   },
   ROWS: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Row must be a number',
-    REQUIRED_ERROR_MESSAGE: 'Row is required',
+    INVALID_TYPE_ERROR_MESSAGE: 'Hall rows must be a number',
+    REQUIRED_ERROR_MESSAGE: 'Hall rows is required',
     MIN_LENGTH: {
       VALUE: 1,
       ERROR_MESSAGE: 'Hall rows must be at least 1',
@@ -59,8 +51,8 @@ const SHOWTIME = {
     },
   },
   COLUMNS: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Column must be a number',
-    REQUIRED_ERROR_MESSAGE: 'Column is required',
+    INVALID_TYPE_ERROR_MESSAGE: 'Hall columns must be a number',
+    REQUIRED_ERROR_MESSAGE: 'Hall columns is required',
     MIN_LENGTH: {
       VALUE: 1,
       ERROR_MESSAGE: 'Hall columns must be at least 1',
@@ -69,6 +61,11 @@ const SHOWTIME = {
       VALUE: 64,
       ERROR_MESSAGE: 'Hall columns must be at most 64',
     },
+  },
+  USER_ID: {
+    INVALID_TYPE_ERROR_MESSAGE: 'User id must be a string',
+    REQUIRED_ERROR_MESSAGE: 'User id is required',
+    ERROR_MESSAGE: 'User id must be a valid UUIDV4',
   },
 } as const;
 
@@ -165,10 +162,12 @@ const SHOWTIME_SCHEMAS = {
         .date({
           errorMap: ({ code }, { defaultError }) => {
             switch (code) {
-              case 'invalid_date':
+              case 'invalid_date': {
                 return { message: SHOWTIME.AT.INVALID_TYPE_ERROR_MESSAGE };
-              default:
+              }
+              default: {
                 return { message: defaultError };
+              }
             }
           },
         })
@@ -258,10 +257,10 @@ const SHOWTIME_SCHEMAS = {
     {
       user_id: zod
         .string({
-          invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
-          required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+          invalid_type_error: SHOWTIME.USER_ID.INVALID_TYPE_ERROR_MESSAGE,
+          required_error: SHOWTIME.USER_ID.REQUIRED_ERROR_MESSAGE,
         })
-        .uuid(USER.ID.ERROR_MESSAGE),
+        .uuid(SHOWTIME.USER_ID.ERROR_MESSAGE),
       showtime_id: zod
         .string({
           invalid_type_error: SHOWTIME.ID.INVALID_TYPE_ERROR_MESSAGE,
@@ -280,10 +279,10 @@ const SHOWTIME_SCHEMAS = {
         {
           user_id: zod
             .string({
-              invalid_type_error: USER.ID.INVALID_TYPE_ERROR_MESSAGE,
-              required_error: USER.ID.REQUIRED_ERROR_MESSAGE,
+              invalid_type_error: SHOWTIME.USER_ID.INVALID_TYPE_ERROR_MESSAGE,
+              required_error: SHOWTIME.USER_ID.REQUIRED_ERROR_MESSAGE,
             })
-            .uuid(USER.ID.ERROR_MESSAGE),
+            .uuid(SHOWTIME.USER_ID.ERROR_MESSAGE),
         },
         {
           invalid_type_error: PARAMS.INVALID_TYPE_ERROR_MESSAGE,
@@ -377,14 +376,13 @@ function validateGetUserShowtimes(request: Request) {
   const { user_id: userId } = parseValidationResult(
     SHOWTIME_SCHEMAS.USER.READ.PARAMS.safeParse(request.params),
   );
-  const { cursor, pageSize } = parseValidationResult(
+  const cursor = parseValidationResult(
     SHOWTIME_SCHEMAS.USER.READ.QUERY.safeParse(request.query),
   );
 
   return {
+    ...cursor,
     userId,
-    cursor,
-    pageSize,
   } as const;
 }
 
@@ -397,15 +395,11 @@ function validateCreateShowtime(request: Request) {
 }
 
 function validateReserveShowtimeTicket(request: Request) {
-  const { showtimeId, row, column } = parseValidationResult(
+  const validatedParams = parseValidationResult(
     SHOWTIME_SCHEMAS.RESERVE.safeParse(request.body),
   );
 
-  return {
-    showtimeId,
-    row,
-    column,
-  } as const;
+  return validatedParams;
 }
 
 function validateDeleteShowtime(request: Request) {
@@ -413,7 +407,7 @@ function validateDeleteShowtime(request: Request) {
     SHOWTIME_SCHEMAS.DELETE.safeParse(request.params),
   );
 
-  return showtimeId;
+  return { showtimeId };
 }
 
 function validateCancelUserShowtimeReservation(request: Request) {
@@ -421,7 +415,7 @@ function validateCancelUserShowtimeReservation(request: Request) {
     SHOWTIME_SCHEMAS.CANCEL.safeParse(request.params),
   );
 
-  return showtimeId;
+  return { showtimeId };
 }
 
 /**********************************************************************************/

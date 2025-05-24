@@ -210,7 +210,6 @@ class EnvironmentManager {
     }
 
     const valueAsNumber = Number(value);
-
     if (isNaN(valueAsNumber)) {
       this.#logger.error(`Invalid value for '${key}' environment variable`);
 

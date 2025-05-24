@@ -1,13 +1,9 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, asc, eq, gt, or } from 'drizzle-orm';
+import type { Locals, Response } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type {
-  PaginatedResult,
-  Pagination,
-  RequestContext,
-  ResponseWithContext,
-} from '../../../utils/types.ts';
+import type { PaginatedResult, Pagination } from '../../../utils/types.ts';
 
 import { encodeCursor, sanitizeElement } from '../../utils.ts';
 
@@ -21,7 +17,7 @@ import type {
 /**********************************************************************************/
 
 async function getMovies(
-  context: RequestContext,
+  context: Locals,
   pagination: GetMoviesValidatedData,
 ): Promise<PaginatedResult<{ movies: Movie[] }>> {
   const { database } = context;
@@ -59,7 +55,7 @@ async function getMovies(
 }
 
 async function getMovie(
-  context: RequestContext,
+  context: Locals,
   movieId: GetMovieValidatedData,
 ): Promise<Movie> {
   const { database } = context;
@@ -88,11 +84,16 @@ async function getMovie(
   return movie;
 }
 
-async function getMoviePoster(
-  response: ResponseWithContext,
-  movieId: GetMovieValidatedData,
-): Promise<void> {
-  const { database } = response.locals.context;
+async function getMoviePoster(params: {
+  context: Locals;
+  response: Response;
+  movieId: GetMovieValidatedData;
+}): Promise<void> {
+  const {
+    context: { database, fileManager },
+    response,
+    movieId,
+  } = params;
 
   const handler = database.getHandler();
   const { moviePoster: moviePosterModel } = database.getModels();
@@ -113,12 +114,16 @@ async function getMoviePoster(
   }
   const { absolutePath, mimeType, sizeInBytes } = moviePoster;
 
-  await streamMoviePosterResponse(response, {
-    absolutePath,
-    sizeInBytes,
-    // Pay attention if the mime type needs the addition of charset, and if so
-    // make sure it is handled
-    contentType: mimeType,
+  await streamMoviePosterResponse({
+    response,
+    fileManager,
+    movieMetadata: {
+      absolutePath,
+      sizeInBytes,
+      // Pay attention if the mime type needs the addition of charset, and if so
+      // make sure it is handled
+      contentType: mimeType,
+    },
   });
 }
 
@@ -148,15 +153,12 @@ function sanitizeMoviesPage(
   } as const;
 }
 
-async function streamMoviePosterResponse(
-  response: ResponseWithContext,
-  movieMetadata: MoviePoster,
-) {
-  const {
-    locals: {
-      context: { fileManager },
-    },
-  } = response;
+async function streamMoviePosterResponse(params: {
+  response: Response;
+  fileManager: Locals['fileManager'];
+  movieMetadata: MoviePoster;
+}) {
+  const { response, fileManager, movieMetadata } = params;
   const { absolutePath, contentType, sizeInBytes } = movieMetadata;
 
   response

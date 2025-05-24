@@ -1,12 +1,9 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, asc, eq, gt, or } from 'drizzle-orm';
+import type { Locals } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type {
-  PaginatedResult,
-  Pagination,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { PaginatedResult, Pagination } from '../../../utils/types.ts';
 
 import { encodeCursor, sanitizeElement } from '../../utils.ts';
 
@@ -19,7 +16,7 @@ import type {
 /**********************************************************************************/
 
 async function getUsers(
-  context: RequestContext,
+  context: Locals,
   pagination: GetUsersValidatedData,
 ): Promise<PaginatedResult<{ users: User[] }>> {
   const { database } = context;
@@ -57,7 +54,7 @@ async function getUsers(
 }
 
 async function getUser(
-  context: RequestContext,
+  context: Locals,
   userId: GetUserValidatedData,
 ): Promise<User> {
   const { database } = context;

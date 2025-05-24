@@ -126,7 +126,7 @@ function validateCreateGenre(request: Request) {
 }
 
 function validateUpdateGenre(request: Request) {
-  const { name } = parseValidationResult(
+  const updates = parseValidationResult(
     GENRE_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { genre_id: genreId } = parseValidationResult(
@@ -134,8 +134,8 @@ function validateUpdateGenre(request: Request) {
   );
 
   return {
+    ...updates,
     genreId,
-    name,
   } as const;
 }
 
@@ -144,7 +144,7 @@ function validateDeleteGenre(request: Request) {
     GENRE_SCHEMAS.DELETE.safeParse(request.params),
   );
 
-  return genreId;
+  return { genreId };
 }
 
 /**********************************************************************************/

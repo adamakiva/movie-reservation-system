@@ -16,7 +16,6 @@ import {
   suite,
   terminateServer,
   test,
-  type ResponseWithContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -41,7 +40,7 @@ await suite('Hall unit tests', async () => {
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -77,7 +76,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -114,7 +113,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -151,7 +150,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -188,7 +187,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing rows', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -221,7 +220,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty rows', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -255,7 +254,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Rows number too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -289,7 +288,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Rows number too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -323,7 +322,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing columns', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -356,7 +355,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty columns', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -390,7 +389,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Columns number too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -424,7 +423,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Columns number too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -458,7 +457,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const { name: hallName } = await seedHall(database);
 
     const hallToCreate = {
@@ -503,7 +502,7 @@ await suite('Hall unit tests', async () => {
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -532,7 +531,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -561,7 +560,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -593,7 +592,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -625,7 +624,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -657,7 +656,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -689,7 +688,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -721,7 +720,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty rows', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -753,7 +752,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Rows number too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -785,7 +784,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Rows number too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -817,7 +816,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty columns', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -849,7 +848,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Columns number too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -881,7 +880,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Columns number too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -913,7 +912,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const createdHalls = await seedHalls(database, 2);
 
     const hallToUpdate = {
@@ -950,7 +949,7 @@ await suite('Hall unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -974,7 +973,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -1003,7 +1002,7 @@ await suite('Hall unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {

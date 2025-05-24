@@ -16,7 +16,7 @@ import type {
 
 type CreateRoleValidatedData = ReturnType<typeof validateCreateRole>;
 type UpdateRoleValidatedData = ReturnType<typeof validateUpdateRole>;
-type DeleteRoleValidatedData = ReturnType<typeof validateDeleteRole>;
+type DeleteRoleValidatedData = ReturnType<typeof validateDeleteRole>['roleId'];
 
 type Role = {
   id: string;

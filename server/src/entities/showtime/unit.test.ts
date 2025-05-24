@@ -15,7 +15,6 @@ import {
   terminateServer,
   test,
   VALIDATION,
-  type ResponseWithContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -39,7 +38,7 @@ await suite('Showtime unit tests', async () => {
   });
 
   await test('Invalid - Read multiple validation: Empty movie id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -68,7 +67,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid movie id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -97,7 +96,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty hall id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -126,7 +125,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid hall id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -155,7 +154,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty cursor', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { cursor: '' },
@@ -182,7 +181,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -213,7 +212,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -244,7 +243,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
@@ -271,7 +270,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -300,7 +299,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -329,7 +328,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid page size', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { 'page-size': randomAlphaNumericString() },
@@ -356,7 +355,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing at', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -386,7 +385,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty at', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -417,7 +416,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: At in the past', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -448,7 +447,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid at', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -479,7 +478,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing movie id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -509,7 +508,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty movie id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -540,7 +539,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid movie id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -571,7 +570,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing hall id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -601,7 +600,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty hall id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -632,7 +631,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid hall id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -663,7 +662,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -687,7 +686,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: { params: { showtime_id: '' } },
     });
@@ -712,7 +711,7 @@ await suite('Showtime unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: { params: { showtime_id: randomAlphaNumericString() } },
     });

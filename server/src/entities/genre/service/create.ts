@@ -1,4 +1,4 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import {
   type CreateGenreValidatedData,
@@ -9,7 +9,7 @@ import {
 /**********************************************************************************/
 
 async function createGenre(
-  context: RequestContext,
+  context: Locals,
   genreToCreate: CreateGenreValidatedData,
 ): Promise<Genre> {
   const { database } = context;

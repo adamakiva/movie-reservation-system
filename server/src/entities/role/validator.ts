@@ -120,7 +120,7 @@ function validateCreateRole(request: Request) {
 }
 
 function validateUpdateRole(request: Request) {
-  const { name } = parseValidationResult(
+  const updates = parseValidationResult(
     ROLE_SCHEMAS.UPDATE.BODY.safeParse(request.body),
   );
   const { role_id: roleId } = parseValidationResult(
@@ -128,8 +128,8 @@ function validateUpdateRole(request: Request) {
   );
 
   return {
+    ...updates,
     roleId,
-    name,
   } as const;
 }
 
@@ -138,7 +138,7 @@ function validateDeleteRole(request: Request) {
     ROLE_SCHEMAS.DELETE.safeParse(request.params),
   );
 
-  return roleId;
+  return { roleId };
 }
 
 /**********************************************************************************/

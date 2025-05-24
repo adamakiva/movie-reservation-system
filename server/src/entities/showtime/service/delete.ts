@@ -1,14 +1,10 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq } from 'drizzle-orm';
-import type { Request } from 'express';
+import type { Locals, Request } from 'express';
 
 import { isForeignKeyViolationError } from '../../../database/index.ts';
 import { GeneralError, isError } from '../../../utils/errors.ts';
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { DatabaseHandler, DatabaseModel } from '../../../utils/types.ts';
 
 import type {
   CancelUserShowtimeValidatedData,
@@ -18,7 +14,7 @@ import type {
 /**********************************************************************************/
 
 async function deleteShowtime(
-  context: RequestContext,
+  context: Locals,
   showtimeId: DeleteShowtimeValidatedData,
 ): Promise<void> {
   const { database, messageQueue } = context;
@@ -58,7 +54,7 @@ async function deleteShowtime(
 
 async function cancelUserShowtimeReservation(params: {
   request: Request;
-  context: RequestContext;
+  context: Locals;
   showtimeId: CancelUserShowtimeValidatedData;
 }) {
   const {
@@ -85,7 +81,7 @@ async function cancelUserShowtimeReservation(params: {
 
 async function deleteShowtimeWithAttachedUsers(params: {
   error: unknown;
-  messageQueue: RequestContext['messageQueue'];
+  messageQueue: Locals['messageQueue'];
   handler: DatabaseHandler;
   userShowtimeModel: DatabaseModel<'userShowtime'>;
   showtimeId: string;
@@ -127,7 +123,7 @@ async function deleteShowtimeWithAttachedUsers(params: {
 
 async function cancelShowtimeReservation(params: {
   handler: DatabaseHandler;
-  messageQueue: RequestContext['messageQueue'];
+  messageQueue: Locals['messageQueue'];
   showtimeModel: DatabaseModel<'showtime'>;
   showtimeId: string;
   userId: string;

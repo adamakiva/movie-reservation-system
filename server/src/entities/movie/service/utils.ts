@@ -14,10 +14,12 @@ import type {
 /**********************************************************************************/
 
 type GetMoviesValidatedData = ReturnType<typeof validateGetMovies>;
-type GetMovieValidatedData = ReturnType<typeof validateGetMovie>;
+type GetMovieValidatedData = ReturnType<typeof validateGetMovie>['movieId'];
 type CreateMovieValidatedData = ReturnType<typeof validateCreateMovie>;
 type UpdateMovieValidatedData = ReturnType<typeof validateUpdateMovie>;
-type DeleteMovieValidatedData = ReturnType<typeof validateDeleteMovie>;
+type DeleteMovieValidatedData = ReturnType<
+  typeof validateDeleteMovie
+>['movieId'];
 
 type Movie = {
   id: string;

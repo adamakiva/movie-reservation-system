@@ -97,26 +97,22 @@ async function startServer() {
 /**********************************************************************************/
 
 function attachProcessHandlers(server: HttpServer, logger: Logger) {
-  process
-    .on('warning', logger.warn)
-    .once('unhandledRejection', async (error: unknown) => {
-      await closeServer({
-        server,
-        code: ERROR_CODES.EXIT_RESTART,
-        error: { logger, value: error },
-      });
-    })
-    .once('uncaughtException', async (error: unknown) => {
-      await closeServer({
-        server,
-        code: ERROR_CODES.EXIT_RESTART,
-        error: { logger, value: error },
-      });
+  const errorHandler = async (error: unknown) => {
+    await closeServer({
+      server,
+      code: ERROR_CODES.EXIT_RESTART,
+      error: { logger, value: error },
     });
-
+  };
   const signalHandler = async () => {
     await closeServer({ server, code: ERROR_CODES.EXIT_NO_RESTART });
   };
+
+  process
+    .on('warning', logger.warn)
+    .once('unhandledRejection', errorHandler)
+    .once('uncaughtException', errorHandler);
+
   SIGNALS.forEach((signal) => {
     process.once(signal, signalHandler);
   });

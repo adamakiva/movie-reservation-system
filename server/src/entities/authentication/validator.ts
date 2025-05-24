@@ -20,15 +20,15 @@ const AUTHENTICATION = {
 const USER = {
   EMAIL: {
     ERROR_MESSAGE: 'Invalid email address',
-    INVALID_TYPE_ERROR_MESSAGE: 'Email must be a string',
-    REQUIRED_ERROR_MESSAGE: 'Email is required',
+    INVALID_TYPE_ERROR_MESSAGE: 'Email address must be a string',
+    REQUIRED_ERROR_MESSAGE: 'Email address is required',
     MIN_LENGTH: {
       VALUE: 3,
-      ERROR_MESSAGE: 'Email must be at least 3 characters long',
+      ERROR_MESSAGE: 'Email address must be at least 3 characters long',
     },
     MAX_LENGTH: {
       VALUE: 256,
-      ERROR_MESSAGE: 'Email must be at most 256 characters long',
+      ERROR_MESSAGE: 'Email address must be at most 256 characters long',
     },
   },
   PASSWORD: {

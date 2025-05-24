@@ -1,10 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
+import type { Locals } from 'express';
 
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { DatabaseHandler, DatabaseModel } from '../../../utils/types.ts';
 
 import {
   type CreateMovieValidatedData,
@@ -15,7 +12,7 @@ import {
 /**********************************************************************************/
 
 async function createMovie(
-  context: RequestContext,
+  context: Locals,
   movieToCreate: CreateMovieValidatedData,
 ): Promise<Movie> {
   const { database } = context;

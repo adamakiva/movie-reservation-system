@@ -16,7 +16,7 @@ import type {
 
 type CreateHallValidatedData = ReturnType<typeof validateCreateHall>;
 type UpdateHallValidatedData = ReturnType<typeof validateUpdateHall>;
-type DeleteHallValidatedData = ReturnType<typeof validateDeleteHall>;
+type DeleteHallValidatedData = ReturnType<typeof validateDeleteHall>['hallId'];
 
 type Hall = {
   id: string;

@@ -2,7 +2,7 @@ import Stream from 'node:stream';
 
 /**********************************************************************************/
 
-const EXPECTED_ENVIRONMENT_VARIABLES = [
+const REQUIRED_ENVIRONMENT_VARIABLES = [
   'NODE_DEFAULT_HIGH_WATERMARK',
   'MESSAGE_QUEUE_URL',
   'MESSAGE_QUEUE_CONSUMER_CONCURRENCY',
@@ -46,7 +46,7 @@ class EnvironmentManager {
 
   #checkForMissingEnvironmentVariables() {
     const errorMessages: string[] = [];
-    EXPECTED_ENVIRONMENT_VARIABLES.forEach((key) => {
+    REQUIRED_ENVIRONMENT_VARIABLES.forEach((key) => {
       if (!process.env[key]) {
         errorMessages.push(`* Missing ${key} environment variable`);
       }
@@ -64,7 +64,6 @@ class EnvironmentManager {
     }
 
     const valueAsNumber = Number(value);
-
     if (isNaN(valueAsNumber)) {
       console.error(`Invalid value for '${key}' environment variable`);
 

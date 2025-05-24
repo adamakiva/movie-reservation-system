@@ -8,11 +8,7 @@ import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { fileTypeStream } from 'file-type';
 import multer, { type Multer, type Options, type StorageEngine } from 'multer';
 
-import {
-  GeneralError,
-  isSystemCallError,
-  registerAbortController,
-} from '../../utils/errors.ts';
+import { GeneralError, isSystemCallError } from '../../utils/errors.ts';
 import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
@@ -57,13 +53,20 @@ class FileManager implements StorageEngine {
   }
 
   public streamFile(dest: Writable, absolutePath: PathLike) {
-    const { signal, timeoutHandler } = registerAbortController(
-      this.#pipeTimeout,
-      'Timeout',
-    );
-    const readStream = createReadStream(absolutePath, { signal });
+    const { signal, abort } = new AbortController();
+    let timeoutHandler: NodeJS.Timeout | undefined = undefined;
 
-    return pipeline(readStream, dest, { signal })
+    const fileStream = createReadStream(absolutePath, { signal }).once(
+      'data',
+      () => {
+        // Actually begin the timer when the data starts being piped
+        timeoutHandler = setTimeout(() => {
+          abort('Timeout');
+        }, this.#pipeTimeout);
+      },
+    );
+
+    return pipeline(fileStream, dest, { signal })
       .catch((error: unknown) => {
         if (isSystemCallError(error) && error.code === 'ENOENT') {
           // Means that 'absolutePath' does not exist, which should be impossible
@@ -98,27 +101,32 @@ class FileManager implements StorageEngine {
             `File type is not recognized`,
           );
         }
-        const { mime: mimetype, ext: extension } =
+        const { mime: mimeType, ext: extension } =
           fileStreamWithFileType.fileType;
 
         const filename = this.#generateFileName();
         file.path = join(this.#saveDir, `${filename}.${extension}`);
 
-        const { signal, timeoutHandler } = registerAbortController(
-          this.#pipeTimeout,
-          'Timeout',
-        );
-        const outStream = createWriteStream(file.path, { signal });
+        const { signal, abort } = new AbortController();
+        let timeoutHandler: NodeJS.Timeout | undefined = undefined;
 
-        return pipeline(fileStreamWithFileType, outStream, { signal })
+        fileStreamWithFileType.once('data', () => {
+          // Actually begin the timer when the data starts being piped
+          timeoutHandler = setTimeout(() => {
+            abort('Timeout');
+          }, this.#pipeTimeout);
+        });
+        const fileStream = createWriteStream(file.path, { signal });
+
+        return pipeline(fileStreamWithFileType, fileStream, { signal })
           .then(() => {
             callback(null, {
               filename,
               // @ts-expect-error TODO Figure out a nice way to do this (changing
               // mime type key name)
-              mimeType: mimetype,
+              mimeType,
               path: file.path,
-              size: outStream.bytesWritten,
+              size: fileStream.bytesWritten,
             });
           })
           .catch((error: unknown) => {

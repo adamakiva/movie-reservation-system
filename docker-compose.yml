@@ -13,7 +13,6 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-admin}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-admin}
-      # Spin-up a an additional replicated database for tests
       - POSTGRES_DB=${POSTGRES_DB:-mrs}
       - PSQL_HISTORY=${PSQL_HISTORY:-/var/lib/postgresql/data/.psql_history}
     volumes:
@@ -42,6 +41,7 @@ services:
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=${RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS:- -rabbitmq_management load_definitions "/etc/rabbitmq/rabbitmq.definitions.json"}
     volumes:
       - ./dev-data/rabbitmq:/var/lib/rabbitmq:rw
+      # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
@@ -112,6 +112,7 @@ services:
       - ./server:/home/node/mrs:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
       - ./npm-cache/server:/home/node/.npm:rw
+      # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:
@@ -160,6 +161,7 @@ services:
       - ./worker:/home/node/worker:rw
       # See: https://docs.npmjs.com/cli/v6/using-npm/config#cache
       - ./npm-cache/worker:/home/node/.npm:rw
+      # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -173,6 +175,7 @@ services:
     build:
       target: nginx
     volumes:
+      # See: https://stackoverflow.com/a/44440563
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     ports:

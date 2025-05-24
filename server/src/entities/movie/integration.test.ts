@@ -11,7 +11,6 @@ import {
   getAdminTokens,
   HTTP_STATUS_CODES,
   initServer,
-  MOVIE,
   randomAlphaNumericString,
   randomNumber,
   randomUUID,
@@ -261,11 +260,7 @@ await suite('Movie integration tests', async () => {
       Object.entries(movieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append(
-        'poster',
-        file,
-        `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
-      );
+      formData.append('poster', file, `${randomAlphaNumericString(32)}.jpg`);
 
       const {
         statusCode,
@@ -323,11 +318,7 @@ await suite('Movie integration tests', async () => {
       Object.entries(updatedMovieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append(
-        'poster',
-        file,
-        `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE + 1)}.jpg`,
-      );
+      formData.append('poster', file, `${randomAlphaNumericString(32)}.jpg`);
 
       const { statusCode, responseBody: updatedMovie } = await sendHttpRequest<
         'PUT',
@@ -369,11 +360,7 @@ await suite('Movie integration tests', async () => {
       Object.entries(movieData).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      formData.append(
-        'poster',
-        file,
-        `${randomAlphaNumericString(MOVIE.POSTER.FILE_NAME.MIN_LENGTH.VALUE - 1)}.jpg`,
-      );
+      formData.append('poster', file, `${randomAlphaNumericString(32)}.jpg`);
 
       const {
         statusCode,

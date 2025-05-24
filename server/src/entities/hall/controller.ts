@@ -1,45 +1,43 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import type { Request } from 'express';
-
-import type { ResponseWithContext } from '../../utils/types.ts';
+import type { Request, Response } from 'express';
 
 import * as hallService from './service/index.ts';
 import * as hallValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function getHalls(_: Request, response: ResponseWithContext) {
-  const halls = await hallService.getHalls(response.locals.context);
+async function getHalls(request: Request, response: Response) {
+  const halls = await hallService.getHalls(request.app.locals);
 
   response.status(HTTP_STATUS_CODES.SUCCESS).json(halls);
 }
 
-async function createHall(request: Request, response: ResponseWithContext) {
+async function createHall(request: Request, response: Response) {
   const hallToCreate = hallValidator.validateCreateHall(request);
 
   const createdHall = await hallService.createHall(
-    response.locals.context,
+    request.app.locals,
     hallToCreate,
   );
 
   response.status(HTTP_STATUS_CODES.CREATED).json(createdHall);
 }
 
-async function updateHall(request: Request, response: ResponseWithContext) {
+async function updateHall(request: Request, response: Response) {
   const hallToUpdate = hallValidator.validateUpdateHall(request);
 
   const updatedHall = await hallService.updateHall(
-    response.locals.context,
+    request.app.locals,
     hallToUpdate,
   );
 
   response.status(HTTP_STATUS_CODES.SUCCESS).json(updatedHall);
 }
 
-async function deleteHall(request: Request, response: ResponseWithContext) {
-  const hallId = hallValidator.validateDeleteHall(request);
+async function deleteHall(request: Request, response: Response) {
+  const { hallId } = hallValidator.validateDeleteHall(request);
 
-  await hallService.deleteHall(response.locals.context, hallId);
+  await hallService.deleteHall(request.app.locals, hallId);
 
   response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }

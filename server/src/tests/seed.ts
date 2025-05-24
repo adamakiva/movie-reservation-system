@@ -12,6 +12,7 @@ import {
 
 async function seed() {
   console.info('Seeding data...');
+
   const { server, authentication, database } = await initServer();
   const [{ createdUsers }, { createdShowtimes }] = await Promise.all([
     seedUsers(authentication, database, 10_000, false, 1),
@@ -27,6 +28,7 @@ async function seed() {
   await seedUserShowtimes(database, 10_000, userIds, showtimeIds);
 
   await server.close();
+
   console.info('Done');
 }
 

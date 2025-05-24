@@ -1,11 +1,11 @@
 import { and, asc, eq, gt, or, type SQL } from 'drizzle-orm';
+import type { Locals } from 'express';
 
 import type {
   DatabaseHandler,
   DatabaseModel,
   PaginatedResult,
   Pagination,
-  RequestContext,
 } from '../../../utils/types.ts';
 
 import { encodeCursor, sanitizeElement } from '../../utils.ts';
@@ -20,7 +20,7 @@ import type {
 /**********************************************************************************/
 
 async function getShowtimes(
-  context: RequestContext,
+  context: Locals,
   pagination: GetShowtimeValidatedData,
 ): Promise<PaginatedResult<{ showtimes: Showtime[] }>> {
   const { database } = context;
@@ -75,7 +75,7 @@ async function getShowtimes(
 }
 
 async function getUserShowtimes(
-  context: RequestContext,
+  context: Locals,
   pagination: GetUserShowtimesValidatedData,
 ): Promise<PaginatedResult<{ userShowtimes: UserShowtime[] }>> {
   const { database } = context;

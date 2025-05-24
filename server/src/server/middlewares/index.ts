@@ -8,20 +8,12 @@ import type pg from 'postgres';
 
 import { isDatabaseError } from '../../database/index.ts';
 import { GeneralError, isError } from '../../utils/errors.ts';
-import type {
-  RequestContext,
-  ResponseWithContext,
-  ResponseWithoutContext,
-} from '../../utils/types.ts';
+import type { Logger } from '../../utils/logger.ts';
 
 /**********************************************************************************/
 
 function checkMethod(allowedMethods: readonly string[]) {
-  return (
-    request: Request,
-    response: ResponseWithoutContext,
-    next: NextFunction,
-  ) => {
+  return (request: Request, response: Response, next: NextFunction) => {
     if (!allowedMethods.includes(request.method.toUpperCase())) {
       // Reason for explicitly adding the header:
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
@@ -36,30 +28,15 @@ function checkMethod(allowedMethods: readonly string[]) {
   };
 }
 
-function attachRequestContext(context: RequestContext) {
-  return (_req: Request, response: Response, next: NextFunction) => {
-    response.locals.context = context;
-
-    next();
-  };
-}
-
-function handleNonExistentRoute(
-  request: Request,
-  response: ResponseWithoutContext,
-) {
+function handleNonExistentRoute(request: Request, response: Response) {
   response
     .status(HTTP_STATUS_CODES.NOT_FOUND)
     .json(`The route '${request.url}' does not exist`);
 }
 
 function isAdmin(adminRoleId: string) {
-  return async (
-    request: Request,
-    response: ResponseWithContext,
-    next: NextFunction,
-  ) => {
-    const { authentication, database } = response.locals.context;
+  return async (request: Request, _response: Response, next: NextFunction) => {
+    const { authentication, database } = request.app.locals;
     const userId = authentication.getUserId(request.headers.authorization!);
 
     const handler = database.getHandler();
@@ -78,12 +55,8 @@ function isAdmin(adminRoleId: string) {
 }
 
 function isSameUserOrAdmin(adminRoleId: string) {
-  return async (
-    request: Request,
-    response: ResponseWithContext,
-    next: NextFunction,
-  ) => {
-    const { authentication, database } = response.locals.context;
+  return async (request: Request, _response: Response, next: NextFunction) => {
+    const { authentication, database } = request.app.locals;
 
     const handler = database.getHandler();
     const { user: userModel } = database.getModels();
@@ -107,8 +80,8 @@ function isSameUserOrAdmin(adminRoleId: string) {
 
 function errorHandler(
   error: unknown,
-  _: Request,
-  response: ResponseWithContext,
+  request: Request,
+  response: Response,
   next: NextFunction,
 ) {
   if (response.headersSent) {
@@ -116,10 +89,12 @@ function errorHandler(
     return;
   }
 
+  const { logger } = request.app.locals;
+
   if (error instanceof GeneralError) {
     const { code, message } = error.getClientError(response);
 
-    response.locals.context.logger.warn(error);
+    logger.warn(error);
     response.status(code).json(message);
     return;
   }
@@ -130,20 +105,21 @@ function errorHandler(
     return;
   }
   if (isError(error) && isDatabaseError(error)) {
-    handlePostgresError(error, response);
+    handlePostgresError({ response, logger, error });
     return;
   }
 
-  handleUnexpectedError(error, response);
+  handleUnexpectedError({ response, logger, error });
 }
 
-function handlePostgresError(
-  error: pg.PostgresError,
-  response: ResponseWithContext,
-) {
+function handlePostgresError(params: {
+  response: Response;
+  logger: Logger;
+  error: pg.PostgresError;
+}) {
+  const { response, logger, error } = params;
   const { FOREIGN_KEY_VIOLATION, UNIQUE_VIOLATION, TOO_MANY_CONNECTIONS } =
     ERROR_CODES.POSTGRES;
-  const { logger } = response.locals.context;
 
   switch (error.code) {
     case FOREIGN_KEY_VIOLATION:
@@ -171,8 +147,12 @@ function handlePostgresError(
     .json('Unexpected error, please try again');
 }
 
-function handleUnexpectedError(error: unknown, response: ResponseWithContext) {
-  const { logger } = response.locals.context;
+function handleUnexpectedError(params: {
+  response: Response;
+  logger: Logger;
+  error: unknown;
+}) {
+  const { response, logger, error } = params;
 
   if (error instanceof Error) {
     logger.error('Unhandled exception:\n', error);
@@ -188,7 +168,6 @@ function handleUnexpectedError(error: unknown, response: ResponseWithContext) {
 /**********************************************************************************/
 
 export {
-  attachRequestContext,
   checkMethod,
   errorHandler,
   handleNonExistentRoute,

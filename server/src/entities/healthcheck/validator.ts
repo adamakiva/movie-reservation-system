@@ -1,8 +1,6 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import zod from 'zod';
-
-import type { ResponseWithContext } from '../../utils/types.ts';
 
 import { parseValidationResult } from '../utils.ts';
 
@@ -51,7 +49,7 @@ const HEALTHCHECK_SCHEMA = zod
 
 /**********************************************************************************/
 
-function validateHealthCheck(request: Request, response: ResponseWithContext) {
+function validateHealthCheck(request: Request, response: Response) {
   try {
     const validatedResult = parseValidationResult(
       HEALTHCHECK_SCHEMA.safeParse(request.method),

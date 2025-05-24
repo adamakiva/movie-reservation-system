@@ -135,6 +135,7 @@ class WebsocketServer {
       .on('error', this.#boundWebsocketServerErrorEventHandler)
       .on('wsClientError', this.#boundWebsocketClientErrorEventHandler)
       .on('connection', this.#boundConnectionEventHandler);
+
     this.#pingTime = pingTime;
     this.#httpServer = server;
     this.#authentication = authentication;
@@ -167,8 +168,11 @@ class WebsocketServer {
     ...parameters: Parameters<WebSocket['send']>
   ) {
     const websockets = this.#clients.get(userId);
+    if (!websockets) {
+      return;
+    }
 
-    websockets?.forEach((websocket) => {
+    websockets.forEach((websocket) => {
       if (websocket.isReady()) {
         websocket.send(...parameters);
       }
@@ -257,19 +261,22 @@ class WebsocketServer {
     // The authentication token is expected in the query string of the websocket
     // as a base64 encoded bearer token (With or without the `Bearer` keyword)
     const authenticationHeader = this.#parseAuthenticationHeader(request);
-    await this.#authentication.verifyWebsocketAuthentication(
-      authenticationHeader,
-    );
-    this.#handler.handleUpgrade(request, socket, head, (websocket, request) => {
-      this.#handler.emit('connection', websocket, request);
+    const isValid =
+      await this.#authentication.verifyWebsocketAuthentication(
+        authenticationHeader,
+      );
+    if (!isValid) {
+      throw new UnauthorizedError('malformed');
+    }
+
+    this.#handler.handleUpgrade(request, socket, head, (websocket) => {
+      this.#handler.emit('connection', websocket, authenticationHeader);
     });
   }
 
-  #connectionEventHandler(websocket: WebSocket, request: IncomingMessage) {
+  #connectionEventHandler(websocket: WebSocket, authenticationHeader: string) {
     // At this stage, the token should exist and is authenticated
-    const userId = this.#authentication.getUserId(
-      this.#parseAuthenticationHeader(request),
-    );
+    const userId = this.#authentication.getUserId(authenticationHeader);
     const handler = new Websocket({
       websocket,
       pingTime: this.#pingTime,

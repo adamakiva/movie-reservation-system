@@ -9,17 +9,17 @@ import type {
   TicketReservationWebsocketMessage,
 } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import type { Locals } from 'express';
 import { ConsumerStatus, type AsyncMessage } from 'rabbitmq-client';
 
 import type { WebsocketServer } from '../../../server/services/index.ts';
-import type { RequestContext } from '../../../utils/types.ts';
 
 /**********************************************************************************/
 
 function reserveShowtimeTicket(params: {
-  database: RequestContext['database'];
+  database: Locals['database'];
   websocketServer: WebsocketServer;
-  logger: RequestContext['logger'];
+  logger: Locals['logger'];
 }) {
   const { database, websocketServer, logger } = params;
 
@@ -66,9 +66,9 @@ function reserveShowtimeTicket(params: {
 }
 
 function cancelShowtimeReservations(params: {
-  database: RequestContext['database'];
+  database: Locals['database'];
   websocketServer: WebsocketServer;
-  logger: RequestContext['logger'];
+  logger: Locals['logger'];
 }) {
   const { database, websocketServer, logger } = params;
 
@@ -114,7 +114,7 @@ function cancelShowtimeReservations(params: {
   };
 }
 
-function cancelShowtime(database: RequestContext['database']) {
+function cancelShowtime(database: Locals['database']) {
   return async (
     message: Omit<AsyncMessage, 'body'> & { body: ShowtimeCancellationMessage },
   ) => {
@@ -154,7 +154,7 @@ function broadcastReserveTicketMessages(params: {
   showtimeId: string;
   row: number;
   column: number;
-  logger: RequestContext['logger'];
+  logger: Locals['logger'];
 }) {
   const { websocketServer, showtimeId, row, column, logger } = params;
 
@@ -176,7 +176,7 @@ function broadcastCancelTicketsMessages(params: {
   websocketServer: WebsocketServer;
   showtimeId: string;
   tickets: { row: number; column: number }[];
-  logger: RequestContext['logger'];
+  logger: Locals['logger'];
 }) {
   const { websocketServer, showtimeId, tickets, logger } = params;
 

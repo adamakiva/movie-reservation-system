@@ -1,10 +1,10 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import type { Role } from './utils.ts';
 
 /**********************************************************************************/
 
-async function getRoles(context: RequestContext): Promise<Role[]> {
+async function getRoles(context: Locals): Promise<Role[]> {
   const { database } = context;
 
   const handler = database.getHandler();

@@ -42,11 +42,11 @@ const VALIDATION = {
       DEFAULT_VALUE: 10,
       MIN_LENGTH: {
         VALUE: 1,
-        ERROR_MESSAGE: 'Page size must be at least 1 character long',
+        ERROR_MESSAGE: 'Page size must be at least 10',
       },
       MAX_LENGTH: {
         VALUE: 64,
-        ERROR_MESSAGE: 'Page size must be at most 64 characters long',
+        ERROR_MESSAGE: 'Page size must be at most 64',
       },
     },
   },

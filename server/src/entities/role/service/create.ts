@@ -1,4 +1,4 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import {
   possibleDuplicationError,
@@ -9,7 +9,7 @@ import {
 /**********************************************************************************/
 
 async function createRole(
-  context: RequestContext,
+  context: Locals,
   roleToCreate: CreateRoleValidatedData,
 ): Promise<Role> {
   const { database } = context;

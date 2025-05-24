@@ -13,7 +13,6 @@ import {
   terminateServer,
   test,
   USER,
-  type ResponseWithContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -38,7 +37,7 @@ await suite('Authentication unit tests', async () => {
   });
 
   await test('Invalid - Login validation: Missing email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -65,7 +64,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Invalid email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -93,7 +92,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Email too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -121,7 +120,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Missing password', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -148,7 +147,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Password too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -178,7 +177,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login validation: Password too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -208,23 +207,21 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Non-existent user', async (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
-        body: {
-          email: `${randomUUID()}@ph.com`,
-          password: randomAlphaNumericString(),
-        },
-      },
-      resOptions: {
-        locals: {
-          context: {
+        app: {
+          locals: {
             authentication,
             fileManager,
             database,
             messageQueue,
             logger,
           },
+        },
+        body: {
+          email: `${randomUUID()}@ph.com`,
+          password: randomAlphaNumericString(),
         },
       },
     });
@@ -246,23 +243,21 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Login service: Incorrect password', async (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
-        body: {
-          email: `${randomUUID()}@ph.com`,
-          password: randomAlphaNumericString(),
-        },
-      },
-      resOptions: {
-        locals: {
-          context: {
+        app: {
+          locals: {
             authentication,
             fileManager,
             database,
             messageQueue,
             logger,
           },
+        },
+        body: {
+          email: `${randomUUID()}@ph.com`,
+          password: randomAlphaNumericString(),
         },
       },
     });
@@ -274,13 +269,9 @@ await suite('Authentication unit tests', async () => {
             from: () => {
               return {
                 where: () => {
-                  return {
-                    limit: () => {
-                      return [
-                        { id: randomUUID(), hash: randomAlphaNumericString() },
-                      ];
-                    },
-                  };
+                  return [
+                    { id: randomUUID(), hash: randomAlphaNumericString() },
+                  ];
                 },
               };
             },
@@ -305,7 +296,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh validation: Missing refresh token', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -329,7 +320,7 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh validation: Invalid refresh token', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -358,25 +349,23 @@ await suite('Authentication unit tests', async () => {
     );
   });
   await test('Invalid - Refresh service: Missing JWT subject', async (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
-        body: {
-          refreshToken: await authentication.generateRefreshToken(
-            randomUUID(),
-            Date.now() + 10_000,
-          ),
-        },
-      },
-      resOptions: {
-        locals: {
-          context: {
+        app: {
+          locals: {
             authentication,
             fileManager,
             database,
             messageQueue,
             logger,
           },
+        },
+        body: {
+          refreshToken: await authentication.generateRefreshToken(
+            randomUUID(),
+            Date.now() + 10_000,
+          ),
         },
       },
     });

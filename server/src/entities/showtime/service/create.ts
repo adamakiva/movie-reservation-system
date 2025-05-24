@@ -1,13 +1,9 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { and, eq } from 'drizzle-orm';
-import type { Request } from 'express';
+import type { Locals, Request } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { DatabaseHandler, DatabaseModel } from '../../../utils/types.ts';
 
 import {
   possibleShowtimeCreationError,
@@ -20,7 +16,7 @@ import {
 /**********************************************************************************/
 
 async function createShowtime(
-  context: RequestContext,
+  context: Locals,
   showtimeToCreate: CreateShowtimeValidatedData,
 ): Promise<Showtime> {
   const { database } = context;
@@ -64,7 +60,7 @@ async function createShowtime(
 
 async function reserveShowtimeTicket(params: {
   request: Request;
-  context: RequestContext;
+  context: Locals;
   showtimeTicket: ReserveShowtimeTicketValidatedData;
 }): Promise<void> {
   const {

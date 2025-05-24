@@ -13,14 +13,6 @@ import {
 
 const { PAGINATION, QUERY, PARAMS } = VALIDATION;
 
-const ROLE = {
-  ID: {
-    INVALID_TYPE_ERROR_MESSAGE: 'Role id must be a string',
-    REQUIRED_ERROR_MESSAGE: 'Role id is required',
-    ERROR_MESSAGE: 'Role id must be a valid UUIDV4',
-  },
-} as const;
-
 const USER = {
   NO_FIELDS_TO_UPDATE_ERROR_MESSAGE: 'Empty update is not allowed',
   ID: {
@@ -54,15 +46,15 @@ const USER = {
   },
   EMAIL: {
     ERROR_MESSAGE: 'Invalid email address',
-    INVALID_TYPE_ERROR_MESSAGE: 'Email must be a string',
-    REQUIRED_ERROR_MESSAGE: 'Email is required',
+    INVALID_TYPE_ERROR_MESSAGE: 'Email address must be a string',
+    REQUIRED_ERROR_MESSAGE: 'Email address is required',
     MIN_LENGTH: {
       VALUE: 3,
-      ERROR_MESSAGE: 'Email must be at least 3 characters long',
+      ERROR_MESSAGE: 'Email address must be at least 3 characters long',
     },
     MAX_LENGTH: {
       VALUE: 256,
-      ERROR_MESSAGE: 'Email must be at most 256 characters long',
+      ERROR_MESSAGE: 'Email address must be at most 256 characters long',
     },
   },
   PASSWORD: {
@@ -219,10 +211,10 @@ const USER_SCHEMAS = {
       ),
     roleId: zod
       .string({
-        invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-        required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+        invalid_type_error: USER.ROLE_ID.INVALID_TYPE_ERROR_MESSAGE,
+        required_error: USER.ROLE_ID.REQUIRED_ERROR_MESSAGE,
       })
-      .uuid(ROLE.ID.ERROR_MESSAGE),
+      .uuid(USER.ROLE_ID.ERROR_MESSAGE),
   }),
   UPDATE: {
     BODY: zod
@@ -230,7 +222,6 @@ const USER_SCHEMAS = {
         firstName: zod
           .string({
             invalid_type_error: USER.FIRST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: USER.FIRST_NAME.REQUIRED_ERROR_MESSAGE,
           })
           .min(
             USER.FIRST_NAME.MIN_LENGTH.VALUE,
@@ -244,7 +235,6 @@ const USER_SCHEMAS = {
         lastName: zod
           .string({
             invalid_type_error: USER.LAST_NAME.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: USER.LAST_NAME.REQUIRED_ERROR_MESSAGE,
           })
           .min(
             USER.LAST_NAME.MIN_LENGTH.VALUE,
@@ -258,7 +248,6 @@ const USER_SCHEMAS = {
         email: zod
           .string({
             invalid_type_error: USER.EMAIL.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: USER.EMAIL.REQUIRED_ERROR_MESSAGE,
           })
           .min(USER.EMAIL.MIN_LENGTH.VALUE, USER.EMAIL.MIN_LENGTH.ERROR_MESSAGE)
           .max(USER.EMAIL.MAX_LENGTH.VALUE, USER.EMAIL.MAX_LENGTH.ERROR_MESSAGE)
@@ -267,7 +256,6 @@ const USER_SCHEMAS = {
         password: zod
           .string({
             invalid_type_error: USER.PASSWORD.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: USER.PASSWORD.REQUIRED_ERROR_MESSAGE,
           })
           .min(
             USER.PASSWORD.MIN_LENGTH.VALUE,
@@ -280,10 +268,9 @@ const USER_SCHEMAS = {
           .optional(),
         roleId: zod
           .string({
-            invalid_type_error: ROLE.ID.INVALID_TYPE_ERROR_MESSAGE,
-            required_error: ROLE.ID.REQUIRED_ERROR_MESSAGE,
+            invalid_type_error: USER.ROLE_ID.INVALID_TYPE_ERROR_MESSAGE,
           })
-          .uuid(ROLE.ID.ERROR_MESSAGE)
+          .uuid(USER.ROLE_ID.ERROR_MESSAGE)
           .optional(),
       })
       .superRefine((userUpdates, context) => {
@@ -341,7 +328,7 @@ function validateGetUser(request: Request) {
     USER_SCHEMAS.READ.SINGLE.safeParse(request.params),
   );
 
-  return userId;
+  return { userId };
 }
 
 function validateCreateUser(request: Request) {
@@ -353,15 +340,15 @@ function validateCreateUser(request: Request) {
 }
 
 function validateUpdateUser(request: Request) {
-  const userToUpdate = parseValidationResult(
-    USER_SCHEMAS.UPDATE.BODY.safeParse(request.body),
-  );
   const { user_id: userId } = parseValidationResult(
     USER_SCHEMAS.UPDATE.PARAMS.safeParse(request.params),
   );
+  const updates = parseValidationResult(
+    USER_SCHEMAS.UPDATE.BODY.safeParse(request.body),
+  );
 
   return {
-    ...userToUpdate,
+    ...updates,
     userId,
   } as const;
 }
@@ -371,7 +358,7 @@ function validateDeleteUser(request: Request) {
     USER_SCHEMAS.DELETE.safeParse(request.params),
   );
 
-  return userId;
+  return { userId };
 }
 
 /**********************************************************************************/

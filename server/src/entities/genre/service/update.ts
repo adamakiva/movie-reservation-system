@@ -1,8 +1,8 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
+import type { Locals } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type { RequestContext } from '../../../utils/types.ts';
 
 import {
   type Genre,
@@ -13,7 +13,7 @@ import {
 /**********************************************************************************/
 
 async function updateGenre(
-  context: RequestContext,
+  context: Locals,
   genreToUpdate: UpdateGenreValidatedData,
 ): Promise<Genre> {
   const { database } = context;

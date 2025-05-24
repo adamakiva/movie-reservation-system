@@ -21,10 +21,10 @@ import type {
 /**********************************************************************************/
 
 type GetUsersValidatedData = ReturnType<typeof validateGetUsers>;
-type GetUserValidatedData = ReturnType<typeof validateGetUser>;
+type GetUserValidatedData = ReturnType<typeof validateGetUser>['userId'];
 type CreateUserValidatedData = ReturnType<typeof validateCreateUser>;
 type UpdateUserValidatedData = ReturnType<typeof validateUpdateUser>;
-type DeleteUserValidatedData = ReturnType<typeof validateDeleteUser>;
+type DeleteUserValidatedData = ReturnType<typeof validateDeleteUser>['userId'];
 
 type User = {
   id: string;

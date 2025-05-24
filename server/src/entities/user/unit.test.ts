@@ -18,7 +18,6 @@ import {
   test,
   USER,
   VALIDATION,
-  type ResponseWithContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -47,7 +46,7 @@ await suite('User unit tests', async () => {
   });
 
   await test('Invalid - Read single validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -71,7 +70,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: '' },
@@ -98,7 +97,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomAlphaNumericString() },
@@ -125,7 +124,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read single service: Non-existent entry', async (context) => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
 
     context.mock.method(database, 'getHandler', () => {
       return {
@@ -172,7 +171,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Empty cursor', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { cursor: '' },
@@ -199,7 +198,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -230,7 +229,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Cursor too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -261,7 +260,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid cursor', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { cursor: Buffer.from(randomUUID()).toString('base64') },
@@ -288,7 +287,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too low', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -317,7 +316,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Page size too high', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: {
@@ -346,7 +345,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Read multiple validation: Invalid page size', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         query: { 'page-size': randomAlphaNumericString() },
@@ -373,7 +372,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing first name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -403,7 +402,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty first name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -433,7 +432,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: First name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -465,7 +464,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: First name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -497,7 +496,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing last name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -527,7 +526,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty last name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -557,7 +556,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Last name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -589,7 +588,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Last name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -621,7 +620,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -651,7 +650,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -681,7 +680,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Email too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -711,7 +710,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Email too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -741,7 +740,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -771,7 +770,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing password', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -801,7 +800,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty password', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -831,7 +830,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Password too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -863,7 +862,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Password too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -895,7 +894,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Missing role id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -925,7 +924,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty role id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -955,7 +954,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Invalid role id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -985,7 +984,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const { createdUser, createdRole } = await seedUser(
       authentication,
       database,
@@ -1026,7 +1025,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Create service: Non-existent role id', async () => {
     const roleId = randomUUID();
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
 
     await assert.rejects(
       async () => {
@@ -1053,7 +1052,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1080,7 +1079,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: { body: { roleId: randomUUID() } },
     });
@@ -1105,7 +1104,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: '' },
@@ -1133,7 +1132,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomAlphaNumericString() },
@@ -1161,7 +1160,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty first name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1189,7 +1188,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: First name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1222,7 +1221,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: First name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1255,7 +1254,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty last name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1283,7 +1282,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Last name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1316,7 +1315,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Last name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1349,7 +1348,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1377,7 +1376,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Email too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1408,7 +1407,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Email too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1439,7 +1438,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid email', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1467,7 +1466,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty password', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1495,7 +1494,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Password too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1528,7 +1527,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Password too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1561,7 +1560,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty role id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1589,7 +1588,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid role id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: { user_id: randomUUID() },
@@ -1623,7 +1622,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Non-existent user', async () => {
     const userId = randomUUID();
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
 
     await assert.rejects(
       async () => {
@@ -1655,7 +1654,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const { createdUsers } = await seedUsers(authentication, database, 2);
 
     try {
@@ -1691,7 +1690,7 @@ await suite('User unit tests', async () => {
   });
   await test('Invalid - Update service: Non-existent role id', async () => {
     const updatedRoleId = randomUUID();
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
 
     const { createdUser } = await seedUser(authentication, database, true);
 
@@ -1727,7 +1726,7 @@ await suite('User unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -1751,7 +1750,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: { params: { user_id: '' } },
     });
@@ -1776,7 +1775,7 @@ await suite('User unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: { params: { user_id: randomAlphaNumericString() } },
     });

@@ -1,20 +1,16 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
-import type { Request } from 'express';
+import type { Locals, Request, Response } from 'express';
 
 import { GeneralError } from '../../utils/errors.ts';
-import type { RequestContext, ResponseWithContext } from '../../utils/types.ts';
 
 import * as healthCheckValidator from './validator.ts';
 
 /**********************************************************************************/
 
-async function livenessHealthCheck(
-  request: Request,
-  response: ResponseWithContext,
-) {
+async function livenessHealthCheck(request: Request, response: Response) {
   healthCheckValidator.validateHealthCheck(request, response);
 
-  const notAliveMessage = await isAlive(response.locals.context);
+  const notAliveMessage = await isAlive(request.app.locals);
   if (notAliveMessage) {
     response
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
@@ -25,13 +21,10 @@ async function livenessHealthCheck(
   response.status(HTTP_STATUS_CODES.NO_CONTENT).end();
 }
 
-async function readinessHealthCheck(
-  request: Request,
-  response: ResponseWithContext,
-) {
+async function readinessHealthCheck(request: Request, response: Response) {
   healthCheckValidator.validateHealthCheck(request, response);
 
-  const notReadyMsg = await isReady(response.locals.context);
+  const notReadyMsg = await isReady(request.app.locals);
   if (notReadyMsg) {
     response
       .status(HTTP_STATUS_CODES.GATEWAY_TIMEOUT)
@@ -44,7 +37,7 @@ async function readinessHealthCheck(
 
 /**********************************************************************************/
 
-async function isAlive(context: RequestContext) {
+async function isAlive(context: Locals) {
   const { database, messageQueue, logger } = context;
 
   let notAliveMessage = '';
@@ -69,7 +62,7 @@ async function isAlive(context: RequestContext) {
   return notAliveMessage;
 }
 
-async function isReady(context: RequestContext) {
+async function isReady(context: Locals) {
   const { database, messageQueue, logger } = context;
 
   let notReadyMsg = '';

@@ -1,4 +1,4 @@
-import type { RequestContext } from '../../../utils/types.ts';
+import type { Locals } from 'express';
 
 import {
   type CreateHallValidatedData,
@@ -9,7 +9,7 @@ import {
 /**********************************************************************************/
 
 async function createHall(
-  context: RequestContext,
+  context: Locals,
   hallToCreate: CreateHallValidatedData,
 ): Promise<Hall> {
   const { database } = context;

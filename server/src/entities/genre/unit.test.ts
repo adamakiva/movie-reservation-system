@@ -15,7 +15,6 @@ import {
   suite,
   terminateServer,
   test,
-  type ResponseWithContext,
   type ServerParams,
 } from '../../tests/utils.ts';
 
@@ -40,7 +39,7 @@ await suite('Genre unit tests', async () => {
   });
 
   await test('Invalid - Create validation: Missing name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -64,7 +63,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Empty name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -93,7 +92,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -122,7 +121,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create validation: Name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -151,7 +150,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Create service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const { name: genreName } = await seedGenre(database);
 
     const genreToCreate = { name: genreName };
@@ -186,7 +185,7 @@ await suite('Genre unit tests', async () => {
     }
   });
   await test('Invalid - Update validation: Without updates', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -215,7 +214,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         body: {
@@ -244,7 +243,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -276,7 +275,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -308,7 +307,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Empty name', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -340,7 +339,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too short', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -372,7 +371,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update validation: Name too long', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -404,7 +403,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Update service: Duplicate entry', async () => {
-    const { response } = createHttpMocks<ResponseWithContext>({ logger });
+    const { response } = createHttpMocks({ logger });
     const createdGenres = await seedGenres(database, 2);
 
     const genreToUpdate = {
@@ -441,7 +440,7 @@ await suite('Genre unit tests', async () => {
     }
   });
   await test('Invalid - Delete validation: Missing id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
     });
 
@@ -465,7 +464,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Empty id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {
@@ -494,7 +493,7 @@ await suite('Genre unit tests', async () => {
     );
   });
   await test('Invalid - Delete validation: Invalid id', (context) => {
-    const { request, response } = createHttpMocks<ResponseWithContext>({
+    const { request, response } = createHttpMocks({
       logger,
       reqOptions: {
         params: {

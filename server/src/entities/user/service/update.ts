@@ -1,12 +1,9 @@
 import { HTTP_STATUS_CODES } from '@adamakiva/movie-reservation-system-shared';
 import { eq } from 'drizzle-orm';
+import type { Locals } from 'express';
 
 import { GeneralError } from '../../../utils/errors.ts';
-import type {
-  DatabaseHandler,
-  DatabaseModel,
-  RequestContext,
-} from '../../../utils/types.ts';
+import type { DatabaseHandler, DatabaseModel } from '../../../utils/types.ts';
 
 import {
   userUpdateError,
@@ -17,7 +14,7 @@ import {
 /**********************************************************************************/
 
 async function updateUser(
-  context: RequestContext,
+  context: Locals,
   userToUpdate: UpdateUserValidatedData,
 ): Promise<User> {
   const { authentication, database } = context;
