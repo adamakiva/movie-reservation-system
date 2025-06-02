@@ -82,20 +82,23 @@ function possibleShowtimeCreationError(params: {
   }
 
   switch (error.code) {
-    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
+    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION: {
       return new GeneralError(
         HTTP_STATUS_CODES.CONFLICT,
         `A showtime at '${at.toISOString()}' in '${hall}' already exists`,
         error.cause,
       );
-    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
+    }
+    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION: {
       return handleForeignKeyNotFoundError({ error, movie, hall });
-    default:
+    }
+    default: {
       return new GeneralError(
         HTTP_STATUS_CODES.SERVER_ERROR,
         'Should not be possible',
         error.cause,
       );
+    }
   }
 }
 

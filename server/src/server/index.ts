@@ -33,9 +33,9 @@ class HttpServer {
   readonly #database;
   readonly #messageQueue;
   readonly #websocketServer;
-  readonly #server;
   readonly #routes;
   readonly #logger;
+  readonly #server;
 
   public static async create(params: {
     authenticationParams: Parameters<typeof AuthenticationManager.create>[0];
@@ -110,9 +110,9 @@ class HttpServer {
       cronjob,
       messageQueue: { handler: messageQueue, options: messageQueueParams },
       websocketServer,
-      server,
       routes,
       logger,
+      server,
     })
       .#attachServerConfigurations(httpServerConfigurations)
       .#attachRoutesMiddlewares(app, adminRoleId);
@@ -169,13 +169,13 @@ class HttpServer {
       this.#cronjob.stopAll(),
       this.#messageQueue.close(),
     ]);
-
     results.forEach((result) => {
       if (result.status === 'rejected') {
         this.#logger.error(result.reason, 'Error during server termination');
         exitCode = ERROR_CODES.EXIT_NO_RESTART;
       }
     });
+
     this.#websocketServer.close();
     this.#server.close();
 
@@ -194,9 +194,9 @@ class HttpServer {
       handler: MessageQueue;
     };
     websocketServer: WebsocketServer;
-    server: Server;
     routes: { http: string };
     logger: Logger;
+    server: Server;
   }) {
     const {
       authentication,
@@ -205,9 +205,9 @@ class HttpServer {
       cronjob,
       messageQueue,
       websocketServer,
-      server,
       routes,
       logger,
+      server,
     } = params;
 
     this.#authentication = authentication;
@@ -216,17 +216,19 @@ class HttpServer {
     this.#cronjob = cronjob;
     this.#messageQueue = messageQueue.handler;
     this.#websocketServer = websocketServer;
-    this.#server = server.once('error', async (error) => {
-      this.#logger.error(error, 'HTTP Server error');
-
-      await this.close();
-
-      process.exit(ERROR_CODES.EXIT_RESTART);
-    });
     this.#routes = routes;
     this.#logger = logger;
+    this.#server = server.once('error', this.#errorEventHandler.bind(this));
 
     this.#initMessageQueue(messageQueue.options.consumer);
+  }
+
+  async #errorEventHandler(error: Error) {
+    this.#logger.error(error, 'HTTP Server error');
+
+    await this.close();
+
+    process.exit(ERROR_CODES.EXIT_RESTART);
   }
 
   #initMessageQueue(

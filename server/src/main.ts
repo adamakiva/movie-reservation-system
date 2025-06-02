@@ -14,7 +14,6 @@ import { Logger } from './utils/logger.ts';
 async function startServer() {
   const logger = new Logger();
 
-  const environmentManager = new EnvironmentManager(logger);
   const {
     node: nodeEnv,
     jwt: jwtEnv,
@@ -23,9 +22,9 @@ async function startServer() {
     database: databaseEnv,
     messageQueue: messageQueueEnv,
     adminRoleId,
-  } = environmentManager.getEnvVariables();
+  } = new EnvironmentManager(logger).getEnvVariables();
 
-  const server = await HttpServer.create({
+  const httpServer = await HttpServer.create({
     authenticationParams: {
       audience: 'mrs-users',
       issuer: 'mrs-server',
@@ -89,24 +88,24 @@ async function startServer() {
     logger,
   });
 
-  await server.listen(httpServerEnv.port);
+  await httpServer.listen(httpServerEnv.port);
 
-  attachProcessHandlers(server, logger);
+  attachProcessHandlers(httpServer, logger);
 }
 
 /**********************************************************************************/
 
-function attachProcessHandlers(server: HttpServer, logger: Logger) {
-  const errorHandler = async (error: unknown) => {
+function attachProcessHandlers(httpServer: HttpServer, logger: Logger) {
+  async function errorHandler(error: unknown) {
     await closeServer({
-      server,
+      httpServer,
       code: ERROR_CODES.EXIT_RESTART,
       error: { logger, value: error },
     });
-  };
-  const signalHandler = async () => {
-    await closeServer({ server, code: ERROR_CODES.EXIT_NO_RESTART });
-  };
+  }
+  async function signalHandler() {
+    await closeServer({ httpServer, code: ERROR_CODES.EXIT_NO_RESTART });
+  }
 
   process
     .on('warning', logger.warn)
@@ -119,14 +118,14 @@ function attachProcessHandlers(server: HttpServer, logger: Logger) {
 }
 
 async function closeServer(params: {
-  server: HttpServer;
+  httpServer: HttpServer;
   code: number;
   error?: {
     logger: Logger;
     value: unknown;
   };
 }) {
-  const { server, code, error } = params;
+  const { httpServer, code, error } = params;
 
   if (error) {
     const { logger, value } = error;
@@ -134,7 +133,7 @@ async function closeServer(params: {
   }
 
   try {
-    await server.close();
+    await httpServer.close();
   } finally {
     process.exit(code);
   }

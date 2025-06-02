@@ -47,25 +47,28 @@ function userCreationError(params: {
       'Thrown a non error object',
     );
   }
-  if (!isDatabaseError(error)) {
+  if (!isDatabaseError(error.cause)) {
     return error;
   }
 
-  switch (error.code) {
-    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION:
+  switch (error.cause.code) {
+    case ERROR_CODES.POSTGRES.UNIQUE_VIOLATION: {
       return new GeneralError(
         HTTP_STATUS_CODES.CONFLICT,
         `User '${email}' already exists`,
         error.cause,
       );
-    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION:
-      return handleForeignKeyNotFoundError({ error, role });
-    default:
+    }
+    case ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION: {
+      return handleForeignKeyNotFoundError({ error: error.cause, role });
+    }
+    default: {
       return new GeneralError(
         HTTP_STATUS_CODES.SERVER_ERROR,
         'Should not be possible',
         error.cause,
       );
+    }
   }
 }
 

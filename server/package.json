@@ -21,8 +21,8 @@
     "@adamakiva/movie-reservation-system-shared": "0.0.0",
     "argon2": "~0.43.0",
     "compression": "~1.8.0",
-    "cron": "~4.3.0",
-    "drizzle-orm": "~0.43.1",
+    "cron": "~4.3.1",
+    "drizzle-orm": "~0.44.1",
     "express": "~5.1.0",
     "file-type": "~21.0.0",
     "jose": "~6.0.11",
@@ -30,7 +30,7 @@
     "postgres": "~3.4.7",
     "rabbitmq-client": "~5.0.4",
     "ws": "~8.18.2",
-    "zod": "~3.25.28"
+    "zod": "~3.25.47"
   },
   "devDependencies": {
     "@types/autocannon": "~7.12.7",
@@ -38,23 +38,23 @@
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
     "@types/express": "~5.0.2",
-    "@types/node": "~22.15.21",
+    "@types/node": "~22.15.29",
     "@types/multer": "~1.4.12",
     "@types/ws": "~8.18.1",
     "autocannon": "~8.0.0",
     "clinic": "~13.0.0",
     "dpdm": "~3.14.0",
     "drizzle-kit": "~0.31.1",
-    "eslint": "~9.27.0",
+    "eslint": "~9.28.0",
     "eslint-config-prettier": "~10.1.5",
     "eslint-plugin-security": "~3.0.1",
-    "globals": "~16.1.0",
+    "globals": "~16.2.0",
     "nlf": "~2.1.1",
     "node-mocks-http": "~1.17.2",
     "npm-check-updates": "~18.0.1",
     "prettier": "~3.5.3",
     "typescript": "~5.8.3",
-    "typescript-eslint": "~8.32.1"
+    "typescript-eslint": "~8.33.0"
   },
   "engines": {
     "node": ">=22"

@@ -37,10 +37,10 @@ function handleNonExistentRoute(request: Request, response: Response) {
 function isAdmin(adminRoleId: string) {
   return async (request: Request, _response: Response, next: NextFunction) => {
     const { authentication, database } = request.app.locals;
-    const userId = authentication.getUserId(request.headers.authorization!);
 
     const handler = database.getHandler();
     const { user: userModel } = database.getModels();
+    const userId = authentication.getUserId(request.headers.authorization!);
 
     const [user] = await handler
       .select({ roleId: userModel.roleId })
@@ -98,14 +98,14 @@ function errorHandler(
     response.status(code).json(message);
     return;
   }
+  if (isError(error) && isDatabaseError(error.cause)) {
+    handlePostgresError({ response, logger, error: error.cause });
+    return;
+  }
   if (isError(error) && 'type' in error && error.type === 'entity.too.large') {
     response
       .status(HTTP_STATUS_CODES.CONTENT_TOO_LARGE)
       .json('Request entity too large');
-    return;
-  }
-  if (isError(error) && isDatabaseError(error)) {
-    handlePostgresError({ response, logger, error });
     return;
   }
 
@@ -123,23 +123,26 @@ function handlePostgresError(params: {
 
   switch (error.code) {
     case FOREIGN_KEY_VIOLATION:
-    case UNIQUE_VIOLATION:
+    case UNIQUE_VIOLATION: {
       logger.error(
         'Should have been handled by the code and never get here. Check the' +
           ' code implementation:\n',
         error,
       );
       break;
-    case TOO_MANY_CONNECTIONS:
+    }
+    case TOO_MANY_CONNECTIONS: {
       logger.error(
         'Exceeded database maximum connections.\nThis Should never happen,' +
           ' check the server and database logs to understand why it happened:\n',
         error,
       );
       break;
-    default:
+    }
+    default: {
       logger.error('Unexpected database error:\n', error);
       break;
+    }
   }
 
   response

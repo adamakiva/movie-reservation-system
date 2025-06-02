@@ -95,9 +95,9 @@ function startWorker() {
 /**********************************************************************************/
 
 function reserveShowtimeTicket(messageQueue: MessageQueue) {
-  return async (
+  return async function reserverShowtimeTicket(
     message: Omit<AsyncMessage, 'body'> & { body: TicketReservationsMessage },
-  ) => {
+  ) {
     const { correlationId, body } = message;
 
     if (correlationId !== CORRELATION_IDS.TICKET_RESERVATION) {
@@ -133,9 +133,9 @@ function reserveShowtimeTicket(messageQueue: MessageQueue) {
 }
 
 function cancelShowtimeTicket(messageQueue: MessageQueue) {
-  return async (
+  return async function cancelShowtimeTicket(
     message: Omit<AsyncMessage, 'body'> & { body: TicketCancellationMessage },
-  ) => {
+  ) {
     const { correlationId, body } = message;
 
     if (correlationId !== CORRELATION_IDS.TICKET_CANCELLATION) {
@@ -164,11 +164,11 @@ function cancelShowtimeTicket(messageQueue: MessageQueue) {
 }
 
 function cancelShowtime(messageQueue: MessageQueue) {
-  return async (
+  return async function cancelShowtime(
     message: Omit<AsyncMessage, 'body'> & {
       body: ShowtimeCancellationMessage;
     },
-  ) => {
+  ) {
     const { correlationId, body } = message;
 
     if (correlationId !== CORRELATION_IDS.SHOWTIME_CANCELLATION) {
@@ -199,7 +199,7 @@ function cancelShowtime(messageQueue: MessageQueue) {
 /**********************************************************************************/
 
 function attachProcessHandlers(messageQueue: MessageQueue) {
-  const errorHandler = async (error: unknown) => {
+  async function errorHandler(error: unknown) {
     if (error) {
       console.error(`Unhandled error/rejection:`, error);
     }
@@ -211,7 +211,7 @@ function attachProcessHandlers(messageQueue: MessageQueue) {
     } finally {
       process.exit(ERROR_CODES.EXIT_NO_RESTART);
     }
-  };
+  }
 
   process
     .on('warning', console.warn)

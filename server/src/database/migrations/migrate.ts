@@ -6,44 +6,45 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import pg from 'postgres';
 
-import * as schemas from '../schemas.ts';
+import * as schema from '../schemas.ts';
+
+/**********************************************************************************/
+
+const REQUIRED_ENVIRONMENT_VARIABLES = [
+  'ADMIN_ROLE_ID',
+  'ADMIN_ROLE_NAME',
+  'ADMIN_EMAIL',
+  'ADMIN_PASSWORD',
+  'AUTHENTICATION_HASH_SECRET',
+  'DATABASE_URL',
+] as const;
 
 /**********************************************************************************/
 
 async function run() {
-  const environmentVariables = new Map([
-    ['ADMIN_ROLE_ID', process.env.ADMIN_ROLE_ID],
-    ['ADMIN_ROLE_NAME', process.env.ADMIN_ROLE_NAME],
-    ['ADMIN_EMAIL', process.env.ADMIN_EMAIL],
-    ['ADMIN_PASSWORD', process.env.ADMIN_PASSWORD],
-    ['AUTHENTICATION_HASH_SECRET', process.env.AUTHENTICATION_HASH_SECRET],
-    ['DATABASE_URL', process.env.DATABASE_URL],
-  ] as const);
-
   const errorMessages: string[] = [];
-  environmentVariables.forEach((value, key) => {
-    if (!value) {
+  REQUIRED_ENVIRONMENT_VARIABLES.forEach((key) => {
+    if (!process.env[key]) {
       errorMessages.push(`* Missing '${key}' environment variable`);
     }
   });
 
-  if (!errorMessages.length) {
-    try {
-      await migration(environmentVariables.get('DATABASE_URL')!);
-    } catch (error) {
-      console.error('Migration failed:', error);
-      process.exit(ERROR_CODES.EXIT_NO_RESTART);
-    }
-    return;
+  if (errorMessages.length) {
+    console.error(errorMessages.join('\n'));
+    process.exit(ERROR_CODES.EXIT_NO_RESTART);
   }
 
-  console.error(errorMessages.join('\n'));
-  process.exit(ERROR_CODES.EXIT_NO_RESTART);
+  try {
+    await migration(process.env.DATABASE_URL!);
+  } catch (error) {
+    console.error('Migration failed:', error);
+    process.exit(ERROR_CODES.EXIT_NO_RESTART);
+  }
 }
 
 async function migration(databaseUrl: string) {
   const connection = pg(databaseUrl);
-  const databaseHandler = drizzle(connection, { schema: schemas });
+  const databaseHandler = drizzle(connection, { schema });
 
   try {
     await migrate(databaseHandler, { migrationsFolder: import.meta.dirname });
@@ -82,18 +83,18 @@ async function migration(databaseUrl: string) {
 }
 
 async function seedInitialData(params: {
-  databaseHandler: PostgresJsDatabase<typeof schemas>;
-  role: typeof schemas.genreModel.$inferInsert;
-  user: typeof schemas.userModel.$inferInsert;
+  databaseHandler: PostgresJsDatabase<typeof schema>;
+  role: typeof schema.genreModel.$inferInsert;
+  user: typeof schema.userModel.$inferInsert;
 }) {
   const { databaseHandler, role, user } = params;
 
   await databaseHandler
-    .insert(schemas.roleModel)
+    .insert(schema.roleModel)
     .values(role)
     .onConflictDoNothing();
   await databaseHandler
-    .insert(schemas.userModel)
+    .insert(schema.userModel)
     .values(user)
     .onConflictDoNothing();
 }

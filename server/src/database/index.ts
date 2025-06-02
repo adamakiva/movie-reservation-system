@@ -7,7 +7,7 @@ import type { Logger } from '../utils/logger.ts';
 
 import { DatabaseLogger } from './logger.ts';
 /* The default import is on purpose. See: https://orm.drizzle.team/docs/sql-schema-declaration */
-import * as schemas from './schemas.ts';
+import * as schema from './schemas.ts';
 
 /**********************************************************************************/
 
@@ -32,25 +32,25 @@ class Database {
   }) {
     const { url, options, isAliveQuery, isReadyQuery, logger } = params;
 
+    const connection = pg(url, options);
+
+    this.#handler = drizzle(connection, {
+      schema,
+      logger: new DatabaseLogger(new Set([isAliveQuery, isReadyQuery]), logger),
+    });
+    this.#models = {
+      role: schema.roleModel,
+      user: schema.userModel,
+      genre: schema.genreModel,
+      movie: schema.movieModel,
+      moviePoster: schema.moviePosterModel,
+      hall: schema.hallModel,
+      showtime: schema.showtimeModel,
+      userShowtime: schema.usersShowtimesModel,
+    } as const;
+
     this.#isAliveQuery = isAliveQuery;
     this.#isReadyQuery = isReadyQuery;
-
-    const connection = pg(url, options);
-    this.#handler = drizzle(connection, {
-      schema: schemas,
-      logger: new DatabaseLogger([isAliveQuery, isReadyQuery] as const, logger),
-    });
-
-    this.#models = {
-      role: schemas.roleModel,
-      user: schemas.userModel,
-      genre: schemas.genreModel,
-      movie: schemas.movieModel,
-      moviePoster: schemas.moviePosterModel,
-      hall: schemas.hallModel,
-      showtime: schemas.showtimeModel,
-      userShowtime: schemas.usersShowtimesModel,
-    } as const;
   }
 
   public async close() {
@@ -84,17 +84,17 @@ function isDatabaseError(obj: unknown): obj is pg.PostgresError {
   return obj instanceof pg.PostgresError;
 }
 
-function isForeignKeyViolationError(error: unknown) {
+function isForeignKeyViolationError(error: Error) {
   return (
-    isDatabaseError(error) &&
-    error.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
+    isDatabaseError(error.cause) &&
+    error.cause.code === ERROR_CODES.POSTGRES.FOREIGN_KEY_VIOLATION
   );
 }
 
-function isUniqueViolationError(error: unknown) {
+function isUniqueViolationError(error: Error) {
   return (
-    isDatabaseError(error) &&
-    error.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
+    isDatabaseError(error.cause) &&
+    error.cause.code === ERROR_CODES.POSTGRES.UNIQUE_VIOLATION
   );
 }
 

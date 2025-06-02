@@ -1,3 +1,5 @@
+import { mock } from 'node:test';
+
 import {
   initServer,
   randomNumber,
@@ -13,23 +15,26 @@ import {
 async function seed() {
   console.info('Seeding data...');
 
-  const { server, authentication, database } = await initServer();
+  const { server, authentication, database, logger } = await initServer();
+
+  (['debug', 'info', 'log', 'warn', 'error'] as const).forEach((level) => {
+    mock.method(logger, level, emptyFunction);
+  });
+
   const [{ createdUsers }, { createdShowtimes }] = await Promise.all([
     seedUsers(authentication, database, 10_000, false, 1),
     seedShowtimes(database, 10_000, 1),
     seedGenres(database, 10_000),
   ]);
-  const userIds = createdUsers.map(({ id }) => {
-    return id;
-  });
-  const showtimeIds = createdShowtimes.map(({ id }) => {
-    return id;
-  });
-  await seedUserShowtimes(database, 10_000, userIds, showtimeIds);
+  await seedUserShowtimes(database, 10_000, createdUsers, createdShowtimes);
 
   await server.close();
 
   console.info('Done');
+}
+
+function emptyFunction() {
+  // On purpose
 }
 
 /**********************************************************************************/
@@ -37,11 +42,20 @@ async function seed() {
 async function seedUserShowtimes(
   database: ServerParams['database'],
   amount: number,
-  userIds: string[],
-  showtimeIds: string[],
+  createdUsers: Awaited<ReturnType<typeof seedUsers>>['createdUsers'],
+  createdShowtimes: Awaited<
+    ReturnType<typeof seedShowtimes>
+  >['createdShowtimes'],
 ) {
   const handler = database.getHandler();
   const { userShowtime: userShowtimeModel } = database.getModels();
+
+  const userIds = createdUsers.map(({ id }) => {
+    return id;
+  });
+  const showtimeIds = createdShowtimes.map(({ id }) => {
+    return id;
+  });
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const userShowtimeData = [...Array(amount)].map(() => {

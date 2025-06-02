@@ -45,7 +45,6 @@ import { USER } from '../entities/user/validator.ts';
 import { VALIDATION } from '../entities/utils.ts';
 import { HttpServer } from '../server/index.ts';
 import * as Middlewares from '../server/middlewares/index.ts';
-
 import { EnvironmentManager } from '../utils/config.ts';
 import { GeneralError } from '../utils/errors.ts';
 import { Logger } from '../utils/logger.ts';
@@ -106,7 +105,6 @@ const { PostgresError } = pg;
 async function initServer() {
   const logger = mockLogger();
 
-  const environmentManager = new EnvironmentManager(logger);
   const {
     node: nodeEnv,
     jwt: jwtEnv,
@@ -115,7 +113,7 @@ async function initServer() {
     database: databaseEnv,
     messageQueue: messageQueueEnv,
     adminRoleId,
-  } = environmentManager.getEnvVariables();
+  } = new EnvironmentManager(logger).getEnvVariables();
 
   const server = await HttpServer.create({
     authenticationParams: {
@@ -185,8 +183,8 @@ async function initServer() {
   const baseUrl = `http://localhost:${port}`;
 
   return {
-    env: environmentManager.getEnvVariables(),
     server,
+    maxRequestsPerSocket: httpServerEnv.configurations.maxRequestsPerSocket,
     authentication: server.getAuthenticationManager(),
     fileManager: server.getFileManager(),
     database: server.getDatabase(),
@@ -300,11 +298,11 @@ async function sendHttpRequest<
 >(params: {
   route: string;
   method: M;
+  responseType: RT;
   payload?: M extends 'HEAD' | 'GET' | 'DELETE' ? never : unknown;
   headers?: HeadersInit;
-  responseType: RT;
 }): Promise<ResponseType<RT, R>> {
-  const { route, method, payload, responseType } = params;
+  const { route, method, responseType, payload } = params;
 
   const headers = !(payload instanceof FormData)
     ? ({ ...params.headers, 'Content-Type': 'application/json' } as const)
@@ -331,13 +329,14 @@ async function sendHttpRequest<
   }
 
   switch (responseType) {
-    case 'bytes':
+    case 'bytes': {
       return {
         statusCode,
         responseBody: await fetchResponse[responseType as 'bytes'](),
       } as const as ResponseType<RT, R>;
+    }
     case 'json':
-    case 'text':
+    case 'text': {
       return {
         statusCode: fetchResponse.status,
         responseBody:
@@ -347,8 +346,10 @@ async function sendHttpRequest<
             responseType as 'json' | 'text'
           ](),
       } as const as ResponseType<RT, R>;
-    default:
+    }
+    default: {
       throw new Error('Should never happen');
+    }
   }
 }
 
@@ -524,7 +525,7 @@ async function seedMovies(
                 createdGenres[randomNumber(0, createdGenres.length - 1)]!.id,
               createdAt: now,
               updatedAt: now,
-            };
+            } as const;
           }),
         )
         .returning({
@@ -545,7 +546,7 @@ async function seedMovies(
               ...moviePostersData[moviePostersData.length - 1]!,
               createdAt: now,
               updatedAt: now,
-            };
+            } as const;
           }),
         )
         .returning({
@@ -721,7 +722,7 @@ async function seedShowtimes(
             movieId:
               createdMovies[randomNumber(0, createdMovies.length - 1)]!.id,
             hallId: createdHalls[randomNumber(0, createdHalls.length - 1)]!.id,
-          };
+          } as const;
         }),
       )
       .returning({

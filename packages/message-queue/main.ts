@@ -14,11 +14,18 @@ import {
 
 /**********************************************************************************/
 
+type Logger = {
+  // eslint-disable-next-line no-unused-vars
+  info: (...args: unknown[]) => void;
+  // eslint-disable-next-line no-unused-vars
+  error: (...args: unknown[]) => void;
+};
+
 const CORRELATION_IDS = {
   TICKET_RESERVATION: 'ticket.reserve',
   TICKET_CANCELLATION: 'ticket.cancel',
   SHOWTIME_CANCELLATION: 'showtime.cancel',
-};
+} as const;
 
 type Exchanges = ['mrs'];
 type Consumers = ['ticket', 'showtime'];
@@ -68,15 +75,15 @@ type ShowtimeCancellationMessage = {
 /**********************************************************************************/
 
 class MessageQueue {
-  readonly #handler;
-  readonly #logger;
-
   readonly #boundErrorEventHandler;
   readonly #boundConnectionEventHandler;
   readonly #boundBlockEventHandler;
   readonly #boundUnblockedEventHandler;
   readonly #boundUndeliveredMessageEventHandler;
   readonly #boundConsumerErrorEventHandler;
+
+  readonly #handler;
+  readonly #logger;
 
   #publishers: { [key: string]: Publisher };
   readonly #consumers: Consumer[];
@@ -86,17 +93,9 @@ class MessageQueue {
 
   public constructor(params: {
     connectionOptions: ConnectionOptions;
-    logger: {
-      // eslint-disable-next-line no-unused-vars
-      info: (...args: unknown[]) => void;
-      // eslint-disable-next-line no-unused-vars
-      error: (...args: unknown[]) => void;
-    };
+    logger: Logger;
   }) {
     const { connectionOptions, logger } = params;
-
-    this.#isAlive = false;
-    this.#isReady = false;
 
     this.#boundErrorEventHandler = this.#errorEventHandler.bind(this);
     this.#boundConnectionEventHandler = this.#connectionEventHandler.bind(this);
@@ -112,11 +111,13 @@ class MessageQueue {
       .on('connection', this.#boundConnectionEventHandler)
       .on('connection.blocked', this.#boundBlockEventHandler)
       .on('connection.unblocked', this.#boundUnblockedEventHandler);
-
     this.#logger = logger;
 
     this.#publishers = {};
     this.#consumers = [];
+
+    this.#isAlive = false;
+    this.#isReady = false;
   }
 
   public createPublishers(publishers: {
@@ -132,35 +133,37 @@ class MessageQueue {
       }[];
     };
   }) {
+    const newPublishers = Object.fromEntries(
+      Object.entries(publishers).map(([publisherName, publisherOptions]) => {
+        const { routing, ...options } = publisherOptions;
+
+        const exchanges: PublisherProps['exchanges'] = [];
+        const queues: PublisherProps['queues'] = [];
+        const queueBindings: PublisherProps['queueBindings'] = [];
+
+        routing.forEach(({ exchange, queue, routingKey }) => {
+          exchanges.push({ exchange, passive: true, durable: true });
+          queues.push({ queue, passive: true, durable: true });
+          queueBindings.push({ exchange, queue, routingKey });
+        });
+
+        const publisher = this.#handler
+          .createPublisher({
+            ...options,
+            exchanges,
+            queues,
+            queueBindings,
+          })
+          .on('basic.return', this.#boundUndeliveredMessageEventHandler);
+
+        return [publisherName, publisher] as const;
+      }),
+    );
+
     this.#publishers = {
       ...this.#publishers,
-      ...Object.fromEntries(
-        Object.entries(publishers).map(([publisherName, publisherOptions]) => {
-          const { routing, ...options } = publisherOptions;
-
-          const exchanges: PublisherProps['exchanges'] = [];
-          const queues: PublisherProps['queues'] = [];
-          const queueBindings: PublisherProps['queueBindings'] = [];
-
-          routing.forEach(({ exchange, queue, routingKey }) => {
-            exchanges.push({ exchange, passive: true, durable: true });
-            queues.push({ queue, passive: true, durable: true });
-            queueBindings.push({ exchange, queue, routingKey });
-          });
-
-          const publisher = this.#handler
-            .createPublisher({
-              ...options,
-              exchanges,
-              queues,
-              queueBindings,
-            })
-            .on('basic.return', this.#boundUndeliveredMessageEventHandler);
-
-          return [publisherName, publisher] as const;
-        }),
-      ),
-    };
+      ...newPublishers,
+    } as const;
 
     return this;
   }
@@ -181,20 +184,20 @@ class MessageQueue {
       ...options
     } = consumerProps;
 
-    this.#consumers.push(
-      this.#handler
-        .createConsumer(
-          {
-            ...options,
-            exchanges: [{ exchange, passive: true, durable: true }],
-            queue,
-            queueBindings: [{ exchange, queue, routingKey }],
-            queueOptions: { passive: true, durable: true },
-          },
-          handler,
-        )
-        .on('error', this.#boundConsumerErrorEventHandler),
-    );
+    const consumer = this.#handler
+      .createConsumer(
+        {
+          ...options,
+          exchanges: [{ exchange, passive: true, durable: true }],
+          queue,
+          queueBindings: [{ exchange, queue, routingKey }],
+          queueOptions: { passive: true, durable: true },
+        },
+        handler,
+      )
+      .on('error', this.#boundConsumerErrorEventHandler);
+
+    this.#consumers.push(consumer);
 
     return this;
   }
@@ -316,6 +319,7 @@ export {
   MessageQueue,
   type Consumers,
   type Exchanges,
+  type Logger,
   type Publishers,
   type Queues,
   type RoutingKeys,

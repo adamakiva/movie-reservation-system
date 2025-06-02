@@ -21,12 +21,8 @@ const maxPageSize = VALIDATION.PAGINATION.PAGE_SIZE.MAX_LENGTH.VALUE;
 
 async function stressTest() {
   const {
-    env: {
-      httpServer: {
-        configurations: { maxRequestsPerSocket },
-      },
-    },
     server,
+    maxRequestsPerSocket,
     routes: { http: httpRoute },
     authentication,
     database,
