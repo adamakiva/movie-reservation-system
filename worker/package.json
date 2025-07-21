@@ -6,30 +6,29 @@
   "main": "./src/main.ts",
   "scripts": {
     "lint": "eslint 'src/**/*.ts'; tsc --project tsconfig.json",
-    "commit-local-updates": "ncu -u",
     "check-cir-deps": "dpdm --no-tree --no-warning --progress --transform --exit-code circular:1 src/**/*.ts",
     "check-licenses": "nlf -d -r 1",
     "build": "eslint 'src/**/*.ts' && tsc --build --verbose tsconfig.prod.json"
   },
   "dependencies": {
-    "@adamakiva/movie-reservation-system-message-queue": "0.0.0",
-    "@adamakiva/movie-reservation-system-shared": "0.0.0",
+    "@adamakiva/movie-reservation-system-message-queue": "~0.0.0",
+    "@adamakiva/movie-reservation-system-shared": "~0.0.0",
     "rabbitmq-client": "~5.0.4"
   },
   "devDependencies": {
     "@types/eslint-config-prettier": "~6.11.3",
     "@types/eslint-plugin-security": "~3.0.0",
-    "@types/node": "~22.15.29",
+    "@types/node": "~24.0.15",
     "dpdm": "~3.14.0",
-    "eslint": "~9.28.0",
-    "eslint-config-prettier": "~10.1.5",
+    "eslint": "~9.31.0",
+    "eslint-config-prettier": "~10.1.8",
     "eslint-plugin-security": "~3.0.1",
-    "globals": "~16.2.0",
+    "eslint-plugin-unicorn": "~60.0.0",
+    "globals": "~16.3.0",
     "nlf": "~2.1.1",
-    "npm-check-updates": "~18.0.1",
-    "prettier": "~3.5.3",
+    "prettier": "~3.6.2",
     "typescript": "~5.8.3",
-    "typescript-eslint": "~8.33.0"
+    "typescript-eslint": "~8.37.0"
   },
   "engines": {
     "node": ">=22"

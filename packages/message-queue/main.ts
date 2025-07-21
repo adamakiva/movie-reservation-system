@@ -16,9 +16,9 @@ import {
 
 type Logger = {
   // eslint-disable-next-line no-unused-vars
-  info: (...args: unknown[]) => void;
+  info: (...arguments_: unknown[]) => void;
   // eslint-disable-next-line no-unused-vars
-  error: (...args: unknown[]) => void;
+  error: (...arguments_: unknown[]) => void;
 };
 
 const CORRELATION_IDS = {
@@ -91,11 +91,11 @@ class MessageQueue {
   #isAlive;
   #isReady;
 
-  public constructor(params: {
+  public constructor(parameters: {
     connectionOptions: ConnectionOptions;
     logger: Logger;
   }) {
-    const { connectionOptions, logger } = params;
+    const { connectionOptions, logger } = parameters;
 
     this.#boundErrorEventHandler = this.#errorEventHandler.bind(this);
     this.#boundConnectionEventHandler = this.#connectionEventHandler.bind(this);
@@ -169,7 +169,10 @@ class MessageQueue {
   }
 
   public createConsumer(
-    consumerProps: Pick<ConsumerProps, 'concurrency' | 'exclusive' | 'qos'> & {
+    consumerProperties: Pick<
+      ConsumerProps,
+      'concurrency' | 'exclusive' | 'qos'
+    > & {
       routing: {
         exchange: Exchanges[number];
         queue: Queues[keyof Queues][number];
@@ -182,7 +185,7 @@ class MessageQueue {
       routing: { exchange, queue, routingKey },
       handler,
       ...options
-    } = consumerProps;
+    } = consumerProperties;
 
     const consumer = this.#handler
       .createConsumer(
@@ -202,7 +205,7 @@ class MessageQueue {
     return this;
   }
 
-  public async publish(params: {
+  public async publish(parameters: {
     publisher: Publishers[number];
     exchange: Exchanges[number];
     routingKey: RoutingKeys[keyof RoutingKeys][number];
@@ -211,7 +214,7 @@ class MessageQueue {
       correlationId?: (typeof CORRELATION_IDS)[keyof typeof CORRELATION_IDS];
     };
   }) {
-    const { publisher, exchange, routingKey, data, options } = params;
+    const { publisher, exchange, routingKey, data, options } = parameters;
 
     await this.#publishers[publisher]!.send(
       { ...options, exchange, routingKey },
